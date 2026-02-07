@@ -74,17 +74,22 @@ export default function RootLayout({ children }) {
           </p>
           <ul className="list-disc list-inside space-y-1">
             <li>
-              <strong>Instant SSR:</strong> No more loading screens or blank flashes. Content is
-              rendered immediately on the server.
+              <strong>Instant Stability:</strong> Provides a perfect replacement for{" "}
+              <code>ClientOnly</code> wrappers by deferring application rendering until the client
+              has mounted.
             </li>
             <li>
-              <strong>Zero Configuration:</strong> Automatically sets{" "}
+              <strong>Hydration Safety:</strong> 100% prevents <em>Hydration Mismatch</em> errors
+              across the entire application, making it safe to use browser APIs anywhere.
+            </li>
+            <li>
+              <strong>Seamless Loading:</strong> Uses a transparent, theme-aware background during
+              the initial mount to prevent white flashes without intrusive loading indicators.
+            </li>
+            <li>
+              <strong>Zero Configuration:</strong> Automatically sets optimized defaults for{" "}
               <code>attribute=&quot;class&quot;</code>, <code>defaultTheme=&quot;system&quot;</code>{" "}
               and <code>enableSystem</code>.
-            </li>
-            <li>
-              <strong>Smooth Transitions:</strong> Enforces <code>disableTransitionOnChange</code>{" "}
-              to eliminate color flickering during theme changes.
             </li>
           </ul>
         </CardContent>
