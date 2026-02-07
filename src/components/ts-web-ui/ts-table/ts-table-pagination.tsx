@@ -1,12 +1,7 @@
 "use client"
 
 import { Table } from "@tanstack/react-table"
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +13,7 @@ import {
 } from "@/components/ui/select"
 
 interface TsTablePaginationProps {
-  table: Table<any>
+  table: Table<unknown>
   pageSizeOptions?: number[]
 }
 
@@ -54,8 +49,7 @@ export function TsTablePagination({
           </Select>
         </div>
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Strana {table.getState().pagination.pageIndex + 1} z{" "}
-          {table.getPageCount()}
+          Strana {table.getState().pagination.pageIndex + 1} z {table.getPageCount()}
         </div>
         <div className="flex items-center space-x-2">
           <Button

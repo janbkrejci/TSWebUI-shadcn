@@ -2,7 +2,7 @@
 
 /**
  * TsSidebar - Animovaný sidebar s automatickým schováváním
- * 
+ *
  * Funkce:
  * - Animované otevírání/zavírání
  * - Automatické schování na tablet a menší
@@ -10,11 +10,13 @@
  * - Překrytí obsahu na mobilech (overlay)
  * - Podpora pro umístění pod TopBar
  */
+import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
+
 import { Button } from "@/components/ui/button"
-import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 const SIDEBAR_STATE_KEY = "sidebar:state"
 const SIDEBAR_COLLAPSED_KEY = "sidebar:collapsed"
@@ -78,64 +80,64 @@ interface SidebarProviderProps {
 /**
  * Provider pro správu stavu sidebaru
  */
-export function SidebarProvider({ 
-  children, 
+export function SidebarProvider({
+  children,
   defaultOpen = true,
   mobileBreakpoint = 768,
   topBarHeight = 56,
   width = "16rem",
-  collapsedWidth = "4rem"
+  collapsedWidth = "4rem",
 }: SidebarProviderProps) {
-  // Inicializace - na serveru předpokládáme desktop (defaultOpen), na klientu zjistíme skutečný stav
-  const getInitialMobile = () => typeof window !== 'undefined' ? window.innerWidth < mobileBreakpoint : false
-  
-  const getInitialOpen = () => {
-    if (typeof window !== 'undefined') {
-      if (window.innerWidth < mobileBreakpoint) {
-        return false
-      }
-      // Check storage
+  // Inicializace stavu - VŽDY začínáme s defaultními hodnotami bezpečná pro server
+  const [isOpen, setIsOpen] = React.useState(defaultOpen)
+  const [isCollapsed, setIsCollapsed] = React.useState(false)
+  const [isMobile, setIsMobile] = React.useState(false)
+
+  // Refs pro sledování předchozího stavu
+  const wasMobileRef = React.useRef(false)
+  const wasOpenRef = React.useRef(defaultOpen)
+
+  // Inicializace stavu z prostředí prohlížeče po namontování
+  React.useEffect(() => {
+    // Teď jsme na klientu, můžeme bezpečně přistoupit k window a localStorage
+    const mobile = window.innerWidth < mobileBreakpoint
+    setIsMobile(mobile)
+    wasMobileRef.current = mobile
+
+    // Načtení uloženého stavu
+    let initialOpen = defaultOpen
+    if (mobile) {
+      initialOpen = false
+    } else {
       try {
         const stored = window.localStorage.getItem(SIDEBAR_STATE_KEY)
         if (stored !== null) {
-          return stored === 'true'
+          initialOpen = stored === "true"
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
-      return defaultOpen
     }
-    return defaultOpen
-  }
 
-  const getInitialCollapsed = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-        if (stored !== null) {
-          return stored === 'true'
-        }
-      } catch (e) {
-        // ignore
+    setIsOpen(initialOpen)
+    wasOpenRef.current = initialOpen
+
+    try {
+      const storedCollapsed = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+      if (storedCollapsed !== null) {
+        setIsCollapsed(storedCollapsed === "true")
       }
+    } catch {
+      // ignore
     }
-    return false
-  }
-  
-  const [isOpen, setIsOpen] = React.useState(getInitialOpen)
-  const [isCollapsed, setIsCollapsed] = React.useState(getInitialCollapsed)
-  const [isMobile, setIsMobile] = React.useState(getInitialMobile)
-  
-  // Refs pro sledování předchozího stavu (aby closure fungovalo správně)
-  const wasMobileRef = React.useRef(isMobile)
-  const wasOpenRef = React.useRef(isOpen)
+  }, [defaultOpen, mobileBreakpoint])
 
   // Ukládání stavu do localStorage
   React.useEffect(() => {
     if (!isMobile) {
       try {
         window.localStorage.setItem(SIDEBAR_STATE_KEY, String(isOpen))
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -145,19 +147,18 @@ export function SidebarProvider({
     if (!isMobile) {
       try {
         window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed))
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
   }, [isCollapsed, isMobile])
 
-  // Detekce velikosti okna
+  // Detekce změny velikosti okna
   React.useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < mobileBreakpoint
       const wasMobile = wasMobileRef.current
-      const wasOpen = wasOpenRef.current
-      
+
       // Automaticky schovat na mobilech
       if (mobile && !wasMobile) {
         setIsMobile(true)
@@ -168,14 +169,16 @@ export function SidebarProvider({
       // Automaticky otevřít při zvětšení na desktop (respektovat uložený stav)
       else if (!mobile && wasMobile) {
         setIsMobile(false)
-        
+
         let shouldBeOpen = defaultOpen
         try {
           const stored = window.localStorage.getItem(SIDEBAR_STATE_KEY)
           if (stored !== null) {
-            shouldBeOpen = stored === 'true'
+            shouldBeOpen = stored === "true"
           }
-        } catch (e) {}
+        } catch {
+          // ignore
+        }
 
         setIsOpen(shouldBeOpen)
         wasMobileRef.current = false
@@ -183,67 +186,64 @@ export function SidebarProvider({
       }
     }
 
-    // Počáteční kontrola (pro případ hydratace)
-    // checkMobile() // - tohle možná není potřeba pokud inicializujeme správně, ale pro resize event to chceme
-    // Na druhou stranu, getInitialOpen už to řeší. checkMobile je HLAVNĚ pro změnu velikosti.
-    
     window.addEventListener("resize", checkMobile)
     return () => window.removeEventListener("resize", checkMobile)
   }, [mobileBreakpoint, defaultOpen])
-  
+
   // Synchronizace refs při manuální změně stavu
   React.useEffect(() => {
     wasOpenRef.current = isOpen
   }, [isOpen])
 
-  const toggle = React.useCallback(() => setIsOpen(prev => !prev), [])
+  const toggle = React.useCallback(() => setIsOpen((prev) => !prev), [])
   const open = React.useCallback(() => setIsOpen(true), [])
   const close = React.useCallback(() => setIsOpen(false), [])
   // Na mobile nikdy nekollapsovat
   const toggleCollapsed = React.useCallback(() => {
     if (!isMobile) {
-      setIsCollapsed(prev => !prev)
+      setIsCollapsed((prev) => !prev)
     }
   }, [isMobile])
 
   // Na mobile vždy collapsed=false
   const effectiveCollapsed = isMobile ? false : isCollapsed
 
-  const value = React.useMemo(() => ({
-    isOpen,
-    toggle,
-    open,
-    close,
-    isCollapsed: effectiveCollapsed,
-    toggleCollapsed,
-    topBarHeight,
-    isMobile,
-    width,
-    collapsedWidth,
-  }), [isOpen, toggle, open, close, effectiveCollapsed, toggleCollapsed, topBarHeight, isMobile, width, collapsedWidth])
-
-  return (
-    <SidebarContext.Provider value={value}>
-      {children}
-    </SidebarContext.Provider>
+  const value = React.useMemo(
+    () => ({
+      isOpen,
+      toggle,
+      open,
+      close,
+      isCollapsed: effectiveCollapsed,
+      toggleCollapsed,
+      topBarHeight,
+      isMobile,
+      width,
+      collapsedWidth,
+    }),
+    [
+      isOpen,
+      toggle,
+      open,
+      close,
+      effectiveCollapsed,
+      toggleCollapsed,
+      topBarHeight,
+      isMobile,
+      width,
+      collapsedWidth,
+    ]
   )
-}
 
-/**
- * Props pro Sidebar komponentu
- */
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
+  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
+}
 
 /**
  * Hlavní sidebar komponenta
  * Umístěna pod TopBarem, animované otevírání/zavírání
  * Na desktopu je součástí layoutu, na mobilech je overlay
  */
-export function Sidebar({ 
-  className, 
-  children,
-  ...props 
-}: SidebarProps) {
+export function Sidebar({ className, children, ...props }: React.ComponentProps<"aside">) {
   const { isOpen, close, isCollapsed, topBarHeight, isMobile, width, collapsedWidth } = useSidebar()
 
   const sidebarHeight = `calc(100vh - ${topBarHeight}px)`
@@ -253,7 +253,7 @@ export function Sidebar({
     <>
       {/* Overlay pro mobile - kliknutí zavře sidebar */}
       {isOpen && isMobile && (
-        <div 
+        <div
           className={cn(
             "fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity duration-300"
           )}
@@ -272,22 +272,18 @@ export function Sidebar({
           "transition-all duration-300 ease-in-out",
           // Na mobile: translate animace
           // Na desktop: vždy translate-x-0, šířka se animuje
-          isMobile 
-            ? (isOpen ? "translate-x-0" : "-translate-x-full")
-            : "translate-x-0",
+          isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
           !isMobile && "overflow-visible",
           className
         )}
-        style={{ 
+        style={{
           top: topBarHeight,
           height: sidebarHeight,
           width: isOpen ? currentWidth : 0,
         }}
         {...props}
       >
-        <div className="flex flex-col h-full overflow-hidden">
-          {children}
-        </div>
+        <div className="flex flex-col h-full overflow-hidden">{children}</div>
         <SidebarCollapseTrigger />
       </aside>
     </>
@@ -304,18 +300,18 @@ interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   showCloseButton?: boolean
 }
 
-export function SidebarHeader({ 
-  className, 
+export function SidebarHeader({
+  className,
   children,
   logo,
   showCloseButton = true,
-  ...props 
+  ...props
 }: SidebarHeaderProps) {
   const { close, isCollapsed, toggleCollapsed } = useSidebar()
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768
 
   return (
-    <div 
+    <div
       className={cn(
         "flex items-center justify-between h-14 px-4 border-b flex-shrink-0",
         className
@@ -333,10 +329,12 @@ export function SidebarHeader({
             onClick={toggleCollapsed}
             aria-label={isCollapsed ? "Rozbalit sidebar" : "Sbalit sidebar"}
           >
-            <ChevronLeft className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isCollapsed && "rotate-180"
-            )} />
+            <ChevronLeft
+              className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                isCollapsed && "rotate-180"
+              )}
+            />
           </Button>
         )}
         {/* Zavírací tlačítko - jen na mobilech */}
@@ -359,12 +357,16 @@ export function SidebarHeader({
 /**
  * Obsah sidebaru se scrollováním
  */
-export function SidebarContent({ className, children }: { className?: string, children: React.ReactNode }) {
+export function SidebarContent({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
   return (
     <div className={cn("flex-1 overflow-y-auto scrollbar-hidden", className)}>
-      <div className="py-2">
-        {children}
-      </div>
+      <div className="py-2">{children}</div>
     </div>
   )
 }
@@ -387,9 +389,7 @@ export function SidebarSection({ className, title, children, ...props }: Sidebar
           {title}
         </h3>
       )}
-      <div className="space-y-1">
-        {children}
-      </div>
+      <div className="space-y-1">{children}</div>
     </div>
   )
 }
@@ -406,13 +406,13 @@ interface SidebarItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   asChild?: boolean
 }
 
-export function SidebarItem({ 
-  className, 
-  children, 
+export function SidebarItem({
+  className,
+  children,
   icon,
   isActive,
   asChild,
-  ...props 
+  ...props
 }: SidebarItemProps) {
   const { isCollapsed, close } = useSidebar()
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768
@@ -425,7 +425,6 @@ export function SidebarItem({
     props.onClick?.(e)
   }
 
-  const Comp = asChild ? React.Fragment : "button"
   const content = (
     <Button
       variant={isActive ? "secondary" : "ghost"}
@@ -443,17 +442,20 @@ export function SidebarItem({
   )
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<{ className?: string; onClick?: React.MouseEventHandler }>, {
-      className: cn(
-        "flex items-center w-full h-9 px-3 text-sm rounded-md transition-colors",
-        isActive 
-          ? "bg-secondary text-secondary-foreground" 
-          : "hover:bg-accent hover:text-accent-foreground",
-        isCollapsed && "justify-center px-2",
-        className
-      ),
-      onClick: handleClick,
-    })
+    return React.cloneElement(
+      children as React.ReactElement<{ className?: string; onClick?: React.MouseEventHandler }>,
+      {
+        className: cn(
+          "flex items-center w-full h-9 px-3 text-sm rounded-md transition-colors",
+          isActive
+            ? "bg-secondary text-secondary-foreground"
+            : "hover:bg-accent hover:text-accent-foreground",
+          isCollapsed && "justify-center px-2",
+          className
+        ),
+        onClick: handleClick,
+      }
+    )
   }
 
   return content
@@ -462,7 +464,10 @@ export function SidebarItem({
 /**
  * Tlačítko pro otevření sidebaru (hamburger menu)
  */
-export function SidebarTrigger({ className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function SidebarTrigger({
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const { toggle, isOpen } = useSidebar()
 
   return (
@@ -482,12 +487,13 @@ export function SidebarTrigger({ className, ...props }: React.ButtonHTMLAttribut
 /**
  * Zápatí sidebaru
  */
-export function SidebarFooter({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function SidebarFooter({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div 
-      className={cn("shrink-0 border-t p-3", className)} 
-      {...props}
-    >
+    <div className={cn("shrink-0 border-t p-3", className)} {...props}>
       {children}
     </div>
   )
@@ -497,9 +503,12 @@ export function SidebarFooter({ className, children, ...props }: React.HTMLAttri
  * Hlavní obsahová oblast vedle sidebaru
  * Automaticky se přizpůsobuje šířce sidebaru na desktopu
  */
-interface SidebarInsetProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function SidebarInset({ className, children, style, ...props }: SidebarInsetProps) {
+export function SidebarInset({
+  className,
+  children,
+  style,
+  ...props
+}: React.ComponentProps<"main">) {
   const { isOpen, isCollapsed, topBarHeight, isMobile, width, collapsedWidth } = useSidebar()
 
   // Na desktopu přidat margin-left podle sidebaru
@@ -507,15 +516,15 @@ export function SidebarInset({ className, children, style, ...props }: SidebarIn
   const marginLeft = !isMobile && isOpen ? currentWidth : 0
 
   return (
-    <main 
+    <main
       className={cn(
         "flex-1 flex flex-col overflow-auto transition-[margin-left] duration-300 ease-in-out",
         className
       )}
-      style={{ 
+      style={{
         marginTop: topBarHeight,
         marginLeft,
-        ...style 
+        ...style,
       }}
       {...props}
     >
@@ -540,7 +549,7 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
 
   return (
     <div className="absolute inset-y-0 -right-3 z-50 w-6 pointer-events-none">
-      <div 
+      <div
         className="sticky flex justify-center -translate-y-1/2"
         style={{ top: `calc(50% + ${topBarHeight / 2}px)` }}
       >
@@ -572,4 +581,3 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
 
 // Re-exporty
 export { SidebarContext }
-

@@ -1,4 +1,4 @@
-import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widget-demo"
+import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Demo stránka pro Info Box widget
@@ -6,20 +6,26 @@ import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widge
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: 'label', label: 'Titulek', type: 'string', defaultValue: 'Informace' },
-  { name: 'content', label: 'Obsah', type: 'textarea', defaultValue: 'Toto je důležitá informace pro uživatele formuláře.', hint: 'Text zobrazený v infoboxu' },
-  { 
-    name: 'variant', 
-    label: 'Varianta', 
-    type: 'select', 
-    defaultValue: 'default',
-    options: [
-      { label: 'Default', value: 'default' },
-      { label: 'Destructive (červená)', value: 'destructive' },
-    ],
-    hint: 'Barevná varianta alertu'
+  { name: "label", label: "Titulek", type: "string", defaultValue: "Informace" },
+  {
+    name: "content",
+    label: "Obsah",
+    type: "textarea",
+    defaultValue: "Toto je důležitá informace pro uživatele formuláře.",
+    hint: "Text zobrazený v infoboxu",
   },
-  { name: 'hidden', label: 'Skryté', type: 'boolean', defaultValue: false },
+  {
+    name: "variant",
+    label: "Varianta",
+    type: "select",
+    defaultValue: "default",
+    options: [
+      { label: "Default", value: "default" },
+      { label: "Destructive (červená)", value: "destructive" },
+    ],
+    hint: "Barevná varianta alertu",
+  },
+  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
 ]
 
 export default function InfoboxWidgetDemo() {

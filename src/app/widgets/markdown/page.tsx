@@ -1,4 +1,4 @@
-import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widget-demo"
+import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Demo stránka pro Markdown widget
@@ -6,10 +6,10 @@ import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widge
  */
 
 const attributes: WidgetAttribute[] = [
-  { 
-    name: 'content', 
-    label: 'Markdown obsah', 
-    type: 'textarea', 
+  {
+    name: "content",
+    label: "Markdown obsah",
+    type: "textarea",
     defaultValue: `# Nadpis první úrovně
 
 Toto je odstavec s **tučným textem** a *kurzívou*.
@@ -30,9 +30,9 @@ console.log(hello);
 > Toto je citace
 
 [Odkaz na dokumentaci](https://example.com)`,
-    hint: 'Markdown formátovaný text'
+    hint: "Markdown formátovaný text",
   },
-  { name: 'hidden', label: 'Skryté', type: 'boolean', defaultValue: false },
+  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
 ]
 
 export default function MarkdownWidgetDemo() {

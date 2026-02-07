@@ -1,48 +1,30 @@
 "use client"
 
-import * as React from "react"
 import { Table } from "@tanstack/react-table"
-import { 
-  Download, 
-  Upload, 
-  Plus, 
-  Settings2, 
-  Search,
-  Check
-} from "lucide-react"
+import { Download, Plus, Search, Settings2, Upload } from "lucide-react"
+import * as XLSX from "xlsx"
+
+import * as React from "react"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { 
-    Command, 
-    CommandEmpty, 
-    CommandGroup, 
-    CommandInput, 
-    CommandItem,
-    CommandList
-} from "@/components/ui/command"
-import * as XLSX from "xlsx"
+import { Input } from "@/components/ui/input"
 
 interface TsTableToolbarProps {
-  table: Table<any>
+  table: Table<unknown>
   showCreateButton?: boolean
   showImportButton?: boolean
   showExportButton?: boolean
   showColumnSelector?: boolean
   onCreateClick?: () => void
-  onImportClick?: (data: any[]) => void
+  onImportClick?: (data: unknown[]) => void
   title?: string
 }
 
@@ -54,16 +36,14 @@ export function TsTableToolbar({
   showColumnSelector = true,
   onCreateClick,
   onImportClick,
-  title
+  title,
 }: TsTableToolbarProps) {
-  const isFiltered = table.getState().columnFilters.length > 0
-
   const handleExport = () => {
-    const data = table.getFilteredRowModel().rows.map(row => row.original)
+    const data = table.getFilteredRowModel().rows.map((row) => row.original)
     const ws = XLSX.utils.json_to_sheet(data)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Data")
-    XLSX.writeFile(wb, `export-${new Date().toISOString().split('T')[0]}.xlsx`)
+    XLSX.writeFile(wb, `export-${new Date().toISOString().split("T")[0]}.xlsx`)
   }
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,10 +53,11 @@ export function TsTableToolbar({
     const reader = new FileReader()
     reader.onload = (event) => {
       const bstr = event.target?.result
-      const wb = XLSX.read(bstr, { type: 'binary' })
+      if (typeof bstr !== "string") return
+      const wb = XLSX.read(bstr, { type: "binary" })
       const wsname = wb.SheetNames[0]
       const ws = wb.Sheets[wsname]
-      const data = XLSX.utils.sheet_to_json(ws)
+      const data = XLSX.utils.sheet_to_json(ws) as unknown[]
       onImportClick?.(data)
     }
     reader.readAsBinaryString(file)
@@ -86,17 +67,17 @@ export function TsTableToolbar({
     <div className="flex items-center justify-between py-4 gap-2">
       <div className="flex flex-1 items-center gap-2">
         <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-                placeholder="Hledat..."
-                value={(table.getState().globalFilter as string) ?? ""}
-                onChange={(event) => table.setGlobalFilter(event.target.value)}
-                className="pl-8 h-9"
-            />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Hledat..."
+            value={(table.getState().globalFilter as string) ?? ""}
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
+            className="pl-8 h-9"
+          />
         </div>
         {title && <h2 className="text-lg font-semibold ml-4">{title}</h2>}
       </div>
-      
+
       <div className="flex items-center gap-2">
         {showColumnSelector && (
           <DropdownMenu>
@@ -120,7 +101,9 @@ export function TsTableToolbar({
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
-                      {typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id}
+                      {typeof column.columnDef.header === "string"
+                        ? column.columnDef.header
+                        : column.id}
                     </DropdownMenuCheckboxItem>
                   )
                 })}
@@ -138,11 +121,16 @@ export function TsTableToolbar({
         {showImportButton && (
           <div className="relative">
             <Button variant="outline" size="sm" className="h-9 gap-2" asChild>
-                <label className="cursor-pointer">
-                    <Upload className="h-4 w-4" />
-                    Import
-                    <input type="file" className="hidden" accept=".xlsx,.xls,.csv,.json" onChange={handleImport} />
-                </label>
+              <label className="cursor-pointer">
+                <Upload className="h-4 w-4" />
+                Import
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".xlsx,.xls,.csv,.json"
+                  onChange={handleImport}
+                />
+              </label>
             </Button>
           </div>
         )}

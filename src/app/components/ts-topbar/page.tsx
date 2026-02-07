@@ -1,20 +1,25 @@
 "use client"
 
+import { Bell, Menu, Search, Settings, User } from "lucide-react"
+
 import * as React from "react"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
+
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Bell, User, Settings, Search, Menu
-
-
- } from "lucide-react"
-
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import vscDarkPlus from 'react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus'
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 /**
  * Interaktivní demo TopBaru uvnitř kontejneru
@@ -38,10 +43,10 @@ function TopBarDemo() {
         </div>
         <div className="flex items-center gap-2">
           <Label htmlFor="height">Height:</Label>
-          <Input 
-            id="height" 
-            type="number" 
-            value={height} 
+          <Input
+            id="height"
+            type="number"
+            value={height}
             onChange={(e) => setHeight(Number(e.target.value))}
             className="w-20 h-8"
             min={40}
@@ -56,14 +61,14 @@ function TopBarDemo() {
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 pointer-events-none font-bold text-4xl select-none">
           APP CONTENT
         </div>
-        
+
         {/* TopBar uvnitř kontejneru - relativní pozice */}
         <header
           className={`
             absolute top-0 left-0 right-0 z-10
             flex items-center justify-between gap-4 px-4
             bg-background
-            ${showBorder ? 'border-b' : ''}
+            ${showBorder ? "border-b" : ""}
           `}
           style={{ height }}
         >
@@ -74,20 +79,17 @@ function TopBarDemo() {
             </Button>
             <span className="font-semibold">MyApp</span>
           </div>
-          
+
           {/* Střední část */}
           {showCenter && (
             <div className="flex-1 flex items-center justify-center min-w-0">
               <div className="relative w-full max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search..." 
-                  className="pl-9 h-9 w-full"
-                />
+                <Input placeholder="Search..." className="pl-9 h-9 w-full" />
               </div>
             </div>
           )}
-          
+
           {/* Pravá část */}
           <div className="flex items-center gap-2 shrink-0 ml-auto">
             <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -103,20 +105,17 @@ function TopBarDemo() {
         </header>
 
         {/* Simulovaný obsah pod TopBarem */}
-        <div 
-          className="absolute left-0 right-0 bottom-0 p-6 overflow-auto"
-          style={{ top: height }}
-        >
+        <div className="absolute left-0 right-0 bottom-0 p-6 overflow-auto" style={{ top: height }}>
           <div className="max-w-2xl mx-auto space-y-4">
             <h2 className="text-xl font-semibold text-foreground">Page Content</h2>
             <p className="text-muted-foreground">
-              This area represents the main content of the application, 
-              positioned below the TopBar with proper spacing.
+              This area represents the main content of the application, positioned below the TopBar
+              with proper spacing.
             </p>
             <div className="grid grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="h-24 rounded-lg bg-background border flex items-center justify-center text-muted-foreground"
                 >
                   Card {i}
@@ -197,7 +196,10 @@ export default function TopBarPage() {
           <TopBarDemo />
         </TabsContent>
 
-        <TabsContent value="code" className="flex-1 min-h-0 overflow-auto py-6 data-[state=inactive]:hidden">
+        <TabsContent
+          value="code"
+          className="flex-1 min-h-0 overflow-auto py-6 data-[state=inactive]:hidden"
+        >
           <Card className="w-full">
             <CardHeader>
               <CardTitle>Použití v layoutu</CardTitle>
@@ -206,14 +208,14 @@ export default function TopBarPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SyntaxHighlighter 
-                language="tsx" 
+              <SyntaxHighlighter
+                language="tsx"
                 style={vscDarkPlus}
                 customStyle={{
-                  fontSize: '13px',
-                  lineHeight: '1.6',
-                  borderRadius: '0.5rem',
-                  padding: '1rem'
+                  fontSize: "13px",
+                  lineHeight: "1.6",
+                  borderRadius: "0.5rem",
+                  padding: "1rem",
                 }}
               >
                 {codeString}
@@ -222,14 +224,15 @@ export default function TopBarPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="documentation" className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden">
+        <TabsContent
+          value="documentation"
+          className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden"
+        >
           <div className="space-y-8 pb-8 w-full">
             <Card>
               <CardHeader>
                 <CardTitle>TsTopBar Props</CardTitle>
-                <CardDescription>
-                  Konfigurovatelné vlastnosti hlavní komponenty.
-                </CardDescription>
+                <CardDescription>Konfigurovatelné vlastnosti hlavní komponenty.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -243,31 +246,41 @@ export default function TopBarPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">leftContent</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        leftContent
+                      </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
                       <TableCell className="text-xs">-</TableCell>
                       <TableCell>Obsah na levé straně (hamburger menu, logo)</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">centerContent</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        centerContent
+                      </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
                       <TableCell className="text-xs">-</TableCell>
                       <TableCell>Obsah uprostřed (vyhledávání, breadcrumbs)</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">rightContent</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        rightContent
+                      </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
                       <TableCell className="text-xs">-</TableCell>
                       <TableCell>Obsah na pravé straně (akce, uživatelské menu)</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">height</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        height
+                      </TableCell>
                       <TableCell className="text-xs italic">number</TableCell>
                       <TableCell className="text-xs">56</TableCell>
                       <TableCell>Výška TopBaru v pixelech</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">bordered</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        bordered
+                      </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
                       <TableCell className="text-xs">true</TableCell>
                       <TableCell>Zobrazit spodní border</TableCell>
@@ -280,9 +293,7 @@ export default function TopBarPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Pomocné komponenty</CardTitle>
-                <CardDescription>
-                  Doplňkové komponenty pro stavbu TopBaru.
-                </CardDescription>
+                <CardDescription>Doplňkové komponenty pro stavbu TopBaru.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -294,23 +305,33 @@ export default function TopBarPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">TopBarLogo</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        TopBarLogo
+                      </TableCell>
                       <TableCell>Logo aplikace s volitelným textem a ikonou</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">TopBarActions</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        TopBarActions
+                      </TableCell>
                       <TableCell>Kontejner pro akční tlačítka s mezerami</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">TopBarProvider</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        TopBarProvider
+                      </TableCell>
                       <TableCell>Context provider pro sdílení výšky TopBaru</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">TopBarSpacer</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        TopBarSpacer
+                      </TableCell>
                       <TableCell>Spacer element pro obsah pod fixovaným TopBarem</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">useTopBar()</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        useTopBar()
+                      </TableCell>
                       <TableCell>Hook pro přístup k výšce TopBaru z kontextu</TableCell>
                     </TableRow>
                   </TableBody>
@@ -324,12 +345,25 @@ export default function TopBarPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li><strong>Fixovaná pozice</strong> - TopBar zůstává viditelný při scrollování</li>
-                  <li><strong>Plná šířka</strong> - rozpíná se přes celou šířku viewportu</li>
-                  <li><strong>Tři sloty</strong> - levý, střední a pravý pro flexibilní rozložení</li>
-                  <li><strong>Responsive</strong> - střední obsah se automaticky zmenšuje</li>
-                  <li><strong>Integrace se Sidebarem</strong> - SidebarTrigger se typicky umisťuje vlevo</li>
-                  <li><strong>Z-index management</strong> - TopBar je vždy nad obsahem (z-50)</li>
+                  <li>
+                    <strong>Fixovaná pozice</strong> - TopBar zůstává viditelný při scrollování
+                  </li>
+                  <li>
+                    <strong>Plná šířka</strong> - rozpíná se přes celou šířku viewportu
+                  </li>
+                  <li>
+                    <strong>Tři sloty</strong> - levý, střední a pravý pro flexibilní rozložení
+                  </li>
+                  <li>
+                    <strong>Responsive</strong> - střední obsah se automaticky zmenšuje
+                  </li>
+                  <li>
+                    <strong>Integrace se Sidebarem</strong> - SidebarTrigger se typicky umisťuje
+                    vlevo
+                  </li>
+                  <li>
+                    <strong>Z-index management</strong> - TopBar je vždy nad obsahem (z-50)
+                  </li>
                 </ul>
               </CardContent>
             </Card>

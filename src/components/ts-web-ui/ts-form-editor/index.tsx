@@ -1,6 +1,6 @@
 /**
  * TsFormEditor
- * 
+ *
  * Vizuální editor pro tvorbu formulářů s podporou:
  * - Drag & drop přidávání polí
  * - Režim s taby nebo bez tabů
@@ -10,11 +10,11 @@
  */
 
 export { TsFormEditor } from "./form-editor"
-export type { 
-  EditorField, 
-  EditorRowItem, 
-  EditorRow, 
-  EditorTab, 
+export type {
+  EditorField,
+  EditorRowItem,
+  EditorRow,
+  EditorTab,
   EditorFormDefinition,
   EditorSelection,
 } from "./types"

@@ -2,7 +2,7 @@
 
 /**
  * TsFormEditor - Vizuální editor formulářů
- * 
+ *
  * Poskytuje kompletní rozhraní pro tvorbu formulářů:
  * - Drag & drop přidávání polí
  * - Podpora tabů a single-page režimu
@@ -10,65 +10,33 @@
  * - Náhled formuláře v reálném čase
  * - Export/import JSON konfigurace
  */
-
-import * as React from "react"
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-} from "@dnd-kit/core"
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import {
+  Columns,
+  Copy,
+  Download,
+  Eye,
+  FileJson,
   GripVertical,
   Plus,
-  Trash2,
-  Settings,
-  Eye,
-  Download,
-  Upload,
-  Undo2,
   Redo2,
-  PanelLeftClose,
-  PanelRightClose,
-  Copy,
-  MoreHorizontal,
-  Columns,
-  X,
-  FileJson,
   RotateCcw,
+  Trash2,
+  Undo2,
+  Upload,
+  X,
 } from "lucide-react"
 
+import * as React from "react"
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import {
   Dialog,
   DialogContent,
@@ -82,9 +50,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -92,24 +62,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 import { cn } from "@/lib/utils"
 
-import { useFormEditorStore } from "./store"
-import { GROUPED_FIELD_TYPES, EditorRow, EditorRowItem, EditorTab } from "./types"
-import { TsFieldDef, TsFormButton } from "../ts-form/types"
 import { TsForm } from "../ts-form"
+import { TsFieldDef, TsFormButton } from "../ts-form/types"
+import { useFormEditorStore } from "./store"
+import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./types"
 
 /**
  * Hlavní komponenta Form Editoru
@@ -134,7 +97,6 @@ export function TsFormEditor() {
     updateFieldConfig,
     addButton,
     removeButton,
-    updateButton,
     setSelection,
     clearSelection,
     importJson,
@@ -152,55 +114,51 @@ export function TsFormEditor() {
   const [importJsonText, setImportJsonText] = React.useState("")
   const [importError, setImportError] = React.useState("")
 
-  // Sensory pro drag & drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
-
   // Klávesové zkratky
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignorovat pokud jsme v inputu
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName)) {
         return
       }
 
       // Delete - smazat vybrané
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selection.type === 'field' && selection.id) {
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selection.type === "field" && selection.id) {
           removeField(selection.id)
         }
       }
 
       // Ctrl+Z - undo
-      if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault()
         undo()
       }
 
       // Ctrl+Shift+Z nebo Ctrl+Y - redo
-      if ((e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey) || 
-          (e.key === 'y' && (e.ctrlKey || e.metaKey))) {
+      if (
+        (e.key === "z" && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
+        (e.key === "y" && (e.ctrlKey || e.metaKey))
+      ) {
         e.preventDefault()
         redo()
       }
 
       // Escape - zrušit výběr
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         clearSelection()
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [selection, removeField, undo, redo, clearSelection])
 
   /**
    * Získá řádky podle aktuálního režimu
    */
   const getCurrentRows = (): EditorRow[] => {
-    if (form.mode === 'single') {
+    if (form.mode === "single") {
       return form.rows || []
     }
     return form.tabs?.[activeTabIndex]?.rows || []
@@ -231,11 +189,11 @@ export function TsFormEditor() {
    * Stáhne JSON jako soubor
    */
   const handleDownloadJson = () => {
-    const blob = new Blob([exportJson()], { type: 'application/json' })
+    const blob = new Blob([exportJson()], { type: "application/json" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = 'form-definition.json'
+    a.download = "form-definition.json"
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -262,7 +220,10 @@ export function TsFormEditor() {
         <div className="flex items-center justify-between border-b p-2 bg-muted/30">
           <div className="flex items-center gap-2">
             {/* Mode toggle */}
-            <Select value={form.mode} onValueChange={(v: string) => setMode(v as 'tabs' | 'single')}>
+            <Select
+              value={form.mode}
+              onValueChange={(v: string) => setMode(v as "tabs" | "single")}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -277,12 +238,7 @@ export function TsFormEditor() {
             {/* Undo/Redo */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={undo}
-                  disabled={historyIndex < 0}
-                >
+                <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex < 0}>
                   <Undo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -291,9 +247,9 @@ export function TsFormEditor() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={redo}
                   disabled={historyIndex >= history.length - 1}
                 >
@@ -347,9 +303,7 @@ export function TsFormEditor() {
                     placeholder='{"fields": {}, "layout": {}, "buttons": []}'
                     className="min-h-[300px] font-mono text-sm"
                   />
-                  {importError && (
-                    <p className="text-sm text-destructive">{importError}</p>
-                  )}
+                  {importError && <p className="text-sm text-destructive">{importError}</p>}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowImportDialog(false)}>
@@ -398,7 +352,11 @@ export function TsFormEditor() {
               <h3 className="font-semibold text-sm">Komponenty</h3>
             </div>
             <ScrollArea className="flex-1">
-              <Accordion type="multiple" defaultValue={Object.keys(GROUPED_FIELD_TYPES)} className="px-2 py-1">
+              <Accordion
+                type="multiple"
+                defaultValue={Object.keys(GROUPED_FIELD_TYPES)}
+                className="px-2 py-1"
+              >
                 {Object.entries(GROUPED_FIELD_TYPES).map(([group, fields]) => (
                   <AccordionItem key={group} value={group} className="border-none">
                     <AccordionTrigger className="py-2 text-sm hover:no-underline">
@@ -417,8 +375,16 @@ export function TsFormEditor() {
                               let added = false
                               for (let ri = 0; ri < rows.length && !added; ri++) {
                                 for (let ii = 0; ii < rows[ri].items.length && !added; ii++) {
-                                  if (rows[ri].items[ii].type === 'empty' && !rows[ri].items[ii].field) {
-                                    addField(field.type as TsFieldDef['type'], activeTabIndex, ri, ii)
+                                  if (
+                                    rows[ri].items[ii].type === "empty" &&
+                                    !rows[ri].items[ii].field
+                                  ) {
+                                    addField(
+                                      field.type as TsFieldDef["type"],
+                                      activeTabIndex,
+                                      ri,
+                                      ii
+                                    )
                                     added = true
                                   }
                                 }
@@ -427,7 +393,12 @@ export function TsFormEditor() {
                                 // Přidat nový řádek
                                 addRow(activeTabIndex)
                                 const newRows = getCurrentRows()
-                                addField(field.type as TsFieldDef['type'], activeTabIndex, newRows.length - 1, 0)
+                                addField(
+                                  field.type as TsFieldDef["type"],
+                                  activeTabIndex,
+                                  newRows.length - 1,
+                                  0
+                                )
                               }
                             }}
                           />
@@ -444,7 +415,7 @@ export function TsFormEditor() {
           <div className="flex-1 bg-slate-50 dark:bg-slate-900 overflow-auto p-6">
             <div className="max-w-4xl mx-auto space-y-4">
               {/* Taby (pokud mode === 'tabs') */}
-              {form.mode === 'tabs' && form.tabs && (
+              {form.mode === "tabs" && form.tabs && (
                 <Card>
                   <CardContent className="pt-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -503,11 +474,14 @@ export function TsFormEditor() {
                         tabIndex={activeTabIndex}
                         selection={selection}
                         onSelect={setSelection}
-                        onAddField={addField}
                         onRemoveRow={() => removeRow(activeTabIndex, rowIndex)}
                         onAddColumn={() => addColumnToRow(activeTabIndex, rowIndex)}
-                        onRemoveColumn={(itemIndex) => removeColumnFromRow(activeTabIndex, rowIndex, itemIndex)}
-                        onUpdateColumnWidth={(itemIndex, width) => updateColumnWidth(activeTabIndex, rowIndex, itemIndex, width)}
+                        onRemoveColumn={(itemIndex) =>
+                          removeColumnFromRow(activeTabIndex, rowIndex, itemIndex)
+                        }
+                        onUpdateColumnWidth={(itemIndex, width) =>
+                          updateColumnWidth(activeTabIndex, rowIndex, itemIndex, width)
+                        }
                         fields={form.fields}
                       />
                     ))}
@@ -566,7 +540,7 @@ export function TsFormEditor() {
             </div>
             <ScrollArea className="flex-1">
               <div className="p-3">
-                {selection.type === 'field' && selection.id && form.fields[selection.id] ? (
+                {selection.type === "field" && selection.id && form.fields[selection.id] ? (
                   <FieldPropertiesPanel
                     fieldName={selection.id}
                     config={form.fields[selection.id]}
@@ -588,40 +562,39 @@ export function TsFormEditor() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Náhled formuláře</DialogTitle>
-              <DialogDescription>
-                Interaktivní náhled vašeho formuláře
-              </DialogDescription>
+              <DialogDescription>Interaktivní náhled vašeho formuláře</DialogDescription>
             </DialogHeader>
             <div className="border rounded-lg p-6">
               <TsForm
                 fields={form.fields}
-                layout={form.mode === 'tabs' 
-                  ? { 
-                      tabs: form.tabs?.map((t: EditorTab) => ({ 
-                        label: t.label, 
-                        rows: t.rows.map((r: EditorRow) => 
+                layout={
+                  form.mode === "tabs"
+                    ? {
+                        tabs: form.tabs?.map((t: EditorTab) => ({
+                          label: t.label,
+                          rows: t.rows.map((r: EditorRow) =>
+                            r.items
+                              .filter((item: EditorRowItem) => item.field)
+                              .map((item: EditorRowItem) => ({
+                                field: item.field,
+                                width: item.width,
+                              }))
+                          ),
+                        })),
+                      }
+                    : {
+                        rows: form.rows?.map((r: EditorRow) =>
                           r.items
                             .filter((item: EditorRowItem) => item.field)
-                            .map((item: EditorRowItem) => ({ 
-                              field: item.field, 
-                              width: item.width 
+                            .map((item: EditorRowItem) => ({
+                              field: item.field,
+                              width: item.width,
                             }))
-                        ) 
-                      })) 
-                    }
-                  : { 
-                      rows: form.rows?.map((r: EditorRow) => 
-                        r.items
-                          .filter((item: EditorRowItem) => item.field)
-                          .map((item: EditorRowItem) => ({ 
-                            field: item.field, 
-                            width: item.width 
-                          }))
-                      ) 
-                    }
+                        ),
+                      }
                 }
                 buttons={form.buttons}
-                onSubmit={(data) => console.log('Form submit:', data)}
+                onSubmit={(data) => console.log("Form submit:", data)}
               />
             </div>
             <div className="mt-4">
@@ -640,22 +613,9 @@ export function TsFormEditor() {
 /**
  * Položka v paletě komponent
  */
-function FieldPaletteItem({ 
-  type, 
-  label, 
-  onAdd 
-}: { 
-  type: string
-  label: string
-  onAdd: () => void 
-}) {
+function FieldPaletteItem({ label, onAdd }: { type: string; label: string; onAdd: () => void }) {
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="w-full justify-start text-sm h-8"
-      onClick={onAdd}
-    >
+    <Button variant="ghost" size="sm" className="w-full justify-start text-sm h-8" onClick={onAdd}>
       <Plus className="h-3 w-3 mr-2" />
       {label}
     </Button>
@@ -671,7 +631,6 @@ function CanvasRow({
   tabIndex,
   selection,
   onSelect,
-  onAddField,
   onRemoveRow,
   onAddColumn,
   onRemoveColumn,
@@ -682,8 +641,13 @@ function CanvasRow({
   rowIndex: number
   tabIndex: number
   selection: { type: string | null; id: string | null; rowIndex?: number; itemIndex?: number }
-  onSelect: (selection: any) => void
-  onAddField: (type: TsFieldDef['type'], tabIndex: number, rowIndex: number, itemIndex: number) => void
+  onSelect: (selection: {
+    type: "field"
+    id: string
+    tabIndex: number
+    rowIndex: number
+    itemIndex: number
+  }) => void
   onRemoveRow: () => void
   onAddColumn: () => void
   onRemoveColumn: (itemIndex: number) => void
@@ -698,21 +662,18 @@ function CanvasRow({
       </div>
 
       {/* Grid items */}
-      <div 
+      <div
         className="flex-1 grid gap-2"
-        style={{ gridTemplateColumns: row.items.map(i => i.width || '1fr').join(' ') }}
+        style={{ gridTemplateColumns: row.items.map((i) => i.width || "1fr").join(" ") }}
       >
         {row.items.map((item, itemIndex) => (
           <CanvasCell
             key={item.id}
             item={item}
-            itemIndex={itemIndex}
-            rowIndex={rowIndex}
-            tabIndex={tabIndex}
-            isSelected={selection.type === 'field' && selection.id === item.field}
+            isSelected={selection.type === "field" && selection.id === item.field}
             onSelect={() => {
               if (item.field) {
-                onSelect({ type: 'field', id: item.field, tabIndex, rowIndex, itemIndex })
+                onSelect({ type: "field", id: item.field, tabIndex, rowIndex, itemIndex })
               }
             }}
             onUpdateWidth={(width) => onUpdateColumnWidth(itemIndex, width)}
@@ -735,10 +696,10 @@ function CanvasRow({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7 text-destructive" 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-destructive"
               onClick={onRemoveRow}
             >
               <Trash2 className="h-3 w-3" />
@@ -756,9 +717,6 @@ function CanvasRow({
  */
 function CanvasCell({
   item,
-  itemIndex,
-  rowIndex,
-  tabIndex,
   isSelected,
   onSelect,
   onUpdateWidth,
@@ -767,9 +725,6 @@ function CanvasCell({
   onRemove,
 }: {
   item: EditorRowItem
-  itemIndex: number
-  rowIndex: number
-  tabIndex: number
   isSelected: boolean
   onSelect: () => void
   onUpdateWidth: (width: string) => void
@@ -777,15 +732,13 @@ function CanvasCell({
   showRemove: boolean
   onRemove: () => void
 }) {
-  const isEmpty = !item.field || item.type === 'empty'
+  const isEmpty = !item.field || item.type === "empty"
 
   return (
     <div
       className={cn(
         "relative min-h-[60px] p-2 border rounded transition-colors cursor-pointer",
-        isEmpty 
-          ? "border-dashed bg-muted/30 hover:bg-muted/50" 
-          : "bg-card hover:border-primary/50",
+        isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
         isSelected && "ring-2 ring-primary border-primary"
       )}
       onClick={onSelect}
@@ -798,9 +751,7 @@ function CanvasCell({
       ) : (
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-sm truncate">
-              {fieldConfig?.label || item.field}
-            </span>
+            <span className="font-medium text-sm truncate">{fieldConfig?.label || item.field}</span>
             {showRemove && (
               <Button
                 variant="ghost"
@@ -816,7 +767,7 @@ function CanvasCell({
             )}
           </div>
           <Badge variant="secondary" className="text-xs">
-            {fieldConfig?.type || 'field'}
+            {fieldConfig?.type || "field"}
           </Badge>
         </div>
       )}
@@ -824,7 +775,7 @@ function CanvasCell({
       {/* Width selector */}
       {!isEmpty && (
         <div className="absolute bottom-1 right-1">
-          <Select value={item.width || '1fr'} onValueChange={onUpdateWidth}>
+          <Select value={item.width || "1fr"} onValueChange={onUpdateWidth}>
             <SelectTrigger className="h-5 w-16 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -877,26 +828,20 @@ function FieldPropertiesPanel({
 
         <div className="space-y-2">
           <Label>Label</Label>
-          <Input
-            value={config.label || ''}
-            onChange={(e) => onUpdate({ label: e.target.value })}
-          />
+          <Input value={config.label || ""} onChange={(e) => onUpdate({ label: e.target.value })} />
         </div>
 
         <div className="space-y-2">
           <Label>Placeholder</Label>
           <Input
-            value={config.placeholder || ''}
+            value={config.placeholder || ""}
             onChange={(e) => onUpdate({ placeholder: e.target.value })}
           />
         </div>
 
         <div className="space-y-2">
           <Label>Nápověda</Label>
-          <Input
-            value={config.hint || ''}
-            onChange={(e) => onUpdate({ hint: e.target.value })}
-          />
+          <Input value={config.hint || ""} onChange={(e) => onUpdate({ hint: e.target.value })} />
         </div>
       </div>
 
@@ -905,7 +850,7 @@ function FieldPropertiesPanel({
       {/* Stavy */}
       <div className="space-y-3">
         <h4 className="font-medium text-sm">Stavy</h4>
-        
+
         <div className="flex items-center justify-between">
           <Label>Povinné</Label>
           <Switch
@@ -940,7 +885,7 @@ function FieldPropertiesPanel({
       </div>
 
       {/* Specifické vlastnosti podle typu */}
-      {(config.type === 'number' || config.type === 'slider') && (
+      {(config.type === "number" || config.type === "slider") && (
         <>
           <Separator />
           <div className="space-y-3">
@@ -950,24 +895,30 @@ function FieldPropertiesPanel({
                 <Label className="text-xs">Min</Label>
                 <Input
                   type="number"
-                  value={config.min ?? ''}
-                  onChange={(e) => onUpdate({ min: e.target.value ? Number(e.target.value) : undefined })}
+                  value={config.min ?? ""}
+                  onChange={(e) =>
+                    onUpdate({ min: e.target.value ? Number(e.target.value) : undefined })
+                  }
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Max</Label>
                 <Input
                   type="number"
-                  value={config.max ?? ''}
-                  onChange={(e) => onUpdate({ max: e.target.value ? Number(e.target.value) : undefined })}
+                  value={config.max ?? ""}
+                  onChange={(e) =>
+                    onUpdate({ max: e.target.value ? Number(e.target.value) : undefined })
+                  }
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Krok</Label>
                 <Input
                   type="number"
-                  value={config.step ?? ''}
-                  onChange={(e) => onUpdate({ step: e.target.value ? Number(e.target.value) : undefined })}
+                  value={config.step ?? ""}
+                  onChange={(e) =>
+                    onUpdate({ step: e.target.value ? Number(e.target.value) : undefined })
+                  }
                 />
               </div>
             </div>
@@ -975,7 +926,7 @@ function FieldPropertiesPanel({
         </>
       )}
 
-      {config.type === 'textarea' && (
+      {config.type === "textarea" && (
         <>
           <Separator />
           <div className="space-y-2">
@@ -990,7 +941,11 @@ function FieldPropertiesPanel({
         </>
       )}
 
-      {(config.type === 'select' || config.type === 'multiselect' || config.type === 'radio' || config.type === 'combobox' || config.type === 'button-group') && (
+      {(config.type === "select" ||
+        config.type === "multiselect" ||
+        config.type === "radio" ||
+        config.type === "combobox" ||
+        config.type === "button-group") && (
         <>
           <Separator />
           <div className="space-y-2">
@@ -1012,13 +967,13 @@ function FieldPropertiesPanel({
         </>
       )}
 
-      {(config.type === 'infobox' || config.type === 'markdown') && (
+      {(config.type === "infobox" || config.type === "markdown") && (
         <>
           <Separator />
           <div className="space-y-2">
             <Label>Obsah</Label>
             <Textarea
-              value={config.content || ''}
+              value={config.content || ""}
               onChange={(e) => onUpdate({ content: e.target.value })}
               rows={5}
             />
@@ -1026,11 +981,11 @@ function FieldPropertiesPanel({
         </>
       )}
 
-      {config.type === 'infobox' && (
+      {config.type === "infobox" && (
         <div className="space-y-2">
           <Label>Varianta</Label>
           <Select
-            value={config.variant || 'default'}
+            value={config.variant || "default"}
             onValueChange={(v: string) => onUpdate({ variant: v })}
           >
             <SelectTrigger>

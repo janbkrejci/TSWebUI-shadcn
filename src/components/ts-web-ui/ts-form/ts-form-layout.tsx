@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { TsFormLayout as LayoutType, TsFormRow, TsFieldDef } from "./types"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 import { TsFormField } from "./ts-form-field"
-import { useFormContext } from "react-hook-form"
+import { TsFormLayout as LayoutType, TsFieldDef, TsFormRow } from "./types"
 
 interface TsFormLayoutProps {
   layout: LayoutType
@@ -43,42 +44,36 @@ function renderRows(rows: TsFormRow[], fields: Record<string, TsFieldDef>) {
   return rows.map((row, rowIndex) => {
     // Calculate grid template columns based on widths
     // Default width is 1fr if not specified
-    const gridTemplateColumns = row
-      .map((item) => item.width || "1fr")
-      .join(" ")
+    const gridTemplateColumns = row.map((item) => item.width || "1fr").join(" ")
 
     return (
-      <div
-        key={rowIndex}
-        className="grid gap-4 items-start"
-        style={{ gridTemplateColumns }}
-      >
+      <div key={rowIndex} className="grid gap-4 items-start" style={{ gridTemplateColumns }}>
         {row.map((item, colIndex) => {
-            if (item.type === 'empty') {
-                return <div key={colIndex} />
-            }
-            
-            if (item.type === 'separator') {
-                return (
-                    <div key={colIndex} className="col-span-full py-2">
-                        {item.label && <h4 className="text-sm font-medium text-muted-foreground mb-2">{item.label}</h4>}
-                        <Separator />
-                    </div>
-                )
-            }
+          if (item.type === "empty") {
+            return <div key={colIndex} />
+          }
 
-            const fieldDef = fields[item.field]
-            if (!fieldDef) {
-                return <div key={colIndex} className="text-destructive text-sm">Field '{item.field}' not found</div>
-            }
-
+          if (item.type === "separator") {
             return (
-                <TsFormField 
-                    key={colIndex} 
-                    name={item.field} 
-                    fieldDef={fieldDef} 
-                />
+              <div key={colIndex} className="col-span-full py-2">
+                {item.label && (
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">{item.label}</h4>
+                )}
+                <Separator />
+              </div>
             )
+          }
+
+          const fieldDef = fields[item.field]
+          if (!fieldDef) {
+            return (
+              <div key={colIndex} className="text-destructive text-sm">
+                Field &apos;{item.field}&apos; not found
+              </div>
+            )
+          }
+
+          return <TsFormField key={colIndex} name={item.field} fieldDef={fieldDef} />
         })}
       </div>
     )

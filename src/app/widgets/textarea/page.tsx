@@ -1,4 +1,4 @@
-import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widget-demo"
+import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Demo stránka pro Textarea widget
@@ -6,15 +6,32 @@ import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widge
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: 'label', label: 'Label', type: 'string', defaultValue: 'Popis' },
-  { name: 'placeholder', label: 'Placeholder', type: 'string', defaultValue: 'Zadejte delší text...' },
-  { name: 'hint', label: 'Hint (popis)', type: 'string', defaultValue: '' },
-  { name: 'rows', label: 'Počet řádků', type: 'number', defaultValue: 3, hint: 'Výška textarea v řádcích' },
-  { name: 'error', label: 'Chybová zpráva', type: 'string', defaultValue: '', hint: 'Pokud je vyplněna, widget se zobrazí v chybovém stavu' },
-  { name: 'required', label: 'Povinné', type: 'boolean', defaultValue: false },
-  { name: 'disabled', label: 'Zakázané', type: 'boolean', defaultValue: false },
-  { name: 'readonly', label: 'Pouze pro čtení', type: 'boolean', defaultValue: false },
-  { name: 'hidden', label: 'Skryté', type: 'boolean', defaultValue: false },
+  { name: "label", label: "Label", type: "string", defaultValue: "Popis" },
+  {
+    name: "placeholder",
+    label: "Placeholder",
+    type: "string",
+    defaultValue: "Zadejte delší text...",
+  },
+  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  {
+    name: "rows",
+    label: "Počet řádků",
+    type: "number",
+    defaultValue: 3,
+    hint: "Výška textarea v řádcích",
+  },
+  {
+    name: "error",
+    label: "Chybová zpráva",
+    type: "string",
+    defaultValue: "",
+    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+  },
+  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
 ]
 
 export default function TextareaWidgetDemo() {

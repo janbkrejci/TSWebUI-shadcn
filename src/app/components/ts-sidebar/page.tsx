@@ -1,31 +1,33 @@
 "use client"
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { 
-  Home, Settings, Users, FolderOpen, 
-  BarChart, Calendar, Mail, BookOpen
-} from "lucide-react"
+import { BarChart, BookOpen, Calendar, FolderOpen, Home, Mail, Settings, Users } from "lucide-react"
 
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import vscDarkPlus from 'react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus'
+import * as React from "react"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
-  SidebarFooter,
-  SidebarSection,
-  SidebarItem,
-  SidebarTrigger,
   SidebarInset,
-  SidebarCollapseTrigger,
-  useSidebar
+  SidebarItem,
+  SidebarProvider,
+  SidebarSection,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/ts-web-ui/ts-sidebar"
 
 /**
@@ -47,7 +49,7 @@ const menuItems = [
  */
 function SidebarControls() {
   const { isOpen, toggle, isCollapsed, toggleCollapsed, isMobile } = useSidebar()
-  
+
   return (
     <div className="flex flex-wrap gap-4 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm m-4">
       <div className="flex items-center gap-2">
@@ -55,11 +57,19 @@ function SidebarControls() {
         <Label htmlFor="open">Open</Label>
       </div>
       <div className="flex items-center gap-2">
-        <Switch id="collapsed" checked={isCollapsed} onCheckedChange={toggleCollapsed} disabled={!isOpen} />
-        <Label htmlFor="collapsed" className={!isOpen ? 'opacity-50' : ''}>Collapsed</Label>
+        <Switch
+          id="collapsed"
+          checked={isCollapsed}
+          onCheckedChange={toggleCollapsed}
+          disabled={!isOpen}
+        />
+        <Label htmlFor="collapsed" className={!isOpen ? "opacity-50" : ""}>
+          Collapsed
+        </Label>
       </div>
       <div className="text-sm text-muted-foreground">
-        Mode: <span className="font-medium">{isMobile ? 'Mobile (overlay)' : 'Desktop (push)'}</span>
+        Mode:{" "}
+        <span className="font-medium">{isMobile ? "Mobile (overlay)" : "Desktop (push)"}</span>
       </div>
     </div>
   )
@@ -74,7 +84,7 @@ function DemoSidebarContent() {
       <SidebarContent>
         <SidebarSection title="Navigation">
           {menuItems.map((item) => (
-            <SidebarItem 
+            <SidebarItem
               key={item.label}
               icon={<item.icon className="h-5 w-5" />}
               isActive={item.active}
@@ -96,14 +106,13 @@ function DemoMainContent() {
     <div className="max-w-2xl space-y-4 p-6">
       <h2 className="text-xl font-semibold text-foreground">Page Content</h2>
       <p className="text-muted-foreground">
-        Main content area that adjusts to sidebar state. 
-        The sidebar can be opened/closed and collapsed.
-        Try resizing the window to see responsive behavior.
+        Main content area that adjusts to sidebar state. The sidebar can be opened/closed and
+        collapsed. Try resizing the window to see responsive behavior.
       </p>
       <div className="grid grid-cols-2 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className="h-32 rounded-lg bg-card border flex items-center justify-center text-muted-foreground"
           >
             Content Card {i}
@@ -139,8 +148,8 @@ function SidebarDemo() {
         </div>
 
         {/* SidebarProvider pro izolovanou demo */}
-        <SidebarProvider 
-          defaultOpen={true} 
+        <SidebarProvider
+          defaultOpen={true}
           mobileBreakpoint={768}
           topBarHeight={topBarHeight}
           width="16rem"
@@ -153,7 +162,7 @@ function SidebarDemo() {
               <span className="font-semibold">Application</span>
             </header>
           )}
-          
+
           {/* Sidebar uvnitř kontejneru - používá skutečnou komponentu */}
           <Sidebar className="!absolute">
             <DemoSidebarContent />
@@ -258,7 +267,10 @@ export default function SidebarPage() {
           <SidebarDemo />
         </TabsContent>
 
-        <TabsContent value="code" className="flex-1 min-h-0 overflow-auto py-6 data-[state=inactive]:hidden">
+        <TabsContent
+          value="code"
+          className="flex-1 min-h-0 overflow-auto py-6 data-[state=inactive]:hidden"
+        >
           <Card className="w-full">
             <CardHeader>
               <CardTitle>Základní použití</CardTitle>
@@ -267,14 +279,14 @@ export default function SidebarPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SyntaxHighlighter 
-                language="tsx" 
+              <SyntaxHighlighter
+                language="tsx"
                 style={vscDarkPlus}
                 customStyle={{
-                  fontSize: '13px',
-                  lineHeight: '1.6',
-                  borderRadius: '0.5rem',
-                  padding: '1rem'
+                  fontSize: "13px",
+                  lineHeight: "1.6",
+                  borderRadius: "0.5rem",
+                  padding: "1rem",
                 }}
               >
                 {codeString}
@@ -283,14 +295,15 @@ export default function SidebarPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="documentation" className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden">
+        <TabsContent
+          value="documentation"
+          className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden"
+        >
           <div className="space-y-8 pb-8 w-full">
             <Card>
               <CardHeader>
                 <CardTitle>SidebarProvider Props</CardTitle>
-                <CardDescription>
-                  Context provider pro správu stavu sidebaru.
-                </CardDescription>
+                <CardDescription>Context provider pro správu stavu sidebaru.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -304,33 +317,43 @@ export default function SidebarPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">defaultOpen</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        defaultOpen
+                      </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
                       <TableCell className="text-xs">true</TableCell>
                       <TableCell>Výchozí stav otevření sidebaru</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">mobileBreakpoint</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        mobileBreakpoint
+                      </TableCell>
                       <TableCell className="text-xs italic">number</TableCell>
                       <TableCell className="text-xs">768</TableCell>
                       <TableCell>Breakpoint pro mobilní režim (px)</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">topBarHeight</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        topBarHeight
+                      </TableCell>
                       <TableCell className="text-xs italic">number</TableCell>
                       <TableCell className="text-xs">56</TableCell>
                       <TableCell>Výška TopBaru pro správné odsazení</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">width</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        width
+                      </TableCell>
                       <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell className="text-xs">"16rem"</TableCell>
+                      <TableCell className="text-xs">&quot;16rem&quot;</TableCell>
                       <TableCell>Šířka rozšířeného sidebaru</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">collapsedWidth</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        collapsedWidth
+                      </TableCell>
                       <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell className="text-xs">"4rem"</TableCell>
+                      <TableCell className="text-xs">&quot;4rem&quot;</TableCell>
                       <TableCell>Šířka kolapsovaného sidebaru</TableCell>
                     </TableRow>
                   </TableBody>
@@ -356,37 +379,51 @@ export default function SidebarPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">isOpen</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        isOpen
+                      </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
                       <TableCell>Je sidebar viditelný</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">toggle</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        toggle
+                      </TableCell>
                       <TableCell className="text-xs italic">() =&gt; void</TableCell>
                       <TableCell>Přepnout viditelnost sidebaru</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">open</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        open
+                      </TableCell>
                       <TableCell className="text-xs italic">() =&gt; void</TableCell>
                       <TableCell>Otevřít sidebar</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">close</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        close
+                      </TableCell>
                       <TableCell className="text-xs italic">() =&gt; void</TableCell>
                       <TableCell>Zavřít sidebar</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">isCollapsed</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        isCollapsed
+                      </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
                       <TableCell>Je sidebar kolapsován</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">toggleCollapsed</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        toggleCollapsed
+                      </TableCell>
                       <TableCell className="text-xs italic">() =&gt; void</TableCell>
                       <TableCell>Přepnout kolapsovaný stav</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">isMobile</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        isMobile
+                      </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
                       <TableCell>Je aktivní mobilní breakpoint</TableCell>
                     </TableRow>
@@ -398,9 +435,7 @@ export default function SidebarPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Komponenty</CardTitle>
-                <CardDescription>
-                  Stavební bloky pro sestavení sidebaru.
-                </CardDescription>
+                <CardDescription>Stavební bloky pro sestavení sidebaru.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -412,35 +447,51 @@ export default function SidebarPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarProvider</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarProvider
+                      </TableCell>
                       <TableCell>Context provider pro správu stavu</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">Sidebar</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        Sidebar
+                      </TableCell>
                       <TableCell>Hlavní kontejner sidebaru</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarContent</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarContent
+                      </TableCell>
                       <TableCell>Scrollovatelný hlavní obsah</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarSection</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarSection
+                      </TableCell>
                       <TableCell>Sekce s volitelným titulkem</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarItem</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarItem
+                      </TableCell>
                       <TableCell>Navigační položka s ikonou</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarFooter</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarFooter
+                      </TableCell>
                       <TableCell>Spodní část sidebaru</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarTrigger</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarTrigger
+                      </TableCell>
                       <TableCell>Tlačítko pro otevření/zavření</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">SidebarInset</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        SidebarInset
+                      </TableCell>
                       <TableCell>Hlavní obsah s automatickým odsazením</TableCell>
                     </TableRow>
                   </TableBody>
@@ -454,12 +505,25 @@ export default function SidebarPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li><strong>Animované přechody</strong> - plynulé otevírání, zavírání a kolapsování</li>
-                  <li><strong>Kolapsovaný režim</strong> - zobrazí pouze ikony pro úsporu místa</li>
-                  <li><strong>Responzivní design</strong> - automatické skrytí/zobrazení při změně velikosti okna</li>
-                  <li><strong>Push vs Overlay</strong> - na desktopu obsah uhýbá, na mobile je overlay</li>
-                  <li><strong>Integrace s TopBarem</strong> - správné odsazení pomocí topBarHeight</li>
-                  <li><strong>SidebarInset</strong> - automaticky reaguje na stav sidebaru</li>
+                  <li>
+                    <strong>Animované přechody</strong> - plynulé otevírání, zavírání a kolapsování
+                  </li>
+                  <li>
+                    <strong>Kolapsovaný režim</strong> - zobrazí pouze ikony pro úsporu místa
+                  </li>
+                  <li>
+                    <strong>Responzivní design</strong> - automatické skrytí/zobrazení při změně
+                    velikosti okna
+                  </li>
+                  <li>
+                    <strong>Push vs Overlay</strong> - na desktopu obsah uhýbá, na mobile je overlay
+                  </li>
+                  <li>
+                    <strong>Integrace s TopBarem</strong> - správné odsazení pomocí topBarHeight
+                  </li>
+                  <li>
+                    <strong>SidebarInset</strong> - automaticky reaguje na stav sidebaru
+                  </li>
                 </ul>
               </CardContent>
             </Card>

@@ -1,13 +1,15 @@
 "use client"
 
+import { Monitor, Moon, Sun } from "lucide-react"
+
 import * as React from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
-import { Sun, Moon, Monitor } from "lucide-react"
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import vscDarkPlus from 'react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus'
 
 function ModeToggleDemo() {
   return (
@@ -24,7 +26,7 @@ function ModeToggleDemo() {
             <span className="text-sm text-muted-foreground">Current theme toggle:</span>
             <ModeToggle />
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 border rounded-lg bg-card text-center">
               <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-background border flex items-center justify-center">
@@ -132,7 +134,10 @@ export default function ModeTogglePage() {
           <ModeToggleDemo />
         </TabsContent>
 
-        <TabsContent value="code" className="flex-1 min-h-0 overflow-auto py-6 data-[state=inactive]:hidden">
+        <TabsContent
+          value="code"
+          className="flex-1 min-h-0 overflow-auto py-6 data-[state=inactive]:hidden"
+        >
           <Card className="w-full">
             <CardHeader>
               <CardTitle>Implementation</CardTitle>
@@ -141,14 +146,14 @@ export default function ModeTogglePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SyntaxHighlighter 
-                language="tsx" 
+              <SyntaxHighlighter
+                language="tsx"
                 style={vscDarkPlus}
                 customStyle={{
-                  fontSize: '13px',
-                  lineHeight: '1.6',
-                  borderRadius: '0.5rem',
-                  padding: '1rem'
+                  fontSize: "13px",
+                  lineHeight: "1.6",
+                  borderRadius: "0.5rem",
+                  padding: "1rem",
                 }}
               >
                 {codeString}
@@ -157,7 +162,10 @@ export default function ModeTogglePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="documentation" className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden">
+        <TabsContent
+          value="documentation"
+          className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden"
+        >
           <div className="space-y-8 pb-8 w-full">
             <Card>
               <CardHeader>
@@ -165,10 +173,18 @@ export default function ModeTogglePage() {
               </CardHeader>
               <CardContent>
                 <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                  <li><code>next-themes</code> - Theme management for Next.js</li>
-                  <li><code>lucide-react</code> - Sun and Moon icons</li>
-                  <li><code>@/components/ui/button</code> - shadcn Button</li>
-                  <li><code>@/components/ui/dropdown-menu</code> - shadcn DropdownMenu</li>
+                  <li>
+                    <code>next-themes</code> - Theme management for Next.js
+                  </li>
+                  <li>
+                    <code>lucide-react</code> - Sun and Moon icons
+                  </li>
+                  <li>
+                    <code>@/components/ui/button</code> - shadcn Button
+                  </li>
+                  <li>
+                    <code>@/components/ui/dropdown-menu</code> - shadcn DropdownMenu
+                  </li>
                 </ul>
               </CardContent>
             </Card>
@@ -195,17 +211,17 @@ export default function ModeTogglePage() {
                 <p className="text-muted-foreground mb-4">
                   The ModeToggle requires ThemeProvider to be set up in your layout:
                 </p>
-                <SyntaxHighlighter 
-                  language="tsx" 
+                <SyntaxHighlighter
+                  language="tsx"
                   style={vscDarkPlus}
                   customStyle={{
-                    fontSize: '13px',
-                    lineHeight: '1.6',
-                    borderRadius: '0.5rem',
-                    padding: '1rem'
+                    fontSize: "13px",
+                    lineHeight: "1.6",
+                    borderRadius: "0.5rem",
+                    padding: "1rem",
                   }}
                 >
-{`// app/layout.tsx
+                  {`// app/layout.tsx
 import { ThemeProvider } from "@/components/theme-provider"
 
 export default function RootLayout({ children }) {

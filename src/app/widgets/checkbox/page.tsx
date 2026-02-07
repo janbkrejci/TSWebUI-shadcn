@@ -1,4 +1,4 @@
-import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widget-demo"
+import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Demo stránka pro Checkbox widget
@@ -6,13 +6,19 @@ import { WidgetDemoWrapper, WidgetAttribute } from "@/components/ts-web-ui/widge
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: 'label', label: 'Label', type: 'string', defaultValue: 'Souhlasím s podmínkami' },
-  { name: 'hint', label: 'Hint (popis)', type: 'string', defaultValue: '' },
-  { name: 'error', label: 'Chybová zpráva', type: 'string', defaultValue: '', hint: 'Pokud je vyplněna, widget se zobrazí v chybovém stavu' },
-  { name: 'required', label: 'Povinné', type: 'boolean', defaultValue: false },
-  { name: 'disabled', label: 'Zakázané', type: 'boolean', defaultValue: false },
-  { name: 'readonly', label: 'Pouze pro čtení', type: 'boolean', defaultValue: false },
-  { name: 'hidden', label: 'Skryté', type: 'boolean', defaultValue: false },
+  { name: "label", label: "Label", type: "string", defaultValue: "Souhlasím s podmínkami" },
+  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  {
+    name: "error",
+    label: "Chybová zpráva",
+    type: "string",
+    defaultValue: "",
+    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+  },
+  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
 ]
 
 export default function CheckboxWidgetDemo() {

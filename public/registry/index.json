@@ -1,0 +1,34 @@
+[
+  {
+    "name": "client-only",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/client-only.json"
+  },
+  {
+    "name": "theme-provider",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json"
+  },
+  {
+    "name": "mode-toggle",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json"
+  },
+  {
+    "name": "ts-sidebar",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json"
+  },
+  {
+    "name": "ts-topbar",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json"
+  },
+  {
+    "name": "ts-window",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json"
+  },
+  {
+    "name": "ts-table",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json"
+  },
+  {
+    "name": "ts-form",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json"
+  }
+]

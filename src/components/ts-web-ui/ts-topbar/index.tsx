@@ -2,16 +2,16 @@
 
 /**
  * TsTopBar - Aplikační horní lišta
- * 
+ *
  * Funkce:
  * - Fixovaná k horní hraně okna
  * - Přes celou šířku
  * - Slot pro hamburger menu, logo, akce
  */
-
-import * as React from "react"
-import { cn } from "@/lib/utils"
 import Link from "next/link"
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
 
 /**
  * Kontext pro TopBar - umožňuje komponentám přistupovat k výšce
@@ -44,12 +44,8 @@ interface TopBarProviderProps {
  */
 export function TopBarProvider({ children, height = 56 }: TopBarProviderProps) {
   const value = React.useMemo(() => ({ height }), [height])
-  
-  return (
-    <TopBarContext.Provider value={value}>
-      {children}
-    </TopBarContext.Provider>
-  )
+
+  return <TopBarContext.Provider value={value}>{children}</TopBarContext.Provider>
 }
 
 /**
@@ -70,7 +66,7 @@ interface TsTopBarProps extends React.HTMLAttributes<HTMLElement> {
 
 /**
  * TsTopBar - hlavní aplikační horní lišta
- * 
+ *
  * Použití:
  * ```tsx
  * <TsTopBar
@@ -102,21 +98,15 @@ export function TsTopBar({
       {...props}
     >
       {/* Levá část */}
-      <div className="flex items-center gap-2 shrink-0">
-        {leftContent}
-      </div>
-      
+      <div className="flex items-center gap-2 shrink-0">{leftContent}</div>
+
       {/* Střední část - roztáhne se pouze pokud má obsah */}
       {centerContent && (
-        <div className="flex-1 flex items-center justify-center min-w-0">
-          {centerContent}
-        </div>
+        <div className="flex-1 flex items-center justify-center min-w-0">{centerContent}</div>
       )}
-      
+
       {/* Pravá část */}
-      <div className="flex items-center gap-2 shrink-0 ml-auto">
-        {rightContent}
-      </div>
+      <div className="flex items-center gap-2 shrink-0 ml-auto">{rightContent}</div>
     </header>
   )
 }
@@ -127,7 +117,7 @@ export function TsTopBar({
  */
 export function TopBarSpacer({ className }: { className?: string }) {
   const { height } = useTopBar()
-  
+
   return <div className={className} style={{ height }} />
 }
 
@@ -156,26 +146,29 @@ export function TopBarLogo({ className, text, icon, href, children }: TopBarLogo
 
   if (href) {
     return (
-      <Link 
-        href={href} 
-        className={cn("flex items-center gap-2 font-semibold hover:opacity-80 transition-opacity", className)} 
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-2 font-semibold hover:opacity-80 transition-opacity",
+          className
+        )}
       >
         {content}
       </Link>
     )
   }
 
-  return (
-    <div className={cn("flex items-center gap-2 font-semibold", className)}>
-      {content}
-    </div>
-  )
+  return <div className={cn("flex items-center gap-2 font-semibold", className)}>{content}</div>
 }
 
 /**
  * Sekce akcí v TopBaru
  */
-export function TopBarActions({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function TopBarActions({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("flex items-center gap-2", className)} {...props}>
       {children}

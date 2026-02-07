@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
   ColumnFiltersState,
   SortingState,
@@ -12,13 +11,15 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 
-import { TsTableView } from "./ts-table-view"
-import { TsTableToolbar } from "./ts-table-toolbar"
-import { TsTablePagination } from "./ts-table-pagination"
-import { generateColumns, TsTableColumnDef, TsTableRowAction } from "./columns"
+import * as React from "react"
 
-export interface TsTableProps {
-  data: any[]
+import { TsTableColumnDef, TsTableRowAction, generateColumns } from "./columns"
+import { TsTablePagination } from "./ts-table-pagination"
+import { TsTableToolbar } from "./ts-table-toolbar"
+import { TsTableView } from "./ts-table-view"
+
+export interface TsTableProps<TData = Record<string, unknown>> {
+  data: TData[]
   columnDefinitions: TsTableColumnDef[]
   title?: string
   showCreateButton?: boolean
@@ -26,16 +27,16 @@ export interface TsTableProps {
   showExportButton?: boolean
   showColumnSelector?: boolean
   enableSelection?: boolean
-  onRowClick?: (row: any, columnKey?: string) => void
+  onRowClick?: (row: TData, columnKey?: string) => void
   onCreateClick?: () => void
-  onAction?: (action: string, row: any) => void
+  onAction?: (action: string, row: TData) => void
   pageSize?: number
   pageSizeOptions?: number[]
   singleItemActions?: string // "action/Label,..."
-  predefinedFilters?: Record<string, any>
+  predefinedFilters?: Record<string, unknown>
 }
 
-export function TsTable({
+export function TsTable<TData = Record<string, unknown>>({
   data: initialData,
   columnDefinitions,
   title,
@@ -50,15 +51,15 @@ export function TsTable({
   pageSize = 10,
   pageSizeOptions = [5, 10, 20, 50, 100],
   singleItemActions,
-  predefinedFilters
+  predefinedFilters,
 }: TsTableProps) {
   const [data, setData] = React.useState(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
-  
+
   // Initialize filters with predefined filters if available
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
-      if (!predefinedFilters) return []
-      return Object.entries(predefinedFilters).map(([id, value]) => ({ id, value: String(value) }))
+    if (!predefinedFilters) return []
+    return Object.entries(predefinedFilters).map(([id, value]) => ({ id, value: String(value) }))
   })
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
@@ -77,17 +78,18 @@ export function TsTable({
 
   // Parse row actions
   const rowActions = React.useMemo<TsTableRowAction[]>(() => {
-      if (!singleItemActions) return []
-      return singleItemActions.split(',').map(s => {
-          const parts = s.split('/')
-          return { action: parts[0].trim(), label: parts[1]?.trim() || parts[0].trim() }
-      })
+    if (!singleItemActions) return []
+    return singleItemActions.split(",").map((s) => {
+      const parts = s.split("/")
+      return { action: parts[0].trim(), label: parts[1]?.trim() || parts[0].trim() }
+    })
   }, [singleItemActions])
 
   // Generate columns definition
   const columns = React.useMemo(
-      () => generateColumns(columnDefinitions, enableSelection, onRowClick, rowActions, onAction), 
-      [columnDefinitions, enableSelection, onRowClick, rowActions, onAction]
+    () =>
+      generateColumns<TData>(columnDefinitions, enableSelection, onRowClick, rowActions, onAction),
+    [columnDefinitions, enableSelection, onRowClick, rowActions, onAction]
   )
 
   const table = useReactTable({
@@ -116,14 +118,14 @@ export function TsTable({
     },
   })
 
-  const handleImport = (newData: any[]) => {
-      setData(prev => [...prev, ...newData])
+  const handleImport = (newData: TData[]) => {
+    setData((prev) => [...prev, ...newData])
   }
 
   return (
     <div className="w-full space-y-4">
-      <TsTableToolbar 
-        table={table} 
+      <TsTableToolbar
+        table={table}
         title={title}
         showCreateButton={showCreateButton}
         showImportButton={showImportButton}
@@ -132,10 +134,7 @@ export function TsTable({
         onCreateClick={onCreateClick}
         onImportClick={handleImport}
       />
-      <TsTableView 
-        table={table}
-        onRowClick={onRowClick ? (row) => onRowClick(row) : undefined}
-      />
+      <TsTableView table={table} onRowClick={onRowClick ? (row) => onRowClick(row) : undefined} />
       <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} />
     </div>
   )
