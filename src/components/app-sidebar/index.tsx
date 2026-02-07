@@ -184,7 +184,7 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
           <div className="space-y-1">
             <NavButton
               href="/"
-              label="Introduction"
+              label="Overview"
               icon={Home}
               isActive={pathname.startsWith("/")}
               isCollapsed={isCollapsed}

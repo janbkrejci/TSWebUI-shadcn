@@ -5,7 +5,7 @@ const REGISTRY_PATH = path.join(process.cwd(), "public", "registry")
 const COMPONENTS_BASE_PATH = path.join(process.cwd(), "src", "components", "ts-web-ui")
 
 /**
- * Definice komponent a jejich závislostí
+ * Definition of components and their dependencies
  */
 const REGISTRY_COMPONENTS = [
   {
@@ -41,9 +41,8 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-window",
     dependencies: ["lucide-react", "react-rnd"],
-    registryDependencies: ["button"],
+    registryDependencies: ["button", "client-only"],
     files: ["ts-window/index.tsx"],
-    // ts-window vnitřně importuje client-only, shadcn add to vyřeší přes lokální cesty nebo dependencies
   },
   {
     name: "ts-table",
@@ -85,6 +84,7 @@ const REGISTRY_COMPONENTS = [
       "switch",
       "textarea",
       "toggle-group",
+      "ts-table",
     ],
     files: [
       "ts-form/index.tsx",
@@ -104,24 +104,30 @@ async function buildRegistry() {
   for (const component of REGISTRY_COMPONENTS) {
     const registryItem = {
       name: component.name,
-      type: "registry:ui",
+      // Using registry:component so it goes to components/ directory instead of components/ui/
+      type: "registry:component",
       dependencies: component.dependencies,
       registryDependencies: component.registryDependencies,
       files: component.files.map((fileRelPath) => {
         const fullPath = path.join(COMPONENTS_BASE_PATH, fileRelPath)
         const content = fs.readFileSync(fullPath, "utf8")
 
-        // Upravíme importy, aby fungovaly v cílovém projektu uživatele
-        // Většina uživatelů má shadcn komponenty v @/components/ui
+        // Adjust imports to point to the target location in the user's project
+        // Relative imports like ../ts-table will be replaced by @/components/ts-web-ui/ts-table
         const processedContent = content
-          .replace(/@\/components\/ui\//g, "@/components/ui/") // Už je správně
+          .replace(/@\/components\/ui\//g, "@/components/ui/")
           .replace(/\.\.\/client-only/g, "@/components/ts-web-ui/client-only")
           .replace(/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table")
+          .replace(/\.\.\/ts-form/g, "@/components/ts-web-ui/ts-form")
+          .replace(/\.\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")
+          .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
+          .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
 
         return {
-          path: fileRelPath,
+          // Including ts-web-ui/ prefix ensures it installs into components/ts-web-ui/...
+          path: `ts-web-ui/${fileRelPath}`,
           content: processedContent,
-          type: "registry:ui",
+          type: "registry:component",
         }
       }),
     }
@@ -131,7 +137,7 @@ async function buildRegistry() {
     console.log(`✅ Generated registry for ${component.name}`)
   }
 
-  // Generování hlavního indexu registru (volitelné, ale užitečné)
+  // Generate main registry index
   const index = REGISTRY_COMPONENTS.map((c) => ({
     name: c.name,
     href: `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${c.name}.json`,

@@ -1,13 +1,13 @@
 {
   "name": "client-only",
-  "type": "registry:ui",
+  "type": "registry:component",
   "dependencies": [],
   "registryDependencies": [],
   "files": [
     {
-      "path": "client-only/index.tsx",
+      "path": "ts-web-ui/client-only/index.tsx",
       "content": "\"use client\"\n\nimport * as React from \"react\"\n\ninterface ClientOnlyProps {\n  children: React.ReactNode\n  fallback?: React.ReactNode\n}\n\n/**\n * Wrapper komponenta zajišťující, že children se renderují pouze na klientu.\n * Používá se pro komponenty, které nemohou být renderovány na serveru (např. používají window).\n */\nexport function ClientOnly({ children, fallback = null }: ClientOnlyProps) {\n  const [hasMounted, setHasMounted] = React.useState(false)\n\n  React.useEffect(() => {\n    setHasMounted(true)\n  }, [])\n\n  if (!hasMounted) {\n    return fallback\n  }\n\n  return <>{children}</>\n}\n",
-      "type": "registry:ui"
+      "type": "registry:component"
     }
   ]
 }
