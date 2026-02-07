@@ -626,6 +626,13 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
 export const WindowOutlet: React.FC<{ className?: string }> = ({ className }) => {
   const { windows } = useWindowManager()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
 
   return (
     <div className={cn("absolute inset-0 pointer-events-none z-50", className)}>

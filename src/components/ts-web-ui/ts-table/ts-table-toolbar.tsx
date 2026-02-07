@@ -138,7 +138,7 @@ export function TsTableToolbar<TData>({
         {showCreateButton && (
           <Button size="sm" className="h-9 gap-2" onClick={onCreateClick}>
             <Plus className="h-4 w-4" />
-            Now record
+            New record
           </Button>
         )}
       </div>

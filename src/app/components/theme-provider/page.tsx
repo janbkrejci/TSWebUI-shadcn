@@ -69,10 +69,14 @@ export default function RootLayout({ children }) {
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            This component has been simplified and merged with <code>ClientOnly</code> logic to
-            provide the best possible stability in Next.js 16.
+            This component has been optimized to provide instant page loads while maintaining full
+            theme support for shadcn/ui.
           </p>
           <ul className="list-disc list-inside space-y-1">
+            <li>
+              <strong>Instant SSR:</strong> No more loading screens or blank flashes. Content is
+              rendered immediately on the server.
+            </li>
             <li>
               <strong>Zero Configuration:</strong> Automatically sets{" "}
               <code>attribute=&quot;class&quot;</code>, <code>defaultTheme=&quot;system&quot;</code>{" "}
@@ -81,14 +85,6 @@ export default function RootLayout({ children }) {
             <li>
               <strong>Smooth Transitions:</strong> Enforces <code>disableTransitionOnChange</code>{" "}
               to eliminate color flickering during theme changes.
-            </li>
-            <li>
-              <strong>Integrated ClientOnly:</strong> Automatically defers content rendering until
-              the client has mounted, 100% preventing <em>Hydration Mismatch</em> errors.
-            </li>
-            <li>
-              <strong>Automatic Loading:</strong> Displays a subtle bouncing dots animation if the
-              application is not yet ready on the client.
             </li>
           </ul>
         </CardContent>

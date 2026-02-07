@@ -53,8 +53,13 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   singleItemActions,
   predefinedFilters,
 }: TsTableProps<TData>) {
+  const [mounted, setMounted] = React.useState(false)
   const [data, setData] = React.useState(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Initialize filters with predefined filters if available
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
@@ -120,6 +125,14 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
 
   const handleImport = (newData: TData[]) => {
     setData((prev) => [...prev, ...newData])
+  }
+
+  if (!mounted) {
+    return (
+      <div className="w-full h-24 flex items-center justify-center border rounded-md bg-muted/5 animate-pulse">
+        <span className="text-sm text-muted-foreground">Loading table...</span>
+      </div>
+    )
   }
 
   return (
