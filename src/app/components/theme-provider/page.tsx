@@ -14,7 +14,7 @@ export default function ThemeProviderPage() {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="cs" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
           {children}
@@ -29,8 +29,8 @@ export default function RootLayout({ children }) {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Theme Provider</h1>
         <p className="text-muted-foreground mt-2">
-          Kontextový provider zajišťující podporu témat (světlý/tmavý režim) s integrovanou ochranou
-          proti hydration mismatch.
+          A context provider that handles theme support (light/dark mode) with built-in protection
+          against hydration mismatches.
         </p>
       </div>
 
@@ -43,10 +43,10 @@ export default function RootLayout({ children }) {
         <TabsContent value="code" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Implementace v Layoutu</CardTitle>
+              <CardTitle>Layout Implementation</CardTitle>
               <CardDescription>
-                ThemeProvider nyní nevyžaduje žádné atributy, protože má v sobě pevně nastavené
-                optimalizované hodnoty pro shadcn UI.
+                ThemeProvider no longer requires any attributes as it comes with pre-configured
+                optimized values for shadcn/ui.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -64,31 +64,31 @@ export default function RootLayout({ children }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            Vlastnosti a vylepšení
+            Features and Improvements
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            Tato komponenta byla zjednodušena a sloučena s logikou <code>ClientOnly</code>, aby
-            poskytovala nejlepší možnou stabilitu v Next.js 16.
+            This component has been simplified and merged with <code>ClientOnly</code> logic to
+            provide the best possible stability in Next.js 16.
           </p>
           <ul className="list-disc list-inside space-y-1">
             <li>
-              <strong>Bez parametrů:</strong> Automaticky nastavuje{" "}
+              <strong>Zero Configuration:</strong> Automatically sets{" "}
               <code>attribute=&quot;class&quot;</code>, <code>defaultTheme=&quot;system&quot;</code>{" "}
-              a <code>enableSystem</code>.
+              and <code>enableSystem</code>.
             </li>
             <li>
-              <strong>Plynulé přepínání:</strong> Vynucuje <code>disableTransitionOnChange</code>{" "}
-              pro eliminaci problikávání barev.
+              <strong>Smooth Transitions:</strong> Enforces <code>disableTransitionOnChange</code>{" "}
+              to eliminate color flickering during theme changes.
             </li>
             <li>
-              <strong>Integrovaný ClientOnly:</strong> Automaticky odkládá renderování obsahu až po
-              namontování na klienta, čímž 100% předchází chybám typu <em>Hydration Mismatch</em>.
+              <strong>Integrated ClientOnly:</strong> Automatically defers content rendering until
+              the client has mounted, 100% preventing <em>Hydration Mismatch</em> errors.
             </li>
             <li>
-              <strong>Automatický Loading:</strong> Pokud aplikace ještě není na klientu připravena,
-              zobrazí decentní pulsní animaci.
+              <strong>Automatic Loading:</strong> Displays a subtle bouncing dots animation if the
+              application is not yet ready on the client.
             </li>
           </ul>
         </CardContent>
