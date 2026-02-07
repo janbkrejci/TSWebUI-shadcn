@@ -1,62 +1,59 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Combobox widget
- * Kombinace textového vstupu a seznamu s filtrováním
+ * Demo page for Combobox widget
+ * Combination of text input and filtered list
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Město" },
-  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Vyberte město..." },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "City" },
+  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Select a city..." },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
     name: "options",
-    label: "Možnosti (JSON)",
+    label: "Options (JSON)",
     type: "json",
     defaultValue: JSON.stringify(
       [
-        { label: "Praha", value: "prague" },
-        { label: "Brno", value: "brno" },
-        { label: "Ostrava", value: "ostrava" },
-        { label: "Plzeň", value: "pilsen" },
-        { label: "Liberec", value: "liberec" },
-        { label: "Olomouc", value: "olomouc" },
-        { label: "České Budějovice", value: "ceske-budejovice" },
-        { label: "Hradec Králové", value: "hradec-kralove" },
+        { label: "New York", value: "new-york" },
+        { label: "London", value: "london" },
+        { label: "Paris", value: "paris" },
+        { label: "Berlin", value: "berlin" },
+        { label: "Tokyo", value: "tokyo" },
       ],
       null,
       2
     ),
-    hint: "Pole objektů {label, value}",
+    hint: "Array of {label, value} objects",
   },
   {
     name: "allowCustom",
-    label: "Povolit vlastní hodnotu",
+    label: "Allow custom value",
     type: "boolean",
     defaultValue: false,
-    hint: "Umožní zadat hodnotu mimo seznam",
+    hint: "Allows entering a value not in the list",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function ComboboxWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Combobox"
-      description="Kombinace textového vstupu a rozbalovacího seznamu s filtrováním. Volitelně podporuje zadání vlastní hodnoty mimo seznam."
+      description="A combination of a text input and a searchable dropdown. Optionally supports entering custom values not in the list."
       widgetType="combobox"
       attributes={attributes}
-      defaultFieldValue=""
+      defaultFieldValue="new-york"
     />
   )
 }

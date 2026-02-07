@@ -1,10 +1,10 @@
 import { FilterFn } from "@tanstack/react-table"
 
-// Helper for parsing number range/operátoru
+// Helper for parsing number range/operator
 function parseNumberRange(filterValue: string) {
   const value = filterValue.trim()
 
-  // Rozsah 10..20
+  // Range 10..20
   if (value.includes("..")) {
     const parts = value.split("..")
     return {
@@ -15,12 +15,12 @@ function parseNumberRange(filterValue: string) {
   // Greater/less than
   if (value.startsWith(">=")) return { min: parseFloat(value.substring(2)), max: null }
   if (value.startsWith("<=")) return { min: null, max: parseFloat(value.substring(2)) }
-  if (value.startsWith(">")) return { min: parseFloat(value.substring(1)) + 0.000001, max: null } // hack pro strict
+  if (value.startsWith(">")) return { min: parseFloat(value.substring(1)) + 0.000001, max: null } // hack for strict
   if (value.startsWith("<")) return { min: null, max: parseFloat(value.substring(1)) - 0.000001 }
 
-  // Equality (nebo částečná shoda pro text, ale tady jsme v číslech)
-  // Pokud je to validní číslo, bereme to jako exact match nebo startsWith?
-  // Original code dělá fallback na text match, pokud to není range.
+  // Equality (or partial match for text, but we are in numbers here)
+  // If it's a valid number, do we treat it as exact match or startsWith?
+  // Original code does fallback to text match if it's not a range.
   const floatVal = parseFloat(value)
   if (!isNaN(floatVal)) return { exact: floatVal }
 
@@ -33,13 +33,13 @@ export const numberFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
 
   const range = parseNumberRange(String(filterValue))
   if (!range) {
-    // Fallback na string match (původní chování)
+    // Fallback to string match (original behavior)
     return String(cellValue).includes(String(filterValue))
   }
 
   if (range.exact !== undefined) {
-    // Original code u exact match dělá taky text match fallback,
-    // ale pokud chceme precizní čísla:
+    // Original code for exact match also does text match fallback,
+    // but if we want precise numbers:
     return cellValue === range.exact || String(cellValue).startsWith(String(filterValue))
   }
 
@@ -50,7 +50,7 @@ export const numberFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
 }
 
 // Helper for parsing data
-// Original code normalizuje na "local midnight"
+// Original code normalizes to "local midnight"
 function parseDate(input: string): Date | null {
   const d = new Date(input)
   if (isNaN(d.getTime())) return null
@@ -69,7 +69,7 @@ export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
     cellDate.getDate()
   )
 
-  // Try parsing filterValue jako range
+  // Try parsing filterValue as range
   const val = String(filterValue).trim()
 
   if (val.includes("..")) {
@@ -99,13 +99,13 @@ export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
     return max ? normalizedCellDate < max : true
   }
 
-  // Equality data
+  // Equality date
   const exactDate = parseDate(val)
   if (exactDate) {
     return normalizedCellDate.getTime() === exactDate.getTime()
   }
 
-  // Fallback: Text search v formatted date (en-US)
+  // Fallback: Text search in formatted date (en-US)
   const formatted = new Intl.DateTimeFormat("en-US").format(normalizedCellDate)
   return formatted.includes(val)
 }

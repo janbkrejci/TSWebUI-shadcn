@@ -6,21 +6,21 @@ import { Button } from "@/components/ui/button"
 
 export default function NotFound() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-56px-3rem)]">
-      <div className="text-center space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-7xl font-bold text-muted-foreground/50">404</h1>
-          <h2 className="text-2xl font-semibold">Stránka nenalezena</h2>
-          <p className="text-muted-foreground max-w-md">
-            Omlouváme se, ale požadovaná stránka neexistuje nebo byla přesunuta.
-          </p>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+      <div className="space-y-4">
+        <h1 className="text-6xl font-extrabold tracking-tighter text-primary">404</h1>
+        <h2 className="text-2xl font-semibold">Page Not Found</h2>
+        <p className="text-muted-foreground max-w-[500px]">
+          Sorry, the page you are looking for does not exist or has been moved.
+        </p>
+        <div className="pt-4">
+          <Button asChild>
+            <Link href="/">
+              <Home className="mr-2 h-4 w-4" />
+              Back to Overview
+            </Link>
+          </Button>
         </div>
-        <Button asChild>
-          <Link href="/">
-            <Home className="mr-2 h-4 w-4" />
-            Zpět na úvod
-          </Link>
-        </Button>
       </div>
     </div>
   )

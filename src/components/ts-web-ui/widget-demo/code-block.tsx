@@ -15,7 +15,7 @@ interface CodeBlockProps {
 }
 
 /**
- * Komponenta pro zobrazení kódu s tlačítkem pro kopírování
+ * Component for displaying code with a copy button
  */
 export function CodeBlock({ code, language = "tsx" }: CodeBlockProps) {
   const [copied, setCopied] = React.useState(false)
@@ -23,7 +23,7 @@ export function CodeBlock({ code, language = "tsx" }: CodeBlockProps) {
   const handleCopy = () => {
     navigator.clipboard.writeText(code)
     setCopied(true)
-    toast.success("Kód zkopírován")
+    toast.success("Code copied to clipboard")
     setTimeout(() => setCopied(false), 2000)
   }
 

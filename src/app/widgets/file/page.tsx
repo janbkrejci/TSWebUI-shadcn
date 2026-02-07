@@ -1,48 +1,47 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro File Upload widget
- * Nahrávání souborů
+ * Demo page for File Upload widget
+ * File uploading
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Přílohy" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Attachments" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "Maximum size 10MB" },
   {
     name: "accept",
-    label: "Povolené typy souborů",
+    label: "Allowed file types",
     type: "string",
     defaultValue: "",
-    hint: "Např. .pdf,.doc,.docx nebo application/pdf",
+    hint: "e.g., .pdf,.doc,.docx or application/pdf",
   },
   {
     name: "multiple",
-    label: "Více souborů",
+    label: "Multiple files",
     type: "boolean",
     defaultValue: false,
-    hint: "Umožní nahrát více souborů najednou",
+    hint: "Allows uploading multiple files at once",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function FileWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="File Upload"
-      description="Widget pro nahrávání souborů. Podporuje omezení typů souborů a nahrávání více souborů najednou."
+      description="A widget for uploading files. Supports file type restrictions and multiple file selection."
       widgetType="file"
       attributes={attributes}
-      defaultFieldValue={undefined}
     />
   )
 }

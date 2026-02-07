@@ -1,48 +1,48 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Nosted Table widget
- * Vnořená tabulka v rámci formuláře
+ * Demo page for Nested Table widget
+ * An embedded table within a form
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Položky objednávky" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Order Items" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
     name: "columns",
-    label: "Definice sloupců (JSON)",
+    label: "Column Definition (JSON)",
     type: "json",
     defaultValue: JSON.stringify(
       [
         { field: "name", header: "Name", width: "200px" },
-        { field: "quantity", header: "Množství", width: "100px" },
-        { field: "price", header: "Cena", width: "100px" },
+        { field: "quantity", header: "Quantity", width: "100px" },
+        { field: "price", header: "Price", width: "100px" },
       ],
       null,
       2
     ),
-    hint: "Pole definic sloupců tabulky",
+    hint: "Array of table column definitions",
   },
   {
     name: "showCreateButton",
-    label: "Tlačítko Vytvořit",
+    label: "Create Button",
     type: "boolean",
     defaultValue: true,
-    hint: "Zobrazit tlačítko pro přidání řádku",
+    hint: "Show the button to add a new row",
   },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function TableWidgetDemo() {
   return (
     <WidgetDemoWrapper
-      title="Nosted Table"
-      description="Vnořená tabulka pro správu seznamu položek v rámci formuláře (např. položky faktury, adresy)."
+      title="Nested Table"
+      description="An embedded table for managing a list of items within a form (e.g., invoice items, addresses)."
       widgetType="table"
       attributes={attributes}
       defaultFieldValue={[
-        { name: "Produkt A", quantity: 2, price: 199 },
-        { name: "Produkt B", quantity: 1, price: 499 },
+        { name: "Product A", quantity: 2, price: 199 },
+        { name: "Product B", quantity: 1, price: 499 },
       ]}
     />
   )

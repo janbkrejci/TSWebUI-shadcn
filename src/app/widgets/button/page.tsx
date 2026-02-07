@@ -1,47 +1,45 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Button widget
- * Tlačítko pro akce v rámci formuláře
+ * Demo page for Button widget
+ * Action button within a form
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Spustit akci" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Submit Form" },
+  { name: "action", label: "Action ID", type: "string", defaultValue: "submit-action" },
   {
     name: "variant",
-    label: "Varianta",
+    label: "Variant",
     type: "select",
     defaultValue: "default",
     options: [
       { label: "Default", value: "default" },
-      { label: "Primary", value: "primary" },
-      { label: "Secondary", value: "secondary" },
-      { label: "Destructive", value: "destructive" },
       { label: "Outline", value: "outline" },
+      { label: "Secondary", value: "secondary" },
       { label: "Ghost", value: "ghost" },
-      { label: "Link", value: "link" },
+      { label: "Destructive", value: "destructive" },
     ],
-    hint: "Vizuální styl tlačítka",
+    hint: "Visual style of the button",
   },
   {
     name: "action",
-    label: "Akce",
+    label: "Action ID",
     type: "string",
-    defaultValue: "custom-action",
-    hint: "Identifikátor akce odeslaný v eventu",
+    defaultValue: "submit",
+    hint: "Action identifier sent in the event",
   },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function ButtonWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Button"
-      description="Tlačítko pro spouštění akcí v rámci formuláře. Při kliknutí vyvolá event form-field-action s identifikátorem akce."
+      description="A button for triggering actions within a form. When clicked, it dispatches a form-field-action event with the action identifier."
       widgetType="button"
       attributes={attributes}
-      defaultFieldValue={undefined}
     />
   )
 }

@@ -1,48 +1,44 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Markdown widget
- * Zobrazení formátovaného textu pomocí Markdown
+ * Demo page for Markdown widget
+ * Displaying formatted text using Markdown
  */
 
 const attributes: WidgetAttribute[] = [
   {
     name: "content",
-    label: "Markdown obsah",
-    type: "textarea",
-    defaultValue: `# Nadpis první úrovně
+    label: "Content",
+    type: "string",
+    defaultValue: `# Level 1 Heading
 
-Toto je odstavec s **tučným textem** a *kurzívou*.
+This is a paragraph with **bold text** and *italics*.
 
-## Seznam funkcí
+## Feature List
 
-- Položka 1
-- Položka 2
-- Položka 3
+- Item 1
+- Item 2
+- Item 3
 
-### Kód
+### Code
 
 \`\`\`javascript
-const hello = "world";
-console.log(hello);
+const greeting = "Hello World";
+console.log(greeting);
 \`\`\`
-
-> Toto je citace
-
-[Odkaz na dokumentaci](https://example.com)`,
-    hint: "Markdown formátovaný text",
+`,
+    hint: "Markdown formatted text",
   },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function MarkdownWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Markdown"
-      description="Widget pro zobrazení formátovaného textu pomocí Markdown syntaxe. Vhodný pro nápovědu, dokumentaci nebo dynamický obsah."
+      description="A widget for displaying formatted text using Markdown syntax. Suitable for help, documentation, or dynamic content."
       widgetType="markdown"
       attributes={attributes}
-      defaultFieldValue={undefined}
     />
   )
 }

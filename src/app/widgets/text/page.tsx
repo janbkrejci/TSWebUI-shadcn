@@ -1,35 +1,34 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Text Input widget
- * Zobrazuje všechny možnosti konfigurace textového vstupního pole
+ * Demo page for Text Input widget
+ * Displays all configuration options for a text input field
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Textové pole" },
-  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Zadejte text..." },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Text Field" },
+  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Enter text..." },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "Enter a single line of text" },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function TextWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Text Input"
-      description="Základní textové vstupní pole pro jednořádkový text. Podporuje validaci, placeholdery a různé stavy."
+      description="A basic text input field for single-line text. Supports validation, placeholders, and various states."
       widgetType="text"
       attributes={attributes}
-      defaultFieldValue=""
     />
   )
 }

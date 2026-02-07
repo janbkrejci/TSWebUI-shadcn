@@ -1,50 +1,49 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Radio Group widget
- * Výběr jedné hodnoty z několika možností formou radio buttonů
+ * Demo page for Radio Group widget
+ * Selection of one value from several options using radio buttons
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Způsob platby" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Payment Method" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "Select how you want to pay" },
   {
     name: "options",
-    label: "Možnosti (JSON)",
+    label: "Options (JSON)",
     type: "json",
     defaultValue: JSON.stringify(
       [
-        { label: "Platební karta", value: "card" },
-        { label: "Bankovní převod", value: "transfer" },
-        { label: "PayPal", value: "paypal" },
-        { label: "Dobírka", value: "cod" },
+        { label: "Credit Card", value: "card" },
+        { label: "Bank Transfer", value: "transfer" },
+        { label: "Cash on Delivery", value: "cod" },
       ],
       null,
       2
     ),
-    hint: "Pole objektů {label, value}",
+    hint: "Array of {label, value} objects",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function RadioWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Radio Group"
-      description="Skupina přepínačů (radio buttons) pro výběr právě jedné hodnoty z několika vzájemně se vylučujících možností."
+      description="A group of radio buttons for selecting exactly one value from several mutually exclusive options."
       widgetType="radio"
       attributes={attributes}
-      defaultFieldValue=""
+      defaultFieldValue="card"
     />
   )
 }

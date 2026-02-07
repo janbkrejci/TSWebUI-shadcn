@@ -1,35 +1,34 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Password widget
- * Pole pro zadávání hesel s maskováním
+ * Demo page for Password widget
+ * Input field for passwords with masking
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Heslo" },
-  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Zadejte heslo..." },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "Minimálně 8 znaků" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Password" },
+  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "••••••••" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "Minimum 8 characters" },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function PasswordWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Password"
-      description="Pole pro zadávání hesel s maskováním znaků. Vhodné pro přihlašovací formuláře a změnu hesla."
+      description="An input field for entering passwords with character masking. Suitable for login forms and password changes."
       widgetType="password"
       attributes={attributes}
-      defaultFieldValue=""
     />
   )
 }

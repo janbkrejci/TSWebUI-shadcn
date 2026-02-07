@@ -19,7 +19,7 @@ export function generateZodSchema(fields: Record<string, TsFieldDef>) {
         if (def.min !== undefined) schema = (schema as z.ZodNumber).min(def.min)
         if (def.max !== undefined) schema = (schema as z.ZodNumber).max(def.max)
 
-        // Pokud není required, povolíme null/undefined
+        // If not required, allow null/undefined
         if (!def.required) {
           schema = schema.nullish()
         }

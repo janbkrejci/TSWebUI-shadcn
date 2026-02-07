@@ -4,9 +4,9 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
 import * as React from "react"
 
 /**
- * Zjednodušený ThemeProvider, který nejprve zajistí aplikaci tématu na dokument
- * a následně bezpečně hydratuje zbytek aplikace. Tím předchází problikávání
- * a zároveň 100% řeší chyby typu Hydration Mismatch.
+ * Simplified ThemeProvider that first ensures the theme is applied to the document
+ * and then safely hydrates the rest of the application. This prevents flickering
+ * and 100% resolves Hydration Mismatch errors.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false)
@@ -26,10 +26,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         children
       ) : (
         /* 
-          Tento div se vyrenderuje na serveru a při startu klienta. 
-          Protože je uvnitř NextThemesProvideru, který do head vkládá script 
-          pro nastavení třídy .dark/.light, bude mít bg-background 
-          okamžitě správnou barvu bez nutnosti detekce v JS.
+          This div is rendered on the server and during initial client load.
+          Because it's inside NextThemesProvider, which injects a script into the head
+          to set the .dark/.light class, bg-background will have the correct color
+          immediately without waiting for JS detection.
         */
         <div className="min-h-screen bg-background" />
       )}

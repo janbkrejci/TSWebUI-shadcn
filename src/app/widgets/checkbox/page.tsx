@@ -1,34 +1,34 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Checkbox widget
- * Zaškrtávací políčko pro boolean hodnoty
+ * Demo page for Checkbox widget
+ * Checkbox for boolean values
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Souhlasím s podmínkami" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "I agree to the terms" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function CheckboxWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Checkbox"
-      description="Zaškrtávací políčko pro binární volby (ano/ne). Vhodné pro souhlas s podmínkami, aktivaci funkcí apod."
+      description="A checkbox for binary choices (yes/no). Suitable for agreeing to terms, activating features, etc."
       widgetType="checkbox"
       attributes={attributes}
-      defaultFieldValue={false}
+      defaultFieldValue={true}
     />
   )
 }

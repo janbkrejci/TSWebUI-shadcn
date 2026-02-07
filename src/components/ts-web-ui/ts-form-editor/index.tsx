@@ -1,12 +1,12 @@
 /**
  * TsFormEditor
  *
- * Vizuální editor pro tvorbu formulářů s podporou:
- * - Drag & drop přidávání polí
+ * Visual editor for creating forms with support for:
+ * - Drag & drop field addition
  * - Mode with or without tabs
- * - Grid layout s více sloupci
- * - Live náhled formuláře
- * - Export/import JSON konfigurace
+ * - Grid layout with multiple columns
+ * - Live form preview
+ * - Export/import JSON configuration
  */
 
 export { TsFormEditor } from "./form-editor"

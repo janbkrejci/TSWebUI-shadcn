@@ -1,44 +1,44 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Number widget
- * Numerické vstupní pole s podporou min/max a kroků
+ * Demo page for Number widget
+ * Numeric input field with min/max and step support
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Množství" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Quantity" },
   { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "0" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
-  { name: "min", label: "Minimální hodnota", type: "number", defaultValue: undefined },
-  { name: "max", label: "Maximální hodnota", type: "number", defaultValue: undefined },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
+  { name: "min", label: "Minimum value", type: "number", defaultValue: undefined },
+  { name: "max", label: "Maximum value", type: "number", defaultValue: undefined },
   {
     name: "step",
-    label: "Krok",
+    label: "Step",
     type: "number",
     defaultValue: 1,
-    hint: "O kolik se mění hodnota při použití šipek",
+    hint: "How much the value changes when using arrows",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function NumberWidgetDemo() {
   return (
     <WidgetDemoWrapper
-      title="Number"
-      description="Numerické vstupní pole pro zadávání čísel. Podporuje omezení rozsahu pomocí min/max a nastavení kroku."
+      title="Number Input"
+      description="A numeric input field for entering numbers. Supports range constraints via min/max and step configuration."
       widgetType="number"
       attributes={attributes}
-      defaultFieldValue={undefined}
+      defaultFieldValue={10}
     />
   )
 }

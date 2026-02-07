@@ -1,40 +1,40 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Slider widget
- * Posuvník pro výběr hodnoty z rozsahu
+ * Demo page for Slider widget
+ * Slider for selecting a value from a range
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Hlasitost" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
-  { name: "min", label: "Minimální hodnota", type: "number", defaultValue: 0 },
-  { name: "max", label: "Maximální hodnota", type: "number", defaultValue: 100 },
+  { name: "label", label: "Label", type: "string", defaultValue: "Volume" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "Adjust the value" },
+  { name: "min", label: "Minimum value", type: "number", defaultValue: 0 },
+  { name: "max", label: "Maximum value", type: "number", defaultValue: 100 },
   {
     name: "step",
-    label: "Krok",
+    label: "Step",
     type: "number",
     defaultValue: 1,
-    hint: "O kolik se mění hodnota při posunu",
+    hint: "How much the value changes when sliding",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function SliderWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Slider"
-      description="Posuvník pro výběr číselné hodnoty z definovaného rozsahu. Vhodný pro nastavení hlasitosti, průhlednosti apod."
+      description="A slider for selecting a numeric value from a defined range. Suitable for settings like volume, opacity, etc."
       widgetType="slider"
       attributes={attributes}
       defaultFieldValue={50}

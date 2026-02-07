@@ -23,7 +23,7 @@ import { TopBarLogo, TsTopBar } from "@/components/ts-web-ui/ts-topbar"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Interaktivní demo TopBaru
+ * Interactive TopBar demo
  */
 function TopBarDemo() {
   const [showCenter, setShowCenter] = React.useState(true)
@@ -32,7 +32,7 @@ function TopBarDemo() {
 
   return (
     <div className="flex-1 flex flex-col gap-4 min-h-0">
-      {/* Ovládací panel */}
+      {/* Control Panel */}
       <div className="flex flex-wrap gap-6 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm">
         <div className="flex items-center gap-2">
           <Switch id="bordered" checked={isBordered} onCheckedChange={setIsBordered} />
@@ -57,14 +57,14 @@ function TopBarDemo() {
         </div>
       </div>
 
-      {/* Workspace kontejner */}
+      {/* Workspace container */}
       <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-[300px]">
-        {/* Pozadí workspace */}
+        {/* Workspace background */}
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 pointer-events-none font-bold text-4xl select-none z-0">
           PAGE CONTENT
         </div>
 
-        {/* TopBar uvnitř kontejneru - používá !absolute pro demo účely */}
+        {/* TopBar inside container - uses !absolute for demo purposes */}
         <TsTopBar
           height={height}
           bordered={isBordered}
@@ -137,7 +137,7 @@ export default function TopBarPage() {
       <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">TopBar</h1>
         <p className="text-muted-foreground mt-2">
-          Univerzální horní lišta pro navigaci, loga a globální akce aplikace.
+          Universal top bar for navigation, logos, and global application actions.
         </p>
       </div>
 
@@ -159,9 +159,9 @@ export default function TopBarPage() {
         >
           <Card className="w-full">
             <CardHeader>
-              <CardTitle>Základní použití</CardTitle>
+              <CardTitle>Basic Usage</CardTitle>
               <CardDescription>
-                TopBar is fixně umístěn na horní hraně okna a poskytuje sloty pro obsah.
+                TopBar is fixed at the top edge of the window and provides slots for content.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -182,15 +182,15 @@ export default function TopBarPage() {
             <Card>
               <CardHeader>
                 <CardTitle>TsTopBar Props</CardTitle>
-                <CardDescription>Vlastnosti hlavní komponenty horní lišty.</CardDescription>
+                <CardDescription>Properties of the main top bar component.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-40">Prop</TableHead>
-                      <TableHead className="w-32">Typ</TableHead>
-                      <TableHead>Popis</TableHead>
+                      <TableHead className="w-32">Type</TableHead>
+                      <TableHead>Description</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -199,35 +199,35 @@ export default function TopBarPage() {
                         leftContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell>Obsah vlevo (hamburger, logo)</TableCell>
+                      <TableCell>Left-aligned content (hamburger, logo)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         centerContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell>Obsah uprostřed (vyhledávání, breadcrumbs)</TableCell>
+                      <TableCell>Center-aligned content (search, breadcrumbs)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         rightContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell>Obsah vpravo (akce, uživatelské menu)</TableCell>
+                      <TableCell>Right-aligned content (actions, user menu)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         height
                       </TableCell>
                       <TableCell className="text-xs italic">number</TableCell>
-                      <TableCell>Výška v pixelech (default: 56)</TableCell>
+                      <TableCell>Height in pixels (default: 56)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         bordered
                       </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Zobrazit spodní linku (default: true)</TableCell>
+                      <TableCell>Whether to show the bottom border (default: true)</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -236,34 +236,34 @@ export default function TopBarPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Pomocné komponenty</CardTitle>
+                <CardTitle>Helper Components</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-40">Komponenta</TableHead>
-                      <TableHead>Účel</TableHead>
+                      <TableHead className="w-40">Component</TableHead>
+                      <TableHead>Purpose</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold">TopBarLogo</TableCell>
                       <TableCell>
-                        Formátované logo s podporou textu, ikony a odkazu (Next.js Link).
+                        Formatted logo with support for text, icon, and link (Next.js Link).
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold">
                         TopBarActions
                       </TableCell>
-                      <TableCell>Wrapper pro skupinu tlačítek s jednotným odsazením.</TableCell>
+                      <TableCell>Wrapper for a group of buttons with consistent spacing.</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold">
                         TopBarSpacer
                       </TableCell>
-                      <TableCell>Prvek pro odsazení obsahu pod fixovanou lištou.</TableCell>
+                      <TableCell>Element for offsetting content below the fixed top bar.</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

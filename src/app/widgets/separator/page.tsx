@@ -1,29 +1,28 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Separator widget
- * Vizuální oddělovač sekcí formuláře
+ * Demo page for Separator widget
+ * Visual separator for form sections
  */
 
 const attributes: WidgetAttribute[] = [
   {
     name: "label",
-    label: "Label (volitelný)",
+    label: "Label (optional)",
     type: "string",
-    defaultValue: "Osobní údaje",
-    hint: "Text zobrazený uprostřed oddělovače. Bez textu se zobrazí jen čára.",
+    defaultValue: "Personal Information",
+    hint: "Text displayed in the middle of the separator. If empty, only a line is shown.",
   },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function SeparatorWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Separator"
-      description="Vizuální oddělovač pro rozdělení formuláře do logických sekcí. Může mít volitelný textový popisek."
+      description="A visual separator for dividing a form into logical sections. It can have an optional text label."
       widgetType="separator"
       attributes={attributes}
-      defaultFieldValue={undefined}
     />
   )
 }

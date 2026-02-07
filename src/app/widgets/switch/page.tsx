@@ -1,34 +1,34 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Switch widget
- * Switch pro boolean hodnoty ve stylu iOS
+ * Demo page for Switch widget
+ * Switch for toggle values
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Aktivní" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Active" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function SwitchWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Switch"
-      description="Switch ve stylu iOS pro zapnutí/vypnutí funkce. Alternativa k checkboxu pro nastavení typu on/off."
+      description="An iOS-style switch for toggling a function on/off. An alternative to a checkbox for binary settings."
       widgetType="switch"
       attributes={attributes}
-      defaultFieldValue={false}
+      defaultFieldValue={true}
     />
   )
 }

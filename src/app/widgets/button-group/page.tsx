@@ -1,50 +1,50 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Button Group widget
- * Skupina tlačítek pro rychlý výběr hodnoty
+ * Demo page for Button Group widget
+ * A group of buttons for quick value selection
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Priorita" },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Priority" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "Select one option" },
   {
     name: "options",
-    label: "Možnosti (JSON)",
+    label: "Options (JSON)",
     type: "json",
     defaultValue: JSON.stringify(
       [
-        { label: "Nízká", value: "low" },
-        { label: "Střední", value: "medium" },
-        { label: "Vysoká", value: "high" },
-        { label: "Kritická", value: "critical" },
+        { label: "Low", value: "low" },
+        { label: "Medium", value: "medium" },
+        { label: "High", value: "high" },
+        { label: "Critical", value: "critical" },
       ],
       null,
       2
     ),
-    hint: "Pole objektů {label, value}",
+    hint: "Array of {label, value} objects",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function ButtonGroupWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Button Group"
-      description="Skupina tlačítek (toggle group) pro rychlý výběr jedné hodnoty. Vhodné pro malý počet možností jako priorita nebo stav."
+      description="A toggle group for quick selection of a single value. Suitable for a small number of options like priority or status."
       widgetType="button-group"
       attributes={attributes}
-      defaultFieldValue=""
+      defaultFieldValue="medium"
     />
   )
 }

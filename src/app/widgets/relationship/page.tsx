@@ -1,96 +1,96 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Relationship Picker widget
- * Výběr souvisejících entit z jiné tabulky
+ * Demo page for Relationship Picker widget
+ * Selection of related entities from another table
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Přiřazený uživatel" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Assigned User" },
   {
     name: "placeholder",
     label: "Placeholder",
     type: "string",
-    defaultValue: "Vyberte uživatele...",
+    defaultValue: "Select user...",
   },
-  { name: "hint", label: "Hint (popis)", type: "string", defaultValue: "" },
+  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
     name: "targetEntity",
-    label: "Cílová entita",
+    label: "Target Entity",
     type: "string",
     defaultValue: "users",
-    hint: "Název tabulky/entity",
+    hint: "Name of the table/entity",
   },
   {
     name: "mode",
-    label: "Režim",
+    label: "Mode",
     type: "select",
     defaultValue: "single",
     options: [
-      { label: "Jeden záznam", value: "single" },
-      { label: "Více záznamů", value: "multiple" },
+      { label: "Single Record", value: "single" },
+      { label: "Multiple Records", value: "multiple" },
     ],
-    hint: "single = 1 záznam, multiple = více záznamů",
+    hint: "single = 1 record, multiple = multiple records",
   },
   {
     name: "displayFields",
-    label: "Zobrazovaná pole (JSON)",
+    label: "Display Fields (JSON)",
     type: "json",
-    defaultValue: JSON.stringify(["name", "email"]),
-    hint: "Pole, která se zobrazí v seznamu",
+    defaultValue: '["name", "email"]',
+    hint: "Fields to display in the list",
   },
   {
     name: "chipDisplayFields",
-    label: "Pole pro chipy (JSON)",
+    label: "Chip Fields (JSON)",
     type: "json",
-    defaultValue: JSON.stringify(["name"]),
-    hint: "Pole, která se zobrazí ve vybraných chipech",
+    defaultValue: '["name"]',
+    hint: "Fields to display in the selected chips",
   },
   {
     name: "valueField",
-    label: "Pole hodnoty",
+    label: "Value Field",
     type: "string",
     defaultValue: "id",
-    hint: "Pole použité jako hodnota (obvykle id)",
+    hint: "Field used as value (usually id)",
   },
   {
     name: "options",
-    label: "Data (JSON)",
+    label: "Mock Data (JSON)",
     type: "json",
     defaultValue: JSON.stringify(
       [
-        { id: 1, name: "Jan Novák", email: "jan.novak@example.com" },
-        { id: 2, name: "Marie Svobodová", email: "marie.svobodova@example.com" },
-        { id: 3, name: "Petr Černý", email: "petr.cerny@example.com" },
-        { id: 4, name: "Eva Dvořáková", email: "eva.dvorakova@example.com" },
-        { id: 5, name: "Tomáš Procházka", email: "tomas.prochazka@example.com" },
+        { id: 1, name: "John Doe", email: "john.doe@example.com" },
+        { id: 2, name: "Jane Smith", email: "jane.smith@example.com" },
+        { id: 3, name: "Bob Johnson", email: "bob.johnson@example.com" },
+        { id: 4, name: "Alice Williams", email: "alice.williams@example.com" },
+        { id: 5, name: "Tom Brown", email: "tom.brown@example.com" },
       ],
       null,
       2
     ),
-    hint: "Pole objektů s dostupnými záznamy",
+    hint: "Array of objects with available records",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function RelationshipWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Relationship Picker"
-      description="Widget pro výběr souvisejících entit (vztah 1:N nebo M:N). Umožňuje vybrat záznamy z jiné tabulky s vyhledáváním."
+      description="A widget for selecting related entities (1:N or M:N relationship). Allows selecting records from another table with search functionality."
       widgetType="relationship"
       attributes={attributes}
-      defaultFieldValue={undefined}
+      defaultFieldValue={1}
     />
   )
 }

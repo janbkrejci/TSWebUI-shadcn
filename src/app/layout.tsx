@@ -56,7 +56,7 @@ export default function RootLayout({
               rightContent={<ModeToggle />}
             />
 
-            {/* Sidebar - pod TopBarem */}
+            {/* Sidebar - below TopBar */}
             <Sidebar>
               <SidebarContent>
                 <AppSidebar />

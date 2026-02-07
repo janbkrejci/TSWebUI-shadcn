@@ -1,8 +1,6 @@
 /**
- * Widget Demo komponenty pro interaktivní testování form widgetů
+ * Widget Demo components for interactive form widget testing
  */
-
-export { WidgetDemoWrapper } from "./widget-demo-wrapper"
-export type { WidgetAttribute } from "./widget-demo-wrapper"
-export { InstallTab } from "./install-tab"
-export { CodeBlock } from "./code-block"
+export * from "./widget-demo-wrapper"
+export * from "./code-block"
+export * from "./install-tab"

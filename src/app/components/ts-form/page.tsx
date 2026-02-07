@@ -20,9 +20,9 @@ import { TsFieldDef, TsFormButton, TsFormLayout } from "@/components/ts-web-ui/t
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const formFields: Record<string, TsFieldDef> = {
-  name: { type: "text", label: "First Name", required: true, placeholder: "Jan" },
-  surname: { type: "text", label: "Last Name", required: true, placeholder: "Novák" },
-  email: { type: "text", label: "E-mail", required: true, placeholder: "jan@example.com" },
+  name: { type: "text", label: "First Name", required: true, placeholder: "John" },
+  surname: { type: "text", label: "Last Name", required: true, placeholder: "Doe" },
+  email: { type: "text", label: "E-mail", required: true, placeholder: "john@example.com" },
   age: { type: "number", label: "Age", min: 18, max: 99, required: true },
   bio: {
     type: "textarea",
@@ -44,10 +44,10 @@ const formFields: Record<string, TsFieldDef> = {
     type: "combobox",
     label: "Country",
     options: [
-      { value: "cz", label: "Czech Republic" },
-      { value: "sk", label: "Slovakia" },
+      { value: "us", label: "United States" },
+      { value: "gb", label: "United Kingdom" },
       { value: "de", label: "Germany" },
-      { value: "at", label: "Austria" },
+      { value: "fr", label: "France" },
     ],
     placeholder: "Search country...",
   },

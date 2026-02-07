@@ -1,53 +1,52 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Image Upload widget
- * Specializované nahrávání obrázků
+ * Demo page for Image Upload widget
+ * Specialized image uploading
  */
 
 const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Profilová fotka" },
+  { name: "label", label: "Label", type: "string", defaultValue: "Profile Picture" },
   {
     name: "hint",
-    label: "Hint (popis)",
+    label: "Hint",
     type: "string",
-    defaultValue: "Doporučená velikost: 400x400 px",
+    defaultValue: "Recommended size: 400x400 px",
   },
   {
     name: "accept",
-    label: "Povolené typy",
+    label: "Allowed types",
     type: "string",
     defaultValue: "image/*",
-    hint: "Výchozí: image/*",
+    hint: "Default: image/*",
   },
   {
     name: "multiple",
-    label: "Více obrázků",
+    label: "Multiple images",
     type: "boolean",
     defaultValue: false,
-    hint: "Umožní nahrát více obrázků",
+    hint: "Allows uploading multiple images",
   },
   {
     name: "error",
-    label: "Chybová zpráva",
+    label: "Error message",
     type: "string",
     defaultValue: "",
-    hint: "Pokud je vyplněna, widget se zobrazí v chybovém stavu",
+    hint: "If provided, the widget will be displayed in an error state",
   },
-  { name: "required", label: "Povinné", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Zakázané", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Pouze pro čtení", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Skryté", type: "boolean", defaultValue: false },
+  { name: "required", label: "Required", type: "boolean", defaultValue: false },
+  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
+  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 
 export default function ImageWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Image Upload"
-      description="Specializovaný widget pro nahrávání obrázků. Automaticky omezuje accept na image/*."
+      description="A specialized widget for uploading images. Automatically restricts 'accept' to image/*."
       widgetType="image"
       attributes={attributes}
-      defaultFieldValue={undefined}
     />
   )
 }

@@ -61,14 +61,14 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
     // Internal Z-Index state
     const [currentZIndex, setCurrentZIndex] = React.useState(globalZIndex++)
 
-    // Aktuální pozice a velikost pro Rnd
+    // Current position and size for Rnd
     const [size, setSize] = React.useState({ width: defaultWidth, height: defaultHeight })
     const [position, setPosition] = React.useState({ x: defaultLeft, y: defaultTop })
 
-    // Uložení stavu před maximalizací/minimalizací pro restore
+    // Store state before maximization/minimization for restore
     const [restoreRect, setRestoreRect] = React.useState<Rect | null>(null)
 
-    // Uložení pozice minimalizovaného okna
+    // Store position of minimized window
     const [minimizedPosition, setMinimizedPosition] = React.useState<{
       x: number
       y: number
@@ -77,7 +77,7 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
     // Opacity state for smooth appearance
     const [isVisible, setIsVisible] = React.useState(false)
 
-    // Reference
+    // References
     const contentRef = React.useRef<HTMLDivElement>(null)
     const measureRef = React.useRef<HTMLDivElement>(null)
     const rndRef = React.useRef<Rnd>(null)
@@ -621,8 +621,6 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     </WindowContext.Provider>
   )
 }
-
-// ... (rest of imports)
 
 export const WindowOutlet: React.FC<{ className?: string }> = ({ className }) => {
   const { windows } = useWindowManager()

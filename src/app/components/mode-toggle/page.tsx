@@ -27,7 +27,7 @@ export default function Header() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Mode Toggle</h1>
         <p className="text-muted-foreground mt-2">
-          Přepínač světlého a tmavého režimu využívající <code>next-themes</code>.
+          A light and dark mode switcher powered by <code>next-themes</code>.
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function Header() {
         <TabsContent value="preview" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Interaktivní ukázka</CardTitle>
+              <CardTitle>Interactive Demo</CardTitle>
               <CardDescription>Click the icon to change the application mode.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center py-12 gap-6">

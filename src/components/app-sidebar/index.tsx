@@ -19,7 +19,6 @@ import {
   List,
   LucideIcon,
   Minus,
-  Monitor,
   Moon,
   MousePointerClick,
   Palette,
@@ -47,7 +46,7 @@ import { useSidebar } from "@/components/ts-web-ui/ts-sidebar"
 import { cn } from "@/lib/utils"
 
 /**
- * Položka navigace sidebaru
+ * Sidebar navigation item
  */
 interface NavItem {
   name: string
@@ -57,17 +56,17 @@ interface NavItem {
 }
 
 /**
- * Definice všech form widgetů dostupných v systému
- * Každý widget má svou demo stránku
+ * Definition of all form widgets available in the system
+ * Each widget has its own demo page
  */
 const FORM_WIDGETS: NavItem[] = [
-  // Textové vstupy
+  // Text inputs
   { name: "text", href: "/widgets/text", label: "Text Input", icon: Type },
   { name: "textarea", href: "/widgets/textarea", label: "Textarea", icon: AlignLeft },
   { name: "password", href: "/widgets/password", label: "Password", icon: KeyRound },
   { name: "number", href: "/widgets/number", label: "Number", icon: Hash },
 
-  // Výběr hodnot
+  // Value selection
   { name: "select", href: "/widgets/select", label: "Select", icon: ChevronDown },
   { name: "multiselect", href: "/widgets/multiselect", label: "Multi Select", icon: List },
   { name: "combobox", href: "/widgets/combobox", label: "Combobox", icon: Search },
@@ -76,18 +75,18 @@ const FORM_WIDGETS: NavItem[] = [
   { name: "switch", href: "/widgets/switch", label: "Switch", icon: ToggleLeft },
   { name: "button-group", href: "/widgets/button-group", label: "Button Group", icon: ToggleRight },
 
-  // Datum a čas
+  // Date and Time
   { name: "date", href: "/widgets/date", label: "Date Picker", icon: Calendar },
   { name: "datetime", href: "/widgets/datetime", label: "Date Time", icon: CalendarClock },
 
-  // Posuvníky
+  // Sliders
   { name: "slider", href: "/widgets/slider", label: "Slider", icon: SlidersHorizontal },
 
-  // Soubory
+  // Files
   { name: "file", href: "/widgets/file", label: "File Upload", icon: Upload },
   { name: "image", href: "/widgets/image", label: "Image Upload", icon: Image },
 
-  // Relace
+  // Relationships
   {
     name: "relationship",
     href: "/widgets/relationship",
@@ -95,20 +94,20 @@ const FORM_WIDGETS: NavItem[] = [
     icon: Link2,
   },
 
-  // Akční prvky
+  // Action elements
   { name: "button", href: "/widgets/button", label: "Button", icon: MousePointerClick },
 
-  // Layout a zobrazení
+  // Layout and display
   { name: "separator", href: "/widgets/separator", label: "Separator", icon: Minus },
   { name: "infobox", href: "/widgets/infobox", label: "Info Box", icon: Info },
   { name: "markdown", href: "/widgets/markdown", label: "Markdown", icon: FileText },
 
-  // Komplexní widgety
+  // Complex widgets
   { name: "table", href: "/widgets/table", label: "Nested Table", icon: TableProperties },
 ]
 
 /**
- * Komponenta pro navigační tlačítko s podporou collapsed módu
+ * Navigation button component with support for collapsed mode
  */
 function NavButton({
   href,
@@ -157,14 +156,14 @@ function NavButton({
 }
 
 /**
- * Hlavní aplikační sidebar s navigací
- * Obsahuje odkazy na komponenty a všechny form widgety
+ * Main application sidebar with navigation
+ * Contains links to components and all form widgets
  */
 export function AppSidebar({ className }: React.ComponentProps<"div">) {
   const pathname = usePathname()
   const { close, isCollapsed } = useSidebar()
 
-  // Na mobilech zavřít sidebar po kliknutí na odkaz
+  // On mobile, close the sidebar after clicking a link
   const handleLinkClick = () => {
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       close()
@@ -174,7 +173,7 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
   return (
     <TooltipProvider>
       <div className={cn("py-2", className)}>
-        {/* Hlavní sekce */}
+        {/* Main Section */}
         <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
           {!isCollapsed && (
             <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
@@ -186,14 +185,14 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
               href="/"
               label="Overview"
               icon={Home}
-              isActive={pathname.startsWith("/")}
+              isActive={pathname === "/"}
               isCollapsed={isCollapsed}
               onClick={handleLinkClick}
             />
           </div>
         </div>
 
-        {/* Komponenty */}
+        {/* Components */}
         <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
           {!isCollapsed && (
             <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
@@ -213,7 +212,7 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
               href="/components/ts-table"
               label="Table"
               icon={Table2}
-              isActive={pathname?.startsWith("/components/ts-table") ?? false}
+              isActive={pathname.startsWith("/components/ts-table")}
               isCollapsed={isCollapsed}
               onClick={handleLinkClick}
             />
@@ -279,7 +278,7 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
           </div>
         </div>
 
-        {/* Form Widgety */}
+        {/* Form Widgets */}
         <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
           {!isCollapsed && (
             <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
