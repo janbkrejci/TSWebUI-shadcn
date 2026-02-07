@@ -249,13 +249,16 @@ export function Sidebar({ className, children, ...props }: React.ComponentProps<
   const sidebarHeight = `calc(100vh - ${topBarHeight}px)`
   const currentWidth = isCollapsed ? collapsedWidth : width
 
+  const isAbsolute = className?.includes("absolute")
+
   return (
     <>
       {/* Overlay pro mobile - kliknutí zavře sidebar */}
       {isOpen && isMobile && (
         <div
           className={cn(
-            "fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity duration-300"
+            "fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity duration-300",
+            isAbsolute && "absolute"
           )}
           style={{ top: topBarHeight }}
           onClick={close}

@@ -1,6 +1,6 @@
 "use client"
 
-import { Moon, Sun } from "lucide-react"
+import { Check, Moon, Sun } from "lucide-react"
 
 import { useTheme } from "next-themes"
 import * as React from "react"
@@ -15,7 +15,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function ModeToggle() {
-  const { setTheme } = useTheme()
+  const { setTheme, theme } = useTheme()
 
   return (
     <TooltipProvider>
@@ -31,13 +31,22 @@ export function ModeToggle() {
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Přepnout téma</p>
+            <p>Toggle theme</p>
           </TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("light")} className="justify-between">
+            Light
+            {theme === "light" && <Check className="h-4 w-4 ml-2" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("dark")} className="justify-between">
+            Dark
+            {theme === "dark" && <Check className="h-4 w-4 ml-2" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("system")} className="justify-between">
+            System
+            {theme === "system" && <Check className="h-4 w-4 ml-2" />}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </TooltipProvider>

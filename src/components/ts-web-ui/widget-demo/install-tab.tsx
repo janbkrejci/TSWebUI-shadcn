@@ -22,16 +22,14 @@ export function InstallTab({ componentName, dependencies = [] }: InstallTabProps
 
   const handleCopy = () => {
     navigator.clipboard.writeText(installCommand)
-    toast.success("Příkaz zkopírován do schránky")
+    toast.success("Command copied to clipboard")
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Instalace komponenty</CardTitle>
-        <CardDescription>
-          Použijte shadcn CLI pro přidání této komponenty do vašeho projektu.
-        </CardDescription>
+        <CardTitle>Component Installation</CardTitle>
+        <CardDescription>Use the shadcn CLI to add this component to your project.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="bg-slate-950 text-slate-50 p-4 rounded-lg relative group">
@@ -47,17 +45,17 @@ export function InstallTab({ componentName, dependencies = [] }: InstallTabProps
         </div>
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground italic">
-            Tento příkaz automaticky provede následující kroky:
+            This command will automatically perform the following steps:
           </p>
           <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 space-y-1">
-            <li>Stáhne zdrojové soubory komponenty do vašeho projektu.</li>
+            <li>Download the component source files into your project.</li>
             {dependencies.length > 0 && (
               <li>
-                Nainstaluje potřebné knihovny:{" "}
+                Install required dependencies:{" "}
                 <span className="font-mono">{dependencies.join(", ")}</span>.
               </li>
             )}
-            <li>Doinstaluje všechny vyžadované základní shadcn UI komponenty.</li>
+            <li>Install all required base shadcn UI components.</li>
           </ul>
         </div>
       </CardContent>
