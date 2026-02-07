@@ -20,7 +20,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Používáme CSS proměnnou a media query, aby barva seděla ještě před hydratací třídy .dark.
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[var(--background)]">
+      <div className="min-h-screen bg-background">
         <style>{`
           :root { --background: oklch(1 0 0); }
           @media (prefers-color-scheme: dark) { :root { --background: oklch(0.145 0 0); } }
