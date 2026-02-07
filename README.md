@@ -1,10 +1,42 @@
 # TS Web UI (Shadcn Edition)
 
-[![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions)
-
-> **Note:** Replace `YOUR_USERNAME/YOUR_REPO` with your actual GitHub repository path.
+[![CI](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci.yml)
+[![Deploy](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/deploy.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/deploy.yml)
 
 A React/Shadcn implementation of the TS Web UI components - a comprehensive UI component library with JSON-driven forms, draggable windows, advanced tables, and more.
+
+## Component Registry (shadcn add)
+
+You can easily add these components to your own project using the shadcn CLI. No need to install a heavy NPM package.
+
+### 1. Initialize shadcn/ui
+
+If you haven't already, initialize shadcn/ui in your project:
+
+```bash
+npx shadcn@latest init
+```
+
+### 2. Add Components
+
+Add any component using its registry URL:
+
+```bash
+# Add TS Window
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json
+
+# Add TS Form
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json
+
+# Add TS Table
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json
+```
+
+Each command will automatically:
+
+1. Download the component files to your `components/ts-web-ui/` directory.
+2. Install necessary NPM dependencies (like `react-rnd`, `zod`, etc.).
+3. Install required shadcn UI primitives (like `button`, `input`, etc.).
 
 ## Features
 
