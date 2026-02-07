@@ -1,13 +1,14 @@
 {
   "name": "ts-web-ui/theme-provider",
-  "type": "registry:component",
+  "type": "registry:block",
   "dependencies": [
     "next-themes"
   ],
   "registryDependencies": [],
   "files": [
     {
-      "path": "index.tsx",
+      "path": "ts-web-ui/theme-provider/index.tsx",
+      "target": "ts-web-ui/theme-provider/index.tsx",
       "content": "\"use client\"\n\nimport { ThemeProvider as NextThemesProvider } from \"next-themes\"\nimport * as React from \"react\"\n\nexport function ThemeProvider({\n  children,\n  ...props\n}: React.ComponentProps<typeof NextThemesProvider>) {\n  return <NextThemesProvider {...props}>{children}</NextThemesProvider>\n}\n",
       "type": "registry:component"
     }

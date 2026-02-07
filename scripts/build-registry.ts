@@ -104,7 +104,7 @@ async function buildRegistry() {
   for (const component of REGISTRY_COMPONENTS) {
     const registryItem = {
       name: component.name,
-      type: "registry:component",
+      type: "registry:block",
       dependencies: component.dependencies,
       registryDependencies: component.registryDependencies,
       files: component.files.map((fileRelPath) => {
@@ -121,13 +121,9 @@ async function buildRegistry() {
           .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
           .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
 
-        // For files, we use the filename relative to the component's root
-        // e.g., "ts-table/ts-table-pagination.tsx" -> "ts-table-pagination.tsx"
-        const parts = fileRelPath.split("/")
-        const fileName = parts[parts.length - 1]
-
         return {
-          path: fileName,
+          path: `ts-web-ui/${fileRelPath}`,
+          target: `ts-web-ui/${fileRelPath}`,
           content: processedContent,
           type: "registry:component",
         }
@@ -144,6 +140,7 @@ async function buildRegistry() {
   // Generate main registry index
   const index = REGISTRY_COMPONENTS.map((c) => ({
     name: c.name,
+    type: "registry:block",
     href: `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${c.name.split("/").pop()}.json`,
   }))
   fs.writeFileSync(path.join(REGISTRY_PATH, "index.json"), JSON.stringify(index, null, 2))
