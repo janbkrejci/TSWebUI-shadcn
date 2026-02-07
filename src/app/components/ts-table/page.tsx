@@ -19,6 +19,7 @@ import { TsTable } from "@/components/ts-web-ui/ts-table"
 import { TsTableColumnDef } from "@/components/ts-web-ui/ts-table/columns"
 
 interface TableItem {
+  [key: string]: unknown
   id: number
   name: string
   username: string

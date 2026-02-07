@@ -189,9 +189,12 @@ export function generateColumns<TData>(
       enableColumnFilter: def.filterable ?? true,
       size: typeof def.width === "number" ? def.width : 200,
       filterFn: (row, id, value, addMeta) => {
-        if (def.type === "number") return numberFilter(row, id, value, addMeta)
-        if (def.type === "date") return dateFilter(row, id, value, addMeta)
-        if (def.type === "boolean") return booleanFilter(row, id, value, addMeta)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (def.type === "number") return numberFilter(row as any, id, value, addMeta)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (def.type === "date") return dateFilter(row as any, id, value, addMeta)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (def.type === "boolean") return booleanFilter(row as any, id, value, addMeta)
         return true // default text filter handled by table
       },
       meta: {

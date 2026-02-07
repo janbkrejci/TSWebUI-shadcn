@@ -23,12 +23,12 @@ import {
 
 import { cn } from "@/lib/utils"
 
-interface TsTableViewProps {
-  table: TanStackTable<unknown>
-  onRowClick?: (row: unknown) => void
+interface TsTableViewProps<TData> {
+  table: TanStackTable<TData>
+  onRowClick?: (row: TData) => void
 }
 
-export function TsTableView({ table, onRowClick }: TsTableViewProps) {
+export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData>) {
   return (
     <div className="rounded-md border bg-card overflow-hidden">
       <Table>

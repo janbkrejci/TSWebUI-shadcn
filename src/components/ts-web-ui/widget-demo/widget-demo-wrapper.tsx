@@ -167,13 +167,13 @@ export function WidgetDemoWrapper({
         // Parsovat JSON hodnoty
         if (attributes.find((a) => a.name === key)?.type === "json" && typeof value === "string") {
           try {
-            ;(def as Record<string, unknown>)[key] = JSON.parse(value)
+            ;(def as unknown as Record<string, unknown>)[key] = JSON.parse(value)
           } catch {
             // Nechat jako string pokud není validní JSON
-            ;(def as Record<string, unknown>)[key] = value
+            ;(def as unknown as Record<string, unknown>)[key] = value
           }
         } else {
-          ;(def as Record<string, unknown>)[key] = value
+          ;(def as unknown as Record<string, unknown>)[key] = value
         }
       }
     })

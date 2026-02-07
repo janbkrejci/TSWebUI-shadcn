@@ -378,7 +378,9 @@ function renderWidget(
         <Alert variant={variant}>
           <Info className="h-4 w-4" />
           <AlertTitle>{def.label || "Info"}</AlertTitle>
-          <AlertDescription>{def.value || def.content || "Obsah infoboxu"}</AlertDescription>
+          <AlertDescription>
+            {(def.value as React.ReactNode) || def.content || "Obsah infoboxu"}
+          </AlertDescription>
         </Alert>
       )
     }
@@ -386,7 +388,7 @@ function renderWidget(
     case "markdown":
       return (
         <div className="prose dark:prose-invert max-w-none p-4 border rounded-md bg-muted/50 text-sm">
-          <Markdown>{def.value || def.content || ""}</Markdown>
+          <Markdown>{(def.value as string) || def.content || ""}</Markdown>
         </div>
       )
 
@@ -672,7 +674,7 @@ function RelationshipWidget({
 
   const valueField = def.valueField || "id"
   const availableItems = React.useMemo(
-    () => (def.options as Record<string, unknown>[]) || [],
+    () => (def.options as unknown as Record<string, unknown>[]) || [],
     [def.options]
   )
 

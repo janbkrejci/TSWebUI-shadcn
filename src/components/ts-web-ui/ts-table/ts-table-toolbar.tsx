@@ -17,18 +17,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 
-interface TsTableToolbarProps {
-  table: Table<unknown>
+interface TsTableToolbarProps<TData> {
+  table: Table<TData>
   showCreateButton?: boolean
   showImportButton?: boolean
   showExportButton?: boolean
   showColumnSelector?: boolean
   onCreateClick?: () => void
-  onImportClick?: (data: unknown[]) => void
+  onImportClick?: (data: TData[]) => void
   title?: string
 }
 
-export function TsTableToolbar({
+export function TsTableToolbar<TData>({
   table,
   showCreateButton = true,
   showImportButton = true,
@@ -37,7 +37,7 @@ export function TsTableToolbar({
   onCreateClick,
   onImportClick,
   title,
-}: TsTableToolbarProps) {
+}: TsTableToolbarProps<TData>) {
   const handleExport = () => {
     const data = table.getFilteredRowModel().rows.map((row) => row.original)
     const ws = XLSX.utils.json_to_sheet(data)
@@ -57,7 +57,7 @@ export function TsTableToolbar({
       const wb = XLSX.read(bstr, { type: "binary" })
       const wsname = wb.SheetNames[0]
       const ws = wb.Sheets[wsname]
-      const data = XLSX.utils.sheet_to_json(ws) as unknown[]
+      const data = XLSX.utils.sheet_to_json(ws) as TData[]
       onImportClick?.(data)
     }
     reader.readAsBinaryString(file)

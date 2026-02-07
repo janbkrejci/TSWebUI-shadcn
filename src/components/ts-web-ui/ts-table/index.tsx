@@ -18,7 +18,7 @@ import { TsTablePagination } from "./ts-table-pagination"
 import { TsTableToolbar } from "./ts-table-toolbar"
 import { TsTableView } from "./ts-table-view"
 
-export interface TsTableProps<TData = Record<string, unknown>> {
+export interface TsTableProps<TData extends Record<string, unknown> = Record<string, unknown>> {
   data: TData[]
   columnDefinitions: TsTableColumnDef[]
   title?: string
@@ -36,7 +36,7 @@ export interface TsTableProps<TData = Record<string, unknown>> {
   predefinedFilters?: Record<string, unknown>
 }
 
-export function TsTable<TData = Record<string, unknown>>({
+export function TsTable<TData extends Record<string, unknown> = Record<string, unknown>>({
   data: initialData,
   columnDefinitions,
   title,
@@ -52,7 +52,7 @@ export function TsTable<TData = Record<string, unknown>>({
   pageSizeOptions = [5, 10, 20, 50, 100],
   singleItemActions,
   predefinedFilters,
-}: TsTableProps) {
+}: TsTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
 

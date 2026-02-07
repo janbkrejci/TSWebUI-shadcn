@@ -12,15 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface TsTablePaginationProps {
-  table: Table<unknown>
+interface TsTablePaginationProps<TData> {
+  table: Table<TData>
   pageSizeOptions?: number[]
 }
 
-export function TsTablePagination({
+export function TsTablePagination<TData>({
   table,
   pageSizeOptions = [5, 10, 20, 50, 100],
-}: TsTablePaginationProps) {
+}: TsTablePaginationProps<TData>) {
   return (
     <div className="flex items-center justify-between px-2 py-4">
       <div className="flex-1 text-sm text-muted-foreground">
