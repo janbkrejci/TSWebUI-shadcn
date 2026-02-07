@@ -69,7 +69,7 @@ export function TsTableToolbar<TData>({
         <div className="relative w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Hledat..."
+            placeholder="Search..."
             value={(table.getState().globalFilter as string) ?? ""}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
             className="pl-8 h-9"
@@ -84,11 +84,11 @@ export function TsTableToolbar<TData>({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 ml-auto flex gap-2">
                 <Settings2 className="h-4 w-4" />
-                Sloupce
+                Columns
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Zobrazit sloupce</DropdownMenuLabel>
+              <DropdownMenuLabel>View columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {table
                 .getAllColumns()
@@ -138,7 +138,7 @@ export function TsTableToolbar<TData>({
         {showCreateButton && (
           <Button size="sm" className="h-9 gap-2" onClick={onCreateClick}>
             <Plus className="h-4 w-4" />
-            Nový záznam
+            Now record
           </Button>
         )}
       </div>

@@ -14,7 +14,7 @@ interface InstallTabProps {
 }
 
 /**
- * Společná komponenta pro zobrazení instalačních instrukcí přes shadcn CLI
+ * Shared component for displaying installation instructions via shadcn CLI
  */
 export function InstallTab({ componentName, dependencies = [] }: InstallTabProps) {
   const registryUrl = `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${componentName}.json`

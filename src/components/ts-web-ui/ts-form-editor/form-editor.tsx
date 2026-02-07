@@ -1,15 +1,7 @@
 "use client"
 
-/**
- * TsFormEditor - Vizuální editor formulářů
- *
- * Poskytuje kompletní rozhraní pro tvorbu formulářů:
- * - Drag & drop přidávání polí
- * - Podpora tabů a single-page režimu
- * - Grid layout s více poli na řádku
- * - Náhled formuláře v reálném čase
- * - Export/import JSON konfigurace
- */
+import { KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import {
   Columns,
   Copy,
@@ -75,7 +67,14 @@ import { useFormEditorStore } from "./store"
 import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./types"
 
 /**
- * Hlavní komponenta Form Editoru
+ * TsFormEditor - Visual form builder
+ *
+ * Provides a complete interface for form creation:
+ * - Drag & drop field addition
+ * - Support for tabs and single-page mode
+ * - Grid layout with multiple fields per row
+ * - Real-time form preview
+ * - JSON configuration export/import
  */
 export function TsFormEditor() {
   const {
@@ -108,21 +107,27 @@ export function TsFormEditor() {
     historyIndex,
   } = useFormEditorStore()
 
-  // Stavy UI
+  // UI States
   const [showPreview, setShowPreview] = React.useState(false)
   const [showImportDialog, setShowImportDialog] = React.useState(false)
   const [importJsonText, setImportJsonText] = React.useState("")
   const [importError, setImportError] = React.useState("")
 
-  // Klávesové zkratky
+  // Sensors for drag & drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  // Keyboard shortcuts
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignorovat pokud jsme v inputu
+      // Ignore if inside an input
       if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName)) {
         return
       }
 
-      // Delete - smazat vybrané
+      // Delete - delete selected
       if (e.key === "Delete" || e.key === "Backspace") {
         if (selection.type === "field" && selection.id) {
           removeField(selection.id)
@@ -135,7 +140,7 @@ export function TsFormEditor() {
         undo()
       }
 
-      // Ctrl+Shift+Z nebo Ctrl+Y - redo
+      // Ctrl+Shift+Z or Ctrl+Y - redo
       if (
         (e.key === "z" && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
         (e.key === "y" && (e.ctrlKey || e.metaKey))
@@ -144,7 +149,7 @@ export function TsFormEditor() {
         redo()
       }
 
-      // Escape - zrušit výběr
+      // Escape - cancel selection
       if (e.key === "Escape") {
         clearSelection()
       }
@@ -155,7 +160,7 @@ export function TsFormEditor() {
   }, [selection, removeField, undo, redo, clearSelection])
 
   /**
-   * Získá řádky podle aktuálního režimu
+   * Gets rows based on current mode
    */
   const getCurrentRows = (): EditorRow[] => {
     if (form.mode === "single") {
@@ -165,7 +170,7 @@ export function TsFormEditor() {
   }
 
   /**
-   * Zpracuje import JSON
+   * Processes JSON import
    */
   const handleImport = () => {
     setImportError("")
@@ -174,19 +179,19 @@ export function TsFormEditor() {
       setShowImportDialog(false)
       setImportJsonText("")
     } else {
-      setImportError("Neplatný formát JSON. Zkontrolujte strukturu.")
+      setImportError("Invalid JSON format. Check the structure.")
     }
   }
 
   /**
-   * Zkopíruje JSON do schránky
+   * Copies JSON to clipboard
    */
   const handleCopyJson = () => {
     navigator.clipboard.writeText(exportJson())
   }
 
   /**
-   * Stáhne JSON jako soubor
+   * Downloads JSON as a file
    */
   const handleDownloadJson = () => {
     const blob = new Blob([exportJson()], { type: "application/json" })
@@ -199,7 +204,7 @@ export function TsFormEditor() {
   }
 
   /**
-   * Nahraje JSON ze souboru
+   * Uploads JSON from a file
    */
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -228,8 +233,8 @@ export function TsFormEditor() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="single">Bez tabů</SelectItem>
-                <SelectItem value="tabs">S taby</SelectItem>
+                <SelectItem value="single">No tabs</SelectItem>
+                <SelectItem value="tabs">With tabs</SelectItem>
               </SelectContent>
             </Select>
 
@@ -242,7 +247,7 @@ export function TsFormEditor() {
                   <Undo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Zpět (Ctrl+Z)</TooltipContent>
+              <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -256,7 +261,7 @@ export function TsFormEditor() {
                   <Redo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Znovu (Ctrl+Shift+Z)</TooltipContent>
+              <TooltipContent>Redo (Ctrl+Shift+Z)</TooltipContent>
             </Tooltip>
 
             <Separator orientation="vertical" className="h-6" />
@@ -268,7 +273,7 @@ export function TsFormEditor() {
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Resetovat formulář</TooltipContent>
+              <TooltipContent>Reset form</TooltipContent>
             </Tooltip>
           </div>
 
@@ -283,10 +288,8 @@ export function TsFormEditor() {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Import JSON konfigurace</DialogTitle>
-                  <DialogDescription>
-                    Vložte JSON definici formuláře nebo nahrajte soubor
-                  </DialogDescription>
+                  <DialogTitle>Import JSON Configuration</DialogTitle>
+                  <DialogDescription>Paste JSON form definition or upload a file</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="flex gap-2">
@@ -301,15 +304,15 @@ export function TsFormEditor() {
                     value={importJsonText}
                     onChange={(e) => setImportJsonText(e.target.value)}
                     placeholder='{"fields": {}, "layout": {}, "buttons": []}'
-                    className="min-h-75 font-mono text-sm"
+                    className="min-h-[300px] font-mono text-sm"
                   />
                   {importError && <p className="text-sm text-destructive">{importError}</p>}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowImportDialog(false)}>
-                    Zrušit
+                    Cancel
                   </Button>
-                  <Button onClick={handleImport}>Importovat</Button>
+                  <Button onClick={handleImport}>Import</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -325,11 +328,11 @@ export function TsFormEditor() {
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleCopyJson}>
                   <Copy className="h-4 w-4 mr-2" />
-                  Kopírovat do schránky
+                  Copy to clipboard
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadJson}>
                   <FileJson className="h-4 w-4 mr-2" />
-                  Stáhnout jako soubor
+                  Download as file
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -339,17 +342,17 @@ export function TsFormEditor() {
             {/* Preview */}
             <Button variant="default" size="sm" onClick={() => setShowPreview(true)}>
               <Eye className="h-4 w-4 mr-2" />
-              Náhled
+              Preview
             </Button>
           </div>
         </div>
 
         {/* Main content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar - Paleta komponent */}
+          {/* Sidebar - Component Palette */}
           <div className="w-64 border-r bg-muted/20 flex flex-col">
             <div className="p-3 border-b">
-              <h3 className="font-semibold text-sm">Komponenty</h3>
+              <h3 className="font-semibold text-sm">Components</h3>
             </div>
             <ScrollArea className="flex-1">
               <Accordion
@@ -371,7 +374,7 @@ export function TsFormEditor() {
                             label={field.label}
                             onAdd={() => {
                               const rows = getCurrentRows()
-                              // Přidat do prvního prázdného slotu nebo nového řádku
+                              // Add to the first empty slot or new row
                               let added = false
                               for (let ri = 0; ri < rows.length && !added; ri++) {
                                 for (let ii = 0; ii < rows[ri].items.length && !added; ii++) {
@@ -390,7 +393,7 @@ export function TsFormEditor() {
                                 }
                               }
                               if (!added) {
-                                // Přidat nový řádek
+                                // Add new row
                                 addRow(activeTabIndex)
                                 const newRows = getCurrentRows()
                                 addField(
@@ -414,7 +417,7 @@ export function TsFormEditor() {
           {/* Canvas */}
           <div className="flex-1 bg-slate-50 dark:bg-slate-900 overflow-auto p-6">
             <div className="max-w-4xl mx-auto space-y-4">
-              {/* Taby (pokud mode === 'tabs') */}
+              {/* Tabs (if mode === 'tabs') */}
               {form.mode === "tabs" && form.tabs && (
                 <Card>
                   <CardContent className="pt-4">
@@ -459,10 +462,10 @@ export function TsFormEditor() {
                 </Card>
               )}
 
-              {/* Canvas s řádky */}
+              {/* Canvas with rows */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Layout formuláře</CardTitle>
+                  <CardTitle className="text-base">Form Layout</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -486,27 +489,27 @@ export function TsFormEditor() {
                       />
                     ))}
 
-                    {/* Tlačítko pro přidání řádku */}
+                    {/* Button to add row */}
                     <Button
                       variant="outline"
                       className="w-full border-dashed"
                       onClick={() => addRow(activeTabIndex)}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Přidat řádek
+                      Add row
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Tlačítka formuláře */}
+              {/* Form Buttons */}
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Tlačítka</CardTitle>
+                    <CardTitle className="text-base">Buttons</CardTitle>
                     <Button variant="outline" size="sm" onClick={addButton}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Přidat
+                      Add
                     </Button>
                   </div>
                 </CardHeader>
@@ -536,7 +539,7 @@ export function TsFormEditor() {
           {/* Properties Panel */}
           <div className="w-80 border-l bg-background flex flex-col">
             <div className="p-3 border-b">
-              <h3 className="font-semibold text-sm">Vlastnosti</h3>
+              <h3 className="font-semibold text-sm">Properties</h3>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-3">
@@ -549,7 +552,7 @@ export function TsFormEditor() {
                   />
                 ) : (
                   <div className="text-sm text-muted-foreground text-center py-10">
-                    Vyberte pole pro úpravu vlastností
+                    Select a field to edit properties
                   </div>
                 )}
               </div>
@@ -561,8 +564,8 @@ export function TsFormEditor() {
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
             <DialogHeader>
-              <DialogTitle>Náhled formuláře</DialogTitle>
-              <DialogDescription>Interaktivní náhled vašeho formuláře</DialogDescription>
+              <DialogTitle>Form Preview</DialogTitle>
+              <DialogDescription>Interactive preview of your form</DialogDescription>
             </DialogHeader>
             <div className="border rounded-lg p-6">
               <TsForm
@@ -611,7 +614,7 @@ export function TsFormEditor() {
 }
 
 /**
- * Položka v paletě komponent
+ * Item in the component palette
  */
 function FieldPaletteItem({ label, onAdd }: { type: string; label: string; onAdd: () => void }) {
   return (
@@ -623,7 +626,7 @@ function FieldPaletteItem({ label, onAdd }: { type: string; label: string; onAdd
 }
 
 /**
- * Řádek na canvasu
+ * Row on the canvas
  */
 function CanvasRow({
   row,
@@ -656,7 +659,7 @@ function CanvasRow({
 }) {
   return (
     <div className="group flex items-stretch gap-2 p-2 border rounded-md bg-card hover:border-primary/50 transition-colors">
-      {/* Grip pro řádek */}
+      {/* Row grip */}
       <div className="flex items-center text-muted-foreground cursor-grab">
         <GripVertical className="h-4 w-4" />
       </div>
@@ -684,7 +687,7 @@ function CanvasRow({
         ))}
       </div>
 
-      {/* Akce řádku */}
+      {/* Row actions */}
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -692,7 +695,7 @@ function CanvasRow({
               <Columns className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Přidat sloupec</TooltipContent>
+          <TooltipContent>Add column</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -705,7 +708,7 @@ function CanvasRow({
               <Trash2 className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Smazat řádek</TooltipContent>
+          <TooltipContent>Delete row</TooltipContent>
         </Tooltip>
       </div>
     </div>
@@ -713,7 +716,7 @@ function CanvasRow({
 }
 
 /**
- * Buňka v řádku (obsahuje pole nebo je prázdná)
+ * Cell in a row (contains a field or is empty)
  */
 function CanvasCell({
   item,
@@ -737,7 +740,7 @@ function CanvasCell({
   return (
     <div
       className={cn(
-        "relative min-h-15 p-2 border rounded transition-colors cursor-pointer",
+        "relative min-h-[60px] p-2 border rounded transition-colors cursor-pointer",
         isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
         isSelected && "ring-2 ring-primary border-primary"
       )}
@@ -746,7 +749,7 @@ function CanvasCell({
       {isEmpty ? (
         <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
           <Plus className="h-4 w-4 mr-1" />
-          Přetáhněte pole
+          Drag a field here
         </div>
       ) : (
         <div className="space-y-1">
@@ -796,7 +799,7 @@ function CanvasCell({
 }
 
 /**
- * Panel vlastností pole
+ * Field properties panel
  */
 function FieldPropertiesPanel({
   fieldName,
@@ -811,18 +814,18 @@ function FieldPropertiesPanel({
 }) {
   return (
     <div className="space-y-4">
-      {/* Základní info */}
+      {/* Basic info */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Badge>{config.type}</Badge>
           <Button variant="destructive" size="sm" onClick={onDelete}>
             <Trash2 className="h-3 w-3 mr-1" />
-            Smazat
+            Delete
           </Button>
         </div>
 
         <div className="space-y-2">
-          <Label>ID pole</Label>
+          <Label>Field ID</Label>
           <Input value={fieldName} disabled className="font-mono text-sm" />
         </div>
 
@@ -840,19 +843,19 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
-          <Label>Nápověda</Label>
+          <Label>Hint</Label>
           <Input value={config.hint || ""} onChange={(e) => onUpdate({ hint: e.target.value })} />
         </div>
       </div>
 
       <Separator />
 
-      {/* Stavy */}
+      {/* States */}
       <div className="space-y-3">
-        <h4 className="font-medium text-sm">Stavy</h4>
+        <h4 className="font-medium text-sm">States</h4>
 
         <div className="flex items-center justify-between">
-          <Label>Povinné</Label>
+          <Label>Required</Label>
           <Switch
             checked={config.required || false}
             onCheckedChange={(checked: boolean) => onUpdate({ required: checked })}
@@ -860,7 +863,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Zakázané</Label>
+          <Label>Disabled</Label>
           <Switch
             checked={config.disabled || false}
             onCheckedChange={(checked: boolean) => onUpdate({ disabled: checked })}
@@ -868,7 +871,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Pouze pro čtení</Label>
+          <Label>Read-only</Label>
           <Switch
             checked={config.readonly || false}
             onCheckedChange={(checked: boolean) => onUpdate({ readonly: checked })}
@@ -876,7 +879,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Skryté</Label>
+          <Label>Hidden</Label>
           <Switch
             checked={config.hidden || false}
             onCheckedChange={(checked: boolean) => onUpdate({ hidden: checked })}
@@ -884,12 +887,12 @@ function FieldPropertiesPanel({
         </div>
       </div>
 
-      {/* Specifické vlastnosti podle typu */}
+      {/* Type-specific properties */}
       {(config.type === "number" || config.type === "slider") && (
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="font-medium text-sm">Číslo</h4>
+            <h4 className="font-medium text-sm">Number</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Min</Label>
@@ -912,7 +915,7 @@ function FieldPropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Krok</Label>
+                <Label className="text-xs">Step</Label>
                 <Input
                   type="number"
                   value={config.step ?? ""}
@@ -930,7 +933,7 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-2">
-            <Label>Počet řádků</Label>
+            <Label>Row count</Label>
             <Input
               type="number"
               min={1}
@@ -949,7 +952,7 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-2">
-            <Label>Možnosti (JSON)</Label>
+            <Label>Options (JSON)</Label>
             <Textarea
               value={JSON.stringify(config.options || [], null, 2)}
               onChange={(e) => {
@@ -957,7 +960,7 @@ function FieldPropertiesPanel({
                   const options = JSON.parse(e.target.value)
                   onUpdate({ options })
                 } catch {
-                  // Ignorovat neplatný JSON během psaní
+                  // Ignore invalid JSON while typing
                 }
               }}
               rows={5}
@@ -971,9 +974,9 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-2">
-            <Label>Obsah</Label>
+            <Label>Content</Label>
             <Textarea
-              value={config.content || ""}
+              value={(config.value as string) || config.content || ""}
               onChange={(e) => onUpdate({ content: e.target.value })}
               rows={5}
             />
@@ -983,7 +986,7 @@ function FieldPropertiesPanel({
 
       {config.type === "infobox" && (
         <div className="space-y-2">
-          <Label>Varianta</Label>
+          <Label>Variant</Label>
           <Select
             value={config.variant || "default"}
             onValueChange={(v: string) => onUpdate({ variant: v })}

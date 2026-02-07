@@ -1,8 +1,8 @@
 "use client"
 
 /**
- * Form Editor Store - Zustand store pro správu stavu editoru formulářů
- * Obsahuje veškerou logiku pro manipulaci s formulářem
+ * Form Editor Store - Zustand store for form editor state management
+ * Contains all logic for form manipulation
  */
 import { create } from "zustand"
 
@@ -10,43 +10,43 @@ import { TsFieldDef, TsFormButton } from "../ts-form/types"
 import { EditorFormDefinition, EditorRow, EditorRowItem, EditorSelection, EditorTab } from "./types"
 
 // ============================================================================
-// Helper funkce
+// Helper functions
 // ============================================================================
 
-/** Generuje unikátní ID */
+/** Generates a unique ID */
 const generateId = (): string => Math.random().toString(36).substring(2, 11)
 
-/** Získá výchozí label pro typ pole */
+/** Gets the default label for a field type */
 const getDefaultLabel = (type: TsFieldDef["type"]): string => {
   const labels: Record<string, string> = {
-    text: "Textové pole",
-    textarea: "Popis",
-    password: "Heslo",
-    number: "Číslo",
-    select: "Výběr",
-    multiselect: "Vícenásobný výběr",
+    text: "Text field",
+    textarea: "Description",
+    password: "Password",
+    number: "Number",
+    select: "Select",
+    multiselect: "Multi select",
     combobox: "Combobox",
-    radio: "Volba",
-    checkbox: "Zaškrtávací pole",
-    switch: "Přepínač",
-    "button-group": "Skupina tlačítek",
-    date: "Datum",
-    datetime: "Datum a čas",
-    slider: "Posuvník",
-    file: "Soubor",
-    image: "Obrázek",
-    relationship: "Vztah",
-    separator: "Sekce",
-    infobox: "Informace",
+    radio: "Choice",
+    checkbox: "Checkbox",
+    switch: "Switch",
+    "button-group": "Button group",
+    date: "Date",
+    datetime: "Date and time",
+    slider: "Slider",
+    file: "File",
+    image: "Image",
+    relationship: "Relationship",
+    separator: "Section",
+    infobox: "Information",
     markdown: "Text",
-    button: "Tlačítko",
-    table: "Tabulka",
+    button: "Button",
+    table: "Table",
     empty: "",
   }
-  return labels[type] || "Pole"
+  return labels[type] || "Field"
 }
 
-/** Vytvoří výchozí definici pole podle typu */
+/** Creates a default field definition based on type */
 const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
   const base: TsFieldDef = {
     type,
@@ -68,24 +68,24 @@ const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
       return {
         ...base,
         options: [
-          { label: "Možnost 1", value: "option1" },
-          { label: "Možnost 2", value: "option2" },
+          { label: "Option 1", value: "option1" },
+          { label: "Option 2", value: "option2" },
         ],
       }
     case "infobox":
-      return { ...base, content: "Informační text", variant: "default" }
+      return { ...base, content: "Information text", variant: "default" }
     case "markdown":
-      return { ...base, content: "**Markdown** obsah" }
+      return { ...base, content: "**Markdown** content" }
     case "separator":
-      return { ...base, label: "Sekce" }
+      return { ...base, label: "Section" }
     case "button":
-      return { ...base, variant: "default", label: "Tlačítko" }
+      return { ...base, variant: "default", label: "Button" }
     default:
       return base
   }
 }
 
-/** Vytvoří prázdný řádek */
+/** Creates an empty row */
 const createEmptyRow = (): EditorRow => ({
   id: generateId(),
   items: [
@@ -98,21 +98,21 @@ const createEmptyRow = (): EditorRow => ({
   ],
 })
 
-/** Vytvoří výchozí tab */
+/** Creates a default tab */
 const createDefaultTab = (label: string): EditorTab => ({
   id: generateId(),
   label,
   rows: [createEmptyRow()],
 })
 
-/** Výchozí stav formuláře */
+/** Default form state */
 const getInitialForm = (): EditorFormDefinition => ({
   mode: "single",
   rows: [createEmptyRow()],
   fields: {},
   buttons: [
-    { action: "cancel", label: "Zrušit", variant: "outline" },
-    { action: "submit", label: "Uložit", variant: "default", type: "submit" },
+    { action: "cancel", label: "Cancel", variant: "outline" },
+    { action: "submit", label: "Save", variant: "default", type: "submit" },
   ],
 })
 
@@ -128,7 +128,7 @@ export interface FormEditorState {
   history: EditorFormDefinition[]
   historyIndex: number
 
-  // Layout akce
+  // Layout actions
   setMode: (mode: "tabs" | "single") => void
   addTab: (label?: string) => void
   removeTab: (tabIndex: number) => void
@@ -136,17 +136,17 @@ export interface FormEditorState {
   moveTab: (fromIndex: number, toIndex: number) => void
   setActiveTabIndex: (index: number) => void
 
-  // Řádky
+  // Rows
   addRow: (tabIndex: number, afterRowIndex?: number) => void
   removeRow: (tabIndex: number, rowIndex: number) => void
   moveRow: (tabIndex: number, fromIndex: number, toIndex: number) => void
 
-  // Sloupce (grid)
+  // Columns (grid)
   addColumnToRow: (tabIndex: number, rowIndex: number) => void
   removeColumnFromRow: (tabIndex: number, rowIndex: number, itemIndex: number) => void
   updateColumnWidth: (tabIndex: number, rowIndex: number, itemIndex: number, width: string) => void
 
-  // Pole
+  // Fields
   addField: (
     type: TsFieldDef["type"],
     tabIndex: number,
@@ -163,13 +163,13 @@ export interface FormEditorState {
     toRow: number
   ) => void
 
-  // Tlačítka
+  // Buttons
   addButton: () => void
   removeButton: (index: number) => void
   updateButton: (index: number, button: Partial<TsFormButton>) => void
   moveButton: (fromIndex: number, toIndex: number) => void
 
-  // Výběr
+  // Selection
   setSelection: (selection: EditorSelection) => void
   clearSelection: () => void
 
@@ -189,14 +189,14 @@ export interface FormEditorState {
 // ============================================================================
 
 export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
-  // === Výchozí stav ===
+  // === Default state ===
   form: getInitialForm(),
   selection: { type: null, id: null },
   activeTabIndex: 0,
   history: [],
   historyIndex: -1,
 
-  // === Layout akce ===
+  // === Layout actions ===
 
   setMode: (mode: "tabs" | "single") => {
     const { form, saveToHistory } = get()
@@ -210,7 +210,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
           tabs: [
             {
               id: generateId(),
-              label: "Hlavní",
+              label: "Main",
               rows: form.rows || [createEmptyRow()],
             },
           ],
@@ -279,7 +279,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
 
   setActiveTabIndex: (index: number) => set({ activeTabIndex: index }),
 
-  // === Řádky ===
+  // === Rows ===
 
   addRow: (tabIndex: number, afterRowIndex?: number) => {
     const { form, saveToHistory } = get()
@@ -306,7 +306,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     const { form, saveToHistory } = get()
     saveToHistory()
 
-    // Získat pole k odstranění z řádku
+    // Get fields to remove from row
     const rowToRemove =
       form.mode === "single" ? form.rows?.[rowIndex] : form.tabs?.[tabIndex]?.rows[rowIndex]
 
@@ -317,7 +317,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
         )
         .map((item: EditorRowItem) => item.field) || []
 
-    // Odstranit pole z fields
+    // Remove field from fields
     const newFields = { ...form.fields }
     fieldsToRemove.forEach((f: string | undefined) => {
       if (f) delete newFields[f]
@@ -355,7 +355,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     }
   },
 
-  // === Sloupce (grid) ===
+  // === Columns (grid) ===
 
   addColumnToRow: (tabIndex: number, rowIndex: number) => {
     const { form, saveToHistory } = get()
@@ -431,13 +431,13 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     }
   },
 
-  // === Pole ===
+  // === Fields ===
 
   addField: (type: TsFieldDef["type"], tabIndex: number, rowIndex: number, itemIndex: number) => {
     const { form, saveToHistory, setSelection } = get()
     saveToHistory()
 
-    // Generovat unikátní název pole
+    // Generate unique field name
     const baseName = type.replace("-", "_")
     let fieldName = baseName
     let counter = 1
@@ -445,10 +445,10 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       fieldName = `${baseName}_${counter++}`
     }
 
-    // Vytvořit definici pole
+    // Create field definition
     const fieldDef = createDefaultFieldDef(type)
 
-    // Aktualizovat layout
+    // Update layout
     if (form.mode === "single" && form.rows) {
       const newRows = [...form.rows]
       const items = [...newRows[rowIndex].items]
@@ -477,7 +477,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       })
     }
 
-    // Vybrat nové pole
+    // Select new field
     setSelection({ type: "field", id: fieldName, tabIndex, rowIndex, itemIndex })
   },
 
@@ -485,11 +485,11 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     const { form, saveToHistory, clearSelection, selection } = get()
     saveToHistory()
 
-    // Odstranit z fields
+    // Remove from fields
     const newFields = { ...form.fields }
     delete newFields[fieldName]
 
-    // Odstranit z layoutu nebo nahradit prázdným
+    // Remove from layout or replace with empty
     const clearFieldFromItem = (item: EditorRowItem): EditorRowItem => {
       if (item.field === fieldName) {
         return { ...item, field: "", type: "empty" }
@@ -514,7 +514,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       set({ form: { ...form, tabs: newTabs, fields: newFields } })
     }
 
-    // Zrušit výběr pokud bylo pole vybrané
+    // Clear selection if field was selected
     if (selection.id === fieldName) {
       clearSelection()
     }
@@ -539,7 +539,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     const { form, saveToHistory } = get()
     saveToHistory()
 
-    // Získat zdrojové a cílové položky
+    // Get source and target rows
     const getRow = (tabIdx: number, rowIdx: number): EditorRow | undefined => {
       if (form.mode === "single") return form.rows?.[rowIdx]
       return form.tabs?.[tabIdx]?.rows[rowIdx]
@@ -550,11 +550,11 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
 
     if (!sourceRow || !targetRow) return
 
-    // Implementace přesunu - zjednodušená verze
-    // TODO: Plná implementace pro tabs
+    // Movement implementation - simplified version
+    // TODO: Full implementation for tabs
   },
 
-  // === Tlačítka ===
+  // === Buttons ===
 
   addButton: () => {
     const { form, saveToHistory } = get()
@@ -562,7 +562,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
 
     const newButton: TsFormButton = {
       action: `action_${form.buttons.length + 1}`,
-      label: `Tlačítko ${form.buttons.length + 1}`,
+      label: `Button ${form.buttons.length + 1}`,
       variant: "outline",
     }
     set({ form: { ...form, buttons: [...form.buttons, newButton] } })
@@ -599,7 +599,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     set({ form: { ...form, buttons: newButtons } })
   },
 
-  // === Výběr ===
+  // === Selection ===
 
   setSelection: (selection: EditorSelection) => set({ selection }),
   clearSelection: () => set({ selection: { type: null, id: null } }),
@@ -612,14 +612,14 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     try {
       const parsed = JSON.parse(json)
 
-      // Validace základní struktury
+      // Basic structure validation
       if (!parsed.fields || typeof parsed.fields !== "object") {
         return false
       }
 
       saveToHistory()
 
-      // Převést na EditorFormDefinition
+      // Convert to EditorFormDefinition
       const form: EditorFormDefinition = {
         mode: parsed.layout?.tabs ? "tabs" : "single",
         fields: parsed.fields,
@@ -664,7 +664,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
   exportJson: (): string => {
     const { form } = get()
 
-    // Převést na formát TsForm
+    // Convert to TsForm format
     const output: {
       fields: Record<string, TsFieldDef>
       layout: {
@@ -719,13 +719,13 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
   saveToHistory: () => {
     const { form, history, historyIndex } = get()
 
-    // Oříznout budoucí historii pokud jsme uprostřed
+    // Trim future history if we are in the middle
     const newHistory = history.slice(0, historyIndex + 1)
 
-    // Přidat aktuální stav (deep clone)
+    // Add current state (deep clone)
     newHistory.push(JSON.parse(JSON.stringify(form)))
 
-    // Omezit velikost historie
+    // Limit history size
     if (newHistory.length > 50) {
       newHistory.shift()
     }

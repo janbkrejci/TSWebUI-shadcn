@@ -2,7 +2,7 @@ import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widge
 
 /**
  * Demo stránka pro Switch widget
- * Přepínač pro boolean hodnoty ve stylu iOS
+ * Switch pro boolean hodnoty ve stylu iOS
  */
 
 const attributes: WidgetAttribute[] = [
@@ -25,7 +25,7 @@ export default function SwitchWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Switch"
-      description="Přepínač ve stylu iOS pro zapnutí/vypnutí funkce. Alternativa k checkboxu pro nastavení typu on/off."
+      description="Switch ve stylu iOS pro zapnutí/vypnutí funkce. Alternativa k checkboxu pro nastavení typu on/off."
       widgetType="switch"
       attributes={attributes}
       defaultFieldValue={false}

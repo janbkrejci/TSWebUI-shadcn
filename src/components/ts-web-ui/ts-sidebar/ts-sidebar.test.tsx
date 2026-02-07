@@ -16,7 +16,7 @@ describe("TsSidebar", () => {
       </SidebarProvider>
     )
 
-    const trigger = screen.getByLabelText(/Zavřít menu/i)
+    const trigger = screen.getByLabelText(/Close menu/i)
     expect(screen.getByText("Item 1")).toBeInTheDocument()
 
     fireEvent.click(trigger)

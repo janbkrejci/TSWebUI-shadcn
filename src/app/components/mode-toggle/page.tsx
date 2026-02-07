@@ -16,7 +16,7 @@ export default function ModeTogglePage() {
 export default function Header() {
   return (
     <header>
-      <div className="logo">Můj Web</div>
+      <div className="logo">My Web</div>
       <ModeToggle />
     </header>
   )
@@ -42,20 +42,20 @@ export default function Header() {
           <Card>
             <CardHeader>
               <CardTitle>Interaktivní ukázka</CardTitle>
-              <CardDescription>Klikněte na ikonu pro změnu režimu aplikace.</CardDescription>
+              <CardDescription>Click the icon to change the application mode.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center py-12 gap-6">
               <div className="p-8 border rounded-xl bg-card shadow-sm flex flex-col items-center gap-4">
                 <ModeToggle />
-                <span className="text-sm font-medium">Aktuálně zvolený motiv</span>
+                <span className="text-sm font-medium">Currently selected theme</span>
               </div>
 
               <div className="grid grid-cols-2 gap-4 w-full max-w-md">
                 <div className="p-4 rounded-lg border bg-white text-black flex items-center gap-2 shadow-sm">
-                  <Sun className="h-4 w-4" /> Světlý režim
+                  <Sun className="h-4 w-4" /> Light mode
                 </div>
                 <div className="p-4 rounded-lg border bg-slate-950 text-white flex items-center gap-2 shadow-sm">
-                  <Moon className="h-4 w-4" /> Tmavý režim
+                  <Moon className="h-4 w-4" /> Dark mode
                 </div>
               </div>
             </CardContent>

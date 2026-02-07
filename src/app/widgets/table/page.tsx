@@ -1,7 +1,7 @@
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
 /**
- * Demo stránka pro Nested Table widget
+ * Demo stránka pro Nosted Table widget
  * Vnořená tabulka v rámci formuláře
  */
 
@@ -14,7 +14,7 @@ const attributes: WidgetAttribute[] = [
     type: "json",
     defaultValue: JSON.stringify(
       [
-        { field: "name", header: "Název", width: "200px" },
+        { field: "name", header: "Name", width: "200px" },
         { field: "quantity", header: "Množství", width: "100px" },
         { field: "price", header: "Cena", width: "100px" },
       ],
@@ -36,7 +36,7 @@ const attributes: WidgetAttribute[] = [
 export default function TableWidgetDemo() {
   return (
     <WidgetDemoWrapper
-      title="Nested Table"
+      title="Nosted Table"
       description="Vnořená tabulka pro správu seznamu položek v rámci formuláře (např. položky faktury, adresy)."
       widgetType="table"
       attributes={attributes}

@@ -1,7 +1,7 @@
 "use client"
 
 import { format } from "date-fns"
-import { cs } from "date-fns/locale"
+import { enUS } from "date-fns/locale"
 import { CalendarIcon, Check, ChevronsUpDown, Info, X as XIcon } from "lucide-react"
 
 import * as React from "react"
@@ -240,8 +240,7 @@ function renderWidget(
           )}
         >
           {(def.options || []).map((opt: TsFieldOptions | string) => {
-            // format value/enabled/variant/Label or just value/label or object
-            // Assuming object {value, label} or string "value/Label"
+            // format value/label or object
             const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
             const label = typeof opt === "string" ? opt.split("/").pop() : opt.label
 
@@ -279,7 +278,7 @@ function renderWidget(
           disabled={def.disabled || def.readonly}
         >
           <SelectTrigger className={cn(errorClass, readonlyClass)}>
-            <SelectValue placeholder={def.placeholder || "Vyberte..."} />
+            <SelectValue placeholder={def.placeholder || "Select..."} />
           </SelectTrigger>
           <SelectContent>
             {(def.options || []).map((opt: TsFieldOptions | string) => {
@@ -317,9 +316,9 @@ function renderWidget(
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {field.value ? (
-                format(field.value as Date, "PPP", { locale: cs })
+                format(field.value as Date, "PPP", { locale: enUS })
               ) : (
-                <span>{def.placeholder || "Vyberte datum"}</span>
+                <span>{def.placeholder || "Pick a date"}</span>
               )}
             </Button>
           </PopoverTrigger>
@@ -329,7 +328,7 @@ function renderWidget(
               selected={field.value as Date}
               onSelect={field.onChange}
               initialFocus
-              locale={cs}
+              locale={enUS}
             />
           </PopoverContent>
         </Popover>
@@ -379,7 +378,7 @@ function renderWidget(
           <Info className="h-4 w-4" />
           <AlertTitle>{def.label || "Info"}</AlertTitle>
           <AlertDescription>
-            {(def.value as React.ReactNode) || def.content || "Obsah infoboxu"}
+            {(def.value as React.ReactNode) || def.content || "Infobox content"}
           </AlertDescription>
         </Alert>
       )
@@ -399,7 +398,6 @@ function renderWidget(
             data={(field.value as Record<string, unknown>[]) || []}
             columnDefinitions={def.columns || []}
             showCreateButton={def.showCreateButton}
-            // Pass other props if needed, but data binding is tricky without specific table editing features
           />
         </div>
       )
@@ -424,7 +422,7 @@ function renderWidget(
       )
 
     case "separator":
-      // Oddělovač - vizuální prvek bez hodnoty
+      // Separator - visual element without value
       return (
         <div className="py-2">
           {def.label ? (
@@ -445,11 +443,11 @@ function renderWidget(
       )
 
     case "empty":
-      // Prázdný placeholder pro layout účely
+      // Empty placeholder for layout purposes
       return <div className="min-h-[40px]" />
 
     case "relationship":
-      // Relationship picker pro výběr entit
+      // Relationship picker for entity selection
       return <RelationshipWidget field={field} def={def} hasError={hasError} />
 
     // Fallback for not implemented
@@ -501,14 +499,14 @@ function ComboboxWidget({
           {field.value
             ? (options.find((framework) => framework.value === field.value)?.label ??
               (field.value as string))
-            : def.placeholder || "Vyberte..."}
+            : def.placeholder || "Select..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput
-            placeholder={def.placeholder || "Hledat..."}
+            placeholder={def.placeholder || "Search..."}
             value={searchValue}
             onValueChange={setSearchValue}
           />
@@ -522,10 +520,10 @@ function ComboboxWidget({
                     setOpen(false)
                   }}
                 >
-                  Použít: &quot;{searchValue}&quot;
+                  Use: &quot;{searchValue}&quot;
                 </div>
               ) : (
-                "Nenalezeno."
+                "Not found."
               )}
             </CommandEmpty>
             <CommandGroup>
@@ -534,9 +532,6 @@ function ComboboxWidget({
                   key={framework.value}
                   value={framework.label}
                   onSelect={(currentValue: string) => {
-                    // Shadcn command returns lowercase label as value
-                    // We need to map back to original value
-                    // Simple lookup by label
                     const original = options.find(
                       (o) => o.label.toLowerCase() === currentValue.toLowerCase()
                     )
@@ -612,7 +607,7 @@ function MultiSelectWidget({
                 </Badge>
               ))
             ) : (
-              <span className="text-muted-foreground">{def.placeholder || "Vyberte..."}</span>
+              <span className="text-muted-foreground">{def.placeholder || "Select..."}</span>
             )}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -620,9 +615,9 @@ function MultiSelectWidget({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder={def.placeholder || "Hledat..."} />
+          <CommandInput placeholder={def.placeholder || "Search..."} />
           <CommandList>
-            <CommandEmpty>Nenalezeno.</CommandEmpty>
+            <CommandEmpty>Not found.</CommandEmpty>
             <CommandGroup>
               {options.map((opt) => (
                 <CommandItem
@@ -646,9 +641,10 @@ function MultiSelectWidget({
     </Popover>
   )
 }
+
 /**
- * Relationship Widget - umožňuje vybírat entity z relacionální tabulky
- * Podporuje single (jeden záznam) nebo multiple (více záznamů) režim
+ * Relationship Widget - allows selecting entities from a relational table
+ * Supports single or multiple selection modes
  */
 function RelationshipWidget({
   field,
@@ -662,7 +658,7 @@ function RelationshipWidget({
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
 
-  // Konfigurace z field definice
+  // Configuration from field definition
   const mode = def.mode || "single"
   const targetEntity = def.targetEntity || ""
 
@@ -681,19 +677,19 @@ function RelationshipWidget({
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = def.readonly ? "bg-muted/50 cursor-default" : ""
 
-  // Parsování hodnoty - může být single ID nebo array ID nebo objekt/objekty
+  // Value parsing - can be single ID, array ID or object/objects
   const selectedValues = React.useMemo(() => {
     if (!field.value) return []
     return Array.isArray(field.value) ? (field.value as unknown[]) : [field.value]
   }, [field.value])
 
   /**
-   * Získá zobrazovaný text pro položku
+   * Gets display text for an item
    */
   const getDisplayText = (item: unknown, fields: string[]) => {
     if (!item) return ""
     if (typeof item !== "object") {
-      // Najdi položku podle ID
+      // Find item by ID
       const found = availableItems.find((i) => i[valueField] === item)
       if (found) {
         return fields
@@ -711,7 +707,7 @@ function RelationshipWidget({
   }
 
   /**
-   * Filtruje položky podle vyhledávacího textu
+   * Filters items based on search text
    */
   const filteredItems = React.useMemo(() => {
     if (!searchValue) return availableItems
@@ -727,7 +723,7 @@ function RelationshipWidget({
   }, [availableItems, searchValue, displayFields])
 
   /**
-   * Vybere/odebere položku
+   * Selects/removes an item
    */
   const toggleItem = (item: Record<string, unknown>) => {
     const itemValue = item[valueField]
@@ -746,7 +742,7 @@ function RelationshipWidget({
   }
 
   /**
-   * Odebere položku z výběru (pro chip)
+   * Removes item from selection (for chip)
    */
   const removeItem = (itemValue: unknown) => {
     if (mode === "single") {
@@ -757,17 +753,17 @@ function RelationshipWidget({
   }
 
   /**
-   * Zjistí, zda je položka vybrána
+   * Checks if item is selected
    */
   const isSelected = (item: Record<string, unknown>) => selectedValues.includes(item[valueField])
 
   return (
     <div className="space-y-2">
-      {/* Vybrané položky jako chipy */}
+      {/* Selected items as chips */}
       {selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {selectedValues.map((val) => (
-            <Badge key={val} variant="secondary">
+            <Badge key={String(val)} variant="secondary">
               {getDisplayText(val, chipDisplayFields)}
               <XIcon
                 className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
@@ -790,11 +786,11 @@ function RelationshipWidget({
           >
             {selectedValues.length === 0 ? (
               <span className="text-muted-foreground">
-                {def.placeholder || `Vyberte ${targetEntity}...`}
+                {def.placeholder || `Select ${targetEntity}...`}
               </span>
             ) : (
               <span className="text-muted-foreground text-sm">
-                {mode === "single" ? "Změnit výběr" : "Přidat další"}
+                {mode === "single" ? "Change selection" : "Add more"}
               </span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -803,13 +799,13 @@ function RelationshipWidget({
         <PopoverContent className="w-full min-w-[300px] p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder={`Hledat ${targetEntity}...`}
+              placeholder={`Search ${targetEntity}...`}
               value={searchValue}
               onValueChange={setSearchValue}
             />
             <CommandList>
               <CommandEmpty>
-                {availableItems.length === 0 ? `Žádné položky v ${targetEntity}` : "Nenalezeno."}
+                {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
               </CommandEmpty>
               <CommandGroup>
                 {filteredItems.map((item) => (

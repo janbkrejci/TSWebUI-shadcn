@@ -83,15 +83,9 @@ export function TsForm({
 
   // 3. Handle Submit (called by form onSubmit)
   const onFormSubmit = (data: FormValues) => {
-    // This logic handles implicit enter key submit or direct button submit
-    // If confirmation is needed, it should have been intercepted by handleButtonClick
-    // But if Enter key is pressed, we might not know which button it maps to.
-    // Default is usually the first submit button or the one with type="submit"
+    // This logic handles implicit submission via Enter key or direct button click
 
     if (submittingAction) {
-      // If we know the action, we check if that button has confirmation
-      // But logic is usually handled in click handler.
-      // If we are here, validation passed.
       onSubmit?.(data as Record<string, unknown>, submittingAction)
       setSubmittingAction(null)
     } else {
@@ -130,7 +124,7 @@ export function TsForm({
         form.handleSubmit(proceedWithConfirmation)(e)
       } else {
         // No validation for non-submit buttons
-        proceedWithConfirmation(form.getValues())
+        proceedWithConfirmation(form.getValues() as FormValues)
       }
       return
     }
@@ -149,7 +143,7 @@ export function TsForm({
     setConfirmation((prev) => ({ ...prev, isOpen: false }))
 
     if (btnConfig.confirm && confirmation.pendingAction && confirmation.pendingData) {
-      setSubmittingAction(confirmation.pendingAction) // Set loading state if we want
+      setSubmittingAction(confirmation.pendingAction)
       onSubmit?.(confirmation.pendingData as Record<string, unknown>, confirmation.pendingAction)
       setSubmittingAction(null)
     }

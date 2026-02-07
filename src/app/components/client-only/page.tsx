@@ -16,7 +16,7 @@ export default function ClientOnlyPage() {
 
 export default function MyPage() {
   return (
-    <ClientOnly fallback={<div>Načítání...</div>}>
+    <ClientOnly fallback={<div>Loading...</div>}>
       {/* Komponenty, které používají window, localStorage nebo jiné klientské API */}
       <MyComplexBrowserWidget />
     </ClientOnly>
@@ -66,14 +66,14 @@ export default function MyPage() {
                 fallback={
                   <div className="flex flex-col items-center gap-2 animate-pulse text-muted-foreground">
                     <ServerOff className="h-10 w-10 opacity-50" />
-                    <span className="text-sm font-medium">Renderuji na serveru...</span>
+                    <span className="text-sm font-medium">Rendering on server...</span>
                   </div>
                 }
               >
                 <div className="flex flex-col items-center gap-2 text-primary animate-in zoom-in duration-500">
                   <Monitor className="h-10 w-10" />
                   <span className="text-sm font-bold uppercase tracking-widest">
-                    Zobrazeno na klientu
+                    Displayed on client
                   </span>
                   <div className="mt-2 text-xs font-mono bg-background p-2 rounded border shadow-sm">
                     window.innerWidth: {typeof window !== "undefined" ? window.innerWidth : "N/A"}px

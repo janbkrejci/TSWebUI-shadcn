@@ -38,7 +38,7 @@ export function generateZodSchema(fields: Record<string, TsFieldDef>) {
 
       default: // text, select, etc. (mostly strings)
         if (def.required) {
-          schema = z.string().min(1, { message: "Toto pole je povinné" })
+          schema = z.string().min(1, { message: "This field is required" })
         } else {
           schema = z.string().optional().or(z.literal(""))
         }

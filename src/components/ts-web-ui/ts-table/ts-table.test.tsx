@@ -27,7 +27,7 @@ describe("TsTable", () => {
   it("filters data when search input is used", async () => {
     render(<TsTable data={data} columnDefinitions={columns} />)
 
-    const searchInput = screen.getByPlaceholderText(/Hledat.../i)
+    const searchInput = screen.getByPlaceholderText(/Search.../i)
     fireEvent.change(searchInput, { target: { value: "Alice" } })
 
     expect(screen.getByText("Alice")).toBeInTheDocument()

@@ -21,25 +21,25 @@ import { TsFormField } from "../ts-form/ts-form-field"
 import { TsFieldDef } from "../ts-form/types"
 
 /**
- * Definice atributu widgetu pro interaktivní kontroly
+ * Definition of a widget attribute for interactive controls
  */
 export interface WidgetAttribute {
-  /** Jméno atributu (odpovídá TsFieldDef property) */
+  /** Attribute name (corresponds to TsFieldDef property) */
   name: string
-  /** Lidsky čitelný popisek */
+  /** Human readable label */
   label: string
-  /** Typ kontroly */
+  /** Control type */
   type: "string" | "number" | "boolean" | "select" | "json" | "textarea"
-  /** Výchozí hodnota */
+  /** Default value */
   defaultValue?: unknown
-  /** Možnosti pro select typ */
+  /** Options for select type */
   options?: { label: string; value: string }[]
-  /** Nápověda */
+  /** Hint text */
   hint?: string
 }
 
 /**
- * Záznam eventu vyhozeného widgetem
+ * Event log entry recorded from the widget
  */
 interface EventLogEntry {
   id: number
@@ -49,29 +49,29 @@ interface EventLogEntry {
 }
 
 /**
- * Props pro WidgetDemoWrapper komponentu
+ * Props for the WidgetDemoWrapper component
  */
 interface WidgetDemoWrapperProps {
-  /** Název widgetu */
+  /** Widget title */
   title: string
-  /** Popis widgetu */
+  /** Widget description */
   description: string
-  /** Typ widgetu (fieldDef.type) */
+  /** Widget type (fieldDef.type) */
   widgetType: TsFieldDef["type"]
-  /** Definice atributů pro interaktivní ovládání */
+  /** Attribute definitions for interactive control */
   attributes: WidgetAttribute[]
-  /** Výchozí hodnota pole */
+  /** Default field value */
   defaultFieldValue?: unknown
-  /** Doplňkové fixní atributy field definice */
+  /** Additional fixed field definition props */
   additionalFieldProps?: Partial<TsFieldDef>
-  /** Jména eventů k naslouchání */
+  /** Event names to watch */
   watchEvents?: string[]
-  /** Zobrazit tab s instrukcemi k instalaci? */
+  /** Show installation instructions tab? */
   showInstallTab?: boolean
 }
 
 /**
- * WidgetDemoWrapper - univerzální wrapper pro demo stránky widgetů
+ * WidgetDemoWrapper - universal wrapper for widget demo pages
  */
 export function WidgetDemoWrapper({
   title,
@@ -82,7 +82,7 @@ export function WidgetDemoWrapper({
   additionalFieldProps = {},
   showInstallTab = false,
 }: WidgetDemoWrapperProps) {
-  // Stav atributů widgetu
+  // Widget attributes state
   const [attrValues, setAttrValues] = React.useState<Record<string, unknown>>(() => {
     const initial: Record<string, unknown> = {}
     attributes.forEach((attr) => {
@@ -91,15 +91,15 @@ export function WidgetDemoWrapper({
     return initial
   })
 
-  // Log eventů
+  // Event log
   const [eventLog, setEventLog] = React.useState<EventLogEntry[]>([])
   const eventIdRef = React.useRef(0)
 
-  // Reference na widget kontejner pro event listening
+  // Widget container reference for event listening
   const widgetContainerRef = React.useRef<HTMLDivElement>(null)
 
   /**
-   * Zaloguje event do logu
+   * Logs an event to the log
    */
   const logEvent = React.useCallback((eventName: string, detail: unknown) => {
     eventIdRef.current += 1
@@ -110,21 +110,21 @@ export function WidgetDemoWrapper({
         eventName,
         detail,
       },
-      ...prev.slice(0, 99), // Uchovat max 100 záznamů
+      ...prev.slice(0, 99), // Keep max 100 entries
     ])
   }, [])
 
-  // Aktuální hodnota widgetu
+  // Current widget value
   const [currentValue, setCurrentValue] = React.useState<unknown>(defaultFieldValue)
 
-  // Form pro widget
+  // Form for the widget
   const form = useForm({
     defaultValues: {
       demoField: defaultFieldValue,
     },
   })
 
-  // Sledování změny hodnoty formuláře
+  // Watch form value changes
   React.useEffect(() => {
     const subscription = form.watch((value) => {
       setCurrentValue(value.demoField)
@@ -135,21 +135,21 @@ export function WidgetDemoWrapper({
   }, [form, logEvent])
 
   /**
-   * Vymaže log eventů
+   * Clears the event log
    */
   const clearEventLog = () => {
     setEventLog([])
   }
 
   /**
-   * Aktualizuje hodnotu atributu
+   * Updates an attribute value
    */
   const updateAttribute = (name: string, value: unknown) => {
     setAttrValues((prev) => ({ ...prev, [name]: value }))
   }
 
   /**
-   * Sestaví field definici z aktuálních atributů
+   * Builds the field definition from current attributes
    */
   const buildFieldDef = (): TsFieldDef => {
     const def: TsFieldDef = {
@@ -157,15 +157,15 @@ export function WidgetDemoWrapper({
       ...additionalFieldProps,
     }
 
-    // Přidat všechny nenulové atributy
+    // Add all non-null attributes
     Object.entries(attrValues).forEach(([key, value]) => {
       if (value !== "" && value !== undefined && value !== null) {
-        // Parsovat JSON hodnoty
+        // Parse JSON values
         if (attributes.find((a) => a.name === key)?.type === "json" && typeof value === "string") {
           try {
             ;(def as unknown as Record<string, unknown>)[key] = JSON.parse(value)
           } catch {
-            // Nechat jako string pokud není validní JSON
+            // Keep as string if not valid JSON
             ;(def as unknown as Record<string, unknown>)[key] = value
           }
         } else {
@@ -180,14 +180,14 @@ export function WidgetDemoWrapper({
   const fieldDef = buildFieldDef()
 
   /**
-   * Zkopíruje JSON konfigurace do schránky
+   * Copies JSON config to clipboard
    */
   const copyJsonConfig = () => {
     const config: Record<string, unknown> = {
       type: widgetType,
       ...attrValues,
     }
-    // Odstranit prázdné hodnoty
+    // Remove empty values
     Object.keys(config).forEach((key) => {
       if (config[key] === "" || config[key] === undefined || config[key] === false) {
         delete config[key]
@@ -198,7 +198,7 @@ export function WidgetDemoWrapper({
   }
 
   /**
-   * Reset hodnoty widgetu
+   * Resets widget value
    */
   const resetValue = () => {
     form.setValue("demoField", defaultFieldValue)
@@ -211,11 +211,11 @@ export function WidgetDemoWrapper({
 
   const previewContent = (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Levý sloupec - Widget Preview */}
+      {/* Left column - Widget Preview */}
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Preview</CardTitle>
-          <CardDescription>Interaktivní náhled widgetu</CardDescription>
+          <CardDescription>Interactive widget preview</CardDescription>
         </CardHeader>
         <CardContent>
           <div ref={widgetContainerRef} className="p-4 border rounded-lg bg-muted/20">
@@ -228,10 +228,10 @@ export function WidgetDemoWrapper({
 
           <Separator className="my-4" />
 
-          {/* Aktuální hodnota */}
+          {/* Current value */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Aktuální hodnota:</Label>
+              <Label className="text-sm font-medium">Current value:</Label>
               <Button variant="outline" size="sm" onClick={resetValue}>
                 <Trash2 className="h-3 w-3 mr-1" /> Reset
               </Button>
@@ -243,15 +243,15 @@ export function WidgetDemoWrapper({
         </CardContent>
       </Card>
 
-      {/* Pravý sloupec - Kontroly a JSON */}
+      {/* Right column - Controls and JSON */}
       <div className="space-y-6">
-        {/* Atributy */}
+        {/* Attributes */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Atributy</CardTitle>
+              <CardTitle className="text-base">Attributes</CardTitle>
               <Button variant="ghost" size="sm" onClick={copyJsonConfig}>
-                <Copy className="h-3 w-3 mr-1" /> Kopírovat
+                <Copy className="h-3 w-3 mr-1" /> Copy
               </Button>
             </div>
           </CardHeader>
@@ -271,10 +271,10 @@ export function WidgetDemoWrapper({
           </CardContent>
         </Card>
 
-        {/* JSON Konfigurace */}
+        {/* JSON Configuration */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">JSON Konfigurace</CardTitle>
+            <CardTitle className="text-base">JSON Configuration</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="p-3 bg-muted rounded-md text-xs overflow-auto max-h-48">
@@ -308,9 +308,9 @@ export function WidgetDemoWrapper({
           <TabsContent value="install" className="pt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Instalace komponenty</CardTitle>
+                <CardTitle>Component Installation</CardTitle>
                 <CardDescription>
-                  Použijte shadcn CLI pro přidání této komponenty do vašeho projektu.
+                  Use the shadcn CLI to add this component to your project.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -322,15 +322,15 @@ export function WidgetDemoWrapper({
                     className="absolute right-2 top-2 h-8 w-8 text-slate-400 hover:text-slate-50"
                     onClick={() => {
                       navigator.clipboard.writeText(installCommand)
-                      toast("Příkaz zkopírován")
+                      toast.success("Command copied to clipboard")
                     }}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground italic">
-                  Poznámka: Tento příkaz automaticky nainstaluje všechny potřebné NPM závislosti a
-                  shadcn UI komponenty.
+                  Note: This command will automatically install all required NPM dependencies and
+                  shadcn UI components.
                 </p>
               </CardContent>
             </Card>
@@ -346,16 +346,16 @@ export function WidgetDemoWrapper({
           <div className="flex items-center justify-between">
             <CardTitle>Event Log</CardTitle>
             <Button variant="outline" size="sm" onClick={clearEventLog}>
-              <Trash2 className="h-3 w-3 mr-1" /> Vymazat
+              <Trash2 className="h-3 w-3 mr-1" /> Clear
             </Button>
           </div>
-          <CardDescription>Zaznamenané eventy z widgetu</CardDescription>
+          <CardDescription>Recorded events from the widget</CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px]">
             {eventLog.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-8">
-                Zatím žádné eventy. Interagujte s widgetem.
+                No events yet. Interact with the widget.
               </p>
             ) : (
               <div className="space-y-2">
@@ -385,7 +385,7 @@ export function WidgetDemoWrapper({
 }
 
 /**
- * Kontrolní prvek pro jednotlivý atribut
+ * Control element for an individual attribute
  */
 function AttributeControl({
   attribute,
@@ -431,7 +431,7 @@ function AttributeControl({
             value={(value as string) ?? ""}
             onChange={(e) => onChange(e.target.value)}
           >
-            <option value="">-- Vyberte --</option>
+            <option value="">-- Select --</option>
             {attribute.options?.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}

@@ -29,22 +29,22 @@ interface TableItem {
   company: string
   turnover: number
   contractDate: string
-  approved: boolean
+  apforved: boolean
 }
 
 const tableData: TableItem[] = [
   {
     id: 1,
-    name: "Jana Nováková",
+    name: "Jana Novak",
     username: "jana_n",
     email: "jana@example.com",
-    city: "Praha",
+    city: "Prague",
     phone: "555-1234",
     website: "www.jananovakova.com",
     company: "Novák s.r.o.",
     turnover: 125000.5,
     contractDate: "2022-03-15",
-    approved: true,
+    apforved: true,
   },
   {
     id: 2,
@@ -57,63 +57,63 @@ const tableData: TableItem[] = [
     company: "Svoboda a.s.",
     turnover: 89000.75,
     contractDate: "2019-07-22",
-    approved: false,
+    apforved: false,
   },
   {
     id: 3,
-    name: "Marie Černá",
+    name: "Marie Cerna",
     username: "marie_c",
     email: "marie@example.com",
     city: "Ostrava",
     phone: "555-8765",
     website: "www.mariecerna.com",
-    company: "Černá spol. s r.o.",
+    company: "Cerna spol. s r.o.",
     turnover: 234000.25,
     contractDate: "2024-01-10",
-    approved: true,
+    apforved: true,
   },
   {
     id: 4,
-    name: "Tomáš Dvořák",
+    name: "Tomáš Dvorak",
     username: "tomas_d",
     email: "tomas@example.com",
-    city: "Plzeň",
+    city: "Pilsen",
     phone: "555-4321",
     website: "www.tomasdvorak.com",
-    company: "Dvořák s.r.o.",
+    company: "Dvorak s.r.o.",
     turnover: 156000.0,
     contractDate: "2020-05-08",
-    approved: true,
+    apforved: true,
   },
   {
     id: 5,
-    name: "Eva Procházková",
+    name: "Eva Prochazka",
     username: "eva_p",
     email: "eva@example.com",
-    city: "České Budějovice",
+    city: "Ceske Budejovice",
     phone: "555-2468",
-    website: "www.evaprocha.com",
+    website: "www.evaforcha.com",
     company: "Procházka a syn",
     turnover: 78000.9,
     contractDate: "2018-09-14",
-    approved: false,
+    apforved: false,
   },
   {
     id: 6,
     name: "Jiří Krejčí",
     username: "jiri_k",
     email: "jiri@example.com",
-    city: "Hradec Králové",
+    city: "Hradec Kralove",
     phone: "555-1357",
     website: "www.jirikrejci.com",
     company: "Krejčí Group s.r.o.",
     turnover: 312000.45,
     contractDate: "2021-02-28",
-    approved: true,
+    apforved: true,
   },
   {
     id: 7,
-    name: "Alena Horáková",
+    name: "Alena Horak",
     username: "alena_h",
     email: "alena@example.com",
     city: "Pardubice",
@@ -122,24 +122,24 @@ const tableData: TableItem[] = [
     company: "Horák s.r.o.",
     turnover: 187000.3,
     contractDate: "2025-11-03",
-    approved: false,
+    apforved: false,
   },
   {
     id: 8,
-    name: "Pavel Němeček",
+    name: "Pavel Nemecek",
     username: "pavel_n",
     email: "pavel@example.com",
     city: "Liberec",
     phone: "555-8642",
     website: "www.pavelnemecek.com",
-    company: "Němeček a partneři",
+    company: "Nemecek a partneři",
     turnover: 95000.6,
     contractDate: "2019-06-19",
-    approved: true,
+    apforved: true,
   },
   {
     id: 9,
-    name: "Tereza Poláková",
+    name: "Tereza Polak",
     username: "tereza_p",
     email: "tereza@example.com",
     city: "Olomouc",
@@ -148,20 +148,20 @@ const tableData: TableItem[] = [
     company: "Polák Group s.r.o.",
     turnover: 268000.8,
     contractDate: "2023-04-12",
-    approved: true,
+    apforved: true,
   },
   {
     id: 10,
-    name: "Martin Veselý",
+    name: "Martin Vesely",
     username: "martin_v",
     email: "martin@example.com",
-    city: "Zlín",
+    city: "Zlin",
     phone: "555-1597",
     website: "www.martinvesely.com",
-    company: "Veselý a.s.",
+    company: "Vesely a.s.",
     turnover: 134000.15,
     contractDate: "2020-08-27",
-    approved: false,
+    apforved: false,
   },
 ]
 
@@ -169,7 +169,7 @@ const columnDefinitions: TsTableColumnDef[] = [
   { key: "id", title: "ID", type: "number", visible: false, align: "right" },
   {
     key: "name",
-    title: "Jméno",
+    title: "Name",
     type: "text",
     sortable: true,
     filterable: true,
@@ -177,13 +177,13 @@ const columnDefinitions: TsTableColumnDef[] = [
     align: "left",
     isClickable: true,
   },
-  { key: "username", title: "Uživatel", type: "text", visible: false },
+  { key: "username", title: "Username", type: "text", visible: false },
   { key: "email", title: "E-mail", type: "text", visible: true, canBeCopied: true },
-  { key: "city", title: "Město", type: "text", visible: true },
-  { key: "company", title: "Firma", type: "text", visible: true, isClickable: true },
+  { key: "city", title: "City", type: "text", visible: true },
+  { key: "company", title: "Company", type: "text", visible: true, isClickable: true },
   {
     key: "turnover",
-    title: "Obrat",
+    title: "Turnover",
     type: "number",
     sortable: true,
     visible: true,
@@ -191,13 +191,13 @@ const columnDefinitions: TsTableColumnDef[] = [
   },
   {
     key: "contractDate",
-    title: "Smlouva",
+    title: "Contract",
     type: "date",
     sortable: true,
     visible: true,
     align: "right",
   },
-  { key: "approved", title: "Schváleno", type: "boolean", visible: true, align: "center" },
+  { key: "apforved", title: "Approved", type: "boolean", visible: true, align: "center" },
 ]
 
 export default function TsTablePage() {
@@ -205,16 +205,16 @@ export default function TsTablePage() {
 
   const handleRowClick = (row: unknown, columnKey?: string) => {
     const item = row as TableItem
-    setLastAction(`Kliknuto na řádek ID: ${item.id}${columnKey ? `, sloupec: ${columnKey}` : ""}`)
+    setLastAction(`Clicked on row ID: ${item.id}${columnKey ? `, column: ${columnKey}` : ""}`)
   }
 
   const handleCreate = () => {
-    setLastAction("Kliknuto na 'Nový záznam'")
+    setLastAction("Clicked on 'New record'")
   }
 
   const handleAction = (action: string, row: unknown) => {
     const item = row as TableItem
-    setLastAction(`Akce: ${action} pro ${item.name}`)
+    setLastAction(`Action: ${action} for ${item.name}`)
   }
 
   return (
@@ -275,7 +275,7 @@ const columns = [
   { key: 'name', title: 'Name', type: 'text', sortable: true },
   { key: 'email', title: 'E-mail', type: 'text', canBeCopied: true },
   { key: 'turnover', title: 'Turnover', type: 'number', align: 'right' },
-  { key: 'approved', title: 'Approved', type: 'boolean', align: 'center' }
+  { key: 'apforved', title: 'Apforved', type: 'boolean', align: 'center' }
 ]
 
 export default function MyPage() {

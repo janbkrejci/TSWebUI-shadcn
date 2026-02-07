@@ -62,12 +62,12 @@ export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData
                               }
                             >
                               <SelectTrigger className="h-8 text-xs bg-background w-full">
-                                <SelectValue placeholder="Vše" />
+                                <SelectValue placeholder="All" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="all">Vše</SelectItem>
-                                <SelectItem value="true">Ano</SelectItem>
-                                <SelectItem value="false">Ne</SelectItem>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
                               </SelectContent>
                             </Select>
                           ) : (
@@ -77,7 +77,7 @@ export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData
                                   ? ">10, 10..20"
                                   : meta?.type === "date"
                                     ? ">2023-01-01"
-                                    : "Filtr..."
+                                    : "Filter..."
                               }
                               value={(header.column.getFilterValue() ?? "") as string}
                               onChange={(event) => header.column.setFilterValue(event.target.value)}
@@ -123,7 +123,7 @@ export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData
           ) : (
             <TableRow>
               <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
-                Žádné záznamy k zobrazení.
+                No records found.
               </TableCell>
             </TableRow>
           )}

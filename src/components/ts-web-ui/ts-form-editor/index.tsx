@@ -3,7 +3,7 @@
  *
  * Vizuální editor pro tvorbu formulářů s podporou:
  * - Drag & drop přidávání polí
- * - Režim s taby nebo bez tabů
+ * - Mode with or without tabs
  * - Grid layout s více sloupci
  * - Live náhled formuláře
  * - Export/import JSON konfigurace

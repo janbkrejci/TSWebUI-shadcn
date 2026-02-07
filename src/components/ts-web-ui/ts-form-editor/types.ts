@@ -1,133 +1,133 @@
 /**
- * Typy pro Form Editor
- * Definuje strukturu formuláře, polí a layoutu
+ * Types for Form Editor
+ * Defines the structure of the form, fields, and layout
  */
 import { TsFieldDef, TsFormButton } from "../ts-form/types"
 
 /**
- * Rozšířená definice pole pro editor s unikátním ID
+ * Extended field definition for the editor with a unique ID
  */
 export interface EditorField {
-  /** Unikátní ID pole v editoru */
+  /** Unique ID of the field in the editor */
   id: string
-  /** Název pole (klíč v objektu fields) */
+  /** Field name (key in the fields object) */
   name: string
-  /** Definice pole */
+  /** Field definition */
   config: TsFieldDef
 }
 
 /**
- * Položka řádku v editoru s rozšířenými metadaty
- * Rozšiřuje TsFormRowItem o ID a typ pole
+ * Row item in the editor with extended metadata
+ * Extends TsFormRowItem with an ID and field type
  */
 export interface EditorRowItem {
-  /** Unikátní ID položky */
+  /** Unique ID of the item */
   id: string
-  /** Reference na pole (klíč v objektu fields) nebo prázdný string */
+  /** Reference to the field (key in the fields object) or empty string */
   field: string
-  /** Šířka sloupce v CSS grid */
+  /** Column width in CSS grid */
   width?: string
-  /** Typ pole pro zobrazení v editoru */
+  /** Field type for display in the editor */
   type?: TsFieldDef["type"] | "empty" | "separator"
-  /** Label pro separátor */
+  /** Label for separator */
   label?: string
-  /** Zarovnání */
+  /** Alignment */
   align?: "left" | "center" | "right"
 }
 
 /**
- * Řádek v editoru
+ * Row in the editor
  */
 export interface EditorRow {
-  /** Unikátní ID řádku */
+  /** Unique ID of the row */
   id: string
-  /** Položky řádku */
+  /** Row items */
   items: EditorRowItem[]
 }
 
 /**
- * Tab v editoru
+ * Tab in the editor
  */
 export interface EditorTab {
-  /** Unikátní ID tabu */
+  /** Unique ID of the tab */
   id: string
-  /** Popisek tabu */
+  /** Tab label */
   label: string
-  /** Řádky v tabu */
+  /** Rows in the tab */
   rows: EditorRow[]
 }
 
 /**
- * Celková struktura formuláře v editoru
+ * Overall form structure in the editor
  */
 export interface EditorFormDefinition {
-  /** Režim layoutu - s taby nebo bez */
+  /** Layout mode - with or without tabs */
   mode: "tabs" | "single"
-  /** Taby (pokud mode === 'tabs') */
+  /** Tabs (if mode === 'tabs') */
   tabs?: EditorTab[]
-  /** Řádky (pokud mode === 'single') */
+  /** Rows (if mode === 'single') */
   rows?: EditorRow[]
-  /** Definice všech polí */
+  /** Definitions of all fields */
   fields: Record<string, TsFieldDef>
-  /** Tlačítka formuláře */
+  /** Form buttons */
   buttons: TsFormButton[]
 }
 
 /**
- * Aktuálně vybraný element v editoru
+ * Currently selected element in the editor
  */
 export interface EditorSelection {
   type: "field" | "row" | "tab" | "button" | null
   id: string | null
-  /** Index tabu (pro field a row) */
+  /** Tab index (for field and row) */
   tabIndex?: number
-  /** Index řádku (pro field) */
+  /** Row index (for field) */
   rowIndex?: number
-  /** Index položky v řádku (pro field) */
+  /** Item index in row (for field) */
   itemIndex?: number
 }
 
 /**
- * Dostupné typy polí pro přidání do formuláře
+ * Available field types for adding to the form
  */
 export const AVAILABLE_FIELD_TYPES: { type: TsFieldDef["type"]; label: string; group: string }[] = [
-  // Textové vstupy
-  { type: "text", label: "Text", group: "Textové" },
-  { type: "textarea", label: "Textarea", group: "Textové" },
-  { type: "password", label: "Heslo", group: "Textové" },
-  { type: "number", label: "Číslo", group: "Textové" },
+  // Text inputs
+  { type: "text", label: "Text", group: "Text" },
+  { type: "textarea", label: "Textarea", group: "Text" },
+  { type: "password", label: "Password", group: "Text" },
+  { type: "number", label: "Number", group: "Text" },
 
-  // Výběr
-  { type: "select", label: "Select", group: "Výběr" },
-  { type: "multiselect", label: "Multi Select", group: "Výběr" },
-  { type: "combobox", label: "Combobox", group: "Výběr" },
-  { type: "radio", label: "Radio", group: "Výběr" },
-  { type: "checkbox", label: "Checkbox", group: "Výběr" },
-  { type: "switch", label: "Switch", group: "Výběr" },
-  { type: "button-group", label: "Button Group", group: "Výběr" },
+  // Selection
+  { type: "select", label: "Select", group: "Selection" },
+  { type: "multiselect", label: "Multi Select", group: "Selection" },
+  { type: "combobox", label: "Combobox", group: "Selection" },
+  { type: "radio", label: "Radio", group: "Selection" },
+  { type: "checkbox", label: "Checkbox", group: "Selection" },
+  { type: "switch", label: "Switch", group: "Selection" },
+  { type: "button-group", label: "Button Group", group: "Selection" },
 
-  // Datum
-  { type: "date", label: "Datum", group: "Datum" },
-  { type: "datetime", label: "Datum a čas", group: "Datum" },
+  // Date
+  { type: "date", label: "Date", group: "Date" },
+  { type: "datetime", label: "Date and Time", group: "Date" },
 
-  // Ostatní vstupy
-  { type: "slider", label: "Slider", group: "Ostatní" },
-  { type: "file", label: "Soubor", group: "Ostatní" },
-  { type: "image", label: "Obrázek", group: "Ostatní" },
-  { type: "relationship", label: "Relationship", group: "Ostatní" },
+  // Other inputs
+  { type: "slider", label: "Slider", group: "Others" },
+  { type: "file", label: "File", group: "Others" },
+  { type: "image", label: "Image", group: "Others" },
+  { type: "relationship", label: "Relationship", group: "Others" },
 
-  // Layout a zobrazení
-  { type: "separator", label: "Oddělovač", group: "Layout" },
+  // Layout and display
+  { type: "separator", label: "Separator", group: "Layout" },
   { type: "infobox", label: "Info Box", group: "Layout" },
   { type: "markdown", label: "Markdown", group: "Layout" },
-  { type: "button", label: "Tlačítko", group: "Layout" },
+  { type: "button", label: "Button", group: "Layout" },
 
-  // Komplexní
-  { type: "table", label: "Tabulka", group: "Komplexní" },
+  // Complex
+  { type: "table", label: "Table", group: "Complex" },
 ]
 
 /**
- * Seskupené typy polí pro sidebar
+ * Grouped field types for the sidebar
  */
 export const GROUPED_FIELD_TYPES = AVAILABLE_FIELD_TYPES.reduce(
   (acc, field) => {

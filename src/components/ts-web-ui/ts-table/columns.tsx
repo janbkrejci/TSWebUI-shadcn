@@ -93,7 +93,7 @@ export function generateColumns<TData>(
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Akce</DropdownMenuLabel>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 {rowActions.map((action, idx) => (
                   <DropdownMenuItem
                     key={idx}
@@ -151,12 +151,12 @@ export function generateColumns<TData>(
         let formattedValue: React.ReactNode = String(value ?? "")
 
         if (def.type === "number" && typeof value === "number") {
-          formattedValue = value.toLocaleString("cs-CZ", {
+          formattedValue = value.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })
         } else if (def.type === "date" && value) {
-          formattedValue = new Date(value as string).toLocaleDateString("cs-CZ")
+          formattedValue = new Date(value as string).toLocaleDateString("en-US")
         } else if (def.type === "boolean") {
           formattedValue = (
             <div

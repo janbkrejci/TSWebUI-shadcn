@@ -1,12 +1,12 @@
 "use client"
 
 /**
- * TsTopBar - Aplikační horní lišta
+ * TsTopBar - Application top bar
  *
- * Funkce:
- * - Fixovaná k horní hraně okna
- * - Přes celou šířku
- * - Slot pro hamburger menu, logo, akce
+ * Features:
+ * - Fixed to the top edge of the window
+ * - Full width
+ * - Slots for hamburger menu, logo, and actions
  */
 import Link from "next/link"
 import * as React from "react"
@@ -14,33 +14,33 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Kontext pro TopBar - umožňuje komponentám přistupovat k výšce
+ * TopBar Context - allows components to access the top bar height
  */
 interface TopBarContextValue {
-  /** Výška top baru v pixelech */
+  /** Top bar height in pixels */
   height: number
 }
 
 const TopBarContext = React.createContext<TopBarContextValue>({ height: 56 })
 
 /**
- * Hook pro přístup k TopBar kontextu
+ * Hook to access TopBar context
  */
 export function useTopBar() {
   return React.useContext(TopBarContext)
 }
 
 /**
- * Props pro TopBarProvider
+ * Props for TopBarProvider
  */
 interface TopBarProviderProps {
   children: React.ReactNode
-  /** Výška top baru (default 56px = h-14) */
+  /** Top bar height (default 56px = h-14) */
   height?: number
 }
 
 /**
- * Provider pro TopBar - poskytuje výšku dalším komponentám
+ * Provider for TopBar - provides height to other components
  */
 export function TopBarProvider({ children, height = 56 }: TopBarProviderProps) {
   const value = React.useMemo(() => ({ height }), [height])
@@ -49,29 +49,29 @@ export function TopBarProvider({ children, height = 56 }: TopBarProviderProps) {
 }
 
 /**
- * Props pro TsTopBar
+ * Props for TsTopBar
  */
 interface TsTopBarProps extends React.HTMLAttributes<HTMLElement> {
-  /** Obsah na levé straně (hamburger, logo) */
+  /** Content on the left side (hamburger, logo) */
   leftContent?: React.ReactNode
-  /** Obsah uprostřed (název, breadcrumbs) */
+  /** Content in the middle (name, breadcrumbs) */
   centerContent?: React.ReactNode
-  /** Obsah na pravé straně (akce, user menu) */
+  /** Content on the right side (actions, user menu) */
   rightContent?: React.ReactNode
-  /** Výška v pixelech */
+  /** Height in pixels */
   height?: number
-  /** Má mít border dole? */
+  /** Should have a bottom border? */
   bordered?: boolean
 }
 
 /**
- * TsTopBar - hlavní aplikační horní lišta
+ * TsTopBar - main application top bar
  *
- * Použití:
+ * Usage:
  * ```tsx
  * <TsTopBar
  *   leftContent={<SidebarTrigger />}
- *   centerContent={<span>Název aplikace</span>}
+ *   centerContent={<span>Application Name</span>}
  *   rightContent={<ModeToggle />}
  * />
  * ```
@@ -97,23 +97,23 @@ export function TsTopBar({
       style={{ height }}
       {...props}
     >
-      {/* Levá část */}
+      {/* Left side */}
       <div className="flex items-center gap-2 shrink-0">{leftContent}</div>
 
-      {/* Střední část - roztáhne se pouze pokud má obsah */}
+      {/* Middle part - expands only if it has content */}
       {centerContent && (
         <div className="flex-1 flex items-center justify-center min-w-0">{centerContent}</div>
       )}
 
-      {/* Pravá část */}
+      {/* Right side */}
       <div className="flex items-center gap-2 shrink-0 ml-auto">{rightContent}</div>
     </header>
   )
 }
 
 /**
- * Spacer pro obsah pod TopBarem
- * Zajistí, že obsah nezačíná pod fixovaným TopBarem
+ * Spacer for content under the TopBar
+ * Ensures content doesn't start hidden under the fixed TopBar
  */
 export function TopBarSpacer({ className }: { className?: string }) {
   const { height } = useTopBar()
@@ -122,16 +122,16 @@ export function TopBarSpacer({ className }: { className?: string }) {
 }
 
 /**
- * Logo v TopBaru
+ * Logo in the TopBar
  */
 interface TopBarLogoProps {
   className?: string
   children?: React.ReactNode
-  /** Text loga */
+  /** Logo text */
   text?: string
-  /** Ikona loga */
+  /** Logo icon */
   icon?: React.ReactNode
-  /** URL pro link (pokud je zadáno, logo bude odkaz) */
+  /** URL for link (if provided, logo will be a link) */
   href?: string
 }
 
@@ -162,7 +162,7 @@ export function TopBarLogo({ className, text, icon, href, children }: TopBarLogo
 }
 
 /**
- * Sekce akcí v TopBaru
+ * Actions section in the TopBar
  */
 export function TopBarActions({
   className,
@@ -176,5 +176,5 @@ export function TopBarActions({
   )
 }
 
-// Re-exporty
+// Re-exports
 export { TopBarContext }
