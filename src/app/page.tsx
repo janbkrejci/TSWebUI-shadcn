@@ -4,7 +4,6 @@ import {
   Moon,
   Palette,
   PanelLeft,
-  PanelLeftClose,
   PanelTop,
   Pencil,
   Table2,
@@ -108,18 +107,6 @@ export default function Home() {
         <h2 className="text-xl font-semibold mb-4">Utility Components</h2>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
           <Link
-            href="/components/mode-toggle"
-            className="rounded-xl border bg-card text-card-foreground shadow block hover:border-primary transition-colors"
-          >
-            <div className="p-4 flex flex-col items-center justify-center space-y-2 h-32">
-              <Moon className="h-8 w-8 text-muted-foreground" />
-              <div className="text-center">
-                <span className="font-semibold block">Mode Toggle</span>
-                <span className="text-xs text-muted-foreground">Theme switcher</span>
-              </div>
-            </div>
-          </Link>
-          <Link
             href="/components/theme-provider"
             className="rounded-xl border bg-card text-card-foreground shadow block hover:border-primary transition-colors"
           >
@@ -132,14 +119,14 @@ export default function Home() {
             </div>
           </Link>
           <Link
-            href="/components/sidebar-collapse-trigger"
+            href="/components/mode-toggle"
             className="rounded-xl border bg-card text-card-foreground shadow block hover:border-primary transition-colors"
           >
             <div className="p-4 flex flex-col items-center justify-center space-y-2 h-32">
-              <PanelLeftClose className="h-8 w-8 text-muted-foreground" />
+              <Moon className="h-8 w-8 text-muted-foreground" />
               <div className="text-center">
-                <span className="font-semibold block">Collapse Trigger</span>
-                <span className="text-xs text-muted-foreground">Sidebar toggle button</span>
+                <span className="font-semibold block">Mode Toggle</span>
+                <span className="text-xs text-muted-foreground">Theme switcher</span>
               </div>
             </div>
           </Link>
