@@ -3,8 +3,6 @@
 import { Plus } from "lucide-react"
 
 import * as React from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { WindowOutlet, WindowProvider, useWindowManager } from "@/components/ts-web-ui/ts-window"
-import { InstallTab } from "@/components/ts-web-ui/widget-demo"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const WindowControls = ({ windowId }: { windowId: string }) => {
   const { getWindow } = useWindowManager()
@@ -330,18 +328,7 @@ export default function Page() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SyntaxHighlighter
-                language="tsx"
-                style={vscDarkPlus}
-                customStyle={{
-                  fontSize: "13px",
-                  lineHeight: "1.6",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                }}
-              >
-                {codeString}
-              </SyntaxHighlighter>
+              <CodeBlock code={codeString} />
             </CardContent>
           </Card>
         </TabsContent>

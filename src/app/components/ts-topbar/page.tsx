@@ -3,8 +3,6 @@
 import { Palette, PanelTop, Search, User } from "lucide-react"
 
 import * as React from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,7 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TopBarLogo, TsTopBar } from "@/components/ts-web-ui/ts-topbar"
-import { InstallTab } from "@/components/ts-web-ui/widget-demo"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Interaktivní demo TopBaru
@@ -163,22 +161,11 @@ export default function TopBarPage() {
             <CardHeader>
               <CardTitle>Základní použití</CardTitle>
               <CardDescription>
-                TopBar je fixně umístěn na horní hraně okna a poskytuje sloty pro obsah.
+                TopBar is fixně umístěn na horní hraně okna a poskytuje sloty pro obsah.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SyntaxHighlighter
-                language="tsx"
-                style={vscDarkPlus}
-                customStyle={{
-                  fontSize: "13px",
-                  lineHeight: "1.6",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                }}
-              >
-                {codeString}
-              </SyntaxHighlighter>
+              <CodeBlock code={codeString} />
             </CardContent>
           </Card>
         </TabsContent>

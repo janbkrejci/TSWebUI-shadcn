@@ -3,15 +3,13 @@
 import { Monitor, ServerOff } from "lucide-react"
 
 import * as React from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { ClientOnly } from "@/components/ts-web-ui/client-only"
-import { InstallTab } from "@/components/ts-web-ui/widget-demo"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 export default function ClientOnlyPage() {
   const codeString = `import { ClientOnly } from "@/components/ts-web-ui/client-only"
@@ -92,18 +90,7 @@ export default function MyPage() {
               <CardTitle>Použití v kódu</CardTitle>
             </CardHeader>
             <CardContent>
-              <SyntaxHighlighter
-                language="tsx"
-                style={vscDarkPlus}
-                customStyle={{
-                  fontSize: "13px",
-                  lineHeight: "1.6",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                }}
-              >
-                {codeString}
-              </SyntaxHighlighter>
+              <CodeBlock code={codeString} />
             </CardContent>
           </Card>
         </TabsContent>

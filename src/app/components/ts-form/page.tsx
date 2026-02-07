@@ -3,8 +3,6 @@
 import { Toaster, toast } from "sonner"
 
 import * as React from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -19,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TsForm } from "@/components/ts-web-ui/ts-form"
 import { TsFieldDef, TsFormButton, TsFormLayout } from "@/components/ts-web-ui/ts-form/types"
-import { InstallTab } from "@/components/ts-web-ui/widget-demo"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const formFields: Record<string, TsFieldDef> = {
   name: { type: "text", label: "First Name", required: true, placeholder: "Jan" },
@@ -212,17 +210,8 @@ export default function TsFormPage() {
         <TabsContent value="code" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              <SyntaxHighlighter
-                language="tsx"
-                style={vscDarkPlus}
-                customStyle={{
-                  fontSize: "13px",
-                  lineHeight: "1.6",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                }}
-              >
-                {`import { TsForm } from "@/components/ts-web-ui/ts-form"
+              <CodeBlock
+                code={`import { TsForm } from "@/components/ts-web-ui/ts-form"
 
 const fields = {
   email: { type: "text", label: "Email", required: true },
@@ -242,7 +231,7 @@ export default function MyForm() {
     />
   )
 }`}
-              </SyntaxHighlighter>
+              />
             </CardContent>
           </Card>
         </TabsContent>

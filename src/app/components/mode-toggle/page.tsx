@@ -3,14 +3,12 @@
 import { Moon, Sun } from "lucide-react"
 
 import * as React from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
-import { InstallTab } from "@/components/ts-web-ui/widget-demo"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 export default function ModeTogglePage() {
   const codeString = `import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
@@ -54,7 +52,7 @@ export default function Header() {
 
               <div className="grid grid-cols-2 gap-4 w-full max-w-md">
                 <div className="p-4 rounded-lg border bg-white text-black flex items-center gap-2 shadow-sm">
-                  <Sun className="h-4 w-4" /> Svetlý režim
+                  <Sun className="h-4 w-4" /> Světlý režim
                 </div>
                 <div className="p-4 rounded-lg border bg-slate-950 text-white flex items-center gap-2 shadow-sm">
                   <Moon className="h-4 w-4" /> Tmavý režim
@@ -67,18 +65,7 @@ export default function Header() {
         <TabsContent value="code" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              <SyntaxHighlighter
-                language="tsx"
-                style={vscDarkPlus}
-                customStyle={{
-                  fontSize: "13px",
-                  lineHeight: "1.6",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                }}
-              >
-                {codeString}
-              </SyntaxHighlighter>
+              <CodeBlock code={codeString} />
             </CardContent>
           </Card>
         </TabsContent>
