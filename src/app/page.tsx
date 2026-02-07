@@ -1,7 +1,6 @@
 import {
   FormInput,
   LayoutGrid,
-  Monitor,
   Moon,
   Palette,
   PanelLeft,
@@ -108,18 +107,6 @@ export default function Home() {
       <div>
         <h2 className="text-xl font-semibold mb-4">Utility Components</h2>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <Link
-            href="/components/client-only"
-            className="rounded-xl border bg-card text-card-foreground shadow block hover:border-primary transition-colors"
-          >
-            <div className="p-4 flex flex-col items-center justify-center space-y-2 h-32">
-              <Monitor className="h-8 w-8 text-muted-foreground" />
-              <div className="text-center">
-                <span className="font-semibold block">Client Only</span>
-                <span className="text-xs text-muted-foreground">SSR bypass wrapper</span>
-              </div>
-            </div>
-          </Link>
           <Link
             href="/components/mode-toggle"
             className="rounded-xl border bg-card text-card-foreground shadow block hover:border-primary transition-colors"
