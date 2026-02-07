@@ -102,41 +102,42 @@ async function buildRegistry() {
   }
 
   for (const component of REGISTRY_COMPONENTS) {
+    const componentDir = component.files[0].split("/")[0]
+
     const registryItem = {
       name: component.name,
       // Using registry:component so it goes to components/ directory instead of components/ui/
       type: "registry:component",
       dependencies: component.dependencies,
       registryDependencies: component.registryDependencies,
-      files: component.files.map((fileRelPath) => {
-        const fullPath = path.join(COMPONENTS_BASE_PATH, fileRelPath)
-        const content = fs.readFileSync(fullPath, "utf8")
+      files: [
+        ...component.files.map((fileRelPath) => {
+          const fullPath = path.join(COMPONENTS_BASE_PATH, fileRelPath)
+          const content = fs.readFileSync(fullPath, "utf8")
 
-        // Adjust imports to point to the target location in the user's project
-        // Relative imports like ../ts-table will be replaced by @/components/ts-web-ui/ts-table
-        const processedContent = content
-          .replace(/@\/components\/ui\//g, "@/components/ui/")
-          .replace(/\.\.\/client-only/g, "@/components/ts-web-ui/client-only")
-          .replace(/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table")
-          .replace(/\.\.\/ts-form/g, "@/components/ts-web-ui/ts-form")
-          .replace(/\.\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")
-          .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
-          .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
+          // Adjust imports to point to the target location in the user's project
+          const processedContent = content
+            .replace(/@\/components\/ui\//g, "@/components/ui/")
+            .replace(/\.\.\/client-only/g, "@/components/ts-web-ui/client-only")
+            .replace(/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table")
+            .replace(/\.\.\/ts-form/g, "@/components/ts-web-ui/ts-form")
+            .replace(/\.\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")
+            .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
+            .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
 
-        // Determine the target path within the component directory
-        // If fileRelPath is "ts-table/columns.tsx" and component.name is "ts-web-ui/ts-table"
-        // we want the path inside the component folder to be just "columns.tsx"
-        const parts = fileRelPath.split("/")
-        const fileName = parts[parts.length - 1]
-        // If it's in a subfolder within the component folder, we keep that part
-        const innerPath = parts.slice(1).join("/")
-
-        return {
-          path: innerPath || fileName,
-          content: processedContent,
+          return {
+            path: `ts-web-ui/${fileRelPath}`,
+            content: processedContent,
+            type: "registry:component",
+          }
+        }),
+        // Add a metadata file to prevent shadcn CLI from flattening single-file components
+        {
+          path: `ts-web-ui/${componentDir}/.metadata.json`,
+          content: JSON.stringify({ name: component.name, version: "0.1.0" }, null, 2),
           type: "registry:component",
-        }
-      }),
+        },
+      ],
     }
 
     // Use the last part of the name for the JSON filename
