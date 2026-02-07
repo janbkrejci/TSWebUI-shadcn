@@ -40,12 +40,12 @@ Each command will automatically:
 
 ## Features
 
-- 🎨 **JSON-Driven Forms** - Build complex forms from JSON definitions with 20+ field types
-- 🖱️ **Draggable Windows** - Resizable, draggable window components
-- 📊 **Advanced Tables** - Powered by TanStack Table with sorting, filtering, and pagination
-- 🎭 **Dark Mode** - Full theme support with next-themes
-- 📝 **Form Builder** - Visual form editor with drag & drop
-- 🧩 **shadcn/ui** - Built on top of high-quality Radix UI primitives
+- **JSON-Driven Forms** - Build complex forms from JSON definitions with 20+ field types
+- **Draggable Windows** - Resizable, draggable window components
+- **Advanced Tables** - Powered by TanStack Table with sorting, filtering, and pagination
+- **Dark Mode** - Full theme support with next-themes
+- **Form Builder** - Visual form editor with drag & drop
+- **shadcn/ui** - Built on top of high-quality Radix UI primitives
 
 ## Tech Stack
 
@@ -105,12 +105,12 @@ pnpm start            # Start production server
 
 This project maintains strict code quality standards:
 
-- ✅ **ESLint** - Enforces code quality and consistency
-- ✅ **Prettier** - Automatic code formatting
-- ✅ **TypeScript** - Type safety throughout
-- ✅ **Vitest** - Comprehensive test coverage (80%+ threshold)
-- ✅ **Pre-commit Hooks** - Automatic formatting and linting before commits
-- ✅ **CI/CD** - Automated testing and builds on every push
+- **ESLint** - Enforces code quality and consistency
+- **Prettier** - Automatic code formatting
+- **TypeScript** - Type safety throughout
+- **Vitest** - Comprehensive test coverage (80%+ threshold)
+- **Pre-commit Hooks** - Automatic formatting and linting before commits
+- **CI/CD** - Automated testing and builds on every push
 
 ### Pre-commit Hooks
 
