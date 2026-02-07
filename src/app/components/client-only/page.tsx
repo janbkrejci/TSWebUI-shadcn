@@ -37,12 +37,13 @@ export default function MyPage() {
         className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
       >
         <Monitor className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-        <AlertTitle className="text-blue-800 dark:text-blue-300">Proč to používat?</AlertTitle>
+        <AlertTitle className="text-blue-800 dark:text-blue-300">Důležité info</AlertTitle>
         <AlertDescription className="text-blue-700 dark:text-blue-400">
-          V Next.js (App Router) se komponenty renderují nejdříve na serveru. Pokud vaše komponenta
-          využívá prohlížečová API jako <code>window</code> nebo <code>localStorage</code>, způsobí
-          to chybu při buildu nebo tzv. hydration mismatch. <code>ClientOnly</code> tomuto
-          předchází.
+          V tomto projektu je <code>ClientOnly</code> logika již integrována přímo do{" "}
+          <code>ThemeProvider</code>. Pokud obalíte celou aplikaci pomocí <code>ThemeProvider</code>{" "}
+          v layoutu, většinou již tuto komponentu nebudete samostatně potřebovat. Zůstává však k
+          dispozici pro specifické případy, kdy chcete odložit renderování jen u malé části jinak
+          statické stránky.
         </AlertDescription>
       </Alert>
 

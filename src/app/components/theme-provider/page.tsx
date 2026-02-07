@@ -16,12 +16,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="cs" suppressHydrationWarning>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           {children}
         </ThemeProvider>
       </body>
@@ -34,7 +29,8 @@ export default function RootLayout({ children }) {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Theme Provider</h1>
         <p className="text-muted-foreground mt-2">
-          Kontextový provider zajišťující podporu témat (světlý/tmavý režim).
+          Kontextový provider zajišťující podporu témat (světlý/tmavý režim) s integrovanou ochranou
+          proti hydration mismatch.
         </p>
       </div>
 
@@ -49,7 +45,8 @@ export default function RootLayout({ children }) {
             <CardHeader>
               <CardTitle>Implementace v Layoutu</CardTitle>
               <CardDescription>
-                ThemeProvider by měl obalovat celou vaši aplikaci v kořenovém layoutu.
+                ThemeProvider nyní nevyžaduje žádné atributy, protože má v sobě pevně nastavené
+                optimalizované hodnoty pro shadcn UI.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -67,21 +64,32 @@ export default function RootLayout({ children }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            Vlastnosti
+            Vlastnosti a vylepšení
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            Tento provider je tenký wrapper nad knihovnou <code>next-themes</code>, upravený pro
-            perfektní spolupráci se shadcn UI a Tailwind CSS v4.
+            Tato komponenta byla zjednodušena a sloučena s logikou <code>ClientOnly</code>, aby
+            poskytovala nejlepší možnou stabilitu v Next.js 16.
           </p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Automatická synchronizace se systémovým nastavením OS</li>
             <li>
-              Podpora pro přepínání CSS tříd (standardně <code>.dark</code>)
+              <strong>Bez parametrů:</strong> Automaticky nastavuje{" "}
+              <code>attribute=&quot;class&quot;</code>, <code>defaultTheme=&quot;system&quot;</code>{" "}
+              a <code>enableSystem</code>.
             </li>
-            <li>Prevence hydration mismatch chyb</li>
-            <li>Podpora pro zakázání animací při změně tématu</li>
+            <li>
+              <strong>Plynulé přepínání:</strong> Vynucuje <code>disableTransitionOnChange</code>{" "}
+              pro eliminaci problikávání barev.
+            </li>
+            <li>
+              <strong>Integrovaný ClientOnly:</strong> Automaticky odkládá renderování obsahu až po
+              namontování na klienta, čímž 100% předchází chybám typu <em>Hydration Mismatch</em>.
+            </li>
+            <li>
+              <strong>Automatický Loading:</strong> Pokud aplikace ještě není na klientu připravena,
+              zobrazí decentní pulsní animaci.
+            </li>
           </ul>
         </CardContent>
       </Card>
