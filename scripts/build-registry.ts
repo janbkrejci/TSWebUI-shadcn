@@ -9,12 +9,6 @@ const COMPONENTS_BASE_PATH = path.join(process.cwd(), "src", "components", "ts-w
  */
 const REGISTRY_COMPONENTS = [
   {
-    name: "ts-web-ui/client-only",
-    dependencies: [],
-    registryDependencies: [],
-    files: ["client-only/index.tsx"],
-  },
-  {
     name: "ts-web-ui/theme-provider",
     dependencies: ["next-themes"],
     registryDependencies: [],
@@ -41,7 +35,7 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-window",
     dependencies: ["lucide-react", "react-rnd"],
-    registryDependencies: ["button", "ts-web-ui/client-only"],
+    registryDependencies: ["button"],
     files: ["ts-window/index.tsx"],
   },
   {

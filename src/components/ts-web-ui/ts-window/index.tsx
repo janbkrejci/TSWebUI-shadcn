@@ -7,8 +7,6 @@ import { Rnd, RndDragCallback, RndResizeCallback } from "react-rnd"
 
 import { cn } from "@/lib/utils"
 
-import { ClientOnly } from "../client-only"
-
 // Global Z-Index counter to ensure new or focused windows are always on top
 let globalZIndex = 1000
 
@@ -630,21 +628,19 @@ export const WindowOutlet: React.FC<{ className?: string }> = ({ className }) =>
   const { windows } = useWindowManager()
 
   return (
-    <ClientOnly>
-      <div className={cn("absolute inset-0 pointer-events-none z-50", className)}>
-        {windows.map((w) => (
-          <TsWindow
-            key={w.id}
-            ref={w.ref as React.RefObject<TsWindowRef>}
-            id={w.id}
-            title={w.props.title || "Window"}
-            {...w.props}
-          >
-            {w.content}
-          </TsWindow>
-        ))}
-      </div>
-    </ClientOnly>
+    <div className={cn("absolute inset-0 pointer-events-none z-50", className)}>
+      {windows.map((w) => (
+        <TsWindow
+          key={w.id}
+          ref={w.ref as React.RefObject<TsWindowRef>}
+          id={w.id}
+          title={w.props.title || "Window"}
+          {...w.props}
+        >
+          {w.content}
+        </TsWindow>
+      ))}
+    </div>
   )
 }
 

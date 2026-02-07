@@ -261,14 +261,6 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
           )}
           <div className="space-y-1">
             <NavButton
-              href="/components/client-only"
-              label="Client Only"
-              icon={Monitor}
-              isActive={pathname.startsWith("/components/client-only")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
               href="/components/mode-toggle"
               label="Mode Toggle"
               icon={Moon}

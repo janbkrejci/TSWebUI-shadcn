@@ -224,18 +224,6 @@ import { TsForm } from "@/components/ts-web-ui/ts-form"
   - All Zustand stores
   - Theme/dark mode components
 
-### ClientOnly Wrapper
-
-For components that fail SSR (e.g., react-rnd, browser-only libraries):
-
-```tsx
-import { ClientOnly } from "@/components/ts-web-ui/client-only"
-
-;<ClientOnly fallback={<div>Loading...</div>}>
-  <TsWindow />
-</ClientOnly>
-```
-
 ### Styling with Tailwind v4
 
 This project uses **Tailwind CSS v4** (CSS-first configuration):
