@@ -1,5 +1,5 @@
 {
-  "name": "ts-web-ui-ts-form",
+  "name": "ts-web-ui/ts-form",
   "type": "registry:component",
   "dependencies": [
     "@hookform/resolvers",
@@ -26,7 +26,7 @@
     "switch",
     "textarea",
     "toggle-group",
-    "ts-web-ui-ts-table"
+    "ts-web-ui/ts-table"
   ],
   "files": [
     {
@@ -55,8 +55,8 @@
       "type": "registry:component"
     },
     {
-      "path": ".ts-web-ui-registry",
-      "content": "This file ensures correct installation of TS Web UI components.\nComponent: ts-web-ui/ts-form",
+      "path": "_registry/ts-form.json",
+      "content": "{\n  \"name\": \"ts-web-ui/ts-form\",\n  \"version\": \"0.1.0\"\n}",
       "type": "registry:component"
     }
   ]

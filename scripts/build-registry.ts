@@ -103,13 +103,10 @@ async function buildRegistry() {
 
   for (const component of REGISTRY_COMPONENTS) {
     const registryItem = {
-      // Use a flat name to prevent CLI from trying to be too smart with paths
-      name: component.name.replace(/\//g, "-"),
+      name: component.name,
       type: "registry:component",
       dependencies: component.dependencies,
-      registryDependencies: component.registryDependencies.map((d) =>
-        d.includes("/") ? d.replace(/\//g, "-") : d
-      ),
+      registryDependencies: component.registryDependencies,
       files: [
         ...component.files.map((fileRelPath) => {
           const fullPath = path.join(COMPONENTS_BASE_PATH, fileRelPath)
@@ -131,10 +128,12 @@ async function buildRegistry() {
             type: "registry:component",
           }
         }),
-        // Add a marker file at the root to prevent path flattening
+        // Add a marker in a different top-level directory (_registry)
+        // This prevents shadcn CLI from flattening the 'ts-web-ui' prefix
+        // because the common root of all files will be the components directory itself.
         {
-          path: ".ts-web-ui-registry",
-          content: `This file ensures correct installation of TS Web UI components.\nComponent: ${component.name}`,
+          path: `_registry/${component.name.split("/").pop()}.json`,
+          content: JSON.stringify({ name: component.name, version: "0.1.0" }, null, 2),
           type: "registry:component",
         },
       ],
@@ -149,7 +148,7 @@ async function buildRegistry() {
 
   // Generate main registry index
   const index = REGISTRY_COMPONENTS.map((c) => ({
-    name: c.name.replace(/\//g, "-"),
+    name: c.name,
     href: `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${c.name.split("/").pop()}.json`,
   }))
   fs.writeFileSync(path.join(REGISTRY_PATH, "index.json"), JSON.stringify(index, null, 2))

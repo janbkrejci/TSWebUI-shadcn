@@ -1,5 +1,5 @@
 {
-  "name": "ts-web-ui-ts-sidebar",
+  "name": "ts-web-ui/ts-sidebar",
   "type": "registry:component",
   "dependencies": [
     "lucide-react"
@@ -14,8 +14,8 @@
       "type": "registry:component"
     },
     {
-      "path": ".ts-web-ui-registry",
-      "content": "This file ensures correct installation of TS Web UI components.\nComponent: ts-web-ui/ts-sidebar",
+      "path": "_registry/ts-sidebar.json",
+      "content": "{\n  \"name\": \"ts-web-ui/ts-sidebar\",\n  \"version\": \"0.1.0\"\n}",
       "type": "registry:component"
     }
   ]

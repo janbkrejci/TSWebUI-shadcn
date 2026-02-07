@@ -1,5 +1,5 @@
 {
-  "name": "ts-web-ui-theme-provider",
+  "name": "ts-web-ui/theme-provider",
   "type": "registry:component",
   "dependencies": [
     "next-themes"
@@ -12,8 +12,8 @@
       "type": "registry:component"
     },
     {
-      "path": ".ts-web-ui-registry",
-      "content": "This file ensures correct installation of TS Web UI components.\nComponent: ts-web-ui/theme-provider",
+      "path": "_registry/theme-provider.json",
+      "content": "{\n  \"name\": \"ts-web-ui/theme-provider\",\n  \"version\": \"0.1.0\"\n}",
       "type": "registry:component"
     }
   ]

@@ -1,34 +1,34 @@
 [
   {
-    "name": "ts-web-ui-client-only",
+    "name": "ts-web-ui/client-only",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/client-only.json"
   },
   {
-    "name": "ts-web-ui-theme-provider",
+    "name": "ts-web-ui/theme-provider",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json"
   },
   {
-    "name": "ts-web-ui-mode-toggle",
+    "name": "ts-web-ui/mode-toggle",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json"
   },
   {
-    "name": "ts-web-ui-ts-sidebar",
+    "name": "ts-web-ui/ts-sidebar",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json"
   },
   {
-    "name": "ts-web-ui-ts-topbar",
+    "name": "ts-web-ui/ts-topbar",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json"
   },
   {
-    "name": "ts-web-ui-ts-window",
+    "name": "ts-web-ui/ts-window",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json"
   },
   {
-    "name": "ts-web-ui-ts-table",
+    "name": "ts-web-ui/ts-table",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json"
   },
   {
-    "name": "ts-web-ui-ts-form",
+    "name": "ts-web-ui/ts-form",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json"
   }
 ]
