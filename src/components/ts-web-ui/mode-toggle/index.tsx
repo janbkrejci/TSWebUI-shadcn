@@ -28,7 +28,7 @@ export function ModeToggle() {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
         <DropdownMenuItem onClick={() => setTheme("light")} className="justify-between">
           Light
           {theme === "light" && <Check className="h-4 w-4 ml-2" />}
