@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TsForm } from "@/components/ts-web-ui/ts-form"
 import { TsFieldDef, TsFormButton, TsFormLayout } from "@/components/ts-web-ui/ts-form/types"
+import { InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const formFields: Record<string, TsFieldDef> = {
   name: { type: "text", label: "First Name", required: true, placeholder: "Jan" },
@@ -156,6 +157,7 @@ export default function TsFormPage() {
         <TabsList>
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="install">Install</TabsTrigger>
           <TabsTrigger value="documentation">Documentation</TabsTrigger>
         </TabsList>
 
@@ -243,6 +245,20 @@ export default function MyForm() {
               </SyntaxHighlighter>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="install" className="pt-4">
+          <InstallTab
+            componentName="ts-form"
+            dependencies={[
+              "@hookform/resolvers",
+              "react-hook-form",
+              "zod",
+              "lucide-react",
+              "date-fns",
+              "react-markdown",
+            ]}
+          />
         </TabsContent>
 
         <TabsContent value="documentation" className="pt-4">

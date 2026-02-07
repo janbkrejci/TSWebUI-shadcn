@@ -29,6 +29,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ts-web-ui/ts-sidebar"
+import { InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Menu položky pro demo
@@ -260,6 +261,7 @@ export default function SidebarPage() {
         <TabsList className="shrink-0 w-fit">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="install">Install</TabsTrigger>
           <TabsTrigger value="documentation">Documentation</TabsTrigger>
         </TabsList>
 
@@ -293,6 +295,10 @@ export default function SidebarPage() {
               </SyntaxHighlighter>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="install" className="pt-4">
+          <InstallTab componentName="ts-sidebar" dependencies={["lucide-react"]} />
         </TabsContent>
 
         <TabsContent

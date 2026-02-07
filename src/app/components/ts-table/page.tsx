@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TsTable } from "@/components/ts-web-ui/ts-table"
 import { TsTableColumnDef } from "@/components/ts-web-ui/ts-table/columns"
+import { InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 interface TableItem {
   [key: string]: unknown
@@ -231,6 +232,7 @@ export default function TsTablePage() {
         <TabsList>
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="install">Install</TabsTrigger>
           <TabsTrigger value="documentation">Documentation</TabsTrigger>
         </TabsList>
 
@@ -303,6 +305,13 @@ export default function MyPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="install" className="pt-4">
+          <InstallTab
+            componentName="ts-table"
+            dependencies={["@tanstack/react-table", "lucide-react", "xlsx", "date-fns"]}
+          />
+        </TabsContent>
+
         <TabsContent value="documentation" className="pt-4">
           <div className="space-y-8 pb-8">
             <Card>
@@ -321,7 +330,7 @@ export default function MyPage() {
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-mono text-xs">data</TableCell>
-                      <TableCell className="text-xs italic">any[]</TableCell>
+                      <TableCell className="text-xs italic">unknown[]</TableCell>
                       <TableCell>Array of objects to display in the table.</TableCell>
                     </TableRow>
                     <TableRow>

@@ -301,7 +301,7 @@ export function TsFormEditor() {
                     value={importJsonText}
                     onChange={(e) => setImportJsonText(e.target.value)}
                     placeholder='{"fields": {}, "layout": {}, "buttons": []}'
-                    className="min-h-[300px] font-mono text-sm"
+                    className="min-h-75 font-mono text-sm"
                   />
                   {importError && <p className="text-sm text-destructive">{importError}</p>}
                 </div>
@@ -737,7 +737,7 @@ function CanvasCell({
   return (
     <div
       className={cn(
-        "relative min-h-[60px] p-2 border rounded transition-colors cursor-pointer",
+        "relative min-h-15 p-2 border rounded transition-colors cursor-pointer",
         isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
         isSelected && "ring-2 ring-primary border-primary"
       )}

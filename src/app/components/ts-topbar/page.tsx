@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Menu, Search, Settings, User } from "lucide-react"
+import { Palette, PanelTop, Search, User } from "lucide-react"
 
 import * as React from "react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
@@ -21,154 +21,112 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { TopBarLogo, TsTopBar } from "@/components/ts-web-ui/ts-topbar"
+import { InstallTab } from "@/components/ts-web-ui/widget-demo"
+
 /**
- * Interaktivní demo TopBaru uvnitř kontejneru
+ * Interaktivní demo TopBaru
  */
 function TopBarDemo() {
-  const [showBorder, setShowBorder] = React.useState(true)
   const [showCenter, setShowCenter] = React.useState(true)
+  const [isBordered, setIsBordered] = React.useState(true)
   const [height, setHeight] = React.useState(56)
 
   return (
     <div className="flex-1 flex flex-col gap-4 min-h-0">
       {/* Ovládací panel */}
-      <div className="flex flex-wrap gap-4 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm">
+      <div className="flex flex-wrap gap-6 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm">
         <div className="flex items-center gap-2">
-          <Switch id="border" checked={showBorder} onCheckedChange={setShowBorder} />
-          <Label htmlFor="border">Border</Label>
+          <Switch id="bordered" checked={isBordered} onCheckedChange={setIsBordered} />
+          <Label htmlFor="bordered">Border</Label>
         </div>
         <div className="flex items-center gap-2">
           <Switch id="center" checked={showCenter} onCheckedChange={setShowCenter} />
-          <Label htmlFor="center">Center content</Label>
+          <Label htmlFor="center">Center Content</Label>
         </div>
         <div className="flex items-center gap-2">
           <Label htmlFor="height">Height:</Label>
-          <Input
+          <input
             id="height"
-            type="number"
+            type="range"
+            min="40"
+            max="100"
             value={height}
             onChange={(e) => setHeight(Number(e.target.value))}
-            className="w-20 h-8"
-            min={40}
-            max={80}
+            className="w-24"
           />
+          <span className="text-xs font-mono w-8">{height}px</span>
         </div>
       </div>
 
       {/* Workspace kontejner */}
-      <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-[400px]">
+      <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-[300px]">
         {/* Pozadí workspace */}
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 pointer-events-none font-bold text-4xl select-none">
-          APP CONTENT
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 pointer-events-none font-bold text-4xl select-none z-0">
+          PAGE CONTENT
         </div>
 
-        {/* TopBar uvnitř kontejneru - relativní pozice */}
-        <header
-          className={`
-            absolute top-0 left-0 right-0 z-10
-            flex items-center justify-between gap-4 px-4
-            bg-background
-            ${showBorder ? "border-b" : ""}
-          `}
-          style={{ height }}
-        >
-          {/* Levá část */}
-          <div className="flex items-center gap-3 shrink-0">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Menu className="h-5 w-5" />
-            </Button>
-            <span className="font-semibold">MyApp</span>
-          </div>
-
-          {/* Střední část */}
-          {showCenter && (
-            <div className="flex-1 flex items-center justify-center min-w-0">
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search..." className="pl-9 h-9 w-full" />
+        {/* TopBar uvnitř kontejneru - používá !absolute pro demo účely */}
+        <TsTopBar
+          height={height}
+          bordered={isBordered}
+          className="!absolute"
+          leftContent={
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground">
+                <PanelTop className="h-5 w-5" />
               </div>
+              <TopBarLogo text="MyApplication" />
             </div>
-          )}
-
-          {/* Pravá část */}
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Settings className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <User className="h-5 w-5" />
-            </Button>
-          </div>
-        </header>
-
-        {/* Simulovaný obsah pod TopBarem */}
-        <div className="absolute left-0 right-0 bottom-0 p-6 overflow-auto" style={{ top: height }}>
-          <div className="max-w-2xl mx-auto space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Page Content</h2>
-            <p className="text-muted-foreground">
-              This area represents the main content of the application, positioned below the TopBar
-              with proper spacing.
-            </p>
-            <div className="grid grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="h-24 rounded-lg bg-background border flex items-center justify-center text-muted-foreground"
-                >
-                  Card {i}
-                </div>
-              ))}
+          }
+          centerContent={
+            showCenter ? (
+              <div className="relative w-64 max-w-full">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search everything..." className="pl-8 h-9" />
+              </div>
+            ) : null
+          }
+          rightContent={
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Palette className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <User className="h-5 w-5" />
+              </Button>
             </div>
-          </div>
-        </div>
+          }
+        />
       </div>
     </div>
   )
 }
 
 const codeString = `import { TsTopBar, TopBarLogo, TopBarActions } from "@/components/ts-web-ui/ts-topbar"
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { SidebarTrigger } from "@/components/ts-web-ui/ts-sidebar"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Button } from "@/components/ui/button"
-import { Bell, User, Settings } from "lucide-react"
-
-const TOP_BAR_HEIGHT = 56
 
 export default function Layout({ children }) {
   return (
     <>
-      {/* Fixed TopBar */}
       <TsTopBar
-        height={TOP_BAR_HEIGHT}
-        bordered={true}
+        height={56}
         leftContent={
           <div className="flex items-center gap-3">
             <SidebarTrigger />
-            <TopBarLogo text="My Application" />
+            <TopBarLogo text="TSWebUI" href="/" />
           </div>
-        }
-        centerContent={
-          <SearchInput />
         }
         rightContent={
           <TopBarActions>
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-            <UserMenu />
+            <Button variant="ghost">Docs</Button>
             <ModeToggle />
           </TopBarActions>
         }
       />
       
-      {/* Main content with top margin */}
-      <main style={{ marginTop: TOP_BAR_HEIGHT }}>
+      <main className="mt-[56px]">
         {children}
       </main>
     </>
@@ -181,7 +139,7 @@ export default function TopBarPage() {
       <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">TopBar</h1>
         <p className="text-muted-foreground mt-2">
-          Aplikační horní lišta fixovaná k hornímu okraji okna s podporou tří slotů pro obsah.
+          Univerzální horní lišta pro navigaci, loga a globální akce aplikace.
         </p>
       </div>
 
@@ -189,6 +147,7 @@ export default function TopBarPage() {
         <TabsList className="shrink-0 w-fit">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="install">Install</TabsTrigger>
           <TabsTrigger value="documentation">Documentation</TabsTrigger>
         </TabsList>
 
@@ -202,9 +161,9 @@ export default function TopBarPage() {
         >
           <Card className="w-full">
             <CardHeader>
-              <CardTitle>Použití v layoutu</CardTitle>
+              <CardTitle>Základní použití</CardTitle>
               <CardDescription>
-                TsTopBar se typicky používá v root layoutu aplikace společně se SidebarProvider.
+                TopBar je fixně umístěn na horní hraně okna a poskytuje sloty pro obsah.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -224,6 +183,10 @@ export default function TopBarPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="install" className="pt-4">
+          <InstallTab componentName="ts-topbar" dependencies={["lucide-react"]} />
+        </TabsContent>
+
         <TabsContent
           value="documentation"
           className="flex-1 min-h-0 overflow-auto pt-4 data-[state=inactive]:hidden"
@@ -232,7 +195,7 @@ export default function TopBarPage() {
             <Card>
               <CardHeader>
                 <CardTitle>TsTopBar Props</CardTitle>
-                <CardDescription>Konfigurovatelné vlastnosti hlavní komponenty.</CardDescription>
+                <CardDescription>Vlastnosti hlavní komponenty horní lišty.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -240,7 +203,6 @@ export default function TopBarPage() {
                     <TableRow>
                       <TableHead className="w-40">Prop</TableHead>
                       <TableHead className="w-32">Typ</TableHead>
-                      <TableHead className="w-24">Default</TableHead>
                       <TableHead>Popis</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -250,15 +212,13 @@ export default function TopBarPage() {
                         leftContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell className="text-xs">-</TableCell>
-                      <TableCell>Obsah na levé straně (hamburger menu, logo)</TableCell>
+                      <TableCell>Obsah vlevo (hamburger, logo)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         centerContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell className="text-xs">-</TableCell>
                       <TableCell>Obsah uprostřed (vyhledávání, breadcrumbs)</TableCell>
                     </TableRow>
                     <TableRow>
@@ -266,24 +226,21 @@ export default function TopBarPage() {
                         rightContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell className="text-xs">-</TableCell>
-                      <TableCell>Obsah na pravé straně (akce, uživatelské menu)</TableCell>
+                      <TableCell>Obsah vpravo (akce, uživatelské menu)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         height
                       </TableCell>
                       <TableCell className="text-xs italic">number</TableCell>
-                      <TableCell className="text-xs">56</TableCell>
-                      <TableCell>Výška TopBaru v pixelech</TableCell>
+                      <TableCell>Výška v pixelech (default: 56)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
                         bordered
                       </TableCell>
                       <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell className="text-xs">true</TableCell>
-                      <TableCell>Zobrazit spodní border</TableCell>
+                      <TableCell>Zobrazit spodní linku (default: true)</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -293,78 +250,36 @@ export default function TopBarPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Pomocné komponenty</CardTitle>
-                <CardDescription>Doplňkové komponenty pro stavbu TopBaru.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-40">Komponenta</TableHead>
-                      <TableHead>Popis</TableHead>
+                      <TableHead>Účel</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        TopBarLogo
+                      <TableCell className="font-mono text-xs font-semibold">TopBarLogo</TableCell>
+                      <TableCell>
+                        Formátované logo s podporou textu, ikony a odkazu (Next.js Link).
                       </TableCell>
-                      <TableCell>Logo aplikace s volitelným textem a ikonou</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                      <TableCell className="font-mono text-xs font-semibold">
                         TopBarActions
                       </TableCell>
-                      <TableCell>Kontejner pro akční tlačítka s mezerami</TableCell>
+                      <TableCell>Wrapper pro skupinu tlačítek s jednotným odsazením.</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        TopBarProvider
-                      </TableCell>
-                      <TableCell>Context provider pro sdílení výšky TopBaru</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                      <TableCell className="font-mono text-xs font-semibold">
                         TopBarSpacer
                       </TableCell>
-                      <TableCell>Spacer element pro obsah pod fixovaným TopBarem</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        useTopBar()
-                      </TableCell>
-                      <TableCell>Hook pro přístup k výšce TopBaru z kontextu</TableCell>
+                      <TableCell>Prvek pro odsazení obsahu pod fixovanou lištou.</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Vlastnosti</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>
-                    <strong>Fixovaná pozice</strong> - TopBar zůstává viditelný při scrollování
-                  </li>
-                  <li>
-                    <strong>Plná šířka</strong> - rozpíná se přes celou šířku viewportu
-                  </li>
-                  <li>
-                    <strong>Tři sloty</strong> - levý, střední a pravý pro flexibilní rozložení
-                  </li>
-                  <li>
-                    <strong>Responsive</strong> - střední obsah se automaticky zmenšuje
-                  </li>
-                  <li>
-                    <strong>Integrace se Sidebarem</strong> - SidebarTrigger se typicky umisťuje
-                    vlevo
-                  </li>
-                  <li>
-                    <strong>Z-index management</strong> - TopBar je vždy nad obsahem (z-50)
-                  </li>
-                </ul>
               </CardContent>
             </Card>
           </div>

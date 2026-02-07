@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { WindowOutlet, WindowProvider, useWindowManager } from "@/components/ts-web-ui/ts-window"
+import { InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const WindowControls = ({ windowId }: { windowId: string }) => {
   const { getWindow } = useWindowManager()
@@ -305,6 +306,7 @@ export default function Page() {
         <TabsList className="shrink-0 w-fit">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="install">Install</TabsTrigger>
           <TabsTrigger value="documentation">Documentation</TabsTrigger>
         </TabsList>
 
@@ -342,6 +344,10 @@ export default function Page() {
               </SyntaxHighlighter>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="install" className="pt-4">
+          <InstallTab componentName="ts-window" dependencies={["lucide-react", "react-rnd"]} />
         </TabsContent>
 
         <TabsContent

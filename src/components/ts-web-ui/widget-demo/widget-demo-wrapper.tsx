@@ -66,17 +66,12 @@ interface WidgetDemoWrapperProps {
   additionalFieldProps?: Partial<TsFieldDef>
   /** Jména eventů k naslouchání */
   watchEvents?: string[]
+  /** Zobrazit tab s instrukcemi k instalaci? */
+  showInstallTab?: boolean
 }
 
 /**
  * WidgetDemoWrapper - univerzální wrapper pro demo stránky widgetů
- *
- * Poskytuje:
- * - Interaktivní ovládání všech atributů widgetu
- * - Zobrazení změn v reálném čase
- * - Log všech vyvolených eventů
- * - Aktuální hodnotu widgetu
- * - Generovaný JSON konfigurace
  */
 export function WidgetDemoWrapper({
   title,
@@ -85,6 +80,7 @@ export function WidgetDemoWrapper({
   attributes,
   defaultFieldValue,
   additionalFieldProps = {},
+  showInstallTab = false,
 }: WidgetDemoWrapperProps) {
   // Stav atributů widgetu
   const [attrValues, setAttrValues] = React.useState<Record<string, unknown>>(() => {
@@ -213,6 +209,83 @@ export function WidgetDemoWrapper({
   const registryUrl = `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${widgetType}.json`
   const installCommand = `npx shadcn@latest add ${registryUrl}`
 
+  const previewContent = (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Levý sloupec - Widget Preview */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>Preview</CardTitle>
+          <CardDescription>Interaktivní náhled widgetu</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div ref={widgetContainerRef} className="p-4 border rounded-lg bg-muted/20">
+            <FormProvider {...form}>
+              <form>
+                <TsFormField name="demoField" fieldDef={fieldDef} />
+              </form>
+            </FormProvider>
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* Aktuální hodnota */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Aktuální hodnota:</Label>
+              <Button variant="outline" size="sm" onClick={resetValue}>
+                <Trash2 className="h-3 w-3 mr-1" /> Reset
+              </Button>
+            </div>
+            <pre className="p-3 bg-muted rounded-md text-sm overflow-auto max-h-32">
+              {JSON.stringify(currentValue, null, 2) || "undefined"}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pravý sloupec - Kontroly a JSON */}
+      <div className="space-y-6">
+        {/* Atributy */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Atributy</CardTitle>
+              <Button variant="ghost" size="sm" onClick={copyJsonConfig}>
+                <Copy className="h-3 w-3 mr-1" /> Kopírovat
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {attributes.map((attr) => (
+                  <AttributeControl
+                    key={attr.name}
+                    attribute={attr}
+                    value={attrValues[attr.name]}
+                    onChange={(value) => updateAttribute(attr.name, value)}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* JSON Konfigurace */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">JSON Konfigurace</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="p-3 bg-muted rounded-md text-xs overflow-auto max-h-48">
+              {JSON.stringify(fieldDef, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -221,120 +294,51 @@ export function WidgetDemoWrapper({
         <p className="text-muted-foreground">{description}</p>
       </div>
 
-      <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="w-fit">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
-        </TabsList>
+      {showInstallTab ? (
+        <Tabs defaultValue="preview" className="w-full">
+          <TabsList className="w-fit">
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="install">Install</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="preview" className="pt-4 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Levý sloupec - Widget Preview */}
-            <Card className="lg:col-span-2">
+          <TabsContent value="preview" className="pt-4 space-y-6">
+            {previewContent}
+          </TabsContent>
+
+          <TabsContent value="install" className="pt-4">
+            <Card>
               <CardHeader>
-                <CardTitle>Preview</CardTitle>
-                <CardDescription>Interaktivní náhled widgetu</CardDescription>
+                <CardTitle>Instalace komponenty</CardTitle>
+                <CardDescription>
+                  Použijte shadcn CLI pro přidání této komponenty do vašeho projektu.
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div ref={widgetContainerRef} className="p-4 border rounded-lg bg-muted/20">
-                  <FormProvider {...form}>
-                    <form>
-                      <TsFormField name="demoField" fieldDef={fieldDef} />
-                    </form>
-                  </FormProvider>
+              <CardContent className="space-y-4">
+                <div className="bg-slate-950 text-slate-50 p-4 rounded-lg relative group">
+                  <code className="text-sm font-mono break-all">{installCommand}</code>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute right-2 top-2 h-8 w-8 text-slate-400 hover:text-slate-50"
+                    onClick={() => {
+                      navigator.clipboard.writeText(installCommand)
+                      toast("Příkaz zkopírován")
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
-
-                <Separator className="my-4" />
-
-                {/* Aktuální hodnota */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Aktuální hodnota:</Label>
-                    <Button variant="outline" size="sm" onClick={resetValue}>
-                      <Trash2 className="h-3 w-3 mr-1" /> Reset
-                    </Button>
-                  </div>
-                  <pre className="p-3 bg-muted rounded-md text-sm overflow-auto max-h-32">
-                    {JSON.stringify(currentValue, null, 2) || "undefined"}
-                  </pre>
-                </div>
+                <p className="text-sm text-muted-foreground italic">
+                  Poznámka: Tento příkaz automaticky nainstaluje všechny potřebné NPM závislosti a
+                  shadcn UI komponenty.
+                </p>
               </CardContent>
             </Card>
-
-            {/* Pravý sloupec - Kontroly a JSON */}
-            <div className="space-y-6">
-              {/* Atributy */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Atributy</CardTitle>
-                    <Button variant="ghost" size="sm" onClick={copyJsonConfig}>
-                      <Copy className="h-3 w-3 mr-1" /> Kopírovat
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-4">
-                      {attributes.map((attr) => (
-                        <AttributeControl
-                          key={attr.name}
-                          attribute={attr}
-                          value={attrValues[attr.name]}
-                          onChange={(value) => updateAttribute(attr.name, value)}
-                        />
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-
-              {/* JSON Konfigurace */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">JSON Konfigurace</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="p-3 bg-muted rounded-md text-xs overflow-auto max-h-48">
-                    {JSON.stringify(fieldDef, null, 2)}
-                  </pre>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="install" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Instalace komponenty</CardTitle>
-              <CardDescription>
-                Použijte shadcn CLI pro přidání této komponenty do vašeho projektu.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-slate-950 text-slate-50 p-4 rounded-lg relative group">
-                <code className="text-sm font-mono break-all">{installCommand}</code>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute right-2 top-2 h-8 w-8 text-slate-400 hover:text-slate-50"
-                  onClick={() => {
-                    navigator.clipboard.writeText(installCommand)
-                    toast("Příkaz zkopírován")
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground italic">
-                Poznámka: Tento příkaz automaticky nainstaluje všechny potřebné NPM závislosti a
-                shadcn UI komponenty.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="pt-4">{previewContent}</div>
+      )}
 
       {/* Event Log */}
       <Card>
