@@ -1,5 +1,5 @@
 {
-  "name": "ts-web-ui/mode-toggle",
+  "name": "ts-web-ui-mode-toggle",
   "type": "registry:component",
   "dependencies": [
     "lucide-react",
@@ -16,8 +16,8 @@
       "type": "registry:component"
     },
     {
-      "path": "ts-web-ui/mode-toggle/.metadata.json",
-      "content": "{\n  \"name\": \"ts-web-ui/mode-toggle\",\n  \"version\": \"0.1.0\"\n}",
+      "path": ".ts-web-ui-registry",
+      "content": "This file ensures correct installation of TS Web UI components.\nComponent: ts-web-ui/mode-toggle",
       "type": "registry:component"
     }
   ]

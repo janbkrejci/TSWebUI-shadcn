@@ -1,5 +1,5 @@
 {
-  "name": "ts-web-ui/ts-window",
+  "name": "ts-web-ui-ts-window",
   "type": "registry:component",
   "dependencies": [
     "lucide-react",
@@ -7,7 +7,7 @@
   ],
   "registryDependencies": [
     "button",
-    "ts-web-ui/client-only"
+    "ts-web-ui-client-only"
   ],
   "files": [
     {
@@ -16,8 +16,8 @@
       "type": "registry:component"
     },
     {
-      "path": "ts-web-ui/ts-window/.metadata.json",
-      "content": "{\n  \"name\": \"ts-web-ui/ts-window\",\n  \"version\": \"0.1.0\"\n}",
+      "path": ".ts-web-ui-registry",
+      "content": "This file ensures correct installation of TS Web UI components.\nComponent: ts-web-ui/ts-window",
       "type": "registry:component"
     }
   ]
