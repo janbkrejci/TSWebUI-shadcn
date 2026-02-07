@@ -7,13 +7,8 @@
   "registryDependencies": [],
   "files": [
     {
-      "path": "ts-web-ui/theme-provider/index.tsx",
+      "path": "index.tsx",
       "content": "\"use client\"\n\nimport { ThemeProvider as NextThemesProvider } from \"next-themes\"\nimport * as React from \"react\"\n\nexport function ThemeProvider({\n  children,\n  ...props\n}: React.ComponentProps<typeof NextThemesProvider>) {\n  return <NextThemesProvider {...props}>{children}</NextThemesProvider>\n}\n",
-      "type": "registry:component"
-    },
-    {
-      "path": "_registry/theme-provider.json",
-      "content": "{\n  \"name\": \"ts-web-ui/theme-provider\",\n  \"version\": \"0.1.0\"\n}",
       "type": "registry:component"
     }
   ]
