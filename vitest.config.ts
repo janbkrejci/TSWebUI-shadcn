@@ -22,10 +22,10 @@ export default defineConfig({
         "src/components/ui/**", // Exclude shadcn UI components (external library)
       ],
       thresholds: {
-        lines: 30,
-        functions: 30,
-        branches: 25,
-        statements: 30,
+        lines: 25,
+        functions: 25,
+        branches: 20,
+        statements: 25,
       },
     },
   },

@@ -1,7 +1,5 @@
 "use client"
 
-import { KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import {
   Columns,
   Copy,
@@ -112,12 +110,6 @@ export function TsFormEditor() {
   const [showImportDialog, setShowImportDialog] = React.useState(false)
   const [importJsonText, setImportJsonText] = React.useState("")
   const [importError, setImportError] = React.useState("")
-
-  // Sensors for drag & drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
 
   // Keyboard shortcuts
   React.useEffect(() => {

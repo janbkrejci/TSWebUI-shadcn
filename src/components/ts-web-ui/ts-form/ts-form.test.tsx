@@ -47,7 +47,7 @@ describe("TsForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Submit/i }))
 
-    // The actual message is "Toto pole je povinné" in our schema
-    expect(await screen.findByText(/povinné/i)).toBeInTheDocument()
+    // The actual message is "This field is required" in our schema
+    expect(await screen.findByText(/This field is required/i)).toBeInTheDocument()
   })
 })
