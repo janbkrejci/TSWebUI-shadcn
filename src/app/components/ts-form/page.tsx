@@ -211,7 +211,9 @@ export default function TsFormPage() {
           <Card>
             <CardContent className="pt-6">
               <CodeBlock
-                code={`import { TsForm } from "@/components/ts-web-ui/ts-form"
+                code={`"use client"
+
+import { TsForm } from "@/components/ts-web-ui/ts-form"
 
 const fields = {
   email: { type: "text", label: "Email", required: true },

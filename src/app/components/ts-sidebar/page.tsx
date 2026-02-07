@@ -178,7 +178,9 @@ function SidebarDemo() {
   )
 }
 
-const codeString = `import { 
+const codeString = `"use client"
+
+import { 
   SidebarProvider, 
   Sidebar, 
   SidebarContent, 

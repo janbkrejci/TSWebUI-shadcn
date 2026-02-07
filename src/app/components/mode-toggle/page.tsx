@@ -11,7 +11,9 @@ import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 export default function ModeTogglePage() {
-  const codeString = `import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+  const codeString = `"use client"
+
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 
 export default function Header() {
   return (

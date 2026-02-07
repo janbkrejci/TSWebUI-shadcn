@@ -326,6 +326,7 @@ If seeing "Text content does not match server-rendered HTML":
 ## Code Style
 
 - **Language:** ALL UI text, labels, documentation, and code comments MUST be in English. No Czech language allowed.
+- **Client Components:** Most components in this library are Client Components. Always include `"use client"` at the top of files using these components or React hooks.
 - **TypeScript:** Use explicit types for props and return values
 - **React:** Prefer function components with hooks
 - **Forms:** Use react-hook-form with zodResolver

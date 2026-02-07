@@ -269,7 +269,9 @@ export default function TsTablePage() {
             </CardHeader>
             <CardContent>
               <CodeBlock
-                code={`import { TsTable } from "@/components/ts-web-ui/ts-table"
+                code={`"use client"
+
+import { TsTable } from "@/components/ts-web-ui/ts-table"
 
 const columns = [
   { key: 'name', title: 'Name', type: 'text', sortable: true },

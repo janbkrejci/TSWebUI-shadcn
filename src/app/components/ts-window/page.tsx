@@ -202,7 +202,9 @@ function TsWindowDemo() {
 }
 
 export default function TsWindowPage() {
-  const codeString = `import { 
+  const codeString = `"use client"
+
+import { 
   WindowProvider, 
   useWindowManager, 
   WindowOutlet 

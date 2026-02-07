@@ -101,7 +101,9 @@ function TopBarDemo() {
   )
 }
 
-const codeString = `import { TsTopBar, TopBarLogo, TopBarActions } from "@/components/ts-web-ui/ts-topbar"
+const codeString = `"use client"
+
+import { TsTopBar, TopBarLogo, TopBarActions } from "@/components/ts-web-ui/ts-topbar"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { SidebarTrigger } from "@/components/ts-web-ui/ts-sidebar"
 
