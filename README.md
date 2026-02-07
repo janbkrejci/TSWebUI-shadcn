@@ -1,7 +1,6 @@
 # TS Web UI (Shadcn Edition)
 
-[![CI](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci.yml)
-[![Deploy](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/deploy.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/deploy.yml)
+[![CI/CD](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci-cd.yml)
 
 A React/Shadcn implementation of the TS Web UI components - a comprehensive UI component library with JSON-driven forms, draggable windows, advanced tables, and more.
 

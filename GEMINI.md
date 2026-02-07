@@ -51,8 +51,9 @@ git commit --no-verify
 
 ## Continuous Integration & Deployment
 
-- **CI**: GitHub Actions (`.github/workflows/ci.yml`) runs linting, formatting check, and tests with coverage on push/PR to `main` and `develop`.
-- **CD**: GitHub Actions (`.github/workflows/deploy.yml`) automatically builds and deploys the static export to GitHub Pages when a commit is pushed to the `main` branch.
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/ci-cd.yml`) manages the entire lifecycle.
+- **Verification**: Linting, formatting, and tests must pass before any deployment.
+- **Deployment**: Automatic static export and deployment to GitHub Pages on push to `main`.
 - **Base Path**: The production build uses `/TSWebUI-shadcn` as the base path.
 
 ## Project Architecture
