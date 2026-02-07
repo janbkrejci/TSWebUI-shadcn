@@ -9,43 +9,43 @@ const COMPONENTS_BASE_PATH = path.join(process.cwd(), "src", "components", "ts-w
  */
 const REGISTRY_COMPONENTS = [
   {
-    name: "client-only",
+    name: "ts-web-ui/client-only",
     dependencies: [],
     registryDependencies: [],
     files: ["client-only/index.tsx"],
   },
   {
-    name: "theme-provider",
+    name: "ts-web-ui/theme-provider",
     dependencies: ["next-themes"],
     registryDependencies: [],
     files: ["theme-provider/index.tsx"],
   },
   {
-    name: "mode-toggle",
+    name: "ts-web-ui/mode-toggle",
     dependencies: ["lucide-react", "next-themes"],
     registryDependencies: ["button", "dropdown-menu"],
     files: ["mode-toggle/index.tsx"],
   },
   {
-    name: "ts-sidebar",
+    name: "ts-web-ui/ts-sidebar",
     dependencies: ["lucide-react"],
     registryDependencies: ["button"],
     files: ["ts-sidebar/index.tsx"],
   },
   {
-    name: "ts-topbar",
+    name: "ts-web-ui/ts-topbar",
     dependencies: ["lucide-react"],
     registryDependencies: [],
     files: ["ts-topbar/index.tsx"],
   },
   {
-    name: "ts-window",
+    name: "ts-web-ui/ts-window",
     dependencies: ["lucide-react", "react-rnd"],
-    registryDependencies: ["button", "client-only"],
+    registryDependencies: ["button", "ts-web-ui/client-only"],
     files: ["ts-window/index.tsx"],
   },
   {
-    name: "ts-table",
+    name: "ts-web-ui/ts-table",
     dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "date-fns"],
     registryDependencies: ["button", "checkbox", "dropdown-menu", "input", "select", "table"],
     files: [
@@ -58,7 +58,7 @@ const REGISTRY_COMPONENTS = [
     ],
   },
   {
-    name: "ts-form",
+    name: "ts-web-ui/ts-form",
     dependencies: [
       "@hookform/resolvers",
       "react-hook-form",
@@ -84,7 +84,7 @@ const REGISTRY_COMPONENTS = [
       "switch",
       "textarea",
       "toggle-group",
-      "ts-table",
+      "ts-web-ui/ts-table",
     ],
     files: [
       "ts-form/index.tsx",
@@ -123,16 +123,25 @@ async function buildRegistry() {
           .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
           .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
 
+        // Determine the target path within the component directory
+        // If fileRelPath is "ts-table/columns.tsx" and component.name is "ts-web-ui/ts-table"
+        // we want the path inside the component folder to be just "columns.tsx"
+        const parts = fileRelPath.split("/")
+        const fileName = parts[parts.length - 1]
+        // If it's in a subfolder within the component folder, we keep that part
+        const innerPath = parts.slice(1).join("/")
+
         return {
-          // Including ts-web-ui/ prefix ensures it installs into components/ts-web-ui/...
-          path: `ts-web-ui/${fileRelPath}`,
+          path: innerPath || fileName,
           content: processedContent,
           type: "registry:component",
         }
       }),
     }
 
-    const outputPath = path.join(REGISTRY_PATH, `${component.name}.json`)
+    // Use the last part of the name for the JSON filename
+    const jsonFileName = component.name.split("/").pop()
+    const outputPath = path.join(REGISTRY_PATH, `${jsonFileName}.json`)
     fs.writeFileSync(outputPath, JSON.stringify(registryItem, null, 2))
     console.log(`✅ Generated registry for ${component.name}`)
   }
@@ -140,7 +149,7 @@ async function buildRegistry() {
   // Generate main registry index
   const index = REGISTRY_COMPONENTS.map((c) => ({
     name: c.name,
-    href: `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${c.name}.json`,
+    href: `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${c.name.split("/").pop()}.json`,
   }))
   fs.writeFileSync(path.join(REGISTRY_PATH, "index.json"), JSON.stringify(index, null, 2))
 }
