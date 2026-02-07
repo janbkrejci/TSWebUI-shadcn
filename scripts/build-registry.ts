@@ -123,7 +123,7 @@ async function buildRegistry() {
 
         return {
           path: `ts-web-ui/${fileRelPath}`,
-          target: `ts-web-ui/${fileRelPath}`,
+          target: `components/ts-web-ui/${fileRelPath}`,
           content: processedContent,
           type: "registry:component",
         }
