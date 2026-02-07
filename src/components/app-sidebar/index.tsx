@@ -261,18 +261,18 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
           )}
           <div className="space-y-1">
             <NavButton
-              href="/components/mode-toggle"
-              label="Mode Toggle"
-              icon={Moon}
-              isActive={pathname.startsWith("/components/mode-toggle")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
               href="/components/theme-provider"
               label="Theme Provider"
               icon={Palette}
               isActive={pathname.startsWith("/components/theme-provider")}
+              isCollapsed={isCollapsed}
+              onClick={handleLinkClick}
+            />
+            <NavButton
+              href="/components/mode-toggle"
+              label="Mode Toggle"
+              icon={Moon}
+              isActive={pathname.startsWith("/components/mode-toggle")}
               isCollapsed={isCollapsed}
               onClick={handleLinkClick}
             />
