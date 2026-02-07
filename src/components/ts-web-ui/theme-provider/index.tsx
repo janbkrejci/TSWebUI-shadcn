@@ -16,11 +16,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex space-x-2">
-          <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-          <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-          <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+        <style>{`
+          @keyframes extra-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-150%); }
+          }
+          .animate-extra-bounce {
+            animation: extra-bounce 0.6s infinite ease-in-out;
+          }
+          :root {
+            --background: oklch(1 0 0);
+          }
+          @media (prefers-color-scheme: dark) {
+            :root {
+              --background: oklch(0.145 0 0);
+            }
+          }
+        `}</style>
+        <div className="flex space-x-3">
+          <div className="h-2.5 w-2.5 bg-blue-600 rounded-full animate-extra-bounce [animation-delay:-0.3s]"></div>
+          <div className="h-2.5 w-2.5 bg-blue-600 rounded-full animate-extra-bounce [animation-delay:-0.15s]"></div>
+          <div className="h-2.5 w-2.5 bg-blue-600 rounded-full animate-extra-bounce"></div>
         </div>
       </div>
     )
