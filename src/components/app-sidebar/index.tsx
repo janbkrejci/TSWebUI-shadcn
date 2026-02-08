@@ -38,10 +38,7 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
-import { useSidebar } from "@/components/ts-web-ui/ts-sidebar"
+import { SidebarItem, SidebarSection } from "@/components/ts-web-ui/ts-sidebar"
 
 import { cn } from "@/lib/utils"
 
@@ -107,199 +104,98 @@ const FORM_WIDGETS: NavItem[] = [
 ]
 
 /**
- * Navigation button component with support for collapsed mode
- */
-function NavButton({
-  href,
-  label,
-  icon: Icon,
-  isActive,
-  isCollapsed,
-  onClick,
-}: {
-  href: string
-  label: string
-  icon: LucideIcon
-  isActive: boolean
-  isCollapsed: boolean
-  onClick: () => void
-}) {
-  const button = (
-    <Button
-      variant={isActive ? "secondary" : "ghost"}
-      className={cn(
-        "w-full h-9 text-sm",
-        isCollapsed ? "justify-center px-2" : "justify-start px-3"
-      )}
-      asChild
-      onClick={onClick}
-    >
-      <Link href={href}>
-        <Icon className={cn("h-4 w-4 shrink-0", !isCollapsed && "mr-2")} />
-        {!isCollapsed && <span className="truncate">{label}</span>}
-      </Link>
-    </Button>
-  )
-
-  if (isCollapsed) {
-    return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
-          {label}
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  return button
-}
-
-/**
  * Main application sidebar with navigation
  * Contains links to components and all form widgets
  */
 export function AppSidebar({ className }: React.ComponentProps<"div">) {
   const pathname = usePathname()
-  const { close, isCollapsed } = useSidebar()
-
-  // On mobile, close the sidebar after clicking a link
-  const handleLinkClick = () => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      close()
-    }
-  }
 
   return (
-    <TooltipProvider>
-      <div className={cn("py-2", className)}>
-        {/* Main Section */}
-        <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
-          {!isCollapsed && (
-            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
-              Overview
-            </h3>
-          )}
-          <div className="space-y-1">
-            <NavButton
-              href="/"
-              label="Overview"
-              icon={Home}
-              isActive={pathname === "/"}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-          </div>
-        </div>
+    <div className={cn(className)}>
+      {/* Main Section */}
+      <SidebarSection title="Overview">
+        <SidebarItem icon={<Home className="h-4 w-4" />} isActive={pathname === "/"} asChild>
+          <Link href="/">Overview</Link>
+        </SidebarItem>
+      </SidebarSection>
 
-        {/* Components */}
-        <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
-          {!isCollapsed && (
-            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
-              Components
-            </h3>
-          )}
-          <div className="space-y-1">
-            <NavButton
-              href="/components/ts-window"
-              label="Window"
-              icon={LayoutGrid}
-              isActive={pathname.startsWith("/components/ts-window")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
-              href="/components/ts-table"
-              label="Table"
-              icon={Table2}
-              isActive={pathname.startsWith("/components/ts-table")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
-              href="/components/ts-form"
-              label="Form"
-              icon={FormInput}
-              isActive={pathname.startsWith("/components/ts-form")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
-              href="/components/ts-topbar"
-              label="TopBar"
-              icon={PanelTop}
-              isActive={pathname.startsWith("/components/ts-topbar")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
-              href="/components/ts-sidebar"
-              label="Sidebar"
-              icon={PanelLeft}
-              isActive={pathname.startsWith("/components/ts-sidebar")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
-              href="/form-editor"
-              label="Form Editor"
-              icon={Pencil}
-              isActive={pathname.startsWith("/form-editor")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-          </div>
-        </div>
+      {/* Components */}
+      <SidebarSection title="Components">
+        <SidebarItem
+          icon={<LayoutGrid className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/ts-window")}
+          asChild
+        >
+          <Link href="/components/ts-window">Window</Link>
+        </SidebarItem>
+        <SidebarItem
+          icon={<Table2 className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/ts-table")}
+          asChild
+        >
+          <Link href="/components/ts-table">Table</Link>
+        </SidebarItem>
+        <SidebarItem
+          icon={<FormInput className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/ts-form")}
+          asChild
+        >
+          <Link href="/components/ts-form">Form</Link>
+        </SidebarItem>
+        <SidebarItem
+          icon={<PanelTop className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/ts-topbar")}
+          asChild
+        >
+          <Link href="/components/ts-topbar">TopBar</Link>
+        </SidebarItem>
+        <SidebarItem
+          icon={<PanelLeft className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/ts-sidebar")}
+          asChild
+        >
+          <Link href="/components/ts-sidebar">Sidebar</Link>
+        </SidebarItem>
+        <SidebarItem
+          icon={<Pencil className="h-4 w-4" />}
+          isActive={pathname.startsWith("/form-editor")}
+          asChild
+        >
+          <Link href="/form-editor">Form Editor</Link>
+        </SidebarItem>
+      </SidebarSection>
 
-        {/* Utility Components */}
-        <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
-          {!isCollapsed && (
-            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
-              Utilities
-            </h3>
-          )}
-          <div className="space-y-1">
-            <NavButton
-              href="/components/theme-provider"
-              label="Theme Provider"
-              icon={Palette}
-              isActive={pathname.startsWith("/components/theme-provider")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-            <NavButton
-              href="/components/mode-toggle"
-              label="Mode Toggle"
-              icon={Moon}
-              isActive={pathname.startsWith("/components/mode-toggle")}
-              isCollapsed={isCollapsed}
-              onClick={handleLinkClick}
-            />
-          </div>
-        </div>
+      {/* Utility Components */}
+      <SidebarSection title="Utilities">
+        <SidebarItem
+          icon={<Palette className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/theme-provider")}
+          asChild
+        >
+          <Link href="/components/theme-provider">Theme Provider</Link>
+        </SidebarItem>
+        <SidebarItem
+          icon={<Moon className="h-4 w-4" />}
+          isActive={pathname.startsWith("/components/mode-toggle")}
+          asChild
+        >
+          <Link href="/components/mode-toggle">Mode Toggle</Link>
+        </SidebarItem>
+      </SidebarSection>
 
-        {/* Form Widgets */}
-        <div className={cn("py-2", isCollapsed ? "px-2" : "px-3")}>
-          {!isCollapsed && (
-            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
-              Form Widgets
-            </h3>
-          )}
-          <div className="space-y-1">
-            {FORM_WIDGETS.map((widget) => (
-              <NavButton
-                key={widget.name}
-                href={widget.href}
-                label={widget.label}
-                icon={widget.icon}
-                isActive={pathname.startsWith(widget.href)}
-                isCollapsed={isCollapsed}
-                onClick={handleLinkClick}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </TooltipProvider>
+      {/* Form Widgets */}
+      <SidebarSection title="Form Widgets">
+        {FORM_WIDGETS.map((widget) => (
+          <SidebarItem
+            key={widget.name}
+            icon={<widget.icon className="h-4 w-4" />}
+            isActive={pathname.startsWith(widget.href)}
+            asChild
+          >
+            <Link href={widget.href}>{widget.label}</Link>
+          </SidebarItem>
+        ))}
+      </SidebarSection>
+    </div>
   )
 }
