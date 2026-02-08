@@ -6,7 +6,7 @@
   ],
   "registryDependencies": [
     "button",
-    "ts-web-ui/ts-logo"
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json"
   ],
   "files": [
     {

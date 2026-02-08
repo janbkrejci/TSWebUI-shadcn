@@ -5,9 +5,9 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "ts-web-ui/ts-sidebar",
-    "ts-web-ui/ts-topbar",
-    "ts-web-ui/theme-provider"
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json",
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json",
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json"
   ],
   "files": [
     {

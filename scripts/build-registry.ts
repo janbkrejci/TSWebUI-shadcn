@@ -107,6 +107,8 @@ const REGISTRY_COMPONENTS = [
 ]
 
 async function buildRegistry() {
+  const BASE_URL = "https://janbkrejci.github.io/TSWebUI-shadcn/registry"
+
   if (!fs.existsSync(REGISTRY_PATH)) {
     fs.mkdirSync(REGISTRY_PATH, { recursive: true })
   }
@@ -116,7 +118,14 @@ async function buildRegistry() {
       name: component.name,
       type: "registry:block",
       dependencies: component.dependencies,
-      registryDependencies: component.registryDependencies,
+      registryDependencies: component.registryDependencies.map((dep) => {
+        // If it's one of our components, convert to full URL so shadcn CLI can find it
+        if (dep.startsWith("ts-web-ui/")) {
+          const componentFileName = dep.split("/").pop()
+          return `${BASE_URL}/${componentFileName}.json`
+        }
+        return dep
+      }),
       files: component.files.map((fileRelPath) => {
         const fullPath = path.join(COMPONENTS_BASE_PATH, fileRelPath)
         const content = fs.readFileSync(fullPath, "utf8")
