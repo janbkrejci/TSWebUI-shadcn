@@ -4,7 +4,9 @@
   "dependencies": [
     "lucide-react"
   ],
-  "registryDependencies": [],
+  "registryDependencies": [
+    "ts-web-ui/ts-logo"
+  ],
   "files": [
     {
       "path": "ts-web-ui/ts-topbar/index.tsx",

@@ -5,7 +5,8 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "button"
+    "button",
+    "ts-web-ui/ts-logo"
   ],
   "files": [
     {

@@ -1,5 +1,10 @@
 [
   {
+    "name": "ts-web-ui/ts-logo",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json"
+  },
+  {
     "name": "ts-web-ui/theme-provider",
     "type": "registry:block",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json"
