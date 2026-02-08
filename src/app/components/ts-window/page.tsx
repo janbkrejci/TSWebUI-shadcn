@@ -158,14 +158,22 @@ function TsWindowDemo() {
   const isDataOpen = windows.some((w) => w.id === "data")
   const isSettingsOpen = windows.some((w) => w.id === "settings")
 
+  // Ref to ensure we only open the welcome window once on initial mount
+  const hasOpenedInitial = React.useRef(false)
+
   // Open default windows on mount
   React.useEffect(() => {
+    if (hasOpenedInitial.current) return
+
     // Small delay to ensure layout is ready
     const t = setTimeout(() => {
-      if (!isWelcomeOpen) openWelcomeWindow()
+      if (!isWelcomeOpen) {
+        openWelcomeWindow()
+        hasOpenedInitial.current = true
+      }
     }, 100)
     return () => clearTimeout(t)
-  }, [isWelcomeOpen, openWelcomeWindow]) // run when welcome state changes or callback changes
+  }, [isWelcomeOpen, openWelcomeWindow])
 
   return (
     <div className="flex-1 flex flex-col gap-4 min-h-[500px] data-[state=inactive]:hidden text-foreground">
@@ -265,7 +273,7 @@ function MyWindowApp() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col gap-4 pb-6">
+    <div className="h-full w-full flex flex-col">
        {/* Toolbar */}
        <div className="p-4 border rounded-lg bg-card shadow-sm">
            <Button onClick={handleOpen}>Open New Window</Button>
