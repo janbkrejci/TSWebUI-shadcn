@@ -234,7 +234,7 @@ export default function TopBarSidebarPage() {
           <InstallTab
             componentName="integrated-layout"
             dependencies={["lucide-react"]}
-            instructions="Copy both TopBar and TsSidebar components to your project."
+            instructions="Installs the integrated application layout shell and all its dependencies (TopBar, Sidebar, ThemeProvider)."
           />
         </TabsContent>
       </Tabs>

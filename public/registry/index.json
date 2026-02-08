@@ -33,5 +33,10 @@
     "name": "ts-web-ui/ts-form",
     "type": "registry:block",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json"
+  },
+  {
+    "name": "ts-web-ui/integrated-layout",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/integrated-layout.json"
   }
 ]

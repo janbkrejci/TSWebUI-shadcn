@@ -88,6 +88,16 @@ const REGISTRY_COMPONENTS = [
       "ts-form/types.ts",
     ],
   },
+  {
+    name: "ts-web-ui/integrated-layout",
+    dependencies: ["lucide-react"],
+    registryDependencies: [
+      "ts-web-ui/ts-sidebar",
+      "ts-web-ui/ts-topbar",
+      "ts-web-ui/theme-provider",
+    ],
+    files: ["ts-layout.tsx"],
+  },
 ]
 
 async function buildRegistry() {
@@ -114,6 +124,8 @@ async function buildRegistry() {
           .replace(/\.\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")
           .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
           .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
+          .replace(/\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")
+          .replace(/\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
 
         return {
           path: `ts-web-ui/${fileRelPath}`,
