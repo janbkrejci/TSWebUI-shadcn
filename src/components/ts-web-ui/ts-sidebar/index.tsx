@@ -1,17 +1,12 @@
 "use client"
 
 /**
- * TsSidebar - Animated sidebar with automatic hiding
- *
- * Features:
- * - Animated opening/closing
- * - Automatic hiding on tablet and smaller
- * - Control via hamburger menu button
- * - Content overlay on mobile (overlay)
- * - Support for placement under TopBar
+ * TsSidebar - Animated sidebar with automatic hiding and data-driven navigation
  */
-import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, LucideIcon, Menu, X } from "lucide-react"
 
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -19,40 +14,40 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 import { cn } from "@/lib/utils"
 
+import { Logo } from "../ts-logo"
+
 const SIDEBAR_STATE_KEY = "sidebar:state"
 const SIDEBAR_COLLAPSED_KEY = "sidebar:collapsed"
 
-/**
- * Context for controlling sidebar state
- */
+export interface NavItem {
+  name: string
+  href: string
+  label: string
+  icon: LucideIcon | React.ReactNode
+  exact?: boolean
+}
+
+export interface NavSection {
+  title: string
+  items: NavItem[]
+}
+
 interface SidebarContextValue {
-  /** Is the sidebar open? */
   isOpen: boolean
-  /** Toggle sidebar state */
   toggle: () => void
-  /** Open sidebar */
   open: () => void
-  /** Close sidebar */
   close: () => void
-  /** Is the sidebar in collapsed mode? */
   isCollapsed: boolean
-  /** Toggle collapsed mode */
+  isTransitioning: boolean
   toggleCollapsed: () => void
-  /** Top bar height (for offset) */
   topBarHeight: number
-  /** Are we on a mobile device? */
   isMobile: boolean
-  /** Sidebar width */
   width: string
-  /** Sidebar width in collapsed mode */
   collapsedWidth: string
 }
 
 const SidebarContext = React.createContext<SidebarContextValue | undefined>(undefined)
 
-/**
- * Hook to access sidebar context
- */
 export function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
@@ -61,26 +56,15 @@ export function useSidebar() {
   return context
 }
 
-/**
- * Props for SidebarProvider
- */
 interface SidebarProviderProps {
   children: React.ReactNode
-  /** Default open state (desktop) */
   defaultOpen?: boolean
-  /** Breakpoint for automatic hiding (px) */
   mobileBreakpoint?: number
-  /** Top bar height for sidebar offset */
   topBarHeight?: number
-  /** Sidebar width */
   width?: string
-  /** Sidebar width in collapsed mode */
   collapsedWidth?: string
 }
 
-/**
- * Provider for sidebar state management
- */
 export function SidebarProvider({
   children,
   defaultOpen = true,
@@ -89,57 +73,46 @@ export function SidebarProvider({
   width = "16rem",
   collapsedWidth = "4rem",
 }: SidebarProviderProps) {
-  // Initialization - ALWAYS start with server-safe default values
   const [isOpen, setIsOpen] = React.useState(defaultOpen)
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(false)
+  const [isTransitioning, setIsTransitioning] = React.useState(false)
 
-  // Refs for tracking previous state
   const wasMobileRef = React.useRef(false)
-  const wasOpenRef = React.useRef(defaultOpen)
 
-  // Initialize state from browser environment after mounting
   React.useEffect(() => {
-    // Now on client, safely access window and localStorage
     const mobile = window.innerWidth < mobileBreakpoint
     setIsMobile(mobile)
     wasMobileRef.current = mobile
 
-    // Load saved state
     let initialOpen = defaultOpen
     if (mobile) {
       initialOpen = false
     } else {
       try {
         const stored = window.localStorage.getItem(SIDEBAR_STATE_KEY)
-        if (stored !== null) {
-          initialOpen = stored === "true"
-        }
+        if (stored !== null) initialOpen = stored === "true"
       } catch {
-        // ignore
+        /* ignore */
       }
     }
 
     setIsOpen(initialOpen)
-    wasOpenRef.current = initialOpen
 
     try {
       const storedCollapsed = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-      if (storedCollapsed !== null) {
-        setIsCollapsed(storedCollapsed === "true")
-      }
+      if (storedCollapsed !== null) setIsCollapsed(storedCollapsed === "true")
     } catch {
-      // ignore
+      /* ignore */
     }
   }, [defaultOpen, mobileBreakpoint])
 
-  // Save state to localStorage
   React.useEffect(() => {
     if (!isMobile) {
       try {
         window.localStorage.setItem(SIDEBAR_STATE_KEY, String(isOpen))
       } catch {
-        // ignore
+        /* ignore */
       }
     }
   }, [isOpen, isMobile])
@@ -149,64 +122,48 @@ export function SidebarProvider({
       try {
         window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed))
       } catch {
-        // ignore
+        /* ignore */
       }
     }
   }, [isCollapsed, isMobile])
 
-  // Detect window resize
   React.useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < mobileBreakpoint
       const wasMobile = wasMobileRef.current
 
-      // Automatically hide on mobile
       if (mobile && !wasMobile) {
         setIsMobile(true)
         setIsOpen(false)
         wasMobileRef.current = true
-        wasOpenRef.current = false
-      }
-      // Automatically open when enlarged to desktop (respect saved state)
-      else if (!mobile && wasMobile) {
+      } else if (!mobile && wasMobile) {
         setIsMobile(false)
-
-        let shouldBeOpen = defaultOpen
+        wasMobileRef.current = false
         try {
           const stored = window.localStorage.getItem(SIDEBAR_STATE_KEY)
-          if (stored !== null) {
-            shouldBeOpen = stored === "true"
-          }
+          if (stored !== null) setIsOpen(stored === "true")
         } catch {
-          // ignore
+          /* ignore */
         }
-
-        setIsOpen(shouldBeOpen)
-        wasMobileRef.current = false
-        wasOpenRef.current = shouldBeOpen
       }
     }
 
     window.addEventListener("resize", checkMobile)
     return () => window.removeEventListener("resize", checkMobile)
-  }, [mobileBreakpoint, defaultOpen])
-
-  // Synchronize refs on manual state change
-  React.useEffect(() => {
-    wasOpenRef.current = isOpen
-  }, [isOpen])
+  }, [mobileBreakpoint])
 
   const toggle = React.useCallback(() => setIsOpen((prev) => !prev), [])
   const open = React.useCallback(() => setIsOpen(true), [])
   const close = React.useCallback(() => setIsOpen(false), [])
-  // Never collapse on mobile
+
   const toggleCollapsed = React.useCallback(() => {
     if (!isMobile) {
+      setIsTransitioning(true)
       setIsCollapsed((prev) => !prev)
+      setTimeout(() => setIsTransitioning(false), 290)
     }
   }, [isMobile])
 
-  // On mobile always collapsed=false
   const effectiveCollapsed = isMobile ? false : isCollapsed
 
   const value = React.useMemo(
@@ -216,6 +173,7 @@ export function SidebarProvider({
       open,
       close,
       isCollapsed: effectiveCollapsed,
+      isTransitioning,
       toggleCollapsed,
       topBarHeight,
       isMobile,
@@ -228,6 +186,7 @@ export function SidebarProvider({
       open,
       close,
       effectiveCollapsed,
+      isTransitioning,
       toggleCollapsed,
       topBarHeight,
       isMobile,
@@ -243,21 +202,73 @@ export function SidebarProvider({
   )
 }
 
-/**
- * Main sidebar component
- * Located under TopBar, animated opening/closing
- * On desktop it is part of the layout, on mobile it's an overlay
- */
-export function Sidebar({ className, children, ...props }: React.ComponentProps<"aside">) {
+interface SidebarProps extends React.ComponentProps<"aside"> {
+  navigation?: NavSection[] | NavItem[]
+  logo?: React.ReactNode
+}
+
+export function Sidebar({ className, children, navigation, logo, ...props }: SidebarProps) {
   const { isOpen, close, isCollapsed, topBarHeight, isMobile, width, collapsedWidth } = useSidebar()
+  const pathname = usePathname()
 
   const sidebarHeight = `calc(100vh - ${topBarHeight}px)`
   const currentWidth = isCollapsed ? collapsedWidth : width
   const isAbsolute = className?.includes("absolute")
 
+  const renderContent = () => {
+    if (!navigation) return children
+
+    const isSections = (nav: NavSection[] | NavItem[]): nav is NavSection[] => {
+      return nav.length > 0 && "items" in nav[0]
+    }
+
+    if (isSections(navigation)) {
+      return navigation.map((section) => (
+        <SidebarSection key={section.title} title={section.title}>
+          {section.items.map((item) => (
+            <SidebarItem
+              key={item.name}
+              icon={React.isValidElement(item.icon) ? item.icon : <item.icon className="h-4 w-4" />}
+              isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+              tooltip={item.label}
+              asChild
+            >
+              <Link href={item.href}>{item.label}</Link>
+            </SidebarItem>
+          ))}
+        </SidebarSection>
+      ))
+    }
+
+    return (
+      <SidebarSection>
+        {navigation.map((item) => (
+          <SidebarItem
+            key={item.name}
+            icon={React.isValidElement(item.icon) ? item.icon : <item.icon className="h-4 w-4" />}
+            isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+            tooltip={item.label}
+            asChild
+          >
+            <Link href={item.href}>{item.label}</Link>
+          </SidebarItem>
+        ))}
+      </SidebarSection>
+    )
+  }
+
   return (
     <>
-      {/* Overlay for mobile - clicking closes sidebar */}
+      {/* Standalone floating trigger when sidebar is closed and NO TopBar is present */}
+      {!isOpen && topBarHeight === 0 && (
+        <div
+          className={cn("z-[60] bg-transparent", isAbsolute ? "absolute" : "fixed")}
+          style={{ top: "12px", left: "16px" }}
+        >
+          <SidebarTrigger />
+        </div>
+      )}
+
       {isOpen && isMobile && (
         <div
           className={cn(
@@ -270,17 +281,10 @@ export function Sidebar({ className, children, ...props }: React.ComponentProps<
         />
       )}
 
-      {/* Sidebar - on desktop fixed next to content, on mobile overlay */}
       <aside
         className={cn(
-          "fixed left-0",
-          isMobile ? "z-[110]" : "z-40",
-          "bg-background border-r",
-          "transition-all duration-300 ease-in-out",
-          // On mobile: translate animation
-          // On desktop: always translate-x-0, width animates
+          "fixed left-0 z-40 bg-background border-r transition-all duration-300 ease-in-out",
           isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
-          !isMobile && "overflow-visible",
           className
         )}
         style={{
@@ -290,20 +294,18 @@ export function Sidebar({ className, children, ...props }: React.ComponentProps<
         }}
         {...props}
       >
-        <div className="flex flex-col h-full overflow-hidden">{children}</div>
+        <div className="flex flex-col h-full overflow-hidden">
+          <SidebarHeader logo={logo} />
+          <SidebarContent>{renderContent()}</SidebarContent>
+        </div>
         <SidebarCollapseTrigger />
       </aside>
     </>
   )
 }
 
-/**
- * Sidebar header with logo and close button
- */
 interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Logo or application name */
   logo?: React.ReactNode
-  /** Show close button */
   showCloseButton?: boolean
 }
 
@@ -314,37 +316,42 @@ export function SidebarHeader({
   showCloseButton = true,
   ...props
 }: SidebarHeaderProps) {
-  const { close, isCollapsed, toggleCollapsed } = useSidebar()
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768
+  const { close, isCollapsed, isTransitioning, isMobile, topBarHeight } = useSidebar()
+
+  const hasTopBar = topBarHeight > 0
+
+  if (hasTopBar && !isMobile) return null
+
+  // Header content stays visible during transition when collapsing
+  const showContent = !isCollapsed || isTransitioning
 
   return (
     <div
       className={cn(
-        "flex items-center justify-between h-14 px-4 border-b flex-shrink-0",
+        "flex items-center justify-between h-14 px-4 flex-shrink-0 transition-all duration-300",
+        showContent && "border-b",
         className
       )}
       {...props}
     >
-      {!isCollapsed && (logo || children)}
-      <div className="flex items-center gap-1">
-        {/* Collapse button - only on desktop */}
-        {!isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={toggleCollapsed}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <ChevronLeft
-              className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                isCollapsed && "rotate-180"
-              )}
-            />
-          </Button>
+      <div className="flex items-center gap-3 overflow-hidden h-full">
+        {!hasTopBar && !isMobile && (
+          <>
+            <SidebarTrigger />
+            {showContent && (logo || children) && (
+              <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                {typeof logo === "string" ? <Logo text={logo} /> : logo || children}
+              </div>
+            )}
+          </>
         )}
-        {/* Close button - only on mobile */}
+        {/* On mobile show logo/label if it exists */}
+        {isMobile && (logo || children) && (
+          <div>{typeof logo === "string" ? <Logo text={logo} /> : logo || children}</div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-1">
         {showCloseButton && isMobile && (
           <Button
             variant="ghost"
@@ -361,9 +368,6 @@ export function SidebarHeader({
   )
 }
 
-/**
- * Sidebar content with scrolling
- */
 export function SidebarContent({
   className,
   children,
@@ -372,33 +376,29 @@ export function SidebarContent({
   children: React.ReactNode
 }) {
   return (
-    <div className={cn("flex-1 overflow-y-auto scrollbar-hidden", className)}>
+    <div className={cn("flex-1 overflow-y-auto overflow-x-hidden scrollbar-hidden", className)}>
       <div className="py-2">{children}</div>
     </div>
   )
 }
 
-/**
- * Sidebar section
- */
 interface SidebarSectionProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Section title */
   title?: string
 }
 
 export function SidebarSection({ className, title, children, ...props }: SidebarSectionProps) {
-  const { isCollapsed } = useSidebar()
+  const { isCollapsed, isTransitioning } = useSidebar()
+
+  const showTitle = !isCollapsed || isTransitioning
 
   return (
     <div className={cn("px-3 py-2", className)} {...props}>
       {title && (
-        <div className={cn("mb-2 px-2", isCollapsed ? "h-4 flex items-center" : "")}>
-          {!isCollapsed ? (
-            <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate">
+        <div className="h-8 flex items-center px-2 mb-2 overflow-hidden">
+          {showTitle && (
+            <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate animate-in fade-in duration-300">
               {title}
             </h3>
-          ) : (
-            <div className="w-full border-t border-muted-foreground/20" />
           )}
         </div>
       )}
@@ -407,17 +407,10 @@ export function SidebarSection({ className, title, children, ...props }: Sidebar
   )
 }
 
-/**
- * Sidebar navigation item
- */
 interface SidebarItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Item icon */
   icon?: React.ReactNode
-  /** Is the item active? */
   isActive?: boolean
-  /** As a link wrapper */
   asChild?: boolean
-  /** Optional explicit tooltip text (defaults to children text if it's a string) */
   tooltip?: string
 }
 
@@ -430,33 +423,49 @@ export function SidebarItem({
   tooltip,
   ...props
 }: SidebarItemProps) {
-  const { isCollapsed, close } = useSidebar()
+  const { isCollapsed, isTransitioning, close } = useSidebar()
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // On mobile close sidebar after clicking an item
-    if (isMobile) {
-      close()
-    }
+    if (isMobile) close()
     props.onClick?.(e)
   }
 
-  // Determine tooltip text: use explicit tooltip prop or children if it's a string
   const tooltipText = tooltip || (typeof children === "string" ? children : undefined)
+
+  const showLabel = !isCollapsed || isTransitioning
+
+  const renderLabel = (label: React.ReactNode) => (
+    <span
+      className={cn(
+        "transition-all duration-300 overflow-hidden whitespace-nowrap text-ellipsis flex-1 text-left",
+        !showLabel ? "max-w-0 opacity-0 invisible ml-0" : "max-w-[200px] opacity-100 visible ml-2"
+      )}
+    >
+      {label}
+    </span>
+  )
+
+  const commonClasses = cn(
+    "flex items-center w-full h-9 transition-all duration-300 rounded-md overflow-hidden px-0",
+    isActive
+      ? "bg-secondary text-secondary-foreground font-medium"
+      : "hover:bg-accent hover:text-accent-foreground",
+    className
+  )
 
   const content = (
     <Button
       variant={isActive ? "secondary" : "ghost"}
       className={cn(
-        "w-full justify-start h-9 px-3 text-sm",
-        isCollapsed && "justify-center px-2",
+        "w-full justify-start h-9 transition-all duration-300 flex items-center overflow-hidden px-0",
         className
       )}
       onClick={handleClick}
       {...(asChild ? {} : props)}
     >
-      {icon && <span className={cn("flex-shrink-0", !isCollapsed && "mr-2")}>{icon}</span>}
-      {!isCollapsed && children}
+      <div className="w-10 h-9 shrink-0 flex items-center justify-center">{icon}</div>
+      {renderLabel(children)}
     </Button>
   )
 
@@ -464,25 +473,15 @@ export function SidebarItem({
     asChild && React.isValidElement(children)
       ? React.cloneElement(
           children as React.ReactElement<{ className?: string; onClick?: React.MouseEventHandler }>,
-          {
-            className: cn(
-              "flex items-center w-full h-9 px-3 text-sm rounded-md transition-colors",
-              isActive
-                ? "bg-secondary text-secondary-foreground"
-                : "hover:bg-accent hover:text-accent-foreground",
-              isCollapsed && "justify-center px-2",
-              className
-            ),
-            onClick: handleClick,
-          },
+          { className: commonClasses, onClick: handleClick },
           <>
-            {icon && <span className={cn("flex-shrink-0", !isCollapsed && "mr-2")}>{icon}</span>}
-            {!isCollapsed && (children.props as { children?: React.ReactNode }).children}
+            <div className="w-10 h-9 shrink-0 flex items-center justify-center">{icon}</div>
+            {renderLabel((children.props as { children?: React.ReactNode }).children)}
           </>
         )
       : content
 
-  if (isCollapsed && tooltipText) {
+  if (isCollapsed && !isTransitioning && tooltipText) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{finalItem}</TooltipTrigger>
@@ -496,9 +495,6 @@ export function SidebarItem({
   return finalItem
 }
 
-/**
- * Sidebar trigger button (hamburger menu)
- */
 export function SidebarTrigger({
   className,
   ...props
@@ -509,19 +505,16 @@ export function SidebarTrigger({
     <Button
       variant="ghost"
       size="icon"
-      className={cn("h-9 w-9", className)}
+      className={cn("h-8 w-8", className)}
       onClick={toggle}
       aria-label={isOpen ? "Close menu" : "Open menu"}
       {...props}
     >
-      <Menu className="h-5 w-5" />
+      <Menu className="h-4 w-4" />
     </Button>
   )
 }
 
-/**
- * Sidebar footer
- */
 export function SidebarFooter({
   className,
   children,
@@ -534,10 +527,6 @@ export function SidebarFooter({
   )
 }
 
-/**
- * Main content area next to sidebar
- * Automatically adjusts based on sidebar width on desktop
- */
 export function SidebarInset({
   className,
   children,
@@ -546,41 +535,32 @@ export function SidebarInset({
 }: React.ComponentProps<"main">) {
   const { isOpen, isCollapsed, topBarHeight, isMobile, width, collapsedWidth } = useSidebar()
 
-  // On desktop add margin-left based on sidebar
   const currentWidth = isCollapsed ? collapsedWidth : width
   const marginLeft = !isMobile && isOpen ? currentWidth : 0
 
   return (
     <main
-      className={cn(
-        "flex-1 flex flex-col overflow-auto transition-[margin-left] duration-300 ease-in-out",
-        className
-      )}
+      className={cn("flex flex-col transition-[margin-left] duration-300 ease-in-out", className)}
       style={{
-        marginTop: topBarHeight,
         marginLeft,
         ...style,
       }}
       {...props}
     >
-      {children}
+      <div
+        className="p-4 flex flex-col overflow-hidden"
+        style={{ height: `calc(100vh - ${topBarHeight}px)` }}
+      >
+        <div className="flex-1 relative overflow-auto">{children}</div>
+      </div>
     </main>
   )
 }
 
-/**
- * Sidebar collapse trigger button
- * Circle in the middle of the right edge of the sidebar
- * Displayed only on desktop (not mobile)
- */
 export function SidebarCollapseTrigger({ className }: { className?: string }) {
   const { isCollapsed, toggleCollapsed, isMobile, isOpen, topBarHeight } = useSidebar()
 
-  // Do not show on mobile
-  if (isMobile) return null
-
-  // If the sidebar is closed, do not show trigger
-  if (!isOpen) return null
+  if (isMobile || !isOpen) return null
 
   return (
     <div className="absolute inset-y-0 -right-3 z-50 w-6 pointer-events-none">
@@ -590,13 +570,7 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
       >
         <button
           className={cn(
-            "h-6 w-6 rounded-full",
-            "bg-background border shadow-sm",
-            "flex items-center justify-center",
-            "text-muted-foreground hover:text-foreground hover:bg-accent",
-            "transition-colors duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-            "pointer-events-auto",
+            "h-6 w-6 rounded-full bg-background border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 pointer-events-auto",
             className
           )}
           onClick={toggleCollapsed}
@@ -614,5 +588,6 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
   )
 }
 
-// Re-exports
 export { SidebarContext }
+
+export { Logo } from "../ts-logo"

@@ -17,7 +17,6 @@ import {
   LayoutGrid,
   Link2,
   List,
-  LucideIcon,
   Minus,
   Moon,
   MousePointerClick,
@@ -35,34 +34,23 @@ import {
   Upload,
 } from "lucide-react"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import * as React from "react"
 
-import { SidebarItem, SidebarSection } from "@/components/ts-web-ui/ts-sidebar"
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
+import { Logo } from "@/components/ts-web-ui/ts-logo"
+import {
+  NavSection,
+  Sidebar,
+  SidebarInset,
+  SidebarProvider,
+} from "@/components/ts-web-ui/ts-sidebar"
+import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
 
-import { cn } from "@/lib/utils"
-
-/**
- * Sidebar navigation item
- */
-interface NavItem {
-  name: string
-  href: string
-  label: string
-  icon: LucideIcon
-  exact?: boolean
-}
+const TOP_BAR_HEIGHT = 56
 
 /**
- * Sidebar section
- */
-interface NavSection {
-  title: string
-  items: NavItem[]
-}
-
-/**
- * Definition of all navigation sections and items
+ * Navigation configuration
  */
 const NAVIGATION: NavSection[] = [
   {
@@ -77,6 +65,12 @@ const NAVIGATION: NavSection[] = [
       { name: "form", href: "/components/ts-form", label: "Form", icon: FormInput },
       { name: "topbar", href: "/components/ts-topbar", label: "TopBar", icon: PanelTop },
       { name: "sidebar", href: "/components/ts-sidebar", label: "Sidebar", icon: PanelLeft },
+      {
+        name: "topbar-sidebar",
+        href: "/components/ts-topbar-sidebar",
+        label: "TopBar + Sidebar",
+        icon: LayoutGrid,
+      },
       { name: "form-editor", href: "/form-editor", label: "Form Editor", icon: Pencil },
     ],
   },
@@ -95,13 +89,10 @@ const NAVIGATION: NavSection[] = [
   {
     title: "Form Widgets",
     items: [
-      // Text inputs
       { name: "text", href: "/widgets/text", label: "Text Input", icon: Type },
       { name: "textarea", href: "/widgets/textarea", label: "Textarea", icon: AlignLeft },
       { name: "password", href: "/widgets/password", label: "Password", icon: KeyRound },
       { name: "number", href: "/widgets/number", label: "Number", icon: Hash },
-
-      // Value selection
       { name: "select", href: "/widgets/select", label: "Select", icon: ChevronDown },
       { name: "multiselect", href: "/widgets/multiselect", label: "Multi Select", icon: List },
       { name: "combobox", href: "/widgets/combobox", label: "Combobox", icon: Search },
@@ -114,64 +105,47 @@ const NAVIGATION: NavSection[] = [
         label: "Button Group",
         icon: ToggleRight,
       },
-
-      // Date and Time
       { name: "date", href: "/widgets/date", label: "Date Picker", icon: Calendar },
       { name: "datetime", href: "/widgets/datetime", label: "Date Time", icon: CalendarClock },
-
-      // Sliders
       { name: "slider", href: "/widgets/slider", label: "Slider", icon: SlidersHorizontal },
-
-      // Files
       { name: "file", href: "/widgets/file", label: "File Upload", icon: Upload },
       { name: "image", href: "/widgets/image", label: "Image Upload", icon: Image },
-
-      // Relationships
       {
         name: "relationship",
         href: "/widgets/relationship",
         label: "Relationship Picker",
         icon: Link2,
       },
-
-      // Action elements
       { name: "button", href: "/widgets/button", label: "Button", icon: MousePointerClick },
-
-      // Layout and display
       { name: "separator", href: "/widgets/separator", label: "Separator", icon: Minus },
       { name: "infobox", href: "/widgets/infobox", label: "Info Box", icon: Info },
       { name: "markdown", href: "/widgets/markdown", label: "Markdown", icon: FileText },
-
-      // Complex widgets
       { name: "table", href: "/widgets/table", label: "Nested Table", icon: TableProperties },
     ],
   },
 ]
 
-/**
- * Main application sidebar with navigation
- * Dynamically generated from the NAVIGATION configuration
- */
-export function AppSidebar({ className }: React.ComponentProps<"div">) {
-  const pathname = usePathname()
-
+export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={cn(className)}>
-      {NAVIGATION.map((section) => (
-        <SidebarSection key={section.title} title={section.title}>
-          {section.items.map((item) => (
-            <SidebarItem
-              key={item.name}
-              icon={<item.icon className="h-4 w-4" />}
-              isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
-              tooltip={item.label}
-              asChild
-            >
-              <Link href={item.href}>{item.label}</Link>
-            </SidebarItem>
-          ))}
-        </SidebarSection>
-      ))}
-    </div>
+    <ThemeProvider>
+      <SidebarProvider mobileBreakpoint={1024} topBarHeight={TOP_BAR_HEIGHT}>
+        {/* Fixed TopBar - now handles Hamburger automatically */}
+        <TopBar
+          height={TOP_BAR_HEIGHT}
+          leftContent={<Logo text="TSWebUI" href="/" />}
+          rightContent={
+            <TopBarGroup>
+              <ModeToggle />
+            </TopBarGroup>
+          }
+        />
+
+        {/* Sidebar with navigation data */}
+        <Sidebar navigation={NAVIGATION} />
+
+        {/* Main Content Area */}
+        <SidebarInset>{children}</SidebarInset>
+      </SidebarProvider>
+    </ThemeProvider>
   )
 }

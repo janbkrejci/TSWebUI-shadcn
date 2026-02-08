@@ -1,6 +1,6 @@
 "use client"
 
-import { Palette, PanelTop, Search, User } from "lucide-react"
+import { Palette, Search, User } from "lucide-react"
 
 import * as React from "react"
 
@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { TopBarLogo, TsTopBar } from "@/components/ts-web-ui/ts-topbar"
+import { Logo } from "@/components/ts-web-ui/ts-logo"
+import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 /**
@@ -58,25 +59,19 @@ function TopBarDemo() {
       </div>
 
       {/* Workspace container */}
-      <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-[300px]">
+      <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-75">
         {/* Workspace background */}
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 pointer-events-none font-bold text-4xl select-none z-0">
           PAGE CONTENT
         </div>
 
-        {/* TopBar inside container - uses !absolute for demo purposes */}
-        <TsTopBar
+        {/* TopBar inside container - showTrigger={false} to isolate from App Sidebar */}
+        <TopBar
           height={height}
           bordered={isBordered}
-          className="!absolute"
-          leftContent={
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground">
-                <PanelTop className="h-5 w-5" />
-              </div>
-              <TopBarLogo text="MyApplication" />
-            </div>
-          }
+          showTrigger={false}
+          className="absolute!"
+          leftContent={<Logo text="MyApplication" />}
           centerContent={
             showCenter ? (
               <div className="relative w-64 max-w-full">
@@ -86,14 +81,14 @@ function TopBarDemo() {
             ) : null
           }
           rightContent={
-            <div className="flex items-center gap-2">
+            <TopBarGroup>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Palette className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <User className="h-5 w-5" />
               </Button>
-            </div>
+            </TopBarGroup>
           }
         />
       </div>
@@ -103,34 +98,27 @@ function TopBarDemo() {
 
 const codeString = `"use client"
 
-import { TsTopBar, TopBarLogo, TopBarActions, TopBarSpacer } from "@/components/ts-web-ui/ts-topbar"
+import { TopBar, Logo, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
-// import { SidebarProvider, SidebarTrigger } from "@/components/ts-web-ui/ts-sidebar"
 
 export default function Layout({ children }) {
   return (
     <>
-      {/* <SidebarProvider> */}
-
-        <TsTopBar
-          leftContent={
-            <div className="flex items-center gap-3">
-              {/* <SidebarTrigger /> */}
-              <TopBarLogo text="TSWebUI" href="/" />
-            </div>
-          }
-          rightContent={
-            <TopBarActions>
-              <ModeToggle />
-            </TopBarActions>
-          }
-        />
-        
-        <TopBarSpacer /> {/* Offsets content below the fixed top bar */}
-
+      {/* TopBar is 'sticky' by default, so it stays in the document flow */}
+      <TopBar
+        leftContent={
+          <Logo text="TSWebUI" href="/" />
+        }
+        rightContent={
+          <TopBarGroup>
+            <ModeToggle />
+          </TopBarGroup>
+        }
+      />
+      
+      <main className="p-6">
         {children}
-
-      {/* </SidebarProvider> */}
+      </main>
     </>
   )
 }`
@@ -165,7 +153,7 @@ export default function TopBarPage() {
             <CardHeader>
               <CardTitle>Basic Usage</CardTitle>
               <CardDescription>
-                TopBar is fixed at the top edge of the window and provides slots for content.
+                TopBar uses sticky positioning and stays at the top of the window.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -185,7 +173,7 @@ export default function TopBarPage() {
           <div className="space-y-8 pb-8 w-full">
             <Card>
               <CardHeader>
-                <CardTitle>TsTopBar Props</CardTitle>
+                <CardTitle>TopBar Props</CardTitle>
                 <CardDescription>Properties of the main top bar component.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -203,7 +191,7 @@ export default function TopBarPage() {
                         leftContent
                       </TableCell>
                       <TableCell className="text-xs italic">ReactNode</TableCell>
-                      <TableCell>Left-aligned content (hamburger, logo)</TableCell>
+                      <TableCell>Left-aligned content (logo, app title)</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
@@ -233,6 +221,15 @@ export default function TopBarPage() {
                       <TableCell className="text-xs italic">boolean</TableCell>
                       <TableCell>Whether to show the bottom border (default: true)</TableCell>
                     </TableRow>
+                    <TableRow>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">
+                        showTrigger
+                      </TableCell>
+                      <TableCell className="text-xs italic">boolean</TableCell>
+                      <TableCell>
+                        Automatically show sidebar trigger if available (default: true)
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </CardContent>
@@ -252,22 +249,16 @@ export default function TopBarPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">TopBarLogo</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold">Logo</TableCell>
                       <TableCell>
-                        Formatted logo with support for text, icon, and link (Next.js Link).
+                        Universal logo component with support for text, icon, and link.
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">
-                        TopBarActions
+                      <TableCell className="font-mono text-xs font-semibold">TopBarGroup</TableCell>
+                      <TableCell>
+                        Wrapper for a group of elements with consistent spacing.
                       </TableCell>
-                      <TableCell>Wrapper for a group of buttons with consistent spacing.</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">
-                        TopBarSpacer
-                      </TableCell>
-                      <TableCell>Element for offsetting content below the fixed top bar.</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

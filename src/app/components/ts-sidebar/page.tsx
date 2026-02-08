@@ -18,12 +18,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import {
+  NavSection,
   Sidebar,
-  SidebarContent,
   SidebarInset,
-  SidebarItem,
   SidebarProvider,
-  SidebarSection,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ts-web-ui/ts-sidebar"
@@ -75,59 +73,23 @@ function SidebarControls() {
 }
 
 /**
- * Sidebar content for demo
- */
-function DemoSidebarContent() {
-  return (
-    <>
-      <SidebarContent>
-        <SidebarSection title="Navigation">
-          {menuItems.map((item) => (
-            <SidebarItem
-              key={item.label}
-              icon={<item.icon className="h-5 w-5" />}
-              isActive={item.active}
-            >
-              {item.label}
-            </SidebarItem>
-          ))}
-        </SidebarSection>
-      </SidebarContent>
-    </>
-  )
-}
-
-/**
- * Main content of the demo application
- */
-function DemoMainContent() {
-  return (
-    <div className="max-w-2xl space-y-4 p-6">
-      <h2 className="text-xl font-semibold text-foreground">Page Content</h2>
-      <p className="text-muted-foreground">
-        Main content area that adjusts to sidebar state. The sidebar can be opened/closed and
-        collapsed. Try resizing the window to see responsive behavior.
-      </p>
-      <div className="grid grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-32 rounded-lg bg-card border flex items-center justify-center text-muted-foreground"
-          >
-            Content Card {i}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/**
  * Interactive Sidebar demo inside a container
  */
 function SidebarDemo() {
   const [showTopBar, setShowTopBar] = React.useState(true)
   const topBarHeight = showTopBar ? 56 : 0
+
+  const NAVIGATION: NavSection[] = [
+    {
+      title: "Navigation",
+      items: menuItems.map((m) => ({
+        name: m.label.toLowerCase(),
+        label: m.label,
+        href: "#",
+        icon: m.icon,
+      })),
+    },
+  ]
 
   return (
     <div className="flex-1 flex flex-col gap-4 min-h-0">
@@ -140,7 +102,7 @@ function SidebarDemo() {
       </div>
 
       {/* Workspace container */}
-      <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-[450px]">
+      <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-112.5">
         {/* Workspace background */}
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 pointer-events-none font-bold text-4xl select-none z-0">
           APP CONTENT
@@ -148,7 +110,6 @@ function SidebarDemo() {
 
         {/* SidebarProvider for isolated demo */}
         <SidebarProvider
-          defaultOpen={true}
           mobileBreakpoint={768}
           topBarHeight={topBarHeight}
           width="16rem"
@@ -156,21 +117,41 @@ function SidebarDemo() {
         >
           {/* TopBar (optional) */}
           {showTopBar && (
-            <header className="absolute top-0 left-0 right-0 h-14 z-50 flex items-center gap-4 px-4 bg-background border-b">
+            <header className="absolute top-0 left-0 right-0 h-14 z-50 flex items-center gap-4 px-4 bg-background border-b text-foreground">
               <SidebarTrigger />
-              <span className="font-semibold">Application</span>
+              <span className="font-semibold text-lg tracking-tight">Application</span>
             </header>
           )}
 
           {/* Sidebar inside container - uses actual component */}
-          <Sidebar className="!absolute">
-            <DemoSidebarContent />
-          </Sidebar>
+          <Sidebar
+            className="absolute!"
+            navigation={NAVIGATION}
+            logo={
+              <span className="font-semibold text-lg tracking-tight text-foreground">TSWebUI</span>
+            }
+          />
 
           {/* Main content with controls */}
-          <SidebarInset className="!absolute !inset-0 overflow-auto">
+          <SidebarInset className="absolute! inset-0! overflow-auto bg-transparent pt-14">
             <SidebarControls />
-            <DemoMainContent />
+            <div className="max-w-2xl space-y-4 p-6 pt-0">
+              <h2 className="text-xl font-semibold text-foreground">Page Content</h2>
+              <p className="text-muted-foreground">
+                Main content area that adjusts to sidebar state. The sidebar can be opened/closed
+                and collapsed. Try resizing the window to see responsive behavior.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="h-32 rounded-lg bg-card border flex items-center justify-center text-muted-foreground"
+                  >
+                    Content Card {i}
+                  </div>
+                ))}
+              </div>
+            </div>
           </SidebarInset>
         </SidebarProvider>
       </div>
@@ -183,69 +164,51 @@ const codeString = `"use client"
 import { 
   SidebarProvider, 
   Sidebar, 
-  SidebarContent, 
-  SidebarFooter,
-  SidebarSection,
-  SidebarItem,
-  SidebarTrigger,
   SidebarInset,
-  useSidebar
+  NavSection
 } from "@/components/ts-web-ui/ts-sidebar"
+import { TopBar } from "@/components/ts-web-ui/ts-topbar"
+import { Logo } from "@/components/ts-web-ui/ts-logo"
+import { Home, Users, Settings, Database, Shield } from "lucide-react"
 
-// In your layout:
+const NAVIGATION: NavSection[] = [
+  {
+    title: "Application",
+    items: [
+      { name: "dashboard", label: "Dashboard", href: "/", icon: Home, exact: true },
+      { name: "users", label: "Users", href: "/users", icon: Users },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { name: "database", label: "Database", href: "/database", icon: Database },
+      { name: "security", label: "Security", href: "/security", icon: Shield },
+      { name: "settings", label: "Settings", href: "/settings", icon: Settings },
+    ],
+  },
+]
+
 export default function Layout({ children }) {
   return (
-    <SidebarProvider 
-      defaultOpen={true} 
-      mobileBreakpoint={1024}
-      topBarHeight={56}
-    >
-      <TsTopBar 
-        leftContent={<SidebarTrigger />}
-        // ... other props
+    <SidebarProvider>
+      {/* TopBar automatically adds hamburger menu trigger */}
+      <TopBar 
+        leftContent={<Logo text="My App" href="/" />} 
       />
-      
-      <Sidebar>
-        <SidebarContent>
-          <SidebarSection title="Navigation">
-            <SidebarItem icon={<Home />} isActive>
-              Dashboard
-            </SidebarItem>
-            <SidebarItem icon={<Users />}>
-              Users
-            </SidebarItem>
-          </SidebarSection>
-        </SidebarContent>
-        
-        <SidebarFooter>
-          <UserMenu />
-        </SidebarFooter>
-      </Sidebar>
-      
-      {/* SidebarInset automatically adjusts margin based on sidebar state */}
-      <SidebarInset className="px-6 py-6">
+
+      <Sidebar 
+        navigation={NAVIGATION} 
+        logo={<span className="font-semibold text-lg tracking-tight">My App</span>}
+      />
+
+      <SidebarInset>
         {children}
       </SidebarInset>
     </SidebarProvider>
   )
 }
-
-// Accessing sidebar state in child components:
-function MyComponent() {
-  const { 
-    isOpen,         // boolean - is sidebar visible
-    toggle,         // () => void - toggle sidebar
-    isCollapsed,    // boolean - is sidebar collapsed to icons only
-    toggleCollapsed,// () => void - toggle collapsed state
-    isMobile        // boolean - is mobile breakpoint active
-  } = useSidebar()
-  
-  return (
-    <Button onClick={toggleCollapsed}>
-      Toggle Collapsed
-    </Button>
-  )
-}`
+`
 
 export default function SidebarPage() {
   return (
@@ -277,7 +240,7 @@ export default function SidebarPage() {
             <CardHeader>
               <CardTitle>Basic Usage</CardTitle>
               <CardDescription>
-                Sidebar is used in combination with SidebarProvider and optionally with TsTopBar.
+                Sidebar handles navigation structure automatically via the navigation prop.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -297,8 +260,8 @@ export default function SidebarPage() {
           <div className="space-y-8 pb-8 w-full">
             <Card>
               <CardHeader>
-                <CardTitle>SidebarProvider Props</CardTitle>
-                <CardDescription>Context provider for sidebar state management.</CardDescription>
+                <CardTitle>Sidebar Props</CardTitle>
+                <CardDescription>Main sidebar container configuration.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -306,188 +269,23 @@ export default function SidebarPage() {
                     <TableRow>
                       <TableHead className="w-40">Prop</TableHead>
                       <TableHead className="w-32">Type</TableHead>
-                      <TableHead className="w-24">Default</TableHead>
                       <TableHead>Description</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
-                        defaultOpen
+                        navigation
                       </TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell className="text-xs">true</TableCell>
-                      <TableCell>Default open state of the sidebar</TableCell>
+                      <TableCell className="text-xs italic">NavSection[] | NavItem[]</TableCell>
+                      <TableCell>Data-driven navigation structure</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs font-semibold text-primary">
-                        mobileBreakpoint
+                        logo
                       </TableCell>
-                      <TableCell className="text-xs italic">number</TableCell>
-                      <TableCell className="text-xs">768</TableCell>
-                      <TableCell>Breakpoint for mobile mode (px)</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        topBarHeight
-                      </TableCell>
-                      <TableCell className="text-xs italic">number</TableCell>
-                      <TableCell className="text-xs">56</TableCell>
-                      <TableCell>TopBar height for correct offset</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        width
-                      </TableCell>
-                      <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell className="text-xs">&quot;16rem&quot;</TableCell>
-                      <TableCell>Width of the expanded sidebar</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        collapsedWidth
-                      </TableCell>
-                      <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell className="text-xs">&quot;4rem&quot;</TableCell>
-                      <TableCell>Width of the collapsed sidebar</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>useSidebar Hook</CardTitle>
-                <CardDescription>
-                  Hook to access the sidebar state from any component.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-40">Property</TableHead>
-                      <TableHead className="w-48">Type</TableHead>
-                      <TableHead>Description</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        isOpen
-                      </TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Whether the sidebar is visible</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        toggle
-                      </TableCell>
-                      <TableCell className="text-xs italic">() =&gt; void</TableCell>
-                      <TableCell>Toggle sidebar visibility</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        open
-                      </TableCell>
-                      <TableCell className="text-xs italic">() =&gt; void</TableCell>
-                      <TableCell>Open the sidebar</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        close
-                      </TableCell>
-                      <TableCell className="text-xs italic">() =&gt; void</TableCell>
-                      <TableCell>Close the sidebar</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        isCollapsed
-                      </TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Whether the sidebar is collapsed</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        toggleCollapsed
-                      </TableCell>
-                      <TableCell className="text-xs italic">() =&gt; void</TableCell>
-                      <TableCell>Toggle collapsed state</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        isMobile
-                      </TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Whether the mobile breakpoint is active</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Components</CardTitle>
-                <CardDescription>Building blocks for assembling the sidebar.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-48">Component</TableHead>
-                      <TableHead>Description</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarProvider
-                      </TableCell>
-                      <TableCell>Context provider for state management</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        Sidebar
-                      </TableCell>
-                      <TableCell>Main sidebar container</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarContent
-                      </TableCell>
-                      <TableCell>Scrollable main content</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarSection
-                      </TableCell>
-                      <TableCell>Section with an optional title</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarItem
-                      </TableCell>
-                      <TableCell>Navigation item with icon</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarFooter
-                      </TableCell>
-                      <TableCell>Bottom part of the sidebar</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarTrigger
-                      </TableCell>
-                      <TableCell>Button to open/close the sidebar</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        SidebarInset
-                      </TableCell>
-                      <TableCell>Main content with automatic offset</TableCell>
+                      <TableCell className="text-xs italic">ReactNode</TableCell>
+                      <TableCell>Logo to display in standalone mode (no TopBar)</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -501,22 +299,20 @@ export default function SidebarPage() {
               <CardContent className="space-y-4">
                 <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <strong>Animated transitions</strong> - smooth opening, closing, and collapsing
+                    <strong>Floating Trigger</strong> - Hamburger icon stays visible on transparent
+                    background when sidebar is closed (standalone mode).
                   </li>
                   <li>
-                    <strong>Collapsed mode</strong> - shows only icons to save space
+                    <strong>Smart Transitions</strong> - Labels and titles hide only after sidebar
+                    narrows completely.
                   </li>
                   <li>
-                    <strong>Responsive design</strong> - automatic hiding/showing on window resize
+                    <strong>Clean Collapsed State</strong> - No horizontal lines or headers when in
+                    narrow mode.
                   </li>
                   <li>
-                    <strong>Push vs Overlay</strong> - content shifts on desktop, overlay on mobile
-                  </li>
-                  <li>
-                    <strong>TopBar integration</strong> - correct offset using topBarHeight
-                  </li>
-                  <li>
-                    <strong>SidebarInset</strong> - automatically responds to sidebar state
+                    <strong>Automatic Layout</strong> - Margin and height adjustments handled by
+                    SidebarInset.
                   </li>
                 </ul>
               </CardContent>
