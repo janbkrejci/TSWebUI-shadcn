@@ -438,10 +438,10 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
         dragHandleClassName="window-drag-handle"
         style={{ zIndex: currentZIndex, opacity: isVisible ? 1 : 0 }}
         className={cn(
-          "flex flex-col overflow-hidden bg-background pointer-events-auto",
+          "flex flex-col overflow-hidden bg-background pointer-events-auto border",
           windowState === "maximized"
-            ? "rounded-none border-none"
-            : "rounded-lg border shadow-xl dark:border-neutral-700"
+            ? "rounded-none"
+            : "rounded-lg shadow-xl dark:border-neutral-700"
         )}
       >
         {/* Header / Titlebar */}

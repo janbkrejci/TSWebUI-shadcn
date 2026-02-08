@@ -103,32 +103,34 @@ function TopBarDemo() {
 
 const codeString = `"use client"
 
-import { TsTopBar, TopBarLogo, TopBarActions } from "@/components/ts-web-ui/ts-topbar"
+import { TsTopBar, TopBarLogo, TopBarActions, TopBarSpacer } from "@/components/ts-web-ui/ts-topbar"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
-import { SidebarTrigger } from "@/components/ts-web-ui/ts-sidebar"
+// import { SidebarProvider, SidebarTrigger } from "@/components/ts-web-ui/ts-sidebar"
 
 export default function Layout({ children }) {
   return (
     <>
-      <TsTopBar
-        height={56}
-        leftContent={
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <TopBarLogo text="TSWebUI" href="/" />
-          </div>
-        }
-        rightContent={
-          <TopBarActions>
-            <Button variant="ghost">Docs</Button>
-            <ModeToggle />
-          </TopBarActions>
-        }
-      />
-      
-      <main className="mt-[56px]">
+      {/* <SidebarProvider> */}
+
+        <TsTopBar
+          leftContent={
+            <div className="flex items-center gap-3">
+              {/* <SidebarTrigger /> */}
+              <TopBarLogo text="TSWebUI" href="/" />
+            </div>
+          }
+          rightContent={
+            <TopBarActions>
+              <ModeToggle />
+            </TopBarActions>
+          }
+        />
+        
+        <TopBarSpacer /> {/* Offsets content below the fixed top bar */}
+
         {children}
-      </main>
+
+      {/* </SidebarProvider> */}
     </>
   )
 }`
