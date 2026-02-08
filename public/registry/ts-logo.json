@@ -7,8 +7,8 @@
   "registryDependencies": [],
   "files": [
     {
-      "path": "ts-web-ui/ts-logo.tsx",
-      "target": "components/ts-web-ui/ts-logo.tsx",
+      "path": "ts-web-ui/ts-logo/index.tsx",
+      "target": "components/ts-web-ui/ts-logo/index.tsx",
       "content": "\"use client\"\n\nimport Link from \"next/link\"\nimport * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nexport interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {\n  /** Logo text */\n  text?: string\n  /** Logo icon or element */\n  icon?: React.ReactNode\n  /** URL for link (if provided, logo will be a link) */\n  href?: string\n}\n\n/**\n * Universal Logo component for Sidebar and TopBar\n */\nexport function Logo({ className, text, icon, href, children, ...props }: LogoProps) {\n  const content = (\n    <>\n      {icon}\n      {text && <span className=\"truncate\">{text}</span>}\n      {children}\n    </>\n  )\n\n  const classes = cn(\n    \"flex items-center gap-2 font-semibold text-lg tracking-tight\",\n    href && \"hover:opacity-80 transition-opacity\",\n    className\n  )\n\n  if (href) {\n    return (\n      <Link\n        href={href}\n        className={classes}\n        {...(props as unknown as Omit<React.ComponentProps<typeof Link>, \"href\">)}\n      >\n        {content}\n      </Link>\n    )\n  }\n\n  return (\n    <div className={classes} {...props}>\n      {content}\n    </div>\n  )\n}\n",
       "type": "registry:component"
     }

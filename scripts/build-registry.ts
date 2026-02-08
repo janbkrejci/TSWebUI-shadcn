@@ -12,7 +12,7 @@ const REGISTRY_COMPONENTS = [
     name: "ts-web-ui/ts-logo",
     dependencies: ["lucide-react"],
     registryDependencies: [],
-    files: ["ts-logo.tsx"],
+    files: ["ts-logo/index.tsx"],
   },
   {
     name: "ts-web-ui/theme-provider",
