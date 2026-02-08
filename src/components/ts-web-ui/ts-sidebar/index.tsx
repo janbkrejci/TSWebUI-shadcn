@@ -391,10 +391,16 @@ export function SidebarSection({ className, title, children, ...props }: Sidebar
 
   return (
     <div className={cn("px-3 py-2", className)} {...props}>
-      {title && !isCollapsed && (
-        <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground tracking-tight">
-          {title}
-        </h3>
+      {title && (
+        <div className={cn("mb-2 px-2", isCollapsed ? "h-4 flex items-center" : "")}>
+          {!isCollapsed ? (
+            <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate">
+              {title}
+            </h3>
+          ) : (
+            <div className="w-full border-t border-muted-foreground/20" />
+          )}
+        </div>
       )}
       <div className="space-y-1">{children}</div>
     </div>
