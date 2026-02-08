@@ -29,7 +29,7 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-sidebar",
     dependencies: ["lucide-react"],
-    registryDependencies: ["button", "ts-web-ui/ts-logo"],
+    registryDependencies: ["button", "tooltip", "ts-web-ui/ts-logo"],
     files: ["ts-sidebar/index.tsx"],
   },
   {
