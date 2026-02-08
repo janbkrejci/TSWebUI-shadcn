@@ -37,7 +37,7 @@ export function Logo({ className, text, icon, href, children, ...props }: LogoPr
       <Link
         href={href}
         className={classes}
-        {...(props as unknown as React.ComponentProps<typeof Link>)}
+        {...(props as unknown as Omit<React.ComponentProps<typeof Link>, "href">)}
       >
         {content}
       </Link>

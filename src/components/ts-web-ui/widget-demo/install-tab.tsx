@@ -11,12 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 interface InstallTabProps {
   componentName: string
   dependencies?: string[]
+  instructions?: string
 }
 
 /**
  * Shared component for displaying installation instructions via shadcn CLI
  */
-export function InstallTab({ componentName, dependencies = [] }: InstallTabProps) {
+export function InstallTab({ componentName, dependencies = [], instructions }: InstallTabProps) {
   const registryUrl = `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${componentName}.json`
   const installCommand = `npx shadcn@latest add ${registryUrl}`
 
@@ -43,6 +44,12 @@ export function InstallTab({ componentName, dependencies = [] }: InstallTabProps
             <Copy className="h-4 w-4" />
           </Button>
         </div>
+        {instructions && (
+          <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg border">
+            <span className="font-medium text-foreground">Note: </span>
+            {instructions}
+          </div>
+        )}
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground italic">
             This command will automatically perform the following steps:

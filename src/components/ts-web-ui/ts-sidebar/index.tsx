@@ -228,7 +228,11 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
           {section.items.map((item) => (
             <SidebarItem
               key={item.name}
-              icon={React.isValidElement(item.icon) ? item.icon : <item.icon className="h-4 w-4" />}
+              icon={
+                React.isValidElement(item.icon)
+                  ? item.icon
+                  : React.createElement(item.icon as React.ElementType, { className: "h-4 w-4" })
+              }
               isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
               tooltip={item.label}
               asChild
@@ -245,7 +249,11 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
         {navigation.map((item) => (
           <SidebarItem
             key={item.name}
-            icon={React.isValidElement(item.icon) ? item.icon : <item.icon className="h-4 w-4" />}
+            icon={
+              React.isValidElement(item.icon)
+                ? item.icon
+                : React.createElement(item.icon as React.ElementType, { className: "h-4 w-4" })
+            }
             isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
             tooltip={item.label}
             asChild
