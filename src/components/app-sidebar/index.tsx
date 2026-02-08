@@ -164,6 +164,7 @@ export function AppSidebar({ className }: React.ComponentProps<"div">) {
               key={item.name}
               icon={<item.icon className="h-4 w-4" />}
               isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+              tooltip={item.label}
               asChild
             >
               <Link href={item.href}>{item.label}</Link>

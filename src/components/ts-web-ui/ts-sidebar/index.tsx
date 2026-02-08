@@ -15,6 +15,7 @@ import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { cn } from "@/lib/utils"
 
@@ -235,7 +236,11 @@ export function SidebarProvider({
     ]
   )
 
-  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
+  return (
+    <SidebarContext.Provider value={value}>
+      <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+    </SidebarContext.Provider>
+  )
 }
 
 /**
@@ -406,6 +411,8 @@ interface SidebarItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   isActive?: boolean
   /** As a link wrapper */
   asChild?: boolean
+  /** Optional explicit tooltip text (defaults to children text if it's a string) */
+  tooltip?: string
 }
 
 export function SidebarItem({
@@ -414,6 +421,7 @@ export function SidebarItem({
   icon,
   isActive,
   asChild,
+  tooltip,
   ...props
 }: SidebarItemProps) {
   const { isCollapsed, close } = useSidebar()
@@ -426,6 +434,9 @@ export function SidebarItem({
     }
     props.onClick?.(e)
   }
+
+  // Determine tooltip text: use explicit tooltip prop or children if it's a string
+  const tooltipText = tooltip || (typeof children === "string" ? children : undefined)
 
   const content = (
     <Button
@@ -443,24 +454,40 @@ export function SidebarItem({
     </Button>
   )
 
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(
-      children as React.ReactElement<{ className?: string; onClick?: React.MouseEventHandler }>,
-      {
-        className: cn(
-          "flex items-center w-full h-9 px-3 text-sm rounded-md transition-colors",
-          isActive
-            ? "bg-secondary text-secondary-foreground"
-            : "hover:bg-accent hover:text-accent-foreground",
-          isCollapsed && "justify-center px-2",
-          className
-        ),
-        onClick: handleClick,
-      }
+  const finalItem =
+    asChild && React.isValidElement(children)
+      ? React.cloneElement(
+          children as React.ReactElement<{ className?: string; onClick?: React.MouseEventHandler }>,
+          {
+            className: cn(
+              "flex items-center w-full h-9 px-3 text-sm rounded-md transition-colors",
+              isActive
+                ? "bg-secondary text-secondary-foreground"
+                : "hover:bg-accent hover:text-accent-foreground",
+              isCollapsed && "justify-center px-2",
+              className
+            ),
+            onClick: handleClick,
+          },
+          <>
+            {icon && <span className={cn("flex-shrink-0", !isCollapsed && "mr-2")}>{icon}</span>}
+            {!isCollapsed && (children.props as { children?: React.ReactNode }).children}
+          </>
+        )
+      : content
+
+  if (isCollapsed && tooltipText) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{finalItem}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={10}>
+          {tooltipText}
+        </TooltipContent>
+      </Tooltip>
     )
   }
 
-  return content
+  return finalItem
 }
 
 /**
