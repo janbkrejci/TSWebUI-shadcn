@@ -216,9 +216,15 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
   const { isOpen, close, isCollapsed, topBarHeight, isMobile, width, collapsedWidth } = useSidebar()
   const pathname = usePathname()
 
-  const sidebarHeight = `calc(100vh - ${topBarHeight}px)`
-  const currentWidth = isCollapsed ? collapsedWidth : width
+  // When className includes "absolute" the sidebar is rendered inside a bounded
+  // container (demo / widget), so we switch from viewport-based units to
+  // container-relative units.
   const isAbsolute = className?.includes("absolute")
+
+  const sidebarHeight = isAbsolute
+    ? `calc(100% - ${topBarHeight}px)`
+    : `calc(100vh - ${topBarHeight}px)`
+  const currentWidth = isCollapsed ? collapsedWidth : width
 
   const renderContent = () => {
     if (!navigation) return children
@@ -549,6 +555,22 @@ export function SidebarInset({
 
   const currentWidth = isCollapsed ? collapsedWidth : width
   const marginLeft = !isMobile && isOpen ? currentWidth : 0
+
+  // When rendered in a bounded container (className contains "absolute") avoid
+  // fixing the height to 100vh – let the container define the height instead.
+  const isContained = className?.includes("absolute")
+
+  if (isContained) {
+    return (
+      <main
+        className={cn("flex flex-col transition-[margin-left] duration-300 ease-in-out", className)}
+        style={{ marginLeft, paddingTop: topBarHeight, ...style }}
+        {...props}
+      >
+        <div className="flex-1 relative overflow-auto p-4">{children}</div>
+      </main>
+    )
+  }
 
   return (
     <main

@@ -12,6 +12,12 @@ export interface TsLayoutProps {
   topBarLeft?: React.ReactNode
   topBarCenter?: React.ReactNode
   topBarRight?: React.ReactNode
+  /**
+   * Contained mode: use absolute positioning so the layout fits inside a
+   * bounded demo container (e.g. a div with overflow-hidden).
+   * In normal full-page usage leave this false (default).
+   */
+  contained?: boolean
 }
 
 /**
@@ -29,6 +35,7 @@ export function TsLayout({
   topBarLeft,
   topBarCenter,
   topBarRight,
+  contained = false,
 }: TsLayoutProps) {
   return (
     <SidebarProvider>
@@ -37,13 +44,22 @@ export function TsLayout({
         leftContent={topBarLeft || logo}
         centerContent={topBarCenter}
         rightContent={topBarRight}
+        className={contained ? "absolute! top-0! left-0! right-0!" : undefined}
       />
 
       {/* Sidebar handles navigation data */}
-      <Sidebar navigation={navigation} logo={logo} />
+      <Sidebar
+        navigation={navigation}
+        logo={logo}
+        className={contained ? "absolute!" : undefined}
+      />
 
       {/* SidebarInset handles main content area with proper margins */}
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset
+        className={contained ? "absolute! inset-0! overflow-auto bg-transparent" : undefined}
+      >
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   )
 }

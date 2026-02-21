@@ -52,6 +52,7 @@ function IntegratedDemo() {
   return (
     <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-125">
       <TsLayout
+        contained
         navigation={NAVIGATION}
         topBarLeft={<Logo text="IntegratedApp" />}
         topBarCenter={
