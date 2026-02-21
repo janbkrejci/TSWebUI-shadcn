@@ -302,7 +302,8 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
 
       <aside
         className={cn(
-          "fixed left-0 z-40 bg-background border-r transition-all duration-300 ease-in-out",
+          "fixed left-0 bg-background border-r transition-all duration-300 ease-in-out",
+          isMobile ? "z-[110]" : "z-40",
           isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
           className
         )}
@@ -339,7 +340,7 @@ export function SidebarHeader({
 
   const hasTopBar = topBarHeight > 0
 
-  if (hasTopBar && !isMobile) return null
+  if (hasTopBar) return null
 
   // Header content stays visible during transition when collapsing
   const showContent = !isCollapsed || isTransitioning
