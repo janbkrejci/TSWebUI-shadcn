@@ -281,7 +281,7 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
       {/* Standalone floating trigger when sidebar is closed and NO TopBar is present */}
       {!isOpen && topBarHeight === 0 && (
         <div
-          className={cn("z-[60] bg-transparent", isAbsolute ? "absolute" : "fixed")}
+          className={cn("z-60 bg-transparent", isAbsolute ? "absolute" : "fixed")}
           style={{ top: "12px", left: "16px" }}
         >
           <SidebarTrigger />
@@ -291,7 +291,7 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
       {isOpen && isMobile && (
         <div
           className={cn(
-            "fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity duration-300",
+            "fixed inset-0 z-100 bg-background/80 backdrop-blur-sm transition-opacity duration-300",
             isAbsolute && "absolute"
           )}
           style={{ top: topBarHeight }}
@@ -303,7 +303,7 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
       <aside
         className={cn(
           "fixed left-0 bg-background border-r transition-all duration-300 ease-in-out",
-          isMobile ? "z-[110]" : "z-40",
+          isMobile ? "z-110" : "z-40",
           isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
           className
         )}
@@ -348,7 +348,7 @@ export function SidebarHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between h-14 px-4 flex-shrink-0 transition-all duration-300",
+        "flex items-center justify-between h-14 px-4 shrink-0 transition-all duration-300",
         showContent && "border-b",
         className
       )}
@@ -458,7 +458,7 @@ export function SidebarItem({
     <span
       className={cn(
         "transition-all duration-300 overflow-hidden whitespace-nowrap text-ellipsis flex-1 text-left",
-        !showLabel ? "max-w-0 opacity-0 invisible ml-0" : "max-w-[200px] opacity-100 visible ml-2"
+        !showLabel ? "max-w-0 opacity-0 invisible ml-0" : "max-w-50 opacity-100 visible ml-2"
       )}
     >
       {label}
