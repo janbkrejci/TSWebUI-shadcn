@@ -14,12 +14,6 @@ export interface TsLayoutProps {
   topBarLeft?: React.ReactNode
   topBarCenter?: React.ReactNode
   topBarRight?: React.ReactNode
-  topBarHeight?: number
-  mobileBreakpoint?: number
-  className?: string
-  topBarClassName?: string
-  sidebarClassName?: string
-  contentClassName?: string
 }
 
 /**
@@ -37,33 +31,21 @@ export function TsLayout({
   topBarLeft,
   topBarCenter,
   topBarRight,
-  topBarHeight = 56,
-  mobileBreakpoint = 1024,
-  className,
-  topBarClassName,
-  sidebarClassName,
-  contentClassName,
 }: TsLayoutProps) {
   return (
-    <SidebarProvider
-      topBarHeight={topBarHeight}
-      mobileBreakpoint={mobileBreakpoint}
-      className={className}
-    >
+    <SidebarProvider>
       {/* TopBar automatically adds Hamburger if placed inside SidebarProvider */}
       <TopBar
-        height={topBarHeight}
         leftContent={topBarLeft || logo}
         centerContent={topBarCenter}
         rightContent={topBarRight}
-        className={topBarClassName}
       />
 
       {/* Sidebar handles navigation data */}
-      <Sidebar navigation={navigation} logo={logo} className={sidebarClassName} />
+      <Sidebar navigation={navigation} logo={logo} />
 
       {/* SidebarInset handles main content area with proper margins */}
-      <SidebarInset className={contentClassName}>{children}</SidebarInset>
+      <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   )
 }
