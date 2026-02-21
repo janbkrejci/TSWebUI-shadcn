@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils"
 // Global Z-Index counter to ensure new or focused windows are always on top
 let globalZIndex = 1000
 
+// Shared resize handle element – created once to avoid unnecessary allocations per render
+const RESIZE_HANDLE = <div className="w-full h-full" />
+
 export interface TsWindowProps {
   id?: string | number // ID is useful for the manager
   title?: string
@@ -408,15 +411,12 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
       else handleMaximize()
     }
 
-    const renderHandle = () => <div className="w-full h-full" />
-
     return (
       <Rnd
         ref={rndRef}
         size={size}
         position={position}
         onDragStart={handleDragStart}
-        // onDrag={handleDrag} // Removed to fix jitter
         onDragStop={handleDragStop}
         onResizeStart={handleResizeStart}
         onResizeStop={handleResizeStop}
@@ -426,14 +426,14 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
         disableDragging={windowState === "maximized"}
         enableResizing={windowState === "normal"}
         resizeHandleComponent={{
-          top: renderHandle(),
-          right: renderHandle(),
-          bottom: renderHandle(),
-          left: renderHandle(),
-          topRight: renderHandle(),
-          bottomRight: renderHandle(),
-          bottomLeft: renderHandle(),
-          topLeft: renderHandle(),
+          top: RESIZE_HANDLE,
+          right: RESIZE_HANDLE,
+          bottom: RESIZE_HANDLE,
+          left: RESIZE_HANDLE,
+          topRight: RESIZE_HANDLE,
+          bottomRight: RESIZE_HANDLE,
+          bottomLeft: RESIZE_HANDLE,
+          topLeft: RESIZE_HANDLE,
         }}
         dragHandleClassName="window-drag-handle"
         style={{ zIndex: currentZIndex, opacity: isVisible ? 1 : 0 }}
@@ -570,12 +570,6 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     (content: React.ReactNode, options: Partial<TsWindowProps> & { id?: string } = {}) => {
       const id = options.id || Math.random().toString(36).substring(7)
 
-      // Default options
-      const finalOptions = {
-        autoFit: true, // Auto-fit by default
-        ...options,
-      }
-
       setWindows((prev) => {
         const exists = prev.find((w) => w.id === id)
         if (exists) {
@@ -590,7 +584,7 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           {
             id,
             content,
-            props: finalOptions,
+            props: options,
             ref: React.createRef<TsWindowRef>(),
           },
         ]

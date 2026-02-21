@@ -56,6 +56,11 @@ export function useSidebar() {
   return context
 }
 
+/** Returns sidebar context or undefined when used outside a SidebarProvider */
+export function useOptionalSidebar(): SidebarContextValue | undefined {
+  return React.useContext(SidebarContext)
+}
+
 interface SidebarProviderProps {
   children: React.ReactNode
   defaultOpen?: boolean
@@ -431,8 +436,7 @@ export function SidebarItem({
   tooltip,
   ...props
 }: SidebarItemProps) {
-  const { isCollapsed, isTransitioning, close } = useSidebar()
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768
+  const { isCollapsed, isTransitioning, close, isMobile } = useSidebar()
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isMobile) close()
@@ -595,7 +599,5 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
     </div>
   )
 }
-
-export { SidebarContext }
 
 export { Logo } from "../ts-logo"
