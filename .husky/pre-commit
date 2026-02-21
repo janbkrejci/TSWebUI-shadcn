@@ -1,1 +1,1 @@
-pnpm exec lint-staged
+node /home/runner/.cache/node/corepack/v1/pnpm/11.0.0-dev.1005/bin/pnpm.mjs exec lint-staged

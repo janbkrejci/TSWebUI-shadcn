@@ -7,7 +7,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-import { SidebarContext, SidebarTrigger } from "../ts-sidebar"
+import { SidebarTrigger, useOptionalSidebar } from "../ts-sidebar"
 
 /**
  * TopBar Context - allows components to access the top bar height
@@ -63,7 +63,7 @@ export function TopBar({
   showTrigger = true,
   ...props
 }: TopBarProps) {
-  const sidebarContext = React.useContext(SidebarContext)
+  const sidebarContext = useOptionalSidebar()
   const hasSidebar = !!sidebarContext && showTrigger
 
   return (
@@ -110,5 +110,4 @@ export function TopBarGroup({
   )
 }
 
-export { TopBarContext }
 export { Logo } from "../ts-logo"

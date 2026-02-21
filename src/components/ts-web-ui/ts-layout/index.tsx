@@ -2,8 +2,6 @@
 
 import * as React from "react"
 
-import "@/app/globals.css"
-
 import { NavItem, NavSection, Sidebar, SidebarInset, SidebarProvider } from "../ts-sidebar"
 import { TopBar } from "../ts-topbar"
 
