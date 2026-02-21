@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { TsLayout } from "@/components/ts-web-ui/ts-layout"
 import { Logo } from "@/components/ts-web-ui/ts-logo"
+import { NavSection } from "@/components/ts-web-ui/ts-sidebar"
 import { TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
