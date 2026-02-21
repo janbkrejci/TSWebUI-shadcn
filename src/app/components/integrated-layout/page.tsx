@@ -50,7 +50,7 @@ const NAVIGATION: NavSection[] = [
  */
 function IntegratedDemo() {
   return (
-    <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-[500px]">
+    <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-125">
       <TsLayout
         navigation={NAVIGATION}
         topBarClassName="!absolute"
