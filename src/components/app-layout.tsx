@@ -66,9 +66,9 @@ const NAVIGATION: NavSection[] = [
       { name: "topbar", href: "/components/ts-topbar", label: "TopBar", icon: PanelTop },
       { name: "sidebar", href: "/components/ts-sidebar", label: "Sidebar", icon: PanelLeft },
       {
-        name: "topbar-sidebar",
-        href: "/components/ts-topbar-sidebar",
-        label: "TopBar + Sidebar",
+        name: "integrated-layout",
+        href: "/components/integrated-layout",
+        label: "Integrated Layout",
         icon: LayoutGrid,
       },
       { name: "form-editor", href: "/form-editor", label: "Form Editor", icon: Pencil },

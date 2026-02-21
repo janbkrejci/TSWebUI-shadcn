@@ -8,6 +8,8 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+import { getComponentRegistryUrl } from "@/lib/registry"
+
 interface InstallTabProps {
   componentName: string
   dependencies?: string[]
@@ -18,7 +20,7 @@ interface InstallTabProps {
  * Shared component for displaying installation instructions via shadcn CLI
  */
 export function InstallTab({ componentName, dependencies = [], instructions }: InstallTabProps) {
-  const registryUrl = `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${componentName}.json`
+  const registryUrl = getComponentRegistryUrl(componentName)
   const installCommand = `npx shadcn@latest add ${registryUrl}`
 
   const handleCopy = () => {

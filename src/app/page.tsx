@@ -88,14 +88,14 @@ export default function Home() {
             </div>
           </Link>
           <Link
-            href="/components/ts-topbar-sidebar"
+            href="/components/integrated-layout"
             className="rounded-xl border bg-card text-card-foreground shadow block hover:border-primary transition-colors"
           >
             <div className="p-4 flex flex-col items-center justify-center space-y-3 h-32">
               <LayoutGrid className="h-10 w-10 text-muted-foreground" />
               <div className="text-center">
-                <span className="font-semibold text-lg block">TopBar + Sidebar</span>
-                <span className="text-sm text-muted-foreground">Integrated application layout</span>
+                <span className="font-semibold text-lg block">Integrated Layout</span>
+                <span className="text-sm text-muted-foreground">TopBar + Sidebar combined</span>
               </div>
             </div>
           </Link>

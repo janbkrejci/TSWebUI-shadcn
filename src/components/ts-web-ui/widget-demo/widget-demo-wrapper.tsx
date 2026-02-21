@@ -17,6 +17,8 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 
+import { getComponentRegistryUrl } from "@/lib/registry"
+
 import { TsFormField } from "../ts-form/ts-form-field"
 import { TsFieldDef } from "../ts-form/types"
 
@@ -206,7 +208,7 @@ export function WidgetDemoWrapper({
     logEvent("value-reset", { value: defaultFieldValue })
   }
 
-  const registryUrl = `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${widgetType}.json`
+  const registryUrl = getComponentRegistryUrl(widgetType)
   const installCommand = `npx shadcn@latest add ${registryUrl}`
 
   const previewContent = (

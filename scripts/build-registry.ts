@@ -102,7 +102,7 @@ const REGISTRY_COMPONENTS = [
       "ts-web-ui/ts-topbar",
       "ts-web-ui/theme-provider",
     ],
-    files: ["ts-layout.tsx"],
+    files: ["ts-layout/index.tsx"],
   },
 ]
 
