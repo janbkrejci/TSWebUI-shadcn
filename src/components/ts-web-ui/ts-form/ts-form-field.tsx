@@ -58,7 +58,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
 import { TsTable } from "../ts-table"
-import { TsFieldDef, TsFieldOptions } from "./types"
+import {
+  TsButtonGroupField,
+  TsButtonVariant,
+  TsComboboxField,
+  TsDateField,
+  TsDateTimeField,
+  TsFieldDef,
+  TsFieldOptions,
+  TsFileField,
+  TsMultiselectField,
+  TsNumberField,
+  TsRelationshipField,
+  TsSliderField,
+} from "./types"
 
 interface TsFormFieldProps {
   name: string
@@ -113,23 +126,25 @@ function renderWidget(
   hasError: boolean = false
 ) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const enterAction = "enterAction" in def ? def.enterAction : undefined
+    const escapeAction = "escapeAction" in def ? def.escapeAction : undefined
     if (e.key === "Enter") {
-      if (def.enterAction) {
+      if (enterAction) {
         e.preventDefault()
         e.stopPropagation()
         const event = new CustomEvent("form-key-action", {
-          detail: { key: "Enter", action: def.enterAction, field: name },
+          detail: { key: "Enter", action: enterAction, field: name },
           bubbles: true,
         })
         ;(e.currentTarget as HTMLElement).dispatchEvent(event)
       }
     } else if (e.key === "Escape") {
       e.preventDefault()
-      if (!def.escapeAction || def.escapeAction === "clear") {
+      if (!escapeAction || escapeAction === "clear") {
         field.onChange("")
       } else {
         const event = new CustomEvent("form-key-action", {
-          detail: { key: "Escape", action: def.escapeAction, field: name },
+          detail: { key: "Escape", action: escapeAction, field: name },
           bubbles: true,
         })
         ;(e.currentTarget as HTMLElement).dispatchEvent(event)
@@ -287,13 +302,7 @@ function renderWidget(
                 type="button"
                 variant={
                   isActive
-                    ? ((optVariant || "default") as
-                        | "default"
-                        | "destructive"
-                        | "outline"
-                        | "secondary"
-                        | "ghost"
-                        | "link")
+                    ? ((optVariant as TsButtonVariant) ?? "default") as "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
                     : "outline"
                 }
                 disabled={def.disabled}
@@ -442,13 +451,18 @@ function renderWidget(
       // Relationship picker for entity selection
       return <RelationshipWidget field={field} def={def} hasError={hasError} />
 
-    // Fallback for not implemented
-    default:
+    // This default case should never be reached if all TsFieldDef union members are handled above.
+    // The compile-time exhaustiveness check below will error if a new type is added to TsFieldDef
+    // without a corresponding case in this switch.
+    default: {
+      const _exhaustive: never = def
+      const unknown = _exhaustive as { type: string }
       return (
         <div className="p-2 border border-destructive/50 text-destructive text-sm rounded bg-destructive/10">
-          Unsupported widget: {def.type}
+          Unsupported widget: {unknown.type}
         </div>
       )
+    }
   }
 }
 
@@ -458,7 +472,7 @@ function ComboboxWidget({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsComboboxField
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
@@ -575,7 +589,7 @@ function MultiSelectWidget({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsMultiselectField
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
@@ -692,7 +706,7 @@ function RelationshipWidget({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsRelationshipField
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
@@ -929,7 +943,7 @@ function NumberWidget({
   name,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsNumberField
   hasError?: boolean
   name: string
 }) {
@@ -1031,7 +1045,7 @@ function DateTimeWidget({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsDateTimeField
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
@@ -1182,7 +1196,7 @@ function FileUploadWidget({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsFileField
   hasError?: boolean
 }) {
   const [isDragOver, setIsDragOver] = React.useState(false)
@@ -1326,7 +1340,7 @@ function ProcessButtonGroup({
   def,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsButtonGroupField
   hasError?: boolean
 }) {
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
@@ -1431,7 +1445,7 @@ function DatePickerWidget({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsDateField
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
@@ -1545,7 +1559,7 @@ function SliderWithTooltip({
   hasError = false,
 }: {
   field: ControllerRenderProps<FieldValues, string>
-  def: TsFieldDef
+  def: TsSliderField
   hasError?: boolean
 }) {
   const [showTooltip, setShowTooltip] = React.useState(false)
