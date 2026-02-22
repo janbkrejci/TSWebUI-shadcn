@@ -7,7 +7,13 @@ import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widge
 
 const attributes: WidgetAttribute[] = [
   { name: "label", label: "Label", type: "string", defaultValue: "Submit Form" },
-  { name: "action", label: "Action ID", type: "string", defaultValue: "submit-action" },
+  {
+    name: "action",
+    label: "Action ID",
+    type: "string",
+    defaultValue: "submit",
+    hint: "Action identifier sent in the event",
+  },
   {
     name: "variant",
     label: "Variant",
@@ -21,13 +27,6 @@ const attributes: WidgetAttribute[] = [
       { label: "Destructive", value: "destructive" },
     ],
     hint: "Visual style of the button",
-  },
-  {
-    name: "action",
-    label: "Action ID",
-    type: "string",
-    defaultValue: "submit",
-    hint: "Action identifier sent in the event",
   },
   { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
   { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },

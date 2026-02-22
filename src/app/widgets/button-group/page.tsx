@@ -9,6 +9,17 @@ const attributes: WidgetAttribute[] = [
   { name: "label", label: "Label", type: "string", defaultValue: "Priority" },
   { name: "hint", label: "Hint", type: "string", defaultValue: "Select one option" },
   {
+    name: "variant",
+    label: "Variant",
+    type: "select",
+    defaultValue: "",
+    options: [
+      { label: "Standard (toggle)", value: "" },
+      { label: "Process (chevron steps)", value: "process" },
+    ],
+    hint: "Visual style of the button group",
+  },
+  {
     name: "options",
     label: "Options (JSON)",
     type: "json",

@@ -89,7 +89,7 @@ const NAVIGATION: NavSection[] = [
   {
     title: "Form Widgets",
     items: [
-      { name: "text", href: "/widgets/text", label: "Text Input", icon: Type },
+      { name: "text", href: "/widgets/text", label: "Text Input", icon: Type, exact: true },
       { name: "textarea", href: "/widgets/textarea", label: "Textarea", icon: AlignLeft },
       { name: "password", href: "/widgets/password", label: "Password", icon: KeyRound },
       { name: "number", href: "/widgets/number", label: "Number", icon: Hash },
@@ -105,7 +105,7 @@ const NAVIGATION: NavSection[] = [
         label: "Button Group",
         icon: ToggleRight,
       },
-      { name: "date", href: "/widgets/date", label: "Date Picker", icon: Calendar },
+      { name: "date", href: "/widgets/date", label: "Date Picker", icon: Calendar, exact: true },
       { name: "datetime", href: "/widgets/datetime", label: "Date Time", icon: CalendarClock },
       { name: "slider", href: "/widgets/slider", label: "Slider", icon: SlidersHorizontal },
       { name: "file", href: "/widgets/file", label: "File Upload", icon: Upload },
@@ -116,7 +116,13 @@ const NAVIGATION: NavSection[] = [
         label: "Relationship Picker",
         icon: Link2,
       },
-      { name: "button", href: "/widgets/button", label: "Button", icon: MousePointerClick },
+      {
+        name: "button",
+        href: "/widgets/button",
+        label: "Button",
+        icon: MousePointerClick,
+        exact: true,
+      },
       { name: "separator", href: "/widgets/separator", label: "Separator", icon: Minus },
       { name: "infobox", href: "/widgets/infobox", label: "Info Box", icon: Info },
       { name: "markdown", href: "/widgets/markdown", label: "Markdown", icon: FileText },

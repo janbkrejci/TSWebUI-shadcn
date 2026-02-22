@@ -46,6 +46,8 @@ export interface TsFieldDef {
   min?: number
   max?: number
   step?: number
+  /** Number of decimal places for rounding and display */
+  roundTo?: number
 
   // Select/Radio specific
   options?: TsFieldOptions[] | string[]
@@ -73,6 +75,26 @@ export interface TsFieldDef {
 
   // Combobox
   allowCustom?: boolean
+  /** Message shown when no option matches search (default: "Not found.") */
+  notFoundMessage?: string
+
+  // Text/Number inputs
+  /** Select all text on focus */
+  selectAllOnFocus?: boolean
+
+  // Key actions for text/textarea/number inputs
+  /** Action name emitted when Enter is pressed (e.g. 'focus:next', 'submit', 'click:save') */
+  enterAction?: string
+  /** Action on Escape: 'clear' clears the value, any other string emits form-key-action */
+  escapeAction?: string
+
+  // Date/DateTime
+  /** Date format string using date-fns tokens (default: "d.M.yyyy" for date, "d.M.yyyy HH:mm" for datetime) */
+  dateFormat?: string
+
+  // File upload
+  /** Label shown inside the drop zone */
+  innerLabel?: string
 
   // Infobox/Markdown
   content?: string

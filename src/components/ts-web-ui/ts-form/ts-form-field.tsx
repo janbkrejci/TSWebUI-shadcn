@@ -1,8 +1,20 @@
 "use client"
 
-import { format } from "date-fns"
-import { enUS } from "date-fns/locale"
-import { CalendarIcon, Check, ChevronsUpDown, Info, X as XIcon } from "lucide-react"
+import { format, isValid as isValidDate, parse } from "date-fns"
+import { cs } from "date-fns/locale"
+import {
+  AlertTriangle,
+  CalendarIcon,
+  Check,
+  CheckCircle2,
+  ChevronsUpDown,
+  CloudUpload,
+  Download,
+  FileText as FileTextIcon,
+  Info,
+  X as XIcon,
+} from "lucide-react"
+import remarkGfm from "remark-gfm"
 
 import * as React from "react"
 import { ControllerRenderProps, FieldValues, useFormContext } from "react-hook-form"
@@ -43,6 +55,7 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { cn } from "@/lib/utils"
 
@@ -76,7 +89,7 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
             fieldDef.type !== "markdown" && (
               <FormLabel className={cn(hasError && "text-destructive")}>
                 {fieldDef.label}
-                {fieldDef.required && <span className="ml-1">*</span>}
+                {fieldDef.required && <span className="text-destructive">*</span>}
               </FormLabel>
             )}
 
@@ -102,19 +115,35 @@ function renderWidget(
   hasError: boolean = false
 ) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === "Enter") {
+      if (def.enterAction) {
+        e.preventDefault()
+        e.stopPropagation()
+        const event = new CustomEvent("form-key-action", {
+          detail: { key: "Enter", action: def.enterAction, field: name },
+          bubbles: true,
+        })
+        ;(e.currentTarget as HTMLElement).dispatchEvent(event)
+      }
+    } else if (e.key === "Escape") {
       e.preventDefault()
-      if (def.type === "number") {
-        field.onChange(undefined)
-      } else {
+      if (!def.escapeAction || def.escapeAction === "clear") {
         field.onChange("")
+      } else {
+        const event = new CustomEvent("form-key-action", {
+          detail: { key: "Escape", action: def.escapeAction, field: name },
+          bubbles: true,
+        })
+        ;(e.currentTarget as HTMLElement).dispatchEvent(event)
       }
     }
   }
 
   // Shared classes for error state and readonly styling
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-  const readonlyClass = def.readonly ? "bg-muted/50 cursor-default focus:ring-0" : ""
+  const readonlyClass = def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
+  // For button/interactive widgets: block pointer events instead of disabling (to preserve normal look)
+  const readonlyPointerClass = def.readonly ? "pointer-events-none" : ""
 
   switch (def.type) {
     case "text":
@@ -128,30 +157,20 @@ function renderWidget(
           onKeyDown={handleKeyDown}
           disabled={def.disabled}
           readOnly={def.readonly}
+          tabIndex={def.readonly ? -1 : undefined}
+          onFocus={(e) => {
+            if (def.readonly) {
+              e.currentTarget.blur()
+              return
+            }
+            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+          }}
           className={cn(errorClass, readonlyClass)}
         />
       )
 
     case "number":
-      return (
-        <Input
-          type="number"
-          placeholder={def.placeholder}
-          {...field}
-          value={(field.value as number) ?? ""}
-          onChange={(e) => {
-            const val = e.target.value
-            field.onChange(val === "" ? undefined : e.target.valueAsNumber)
-          }}
-          onKeyDown={handleKeyDown}
-          min={def.min}
-          max={def.max}
-          step={def.step}
-          disabled={def.disabled}
-          readOnly={def.readonly}
-          className={cn(errorClass, readonlyClass)}
-        />
-      )
+      return <NumberWidget field={field} def={def} hasError={hasError} name={name} />
 
     case "textarea":
       return (
@@ -163,33 +182,42 @@ function renderWidget(
           onKeyDown={handleKeyDown}
           disabled={def.disabled}
           readOnly={def.readonly}
-          className={cn(errorClass, readonlyClass)}
+          tabIndex={def.readonly ? -1 : undefined}
+          onFocus={(e) => {
+            if (def.readonly) {
+              e.currentTarget.blur()
+              return
+            }
+            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+          }}
+          className={cn("field-sizing-fixed", errorClass, readonlyClass)}
+          style={def.rows ? { height: `${def.rows * 1.5 + 1}rem` } : undefined}
         />
       )
 
     case "checkbox":
       return (
-        <div className="flex items-center space-x-2">
+        <div className={cn("flex items-center space-x-2", readonlyPointerClass)}>
           <Checkbox
             checked={!!field.value}
             onCheckedChange={field.onChange}
-            disabled={def.disabled || def.readonly}
+            disabled={def.disabled}
             className={cn(hasError && "border-destructive data-[state=checked]:bg-destructive")}
           />
           <FormLabel className={cn("font-normal cursor-pointer", hasError && "text-destructive")}>
             {def.label}
-            {def.required && <span className="ml-1">*</span>}
+            {def.required && <span className="text-destructive">*</span>}
           </FormLabel>
         </div>
       )
 
     case "switch":
       return (
-        <div className="flex items-center space-x-2">
+        <div className={cn("flex items-center space-x-2", readonlyPointerClass)}>
           <Switch
             checked={!!field.value}
             onCheckedChange={field.onChange}
-            disabled={def.disabled || def.readonly}
+            disabled={def.disabled}
             className={cn(
               hasError &&
                 "data-[state=checked]:bg-destructive data-[state=unchecked]:bg-destructive/30"
@@ -197,7 +225,7 @@ function renderWidget(
           />
           <FormLabel className={cn("font-normal cursor-pointer", hasError && "text-destructive")}>
             {def.label}
-            {def.required && <span className="ml-1">*</span>}
+            {def.required && <span className="text-destructive">*</span>}
           </FormLabel>
         </div>
       )
@@ -207,8 +235,12 @@ function renderWidget(
         <RadioGroup
           onValueChange={field.onChange}
           defaultValue={field.value}
-          disabled={def.disabled || def.readonly}
-          className={cn("flex flex-col space-y-1", hasError && "[&_button]:border-destructive")}
+          disabled={def.disabled}
+          className={cn(
+            "flex flex-col space-y-1",
+            hasError && "[&_button]:border-destructive",
+            readonlyPointerClass
+          )}
         >
           {(def.options || []).map((opt: TsFieldOptions | string) => {
             const value = typeof opt === "string" ? opt : String(opt.value)
@@ -229,14 +261,18 @@ function renderWidget(
       )
 
     case "button-group":
+      if (def.variant === "process") {
+        return <ProcessButtonGroup field={field} def={def} hasError={hasError} />
+      }
       return (
         <ToggleGroup
           type="single"
           value={field.value}
           onValueChange={field.onChange}
-          disabled={def.disabled || def.readonly}
+          disabled={def.disabled}
           className={cn(
-            hasError && "[&_button]:border-destructive [&_button[data-state=on]]:bg-destructive"
+            hasError && "[&_button]:border-destructive [&_button[data-state=on]]:bg-destructive",
+            readonlyPointerClass
           )}
         >
           {(def.options || []).map((opt: TsFieldOptions | string) => {
@@ -254,30 +290,12 @@ function renderWidget(
       )
 
     case "slider":
-      return (
-        <div className="py-4">
-          <Slider
-            defaultValue={[field.value || def.min || 0]}
-            max={def.max || 100}
-            min={def.min || 0}
-            step={def.step || 1}
-            onValueChange={(vals: number[]) => field.onChange(vals[0])}
-            disabled={def.disabled || def.readonly}
-            className={cn(
-              hasError && "[&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
-            )}
-          />
-        </div>
-      )
+      return <SliderWithTooltip field={field} def={def} hasError={hasError} />
 
     case "select":
       return (
-        <Select
-          onValueChange={field.onChange}
-          value={field.value}
-          disabled={def.disabled || def.readonly}
-        >
-          <SelectTrigger className={cn(errorClass, readonlyClass)}>
+        <Select onValueChange={field.onChange} value={field.value} disabled={def.disabled}>
+          <SelectTrigger className={cn(errorClass, def.readonly ? "pointer-events-none" : "")}>
             <SelectValue placeholder={def.placeholder || "Select..."} />
           </SelectTrigger>
           <SelectContent>
@@ -301,93 +319,48 @@ function renderWidget(
       return <MultiSelectWidget field={field} def={def} hasError={hasError} />
 
     case "date":
-      return (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !field.value && "text-muted-foreground",
-                errorClass,
-                readonlyClass
-              )}
-              disabled={def.disabled || def.readonly}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {field.value ? (
-                format(field.value as Date, "PPP", { locale: enUS })
-              ) : (
-                <span>{def.placeholder || "Pick a date"}</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={field.value as Date}
-              onSelect={field.onChange}
-              initialFocus
-              locale={enUS}
-            />
-          </PopoverContent>
-        </Popover>
-      )
+      return <DatePickerWidget field={field} def={def} hasError={hasError} />
 
     case "datetime":
-      return (
-        <Input
-          type="datetime-local"
-          {...field}
-          value={field.value ? new Date(field.value as string).toISOString().slice(0, 16) : ""}
-          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
-          disabled={def.disabled}
-          readOnly={def.readonly}
-          className={cn(errorClass, readonlyClass)}
-        />
-      )
+      return <DateTimeWidget field={field} def={def} hasError={hasError} />
 
     case "file":
     case "image":
-      return (
-        <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Input
-            type="file"
-            accept={def.accept || (def.type === "image" ? "image/*" : undefined)}
-            multiple={def.multiple}
-            disabled={def.disabled}
-            readOnly={def.readonly}
-            className={cn(errorClass, readonlyClass, def.readonly && "pointer-events-none")}
-            onChange={(e) => {
-              const files = e.target.files
-              if (def.multiple) {
-                field.onChange(files)
-              } else {
-                field.onChange(files?.[0])
-              }
-            }}
-          />
-        </div>
-      )
+      return <FileUploadWidget field={field} def={def} hasError={hasError} />
 
     case "infobox": {
-      type AlertVariant = "default" | "destructive"
-      const variant: AlertVariant = def.variant === "destructive" ? "destructive" : "default"
+      const v = def.variant || "default"
+      const alertVariant = v === "destructive" ? "destructive" : "default"
+      const variantClasses: Record<string, string> = {
+        information:
+          "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-500",
+        warning:
+          "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400 [&>svg]:text-amber-500",
+        success:
+          "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400 [&>svg]:text-green-500",
+      }
+      const iconMap: Record<string, React.ReactNode> = {
+        default: <Info className="h-4 w-4" />,
+        destructive: <Info className="h-4 w-4" />,
+        information: <Info className="h-4 w-4" />,
+        warning: <AlertTriangle className="h-4 w-4" />,
+        success: <CheckCircle2 className="h-4 w-4" />,
+      }
       return (
-        <Alert variant={variant}>
-          <Info className="h-4 w-4" />
-          <AlertTitle>{def.label || "Info"}</AlertTitle>
-          <AlertDescription>
-            {(def.value as React.ReactNode) || def.content || "Infobox content"}
-          </AlertDescription>
+        <Alert variant={alertVariant} className={variantClasses[v] || ""}>
+          {iconMap[v] || <Info className="h-4 w-4" />}
+          {def.label && <AlertTitle>{def.label}</AlertTitle>}
+          <AlertDescription>{(def.value as React.ReactNode) || def.content || ""}</AlertDescription>
         </Alert>
       )
     }
 
     case "markdown":
       return (
-        <div className="prose dark:prose-invert max-w-none p-4 border rounded-md bg-muted/50 text-sm">
-          <Markdown>{(def.value as string) || def.content || ""}</Markdown>
+        <div className="prose prose-sm dark:prose-invert max-w-none text-sm [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2 [&_a]:text-primary [&_a]:underline">
+          <Markdown remarkPlugins={[remarkGfm]}>
+            {(def.value as string) || def.content || ""}
+          </Markdown>
         </div>
       )
 
@@ -422,23 +395,21 @@ function renderWidget(
       )
 
     case "separator":
-      // Separator - visual element without value
+      // Separator - consistent height with or without label
       return (
         <div className="py-2">
-          {def.label ? (
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
+          <div className="relative h-5 flex items-center">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            {def.label && (
+              <div className="relative flex justify-center w-full text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground font-medium">
                   {def.label}
                 </span>
               </div>
-            </div>
-          ) : (
-            <hr className="border-t" />
-          )}
+            )}
+          </div>
         </div>
       )
 
@@ -484,7 +455,7 @@ function ComboboxWidget({
     !options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase())
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-  const readonlyClass = def.readonly ? "bg-muted/50 cursor-default" : ""
+  const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -493,8 +464,12 @@ function ComboboxWidget({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", errorClass, readonlyClass)}
-          disabled={def.disabled || def.readonly}
+          className={cn(
+            "w-full justify-between hover:bg-background dark:hover:bg-input/30",
+            errorClass,
+            readonlyClass
+          )}
+          disabled={def.disabled}
         >
           {field.value
             ? (options.find((framework) => framework.value === field.value)?.label ??
@@ -523,7 +498,9 @@ function ComboboxWidget({
                   Use: &quot;{searchValue}&quot;
                 </div>
               ) : (
-                "Not found."
+                <span className="italic text-muted-foreground">
+                  {def.notFoundMessage || "Not found."}
+                </span>
               )}
             </CommandEmpty>
             <CommandGroup>
@@ -581,16 +558,20 @@ function MultiSelectWidget({
   }
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-  const readonlyClass = def.readonly ? "bg-muted/50 cursor-default" : ""
+  const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
-          className={cn("w-full justify-between h-auto min-h-[40px]", errorClass, readonlyClass)}
-          disabled={def.disabled || def.readonly}
+          className={cn(
+            "w-full justify-between h-auto min-h-[40px] hover:bg-background dark:hover:bg-input/30",
+            errorClass,
+            readonlyClass
+          )}
+          disabled={def.disabled}
         >
           <div className="flex flex-wrap gap-1">
             {selectedValues.length > 0 ? (
@@ -617,7 +598,11 @@ function MultiSelectWidget({
         <Command>
           <CommandInput placeholder={def.placeholder || "Search..."} />
           <CommandList>
-            <CommandEmpty>Not found.</CommandEmpty>
+            <CommandEmpty>
+              <span className="italic text-muted-foreground">
+                {def.notFoundMessage || "Not found."}
+              </span>
+            </CommandEmpty>
             <CommandGroup>
               {options.map((opt) => (
                 <CommandItem
@@ -675,7 +660,7 @@ function RelationshipWidget({
   )
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-  const readonlyClass = def.readonly ? "bg-muted/50 cursor-default" : ""
+  const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   // Value parsing - can be single ID, array ID or object/objects
   const selectedValues = React.useMemo(() => {
@@ -758,73 +743,728 @@ function RelationshipWidget({
   const isSelected = (item: Record<string, unknown>) => selectedValues.includes(item[valueField])
 
   return (
-    <div className="space-y-2">
-      {/* Selected items as chips */}
-      {selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {selectedValues.map((val) => (
-            <Badge key={String(val)} variant="secondary">
-              {getDisplayText(val, chipDisplayFields)}
-              <XIcon
-                className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
-                onClick={() => removeItem(val)}
-              />
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      {/* Picker button */}
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", errorClass, readonlyClass)}
-            disabled={def.disabled || def.readonly}
-          >
+    <Popover open={open} onOpenChange={setOpen} modal>
+      <PopoverTrigger asChild>
+        {/* Input-like container with chips inside */}
+        <div
+          role="button"
+          tabIndex={readonlyClass ? -1 : 0}
+          className={cn(
+            "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-1 text-sm shadow-xs cursor-pointer",
+            "dark:bg-input/30 transition-[color,box-shadow]",
+            !readonlyClass &&
+              "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+            def.disabled && "opacity-50 pointer-events-none",
+            readonlyClass && "pointer-events-none",
+            errorClass
+          )}
+        >
+          {/* Chips + placeholder area */}
+          <div className="flex flex-1 items-center gap-1 overflow-hidden min-w-0 flex-nowrap">
             {selectedValues.length === 0 ? (
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground truncate">
                 {def.placeholder || `Select ${targetEntity}...`}
               </span>
             ) : (
-              <span className="text-muted-foreground text-sm">
-                {mode === "single" ? "Change selection" : "Add more"}
-              </span>
+              <>
+                {selectedValues.slice(0, 3).map((val) => (
+                  <Badge
+                    key={String(val)}
+                    variant="secondary"
+                    className="shrink-0 gap-1 text-xs h-6 max-w-[120px]"
+                  >
+                    <span className="truncate">{getDisplayText(val, chipDisplayFields)}</span>
+                    {!def.readonly && !def.disabled && (
+                      <XIcon
+                        className="h-2.5 w-2.5 cursor-pointer shrink-0 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeItem(val)
+                        }}
+                      />
+                    )}
+                  </Badge>
+                ))}
+                {selectedValues.length > 3 && (
+                  <Badge variant="outline" className="shrink-0 text-xs h-6 whitespace-nowrap">
+                    +{selectedValues.length - 3}
+                  </Badge>
+                )}
+              </>
             )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </div>
+
+          {/* Right controls */}
+          <div className="flex items-center gap-1 shrink-0 ml-1">
+            {selectedValues.length > 0 && !def.readonly && !def.disabled && (
+              <XIcon
+                className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  field.onChange(mode === "single" ? null : [])
+                  setOpen(false)
+                }}
+              />
+            )}
+            <ChevronsUpDown className="h-4 w-4 text-muted-foreground opacity-50" />
+          </div>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto min-w-75 p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder={`Search ${targetEntity}...`}
+            value={searchValue}
+            onValueChange={setSearchValue}
+          />
+          <CommandList className="max-h-60">
+            <CommandEmpty>
+              {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
+            </CommandEmpty>
+            <CommandGroup>
+              {filteredItems.map((item) => (
+                <CommandItem
+                  key={String(item[valueField])}
+                  value={String(item[valueField])}
+                  onSelect={() => toggleItem(item)}
+                >
+                  <Check
+                    className={cn("mr-2 h-4 w-4", isSelected(item) ? "opacity-100" : "opacity-0")}
+                  />
+                  {getDisplayText(item, displayFields)}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ─── Helper functions for number formatting ──────────────────────────────────
+
+function formatNumericValue(val: number | null | undefined, roundTo?: number): string {
+  if (val === null || val === undefined || isNaN(val)) return ""
+  let num = val
+  if (roundTo !== undefined) {
+    num = Math.round(num * Math.pow(10, roundTo)) / Math.pow(10, roundTo)
+  }
+  return new Intl.NumberFormat("cs-CZ", {
+    useGrouping: true,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: roundTo !== undefined ? roundTo : 10,
+  }).format(num)
+}
+
+function parseNumericValue(text: string): number | undefined {
+  if (!text.trim()) return undefined
+  const clean = text.replace(/\s/g, "").replace(",", ".")
+  const num = parseFloat(clean)
+  return isNaN(num) ? undefined : num
+}
+
+// ─── NumberWidget ─────────────────────────────────────────────────────────────
+
+function NumberWidget({
+  field,
+  def,
+  hasError = false,
+  name,
+}: {
+  field: ControllerRenderProps<FieldValues, string>
+  def: TsFieldDef
+  hasError?: boolean
+  name: string
+}) {
+  const [displayValue, setDisplayValue] = React.useState<string>(() =>
+    formatNumericValue(field.value as number | undefined, def.roundTo)
+  )
+  const [isFocused, setIsFocused] = React.useState(false)
+
+  const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
+  const readonlyClass = def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
+
+  React.useEffect(() => {
+    if (!isFocused) {
+      setDisplayValue(formatNumericValue(field.value as number | undefined, def.roundTo))
+    }
+  }, [field.value, isFocused, def.roundTo])
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (def.readonly) {
+      e.currentTarget.blur()
+      return
+    }
+    setIsFocused(true)
+    // Remove thousands separators for editing
+    const clean = displayValue.replace(/\s/g, "")
+    setDisplayValue(clean)
+    setTimeout(() => e.currentTarget.select(), 0)
+  }
+
+  const handleBlur = () => {
+    setIsFocused(false)
+    const num = parseNumericValue(displayValue)
+    field.onChange(num)
+    field.onBlur()
+    setDisplayValue(formatNumericValue(num, def.roundTo))
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    // Allow: digits, spaces, minus, comma, dot
+    const clean = val.replace(/[^0-9 .,-]/g, "")
+    setDisplayValue(clean !== val ? clean : val)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      if (def.enterAction) {
+        e.stopPropagation()
+        const num = parseNumericValue(displayValue)
+        field.onChange(num)
+        const event = new CustomEvent("form-key-action", {
+          detail: { key: "Enter", action: def.enterAction, field: name },
+          bubbles: true,
+        })
+        ;(e.currentTarget as HTMLElement).dispatchEvent(event)
+      } else {
+        e.currentTarget.blur()
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault()
+      if (def.escapeAction && def.escapeAction !== "clear") {
+        const event = new CustomEvent("form-key-action", {
+          detail: { key: "Escape", action: def.escapeAction, field: name },
+          bubbles: true,
+        })
+        ;(e.currentTarget as HTMLElement).dispatchEvent(event)
+      } else {
+        setDisplayValue("")
+        field.onChange(undefined)
+        e.currentTarget.blur()
+      }
+    }
+  }
+
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      placeholder={def.placeholder}
+      value={displayValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      disabled={def.disabled}
+      readOnly={def.readonly}
+      tabIndex={def.readonly ? -1 : undefined}
+      className={cn("text-right tabular-nums", errorClass, readonlyClass)}
+    />
+  )
+}
+
+// ─── DateTimeWidget ───────────────────────────────────────────────────────────
+
+function DateTimeWidget({
+  field,
+  def,
+  hasError = false,
+}: {
+  field: ControllerRenderProps<FieldValues, string>
+  def: TsFieldDef
+  hasError?: boolean
+}) {
+  const [open, setOpen] = React.useState(false)
+  const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+  const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+  const timeValue = validDate
+    ? `${String(validDate.getHours()).padStart(2, "0")}:${String(validDate.getMinutes()).padStart(2, "0")}`
+    : ""
+
+  const dateFormat = def.dateFormat || "d.M.yyyy HH:mm"
+  const [inputValue, setInputValue] = React.useState(
+    validDate ? format(validDate, dateFormat, { locale: cs }) : ""
+  )
+
+  const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
+
+  React.useEffect(() => {
+    if (validDate && !open) {
+      setInputValue(format(validDate, dateFormat, { locale: cs }))
+    } else if (!field.value) {
+      setInputValue("")
+    }
+  }, [field.value, dateFormat, open, validDate])
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) {
+      field.onChange(undefined)
+      return
+    }
+    const newDate = new Date(date)
+    if (validDate) {
+      newDate.setHours(validDate.getHours(), validDate.getMinutes(), 0, 0)
+    }
+    field.onChange(newDate)
+  }
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const parts = e.target.value.split(":")
+    const hours = parseInt(parts[0] || "0")
+    const minutes = parseInt(parts[1] || "0")
+    const newDate = validDate ? new Date(validDate) : new Date()
+    newDate.setHours(hours, minutes, 0, 0)
+    field.onChange(newDate)
+  }
+
+  const handleInputBlur = () => {
+    if (!inputValue.trim()) {
+      field.onChange(undefined)
+      return
+    }
+    const parsed = parse(inputValue, dateFormat, new Date(), { locale: cs })
+    if (isValidDate(parsed)) {
+      field.onChange(parsed)
+    } else {
+      setInputValue(validDate ? format(validDate, dateFormat, { locale: cs }) : "")
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={def.readonly || def.disabled ? undefined : setOpen}>
+      <div className="relative">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleInputBlur}
+          placeholder={def.placeholder || dateFormat.toLowerCase()}
+          disabled={def.disabled}
+          readOnly={def.readonly}
+          tabIndex={def.readonly ? -1 : undefined}
+          onFocus={def.readonly ? (e) => e.currentTarget.blur() : undefined}
+          className={cn(
+            "pr-10",
+            errorClass,
+            def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
+          )}
+        />
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "absolute right-0 top-0 h-full w-9 rounded-l-none text-muted-foreground hover:text-foreground",
+              (def.readonly || def.disabled) && "pointer-events-none"
+            )}
+            disabled={def.disabled}
+            type="button"
+          >
+            <CalendarIcon className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full min-w-[300px] p-0" align="start">
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder={`Search ${targetEntity}...`}
-              value={searchValue}
-              onValueChange={setSearchValue}
+      </div>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={validDate}
+          onSelect={handleDateSelect}
+          initialFocus
+          locale={cs}
+        />
+        <div className="border-t p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground w-10">Time</span>
+            <Input
+              type="time"
+              value={timeValue}
+              onChange={handleTimeChange}
+              className="h-8 text-sm"
             />
-            <CommandList>
-              <CommandEmpty>
-                {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
-              </CommandEmpty>
-              <CommandGroup>
-                {filteredItems.map((item) => (
-                  <CommandItem
-                    key={String(item[valueField])}
-                    value={String(item[valueField])}
-                    onSelect={() => toggleItem(item)}
-                  >
-                    <Check
-                      className={cn("mr-2 h-4 w-4", isSelected(item) ? "opacity-100" : "opacity-0")}
-                    />
-                    {getDisplayText(item, displayFields)}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ─── FileUploadWidget ─────────────────────────────────────────────────────────
+
+function FileUploadWidget({
+  field,
+  def,
+  hasError = false,
+}: {
+  field: ControllerRenderProps<FieldValues, string>
+  def: TsFieldDef
+  hasError?: boolean
+}) {
+  const [isDragOver, setIsDragOver] = React.useState(false)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const accept = def.accept || (def.type === "image" ? "image/*" : undefined)
+  const multiple = def.multiple
+
+  const files: File[] = React.useMemo(() => {
+    if (!field.value) return []
+    if (Array.isArray(field.value)) return (field.value as File[]).filter((f) => f instanceof File)
+    if (field.value instanceof File) return [field.value]
+    return []
+  }, [field.value])
+
+  const handleFiles = (fileList: FileList) => {
+    const newFiles = Array.from(fileList)
+    if (multiple) {
+      field.onChange([...files, ...newFiles])
+    } else {
+      field.onChange(newFiles[0])
+    }
+  }
+
+  const removeFile = (index: number) => {
+    if (multiple) {
+      const updated = [...files]
+      updated.splice(index, 1)
+      field.onChange(updated.length > 0 ? updated : undefined)
+    } else {
+      field.onChange(undefined)
+    }
+  }
+
+  const downloadFile = (file: File) => {
+    const url = URL.createObjectURL(file)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = file.name
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  const errorBorderClass = hasError
+    ? "border-destructive"
+    : "border-dashed border-muted-foreground/40"
+  const isInteractive = !def.disabled && !def.readonly
+
+  return (
+    <div className="space-y-2">
+      {/* Drop zone */}
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 text-center transition-colors",
+          errorBorderClass,
+          isInteractive && "cursor-pointer hover:border-primary hover:bg-muted/30",
+          isDragOver && "border-primary bg-primary/5",
+          !isInteractive && "opacity-50"
+        )}
+        onClick={() => isInteractive && inputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault()
+          if (isInteractive) setIsDragOver(true)
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setIsDragOver(false)
+          if (isInteractive && e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files)
+        }}
+      >
+        <CloudUpload className="h-8 w-8 text-muted-foreground" />
+        <div className="text-sm text-muted-foreground">
+          {def.innerLabel ||
+            (multiple ? "Drop files here or click to upload" : "Drop file here or click to upload")}
+        </div>
+        {accept && <div className="text-xs text-muted-foreground/70">{accept}</div>}
+      </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files)
+          e.target.value = ""
+        }}
+      />
+
+      {/* File list */}
+      {files.length > 0 && (
+        <div className="space-y-1">
+          {files.map((file, index) => (
+            <div
+              key={`${file.name}-${index}`}
+              className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm"
+            >
+              <FileTextIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="flex-1 truncate">{file.name}</span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {formatSize(file.size)}
+              </span>
+              <button
+                type="button"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={() => downloadFile(file)}
+                title="Download"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+              {isInteractive && (
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => removeFile(index)}
+                  title="Remove"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── ProcessButtonGroup ───────────────────────────────────────────────────────
+
+function ProcessButtonGroup({
+  field,
+  def,
+}: {
+  field: ControllerRenderProps<FieldValues, string>
+  def: TsFieldDef
+  hasError?: boolean
+}) {
+  const options = (def.options || []).map((opt: TsFieldOptions | string) => {
+    const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
+    const label = typeof opt === "string" ? (opt.split("/")[1] ?? opt.split("/")[0]) : opt.label
+    return { value, label }
+  })
+
+  const ARROW = 12
+
+  const getClipPath = (index: number, total: number): string | undefined => {
+    if (total <= 1) return undefined
+    const first = index === 0
+    const last = index === total - 1
+    if (first)
+      return `polygon(0 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, 0 100%)`
+    if (last) return `polygon(${ARROW}px 0, 100% 0, 100% 100%, ${ARROW}px 100%, 0 50%)`
+    return `polygon(${ARROW}px 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, ${ARROW}px 100%, 0 50%)`
+  }
+
+  return (
+    <div className="flex items-stretch">
+      {options.map((opt, index) => {
+        const isActive = field.value === opt.value
+        const clipPath = getClipPath(index, options.length)
+        const isInteractive = !def.disabled && !def.readonly
+
+        return (
+          <div
+            key={opt.value}
+            className="relative h-9"
+            style={{
+              marginLeft: index > 0 ? `${-(ARROW - 1)}px` : undefined,
+              zIndex: isActive ? options.length + 1 : options.length - index,
+            }}
+          >
+            {/* Border layer - 1px larger, clipped to same shape */}
+            {clipPath && (
+              <div
+                className={cn("absolute", isActive ? "bg-primary" : "bg-border")}
+                style={{ clipPath, inset: "-1px" }}
+              />
+            )}
+            {/* Button */}
+            <button
+              type="button"
+              disabled={def.disabled}
+              onClick={() => {
+                if (isInteractive) field.onChange(opt.value)
+              }}
+              className={cn(
+                "relative h-full px-4 text-sm font-medium transition-colors",
+                clipPath ? "" : "rounded-md border",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : cn("bg-background text-foreground", isInteractive && "hover:bg-accent"),
+                def.disabled && "opacity-50 cursor-not-allowed",
+                def.readonly && "pointer-events-none"
+              )}
+              style={clipPath ? { clipPath } : undefined}
+            >
+              {opt.label}
+            </button>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── DatePickerWidget ─────────────────────────────────────────────────────────
+
+function DatePickerWidget({
+  field,
+  def,
+  hasError = false,
+}: {
+  field: ControllerRenderProps<FieldValues, string>
+  def: TsFieldDef
+  hasError?: boolean
+}) {
+  const [open, setOpen] = React.useState(false)
+  const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+  const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+
+  const dateFormat = def.dateFormat || "d.M.yyyy"
+  const [inputValue, setInputValue] = React.useState(
+    validDate ? format(validDate, dateFormat, { locale: cs }) : ""
+  )
+
+  const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
+
+  React.useEffect(() => {
+    if (validDate && !open) {
+      setInputValue(format(validDate, dateFormat, { locale: cs }))
+    } else if (!field.value) {
+      setInputValue("")
+    }
+  }, [field.value, dateFormat, open, validDate])
+
+  const handleInputBlur = () => {
+    if (!inputValue.trim()) {
+      field.onChange(undefined)
+      return
+    }
+    const parsed = parse(inputValue, dateFormat, new Date(), { locale: cs })
+    if (isValidDate(parsed)) {
+      field.onChange(parsed)
+    } else {
+      // Revert to valid value
+      setInputValue(validDate ? format(validDate, dateFormat, { locale: cs }) : "")
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={def.readonly || def.disabled ? undefined : setOpen}>
+      <div className="relative">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleInputBlur}
+          placeholder={def.placeholder || dateFormat.toLowerCase()}
+          disabled={def.disabled}
+          readOnly={def.readonly}
+          tabIndex={def.readonly ? -1 : undefined}
+          onFocus={(e) => {
+            if (def.readonly) {
+              e.currentTarget.blur()
+              return
+            }
+            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+          }}
+          className={cn(
+            "pr-10",
+            errorClass,
+            def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
+          )}
+        />
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "absolute right-0 top-0 h-full w-9 rounded-l-none text-muted-foreground hover:text-foreground",
+              (def.readonly || def.disabled) && "pointer-events-none"
+            )}
+            disabled={def.disabled}
+            type="button"
+          >
+            <CalendarIcon className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+      </div>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={validDate}
+          onSelect={(date) => {
+            if (date) field.onChange(date)
+            setOpen(false)
+          }}
+          initialFocus
+          locale={cs}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ─── SliderWithTooltip ────────────────────────────────────────────────────────
+
+function SliderWithTooltip({
+  field,
+  def,
+  hasError = false,
+}: {
+  field: ControllerRenderProps<FieldValues, string>
+  def: TsFieldDef
+  hasError?: boolean
+}) {
+  const [showTooltip, setShowTooltip] = React.useState(false)
+  const [localValue, setLocalValue] = React.useState<number>(field.value ?? def.min ?? 0)
+  const readonlyPointerClass = def.readonly ? "pointer-events-none" : ""
+
+  React.useEffect(() => {
+    setLocalValue(field.value ?? def.min ?? 0)
+  }, [field.value, def.min])
+
+  return (
+    <div className={cn("py-4 relative", readonlyPointerClass)}>
+      <Tooltip open={showTooltip}>
+        <TooltipTrigger asChild>
+          <div
+            onPointerDown={() => setShowTooltip(true)}
+            onPointerUp={() => setShowTooltip(false)}
+            onPointerLeave={() => setShowTooltip(false)}
+          >
+            <Slider
+              value={[localValue]}
+              max={def.max || 100}
+              min={def.min || 0}
+              step={def.step || 1}
+              onValueChange={(vals: number[]) => {
+                setLocalValue(vals[0])
+                setShowTooltip(true)
+              }}
+              onValueCommit={(vals: number[]) => {
+                field.onChange(vals[0])
+                setTimeout(() => setShowTooltip(false), 300)
+              }}
+              disabled={def.disabled}
+              className={cn(
+                hasError && "[&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
+              )}
+            />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="px-2 py-1 text-xs">
+          {localValue}
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }

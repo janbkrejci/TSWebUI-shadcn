@@ -22,6 +22,36 @@ const attributes: WidgetAttribute[] = [
     hint: "Height of the textarea in lines",
   },
   {
+    name: "selectAllOnFocus",
+    label: "Select all on focus",
+    type: "boolean",
+    defaultValue: false,
+    hint: "Select all text when the input gets focus",
+  },
+  {
+    name: "enterAction",
+    label: "Enter action",
+    type: "select",
+    defaultValue: "",
+    options: [
+      { label: "None", value: "" },
+      { label: "Focus next field", value: "focus:next" },
+      { label: "Submit form", value: "submit" },
+    ],
+    hint: "Action when Enter is pressed",
+  },
+  {
+    name: "escapeAction",
+    label: "Escape action",
+    type: "select",
+    defaultValue: "clear",
+    options: [
+      { label: "Clear field", value: "clear" },
+      { label: "Focus next field", value: "focus:next" },
+    ],
+    hint: "Action when Escape is pressed",
+  },
+  {
     name: "error",
     label: "Error message",
     type: "string",

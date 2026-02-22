@@ -10,7 +10,7 @@ const attributes: WidgetAttribute[] = [
   {
     name: "content",
     label: "Content",
-    type: "string",
+    type: "textarea",
     defaultValue: "This is important information for the form user.",
     hint: "Text displayed in the infobox",
   },
@@ -22,6 +22,9 @@ const attributes: WidgetAttribute[] = [
     options: [
       { label: "Default (Blue)", value: "default" },
       { label: "Destructive (Red)", value: "destructive" },
+      { label: "Information (Blue)", value: "information" },
+      { label: "Warning (Orange)", value: "warning" },
+      { label: "Success (Green)", value: "success" },
     ],
     hint: "Alert color variant",
   },

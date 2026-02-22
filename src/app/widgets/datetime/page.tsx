@@ -9,6 +9,13 @@ const attributes: WidgetAttribute[] = [
   { name: "label", label: "Label", type: "string", defaultValue: "Appointment" },
   { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
+    name: "dateFormat",
+    label: "Date format",
+    type: "string",
+    defaultValue: "d.M.yyyy HH:mm",
+    hint: "date-fns format string (e.g. d.M.yyyy HH:mm, dd/MM/yyyy HH:mm)",
+  },
+  {
     name: "error",
     label: "Error message",
     type: "string",
@@ -25,7 +32,7 @@ export default function DateTimeWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Date Time"
-      description="Select both date and time using a native datetime-local input. Useful for scheduling appointments, deadlines, etc."
+      description="Select date and time using an editable text input with calendar popup. The value is formatted according to a configurable date-fns format string."
       widgetType="datetime"
       attributes={attributes}
       defaultFieldValue={new Date().toISOString()}

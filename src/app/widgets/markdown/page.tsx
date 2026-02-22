@@ -9,7 +9,7 @@ const attributes: WidgetAttribute[] = [
   {
     name: "content",
     label: "Content",
-    type: "string",
+    type: "textarea",
     defaultValue: `# Level 1 Heading
 
 This is a paragraph with **bold text** and *italics*.
@@ -20,6 +20,17 @@ This is a paragraph with **bold text** and *italics*.
 - Item 2
 - Item 3
 
+### Table
+
+| Column A | Column B | Column C |
+|----------|----------|----------|
+| Value 1  | Value 2  | Value 3  |
+| Value 4  | Value 5  | Value 6  |
+
+### Links
+
+Visit [GitHub](https://github.com) for more information.
+
 ### Code
 
 \`\`\`javascript
@@ -27,7 +38,7 @@ const greeting = "Hello World";
 console.log(greeting);
 \`\`\`
 `,
-    hint: "Markdown formatted text",
+    hint: "Markdown formatted text (supports GFM tables, links, code blocks)",
   },
   { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
