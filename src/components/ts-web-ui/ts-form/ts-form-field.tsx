@@ -54,8 +54,6 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { cn } from "@/lib/utils"
 
@@ -89,7 +87,7 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
             fieldDef.type !== "markdown" && (
               <FormLabel className={cn(hasError && "text-destructive")}>
                 {fieldDef.label}
-                {fieldDef.required && <span className="text-destructive">*</span>}
+                {fieldDef.required && <span className="ml-0.5">*</span>}
               </FormLabel>
             )}
 
@@ -165,6 +163,9 @@ function renderWidget(
             }
             if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
           }}
+          onClick={(e) => {
+            if (def.selectAllOnFocus) e.currentTarget.select()
+          }}
           className={cn(errorClass, readonlyClass)}
         />
       )
@@ -190,6 +191,9 @@ function renderWidget(
             }
             if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
           }}
+          onClick={(e) => {
+            if (def.selectAllOnFocus) e.currentTarget.select()
+          }}
           className={cn("field-sizing-fixed", errorClass, readonlyClass)}
           style={def.rows ? { height: `${def.rows * 1.5 + 1}rem` } : undefined}
         />
@@ -206,7 +210,7 @@ function renderWidget(
           />
           <FormLabel className={cn("font-normal cursor-pointer", hasError && "text-destructive")}>
             {def.label}
-            {def.required && <span className="text-destructive">*</span>}
+            {def.required && <span className="ml-0.5">*</span>}
           </FormLabel>
         </div>
       )
@@ -225,7 +229,7 @@ function renderWidget(
           />
           <FormLabel className={cn("font-normal cursor-pointer", hasError && "text-destructive")}>
             {def.label}
-            {def.required && <span className="text-destructive">*</span>}
+            {def.required && <span className="ml-0.5">*</span>}
           </FormLabel>
         </div>
       )
@@ -265,28 +269,44 @@ function renderWidget(
         return <ProcessButtonGroup field={field} def={def} hasError={hasError} />
       }
       return (
-        <ToggleGroup
-          type="single"
-          value={field.value}
-          onValueChange={field.onChange}
-          disabled={def.disabled}
+        <div
           className={cn(
-            hasError && "[&_button]:border-destructive [&_button[data-state=on]]:bg-destructive",
+            "flex flex-wrap gap-1.5",
+            def.disabled && "opacity-50 pointer-events-none",
             readonlyPointerClass
           )}
         >
           {(def.options || []).map((opt: TsFieldOptions | string) => {
-            // format value/label or object
             const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
             const label = typeof opt === "string" ? opt.split("/").pop() : opt.label
-
+            const optVariant = typeof opt !== "string" ? opt.variant : undefined
+            const isActive = field.value === value
             return (
-              <ToggleGroupItem key={value} value={value} aria-label={label}>
+              <Button
+                key={value}
+                type="button"
+                variant={
+                  isActive
+                    ? ((optVariant || "default") as
+                        | "default"
+                        | "destructive"
+                        | "outline"
+                        | "secondary"
+                        | "ghost"
+                        | "link")
+                    : "outline"
+                }
+                disabled={def.disabled}
+                className={cn(hasError && "border-destructive text-destructive")}
+                onClick={() => {
+                  if (!def.disabled && !def.readonly) field.onChange(value)
+                }}
+              >
                 {label}
-              </ToggleGroupItem>
+              </Button>
             )
           })}
-        </ToggleGroup>
+        </div>
       )
 
     case "slider":
@@ -330,8 +350,9 @@ function renderWidget(
 
     case "infobox": {
       const v = def.variant || "default"
-      const alertVariant = v === "destructive" ? "destructive" : "default"
       const variantClasses: Record<string, string> = {
+        destructive:
+          "border-destructive/50 bg-destructive/10 text-destructive dark:text-red-400 [&>svg]:text-destructive",
         information:
           "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-500",
         warning:
@@ -347,7 +368,7 @@ function renderWidget(
         success: <CheckCircle2 className="h-4 w-4" />,
       }
       return (
-        <Alert variant={alertVariant} className={variantClasses[v] || ""}>
+        <Alert variant="default" className={variantClasses[v] || ""}>
           {iconMap[v] || <Info className="h-4 w-4" />}
           {def.label && <AlertTitle>{def.label}</AlertTitle>}
           <AlertDescription>{(def.value as React.ReactNode) || def.content || ""}</AlertDescription>
@@ -357,7 +378,7 @@ function renderWidget(
 
     case "markdown":
       return (
-        <div className="prose prose-sm dark:prose-invert max-w-none text-sm [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2 [&_a]:text-primary [&_a]:underline">
+        <div className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2">
           <Markdown remarkPlugins={[remarkGfm]}>
             {(def.value as string) || def.content || ""}
           </Markdown>
@@ -448,7 +469,7 @@ function ComboboxWidget({
     return { value, label }
   })
 
-  // Allow custom value if not found
+  // Allow custom value if not found (exact match)
   const showCustom =
     def.allowCustom &&
     searchValue &&
@@ -479,29 +500,30 @@ function ComboboxWidget({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
+        <Command
+          filter={(value, search) =>
+            value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+          }
+        >
           <CommandInput
             placeholder={def.placeholder || "Search..."}
             value={searchValue}
             onValueChange={setSearchValue}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                if (searchValue) {
+                  e.preventDefault()
+                  e.nativeEvent.stopImmediatePropagation()
+                  setSearchValue("")
+                }
+              }
+            }}
           />
           <CommandList>
-            <CommandEmpty>
-              {showCustom ? (
-                <div
-                  className="p-2 cursor-pointer hover:bg-muted text-sm"
-                  onClick={() => {
-                    field.onChange(searchValue)
-                    setOpen(false)
-                  }}
-                >
-                  Use: &quot;{searchValue}&quot;
-                </div>
-              ) : (
-                <span className="italic text-muted-foreground">
-                  {def.notFoundMessage || "Not found."}
-                </span>
-              )}
+            <CommandEmpty className="py-1.5 px-2 text-left">
+              <span className="italic text-muted-foreground text-sm">
+                {def.notFoundMessage || "Not found."}
+              </span>
             </CommandEmpty>
             <CommandGroup>
               {options.map((framework) => (
@@ -513,6 +535,7 @@ function ComboboxWidget({
                       (o) => o.label.toLowerCase() === currentValue.toLowerCase()
                     )
                     field.onChange(original ? original.value : currentValue)
+                    setSearchValue("")
                     setOpen(false)
                   }}
                 >
@@ -525,6 +548,19 @@ function ComboboxWidget({
                   {framework.label}
                 </CommandItem>
               ))}
+              {showCustom && (
+                <CommandItem
+                  value={`\x00custom:${searchValue}`}
+                  onSelect={() => {
+                    field.onChange(searchValue)
+                    setSearchValue("")
+                    setOpen(false)
+                  }}
+                >
+                  <Check className="mr-2 h-4 w-4 opacity-0" />
+                  Use: &quot;{searchValue}&quot;
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -543,6 +579,7 @@ function MultiSelectWidget({
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
+  const [searchValue, setSearchValue] = React.useState("")
   const selectedValues: string[] = Array.isArray(field.value) ? (field.value as string[]) : []
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     const value = typeof opt === "string" ? opt : String(opt.value)
@@ -580,7 +617,8 @@ function MultiSelectWidget({
                   {options.find((o) => o.value === val)?.label || val}
                   <XIcon
                     className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={(e) => {
+                    onPointerDown={(e) => {
+                      e.preventDefault()
                       e.stopPropagation()
                       toggleValue(val)
                     }}
@@ -595,11 +633,28 @@ function MultiSelectWidget({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder={def.placeholder || "Search..."} />
+        <Command
+          filter={(value, search) =>
+            value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+          }
+        >
+          <CommandInput
+            placeholder={def.placeholder || "Search..."}
+            value={searchValue}
+            onValueChange={setSearchValue}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                if (searchValue) {
+                  e.preventDefault()
+                  e.nativeEvent.stopImmediatePropagation()
+                  setSearchValue("")
+                }
+              }
+            }}
+          />
           <CommandList>
-            <CommandEmpty>
-              <span className="italic text-muted-foreground">
+            <CommandEmpty className="py-1.5 px-2 text-left">
+              <span className="italic text-muted-foreground text-sm">
                 {def.notFoundMessage || "Not found."}
               </span>
             </CommandEmpty>
@@ -777,7 +832,8 @@ function RelationshipWidget({
                     {!def.readonly && !def.disabled && (
                       <XIcon
                         className="h-2.5 w-2.5 cursor-pointer shrink-0 hover:text-destructive"
-                        onClick={(e) => {
+                        onPointerDown={(e) => {
+                          e.preventDefault()
                           e.stopPropagation()
                           removeItem(val)
                         }}
@@ -979,26 +1035,40 @@ function DateTimeWidget({
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
-  const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
-  const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
-  const timeValue = validDate
-    ? `${String(validDate.getHours()).padStart(2, "0")}:${String(validDate.getMinutes()).padStart(2, "0")}`
-    : ""
+  const [isFocused, setIsFocused] = React.useState(false)
 
   const dateFormat = def.dateFormat || "d.M.yyyy HH:mm"
-  const [inputValue, setInputValue] = React.useState(
-    validDate ? format(validDate, dateFormat, { locale: cs }) : ""
-  )
+  const [inputValue, setInputValue] = React.useState(() => {
+    const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+    const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+    return validDate ? format(validDate, dateFormat, { locale: cs }) : ""
+  })
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
 
+  // Only sync input from field value when not focused
   React.useEffect(() => {
+    if (isFocused) return
+    const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+    const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
     if (validDate && !open) {
       setInputValue(format(validDate, dateFormat, { locale: cs }))
     } else if (!field.value) {
       setInputValue("")
     }
-  }, [field.value, dateFormat, open, validDate])
+  }, [field.value, dateFormat, open, isFocused])
+
+  const getValidDate = () => {
+    const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+    return dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+  }
+
+  const getTimeValue = () => {
+    const vd = getValidDate()
+    return vd
+      ? `${String(vd.getHours()).padStart(2, "0")}:${String(vd.getMinutes()).padStart(2, "0")}`
+      : ""
+  }
 
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) {
@@ -1006,8 +1076,9 @@ function DateTimeWidget({
       return
     }
     const newDate = new Date(date)
-    if (validDate) {
-      newDate.setHours(validDate.getHours(), validDate.getMinutes(), 0, 0)
+    const vd = getValidDate()
+    if (vd) {
+      newDate.setHours(vd.getHours(), vd.getMinutes(), 0, 0)
     }
     field.onChange(newDate)
   }
@@ -1016,12 +1087,13 @@ function DateTimeWidget({
     const parts = e.target.value.split(":")
     const hours = parseInt(parts[0] || "0")
     const minutes = parseInt(parts[1] || "0")
-    const newDate = validDate ? new Date(validDate) : new Date()
+    const newDate = getValidDate() ? new Date(getValidDate()!) : new Date()
     newDate.setHours(hours, minutes, 0, 0)
     field.onChange(newDate)
   }
 
   const handleInputBlur = () => {
+    setIsFocused(false)
     if (!inputValue.trim()) {
       field.onChange(undefined)
       return
@@ -1030,7 +1102,8 @@ function DateTimeWidget({
     if (isValidDate(parsed)) {
       field.onChange(parsed)
     } else {
-      setInputValue(validDate ? format(validDate, dateFormat, { locale: cs }) : "")
+      const vd = getValidDate()
+      setInputValue(vd ? format(vd, dateFormat, { locale: cs }) : "")
     }
   }
 
@@ -1040,12 +1113,22 @@ function DateTimeWidget({
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onFocus={(e) => {
+            if (def.readonly) {
+              e.currentTarget.blur()
+              return
+            }
+            setIsFocused(true)
+            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+          }}
+          onClick={(e) => {
+            if (def.selectAllOnFocus) e.currentTarget.select()
+          }}
           onBlur={handleInputBlur}
           placeholder={def.placeholder || dateFormat.toLowerCase()}
           disabled={def.disabled}
           readOnly={def.readonly}
           tabIndex={def.readonly ? -1 : undefined}
-          onFocus={def.readonly ? (e) => e.currentTarget.blur() : undefined}
           className={cn(
             "pr-10",
             errorClass,
@@ -1070,7 +1153,7 @@ function DateTimeWidget({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={validDate}
+          selected={getValidDate()}
           onSelect={handleDateSelect}
           initialFocus
           locale={cs}
@@ -1080,7 +1163,7 @@ function DateTimeWidget({
             <span className="text-sm text-muted-foreground w-10">Time</span>
             <Input
               type="time"
-              value={timeValue}
+              value={getTimeValue()}
               onChange={handleTimeChange}
               className="h-8 text-sm"
             />
@@ -1249,7 +1332,8 @@ function ProcessButtonGroup({
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
     const label = typeof opt === "string" ? (opt.split("/")[1] ?? opt.split("/")[0]) : opt.label
-    return { value, label }
+    const variant = typeof opt !== "string" ? opt.variant : undefined
+    return { value, label, variant }
   })
 
   const ARROW = 12
@@ -1264,8 +1348,24 @@ function ProcessButtonGroup({
     return `polygon(${ARROW}px 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, ${ARROW}px 100%, 0 50%)`
   }
 
+  const getActiveBgClass = (variant?: string): string => {
+    switch (variant) {
+      case "success":
+        return "bg-green-600 text-white dark:bg-green-500"
+      case "destructive":
+      case "danger":
+        return "bg-destructive text-destructive-foreground"
+      case "warning":
+        return "bg-amber-500 text-white"
+      case "secondary":
+        return "bg-secondary text-secondary-foreground"
+      default:
+        return "bg-primary text-primary-foreground"
+    }
+  }
+
   return (
-    <div className="flex items-stretch">
+    <div className="flex items-stretch rounded-md overflow-hidden">
       {options.map((opt, index) => {
         const isActive = field.value === opt.value
         const clipPath = getClipPath(index, options.length)
@@ -1277,13 +1377,22 @@ function ProcessButtonGroup({
             className="relative h-9"
             style={{
               marginLeft: index > 0 ? `${-(ARROW - 1)}px` : undefined,
-              zIndex: isActive ? options.length + 1 : options.length - index,
+              // Increasing z-index left→right so each button covers the previous one's right border
+              // Active button always on top
+              zIndex: isActive ? options.length + 1 : index + 1,
             }}
           >
-            {/* Border layer - 1px larger, clipped to same shape */}
-            {clipPath && (
+            {/* Border layer - only for active button to show colored border */}
+            {clipPath && isActive && (
               <div
-                className={cn("absolute", isActive ? "bg-primary" : "bg-border")}
+                className={cn("absolute", getActiveBgClass(opt.variant))}
+                style={{ clipPath, inset: "-1px" }}
+              />
+            )}
+            {/* Inactive border layer */}
+            {clipPath && !isActive && (
+              <div
+                className="absolute bg-border"
                 style={{ clipPath, inset: "-1px" }}
               />
             )}
@@ -1298,7 +1407,7 @@ function ProcessButtonGroup({
                 "relative h-full px-4 text-sm font-medium transition-colors",
                 clipPath ? "" : "rounded-md border",
                 isActive
-                  ? "bg-primary text-primary-foreground"
+                  ? getActiveBgClass(opt.variant)
                   : cn("bg-background text-foreground", isInteractive && "hover:bg-accent"),
                 def.disabled && "opacity-50 cursor-not-allowed",
                 def.readonly && "pointer-events-none"
@@ -1326,25 +1435,31 @@ function DatePickerWidget({
   hasError?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
-  const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
-  const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+  const [isFocused, setIsFocused] = React.useState(false)
 
   const dateFormat = def.dateFormat || "d.M.yyyy"
-  const [inputValue, setInputValue] = React.useState(
-    validDate ? format(validDate, dateFormat, { locale: cs }) : ""
-  )
+  const [inputValue, setInputValue] = React.useState(() => {
+    const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+    const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+    return validDate ? format(validDate, dateFormat, { locale: cs }) : ""
+  })
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
 
+  // Only sync input from field value when not focused
   React.useEffect(() => {
+    if (isFocused) return
+    const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+    const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
     if (validDate && !open) {
       setInputValue(format(validDate, dateFormat, { locale: cs }))
     } else if (!field.value) {
       setInputValue("")
     }
-  }, [field.value, dateFormat, open, validDate])
+  }, [field.value, dateFormat, open, isFocused])
 
   const handleInputBlur = () => {
+    setIsFocused(false)
     if (!inputValue.trim()) {
       field.onChange(undefined)
       return
@@ -1353,7 +1468,9 @@ function DatePickerWidget({
     if (isValidDate(parsed)) {
       field.onChange(parsed)
     } else {
-      // Revert to valid value
+      // Revert to valid value if parsing fails
+      const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
+      const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
       setInputValue(validDate ? format(validDate, dateFormat, { locale: cs }) : "")
     }
   }
@@ -1364,18 +1481,22 @@ function DatePickerWidget({
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onBlur={handleInputBlur}
-          placeholder={def.placeholder || dateFormat.toLowerCase()}
-          disabled={def.disabled}
-          readOnly={def.readonly}
-          tabIndex={def.readonly ? -1 : undefined}
           onFocus={(e) => {
             if (def.readonly) {
               e.currentTarget.blur()
               return
             }
+            setIsFocused(true)
             if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
           }}
+          onClick={(e) => {
+            if (def.selectAllOnFocus) e.currentTarget.select()
+          }}
+          onBlur={handleInputBlur}
+          placeholder={def.placeholder || dateFormat.toLowerCase()}
+          disabled={def.disabled}
+          readOnly={def.readonly}
+          tabIndex={def.readonly ? -1 : undefined}
           className={cn(
             "pr-10",
             errorClass,
@@ -1400,7 +1521,10 @@ function DatePickerWidget({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={validDate}
+          selected={(() => {
+            const dv = field.value ? new Date(field.value as string | number | Date) : undefined
+            return dv && !isNaN(dv.getTime()) ? dv : undefined
+          })()}
           onSelect={(date) => {
             if (date) field.onChange(date)
             setOpen(false)
@@ -1432,39 +1556,40 @@ function SliderWithTooltip({
     setLocalValue(field.value ?? def.min ?? 0)
   }, [field.value, def.min])
 
+  const min = def.min ?? 0
+  const max = def.max ?? 100
+  const percent =
+    max !== min ? Math.min(100, Math.max(0, ((localValue - min) / (max - min)) * 100)) : 0
+
   return (
-    <div className={cn("py-4 relative", readonlyPointerClass)}>
-      <Tooltip open={showTooltip}>
-        <TooltipTrigger asChild>
-          <div
-            onPointerDown={() => setShowTooltip(true)}
-            onPointerUp={() => setShowTooltip(false)}
-            onPointerLeave={() => setShowTooltip(false)}
-          >
-            <Slider
-              value={[localValue]}
-              max={def.max || 100}
-              min={def.min || 0}
-              step={def.step || 1}
-              onValueChange={(vals: number[]) => {
-                setLocalValue(vals[0])
-                setShowTooltip(true)
-              }}
-              onValueCommit={(vals: number[]) => {
-                field.onChange(vals[0])
-                setTimeout(() => setShowTooltip(false), 300)
-              }}
-              disabled={def.disabled}
-              className={cn(
-                hasError && "[&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
-              )}
-            />
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="px-2 py-1 text-xs">
+    <div className={cn("relative py-2", readonlyPointerClass)}>
+      {showTooltip && (
+        <div
+          className="absolute -top-7 -translate-x-1/2 pointer-events-none whitespace-nowrap rounded-md border bg-popover text-popover-foreground px-2 py-0.5 text-xs shadow-md z-50"
+          style={{ left: `${percent}%` }}
+        >
           {localValue}
-        </TooltipContent>
-      </Tooltip>
+        </div>
+      )}
+      <Slider
+        value={[localValue]}
+        max={max}
+        min={min}
+        step={def.step || 1}
+        onValueChange={(vals: number[]) => {
+          setLocalValue(vals[0])
+          setShowTooltip(true)
+        }}
+        onValueCommit={(vals: number[]) => {
+          field.onChange(vals[0])
+          setTimeout(() => setShowTooltip(false), 300)
+        }}
+        onPointerDown={() => setShowTooltip(true)}
+        disabled={def.disabled}
+        className={cn(
+          hasError && "[&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
+        )}
+      />
     </div>
   )
 }

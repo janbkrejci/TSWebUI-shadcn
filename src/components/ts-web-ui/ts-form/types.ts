@@ -28,6 +28,7 @@ export type FieldType =
 export interface TsFieldOptions {
   label: string
   value: string | number | boolean
+  variant?: string
 }
 
 export interface TsFieldDef {
