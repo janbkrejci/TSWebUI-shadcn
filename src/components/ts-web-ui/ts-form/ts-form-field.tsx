@@ -107,9 +107,11 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
 
           {/* Error message has priority over hint */}
           {hasError ? (
-            <p className="text-sm text-destructive">{fieldDef.error}</p>
+            <p className="text-sm text-destructive leading-none">{fieldDef.error}</p>
           ) : (
-            fieldDef.hint && <FormDescription>{fieldDef.hint}</FormDescription>
+            fieldDef.hint && (
+              <FormDescription className="leading-none">{fieldDef.hint}</FormDescription>
+            )
           )}
           <FormMessage />
         </FormItem>
@@ -289,16 +291,18 @@ function renderWidget(
       return (
         <div
           className={cn(
-            "flex flex-wrap gap-1.5",
+            "flex",
             def.disabled && "opacity-50 pointer-events-none",
             readonlyPointerClass
           )}
         >
-          {(def.options || []).map((opt: TsFieldOptions | string) => {
+          {(def.options || []).map((opt: TsFieldOptions | string, index, arr) => {
             const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
             const label = typeof opt === "string" ? opt.split("/").pop() : opt.label
             const optVariant = typeof opt !== "string" ? opt.variant : undefined
             const isActive = field.value === value
+            const isFirst = index === 0
+            const isLast = index === arr.length - 1
             return (
               <Button
                 key={value}
@@ -315,7 +319,14 @@ function renderWidget(
                     : "outline"
                 }
                 disabled={def.disabled}
-                className={cn(hasError && "border-destructive text-destructive")}
+                className={cn(
+                  !isFirst && "-ml-px",
+                  isFirst && !isLast && "rounded-r-none",
+                  isLast && !isFirst && "rounded-l-none",
+                  !isFirst && !isLast && "rounded-none",
+                  isActive && "relative z-10",
+                  hasError && "border-destructive text-destructive"
+                )}
                 onClick={() => {
                   if (!def.disabled && !def.readonly) field.onChange(value)
                 }}
@@ -486,6 +497,7 @@ function ComboboxWidget({
 }) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
+  const preventCloseRef = React.useRef(false)
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     const value = typeof opt === "string" ? opt : String(opt.value)
     const label = typeof opt === "string" ? opt : opt.label
@@ -502,7 +514,16 @@ function ComboboxWidget({
   const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && preventCloseRef.current) {
+          preventCloseRef.current = false
+          return
+        }
+        setOpen(nextOpen)
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -531,12 +552,10 @@ function ComboboxWidget({
             value={searchValue}
             onValueChange={setSearchValue}
             onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                if (searchValue) {
-                  e.preventDefault()
-                  e.nativeEvent.stopImmediatePropagation()
-                  setSearchValue("")
-                }
+              if (e.key === "Escape" && searchValue) {
+                e.preventDefault()
+                preventCloseRef.current = true
+                setSearchValue("")
               }
             }}
           />
@@ -601,6 +620,7 @@ function MultiSelectWidget({
 }) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
+  const preventCloseRef = React.useRef(false)
   const selectedValues: string[] = Array.isArray(field.value) ? (field.value as string[]) : []
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     const value = typeof opt === "string" ? opt : String(opt.value)
@@ -619,7 +639,17 @@ function MultiSelectWidget({
   const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && preventCloseRef.current) {
+          preventCloseRef.current = false
+          return
+        }
+        setOpen(nextOpen)
+      }}
+      modal
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -638,8 +668,8 @@ function MultiSelectWidget({
                   {options.find((o) => o.value === val)?.label || val}
                   <XIcon
                     className="ml-1 h-3 w-3 cursor-pointer"
-                    onPointerDown={(e) => {
-                      e.preventDefault()
+                    onPointerDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
                       e.stopPropagation()
                       toggleValue(val)
                     }}
@@ -662,12 +692,10 @@ function MultiSelectWidget({
             value={searchValue}
             onValueChange={setSearchValue}
             onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                if (searchValue) {
-                  e.preventDefault()
-                  e.nativeEvent.stopImmediatePropagation()
-                  setSearchValue("")
-                }
+              if (e.key === "Escape" && searchValue) {
+                e.preventDefault()
+                preventCloseRef.current = true
+                setSearchValue("")
               }
             }}
           />
@@ -851,8 +879,8 @@ function RelationshipWidget({
                     {!def.readonly && !def.disabled && (
                       <XIcon
                         className="h-2.5 w-2.5 cursor-pointer shrink-0 hover:text-destructive"
-                        onPointerDown={(e) => {
-                          e.preventDefault()
+                        onPointerDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
                           e.stopPropagation()
                           removeItem(val)
                         }}
@@ -1399,10 +1427,11 @@ function ProcessButtonGroup({
             key={opt.value}
             className="relative h-9"
             style={{
-              marginLeft: index > 0 ? `${-(ARROW - 1)}px` : undefined,
-              // Increasing z-index left→right so each button covers the previous one's right border
-              // Active button always on top
-              zIndex: isActive ? options.length + 1 : index + 1,
+              marginLeft: index > 0 ? `-${ARROW}px` : undefined,
+              // Decreasing z-index left→right so each button covers the next one's notch,
+              // resulting in a single clean border at each junction.
+              // Active button always on top.
+              zIndex: isActive ? options.length + 1 : options.length - index,
             }}
           >
             {/* Border layer - only for active button to show colored border */}
@@ -1545,6 +1574,19 @@ function DatePickerWidget({
         <Calendar
           mode="single"
           selected={(() => {
+            // Prefer the typed input value (user may have typed without blurring)
+            const parsed = inputValue.trim()
+              ? parse(inputValue, dateFormat, new Date(), { locale: cs })
+              : undefined
+            if (parsed && isValidDate(parsed)) return parsed
+            const dv = field.value ? new Date(field.value as string | number | Date) : undefined
+            return dv && !isNaN(dv.getTime()) ? dv : undefined
+          })()}
+          defaultMonth={(() => {
+            const parsed = inputValue.trim()
+              ? parse(inputValue, dateFormat, new Date(), { locale: cs })
+              : undefined
+            if (parsed && isValidDate(parsed)) return parsed
             const dv = field.value ? new Date(field.value as string | number | Date) : undefined
             return dv && !isNaN(dv.getTime()) ? dv : undefined
           })()}
