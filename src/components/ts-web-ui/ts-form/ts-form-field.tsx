@@ -1493,6 +1493,16 @@ function DatePickerWidget({
     return validDate ? format(validDate, dateFormat, { locale: cs }) : ""
   })
 
+  // Compute calendar date from inputValue first, then field.value as fallback
+  const calendarDate = React.useMemo(() => {
+    if (inputValue.trim()) {
+      const parsed = parse(inputValue, dateFormat, new Date(), { locale: cs })
+      if (isValidDate(parsed)) return parsed
+    }
+    const dv = field.value ? new Date(field.value as string | number | Date) : undefined
+    return dv && !isNaN(dv.getTime()) ? dv : undefined
+  }, [inputValue, dateFormat, field.value])
+
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
 
   // Only sync input from field value when not focused
@@ -1573,23 +1583,8 @@ function DatePickerWidget({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={(() => {
-            // Prefer the typed input value (user may have typed without blurring)
-            const parsed = inputValue.trim()
-              ? parse(inputValue, dateFormat, new Date(), { locale: cs })
-              : undefined
-            if (parsed && isValidDate(parsed)) return parsed
-            const dv = field.value ? new Date(field.value as string | number | Date) : undefined
-            return dv && !isNaN(dv.getTime()) ? dv : undefined
-          })()}
-          defaultMonth={(() => {
-            const parsed = inputValue.trim()
-              ? parse(inputValue, dateFormat, new Date(), { locale: cs })
-              : undefined
-            if (parsed && isValidDate(parsed)) return parsed
-            const dv = field.value ? new Date(field.value as string | number | Date) : undefined
-            return dv && !isNaN(dv.getTime()) ? dv : undefined
-          })()}
+          selected={calendarDate}
+          defaultMonth={calendarDate}
           onSelect={(date) => {
             if (date) field.onChange(date)
             setOpen(false)
