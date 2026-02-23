@@ -99,8 +99,7 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
             fieldDef.type !== "empty" &&
             fieldDef.type !== "markdown" && (
               <FormLabel className={cn(hasError && "text-destructive")}>
-                {fieldDef.label}
-                {fieldDef.required && <span className="ml-0.5">*</span>}
+                {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
               </FormLabel>
             )}
 
@@ -176,7 +175,10 @@ function renderWidget(
               e.currentTarget.blur()
               return
             }
-            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+            if (def.selectAllOnFocus) {
+              const el = e.currentTarget
+              setTimeout(() => el.select(), 0)
+            }
           }}
           onClick={(e) => {
             if (def.selectAllOnFocus) e.currentTarget.select()
@@ -204,7 +206,10 @@ function renderWidget(
               e.currentTarget.blur()
               return
             }
-            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+            if (def.selectAllOnFocus) {
+              const el = e.currentTarget
+              setTimeout(() => el.select(), 0)
+            }
           }}
           onClick={(e) => {
             if (def.selectAllOnFocus) e.currentTarget.select()
@@ -224,8 +229,7 @@ function renderWidget(
             className={cn(hasError && "border-destructive data-[state=checked]:bg-destructive")}
           />
           <FormLabel className={cn("font-normal cursor-pointer", hasError && "text-destructive")}>
-            {def.label}
-            {def.required && <span className="ml-0.5">*</span>}
+            {def.required ? `${def.label} *` : def.label}
           </FormLabel>
         </div>
       )
@@ -243,8 +247,7 @@ function renderWidget(
             )}
           />
           <FormLabel className={cn("font-normal cursor-pointer", hasError && "text-destructive")}>
-            {def.label}
-            {def.required && <span className="ml-0.5">*</span>}
+            {def.required ? `${def.label} *` : def.label}
           </FormLabel>
         </div>
       )
@@ -302,7 +305,13 @@ function renderWidget(
                 type="button"
                 variant={
                   isActive
-                    ? ((optVariant as TsButtonVariant) ?? "default") as "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+                    ? (((optVariant as TsButtonVariant) ?? "default") as
+                        | "default"
+                        | "destructive"
+                        | "outline"
+                        | "secondary"
+                        | "ghost"
+                        | "link")
                     : "outline"
                 }
                 disabled={def.disabled}
@@ -515,9 +524,7 @@ function ComboboxWidget({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command
-          filter={(value, search) =>
-            value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-          }
+          filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
         >
           <CommandInput
             placeholder={def.placeholder || "Search..."}
@@ -648,9 +655,7 @@ function MultiSelectWidget({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command
-          filter={(value, search) =>
-            value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-          }
+          filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
         >
           <CommandInput
             placeholder={def.placeholder || "Search..."}
@@ -970,7 +975,8 @@ function NumberWidget({
     // Remove thousands separators for editing
     const clean = displayValue.replace(/\s/g, "")
     setDisplayValue(clean)
-    setTimeout(() => e.currentTarget.select(), 0)
+    const el = e.currentTarget
+    setTimeout(() => el.select(), 0)
   }
 
   const handleBlur = () => {
@@ -1133,7 +1139,10 @@ function DateTimeWidget({
               return
             }
             setIsFocused(true)
-            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+            if (def.selectAllOnFocus) {
+              const el = e.currentTarget
+              setTimeout(() => el.select(), 0)
+            }
           }}
           onClick={(e) => {
             if (def.selectAllOnFocus) e.currentTarget.select()
@@ -1405,10 +1414,7 @@ function ProcessButtonGroup({
             )}
             {/* Inactive border layer */}
             {clipPath && !isActive && (
-              <div
-                className="absolute bg-border"
-                style={{ clipPath, inset: "-1px" }}
-              />
+              <div className="absolute bg-border" style={{ clipPath, inset: "-1px" }} />
             )}
             {/* Button */}
             <button
@@ -1501,7 +1507,10 @@ function DatePickerWidget({
               return
             }
             setIsFocused(true)
-            if (def.selectAllOnFocus) setTimeout(() => e.currentTarget.select(), 0)
+            if (def.selectAllOnFocus) {
+              const el = e.currentTarget
+              setTimeout(() => el.select(), 0)
+            }
           }}
           onClick={(e) => {
             if (def.selectAllOnFocus) e.currentTarget.select()
