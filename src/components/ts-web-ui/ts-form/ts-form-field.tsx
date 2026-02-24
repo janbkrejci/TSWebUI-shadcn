@@ -261,7 +261,7 @@ function renderWidget(
           defaultValue={field.value}
           disabled={def.disabled}
           className={cn(
-            "flex flex-col space-y-1",
+            "flex flex-col gap-2",
             hasError && "[&_button]:border-destructive",
             readonlyPointerClass
           )}
