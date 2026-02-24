@@ -1055,7 +1055,7 @@ function evaluateMathExpression(expression: string): number | undefined {
     // Replace ^ with **
     expr = expr.replace(/\\^/g, "**")
     // Validate characters: only numbers, operators, brackets and spaces
-    if (/[^0-9.+\\-*/^() ]/.test(expr)) return undefined
+    if (/[^0-9.+*/^() -]/.test(expr)) return undefined
 
     // Use Function constructor for evaluation
     const result = new Function(`return ${expr}`)()
@@ -1083,7 +1083,7 @@ function parseNumericValue(text: string): number | undefined {
   if (!text.trim()) return undefined
 
   // If it contains math operators, try to evaluate it
-  if (/[+\\-*/^()]/.test(text)) {
+  if (/[+*/^() -]/.test(text)) {
     return evaluateMathExpression(text)
   }
 
@@ -1143,7 +1143,7 @@ function NumberWidget({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     // Allow: digits, spaces, minus, comma, dot, and math operators
-    const clean = val.replace(/[^0-9 .,+\\-*/^()]/g, "")
+    const clean = val.replace(/[^0-9 .,+*/^()-]/g, "")
     setDisplayValue(clean !== val ? clean : val)
   }
 
