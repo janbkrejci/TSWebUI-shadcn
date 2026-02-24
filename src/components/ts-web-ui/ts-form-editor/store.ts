@@ -6,7 +6,7 @@
  */
 import { create } from "zustand"
 
-import { TsFieldDef, TsFormButton } from "../ts-form/types"
+import { TsFieldDef, TsFieldUpdate, TsFormButton } from "../ts-form/types"
 import { EditorFormDefinition, EditorRow, EditorRowItem, EditorSelection, EditorTab } from "./types"
 
 // ============================================================================
@@ -48,40 +48,59 @@ const getDefaultLabel = (type: TsFieldDef["type"]): string => {
 
 /** Creates a default field definition based on type */
 const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
-  const base: TsFieldDef = {
-    type,
-    label: getDefaultLabel(type),
-  }
+  const label = getDefaultLabel(type)
+  const defaultOptions = [
+    { label: "Option 1", value: "option1" },
+    { label: "Option 2", value: "option2" },
+  ]
 
   switch (type) {
-    case "number":
-      return { ...base, step: 1 }
-    case "slider":
-      return { ...base, min: 0, max: 100, step: 1 }
+    case "text":
+    case "password":
+      return { type, label }
     case "textarea":
-      return { ...base, rows: 3 }
+      return { type, label, rows: 3 }
+    case "number":
+      return { type, label, step: 1 }
+    case "slider":
+      return { type, label, min: 0, max: 100, step: 1 }
     case "select":
+      return { type, label, options: defaultOptions }
     case "multiselect":
+      return { type, label, options: defaultOptions }
     case "radio":
+      return { type, label, options: defaultOptions }
     case "combobox":
+      return { type, label, options: defaultOptions }
     case "button-group":
-      return {
-        ...base,
-        options: [
-          { label: "Option 1", value: "option1" },
-          { label: "Option 2", value: "option2" },
-        ],
-      }
+      return { type, label, options: defaultOptions }
+    case "checkbox":
+      return { type, label }
+    case "switch":
+      return { type, label }
+    case "date":
+      return { type, label }
+    case "datetime":
+      return { type, label }
+    case "file":
+    case "image":
+      return { type, label }
     case "infobox":
-      return { ...base, content: "Information text", variant: "default" }
+      return { type, label, content: "Information text", variant: "default" }
     case "markdown":
-      return { ...base, content: "**Markdown** content" }
+      return { type, label, content: "**Markdown** content" }
     case "separator":
-      return { ...base, label: "Section" }
+      return { type, label: "Section" }
     case "button":
-      return { ...base, variant: "default", label: "Button" }
+      return { type, label: "Button", variant: "default" }
+    case "table":
+      return { type, label }
+    case "relationship":
+      return { type, label }
+    case "empty":
+      return { type }
     default:
-      return base
+      return { type, label }
   }
 }
 
@@ -154,7 +173,7 @@ export interface FormEditorState {
     itemIndex: number
   ) => void
   removeField: (fieldName: string) => void
-  updateFieldConfig: (fieldName: string, config: Partial<TsFieldDef>) => void
+  updateFieldConfig: (fieldName: string, config: TsFieldUpdate) => void
   moveField: (
     fromTab: number,
     fromRow: number,
@@ -520,7 +539,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     }
   },
 
-  updateFieldConfig: (fieldName: string, config: Partial<TsFieldDef>) => {
+  updateFieldConfig: (fieldName: string, config: TsFieldUpdate) => {
     const { form, saveToHistory } = get()
     saveToHistory()
 
@@ -529,7 +548,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
         ...form,
         fields: {
           ...form.fields,
-          [fieldName]: { ...form.fields[fieldName], ...config },
+          [fieldName]: { ...form.fields[fieldName], ...config } as TsFieldDef,
         },
       },
     })

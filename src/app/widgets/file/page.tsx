@@ -9,6 +9,13 @@ const attributes: WidgetAttribute[] = [
   { name: "label", label: "Label", type: "string", defaultValue: "Attachments" },
   { name: "hint", label: "Hint", type: "string", defaultValue: "Maximum size 10MB" },
   {
+    name: "innerLabel",
+    label: "Drop zone text",
+    type: "string",
+    defaultValue: "",
+    hint: "Text shown inside the drop zone (leave empty for default)",
+  },
+  {
     name: "accept",
     label: "Allowed file types",
     type: "string",

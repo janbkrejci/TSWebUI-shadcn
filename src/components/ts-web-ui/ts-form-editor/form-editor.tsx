@@ -60,7 +60,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 import { TsForm } from "../ts-form"
-import { TsFieldDef, TsFormButton } from "../ts-form/types"
+import { TsFieldDef, TsFieldUpdate, TsFormButton, TsInfoboxVariant } from "../ts-form/types"
 import { useFormEditorStore } from "./store"
 import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./types"
 
@@ -801,9 +801,12 @@ function FieldPropertiesPanel({
 }: {
   fieldName: string
   config: TsFieldDef
-  onUpdate: (config: Partial<TsFieldDef>) => void
+  onUpdate: (config: TsFieldUpdate) => void
   onDelete: () => void
 }) {
+  // Cast to TsFieldUpdate for reading optional properties that not every field type carries
+  // (e.g. placeholder on checkbox). Type-specific properties are accessed via narrowed config below.
+  const configProps = config as TsFieldUpdate
   return (
     <div className="space-y-4">
       {/* Basic info */}
@@ -829,7 +832,7 @@ function FieldPropertiesPanel({
         <div className="space-y-2">
           <Label>Placeholder</Label>
           <Input
-            value={config.placeholder || ""}
+            value={configProps.placeholder || ""}
             onChange={(e) => onUpdate({ placeholder: e.target.value })}
           />
         </div>
@@ -981,7 +984,7 @@ function FieldPropertiesPanel({
           <Label>Variant</Label>
           <Select
             value={config.variant || "default"}
-            onValueChange={(v: string) => onUpdate({ variant: v })}
+            onValueChange={(v) => onUpdate({ variant: v as TsInfoboxVariant })}
           >
             <SelectTrigger>
               <SelectValue />

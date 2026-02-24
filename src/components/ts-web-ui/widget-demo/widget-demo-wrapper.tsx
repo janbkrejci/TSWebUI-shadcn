@@ -154,10 +154,10 @@ export function WidgetDemoWrapper({
    * Builds the field definition from current attributes
    */
   const buildFieldDef = (): TsFieldDef => {
-    const def: TsFieldDef = {
+    const def = {
       type: widgetType,
       ...additionalFieldProps,
-    }
+    } as TsFieldDef
 
     // Add all non-null attributes
     Object.entries(attrValues).forEach(([key, value]) => {
