@@ -534,6 +534,7 @@ function ComboboxWidget({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-controls={`popover-content-${name}`}
           className={cn(
             "w-full justify-between hover:bg-background dark:hover:bg-input/30",
             errorClass,
@@ -549,6 +550,7 @@ function ComboboxWidget({
         </Button>
       </PopoverTrigger>
       <PopoverContent
+        id={`popover-content-${name}`}
         className="w-full p-0"
         onOpenAutoFocus={(e) => {
           e.preventDefault()
@@ -654,6 +656,7 @@ function MultiSelectWidget({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls={`popover-content-${name}`}
           tabIndex={def.disabled || def.readonly ? -1 : 0}
           onClick={() => {
             if (!def.disabled && !def.readonly) setOpen((v) => !v)
@@ -708,6 +711,7 @@ function MultiSelectWidget({
         </div>
       </PopoverAnchor>
       <PopoverContent
+        id={`popover-content-${name}`}
         className="w-full p-0"
         onOpenAutoFocus={(e) => {
           e.preventDefault()
@@ -882,6 +886,7 @@ function RelationshipWidget({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls={`popover-content-${name}`}
           tabIndex={def.disabled || def.readonly ? -1 : 0}
           onClick={() => {
             if (!def.disabled && !def.readonly) setOpen((v) => !v)
