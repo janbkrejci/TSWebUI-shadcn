@@ -1752,6 +1752,8 @@ function SliderWithTooltip({
           setTimeout(() => setShowTooltip(false), 300)
         }}
         onPointerDown={() => setShowTooltip(true)}
+        onPointerEnter={() => setShowTooltip(true)}
+        onPointerLeave={() => setShowTooltip(false)}
         disabled={def.disabled}
         className={cn(
           hasError && "[&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
