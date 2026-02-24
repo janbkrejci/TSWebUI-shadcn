@@ -50,4 +50,69 @@ describe("TsForm", () => {
     // The actual message is "This field is required" in our schema
     expect(await screen.findByText(/This field is required/i)).toBeInTheDocument()
   })
+
+  it("renders and handles button-group", async () => {
+    const onSubmit = vi.fn()
+    const bgFields: Record<string, TsFieldDef> = {
+      status: {
+        type: "button-group",
+        label: "Status",
+        options: ["open/true/default/Open", "closed/true/secondary/Closed"],
+      },
+    }
+    const bgLayout: TsFormLayout = { rows: [[{ field: "status" }]] }
+
+    render(
+      <TsForm
+        layout={bgLayout}
+        fields={bgFields}
+        buttons={buttons}
+        onSubmit={onSubmit}
+        values={{ status: "open" }}
+      />
+    )
+
+    expect(screen.getByText("Open")).toBeInTheDocument()
+    expect(screen.getByText("Closed")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Closed"))
+    fireEvent.click(screen.getByRole("button", { name: /Submit/i }))
+
+    await vi.waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ status: "closed" }), "submit")
+    })
+  })
+
+  it("renders and handles ProcessButtonGroup", async () => {
+    const onSubmit = vi.fn()
+    const procFields: Record<string, TsFieldDef> = {
+      step: {
+        type: "button-group",
+        variant: "process",
+        label: "Step",
+        options: ["1/true/primary/Step 1", "2/true/success/Step 2"],
+      },
+    }
+    const procLayout: TsFormLayout = { rows: [[{ field: "step" }]] }
+
+    render(
+      <TsForm
+        layout={procLayout}
+        fields={procFields}
+        buttons={buttons}
+        onSubmit={onSubmit}
+        values={{ step: "1" }}
+      />
+    )
+
+    expect(screen.getByText("Step 1")).toBeInTheDocument()
+    expect(screen.getByText("Step 2")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Step 2"))
+    fireEvent.click(screen.getByRole("button", { name: /Submit/i }))
+
+    await vi.waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ step: "2" }), "submit")
+    })
+  })
 })

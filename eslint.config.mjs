@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "reference-tswebui/**",
+    "reference-ruian/**",
+    "public/registry/**",
     "coverage/**",
   ]),
 ]);
