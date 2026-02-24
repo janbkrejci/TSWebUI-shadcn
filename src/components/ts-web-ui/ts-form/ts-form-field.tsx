@@ -42,7 +42,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
@@ -497,7 +497,6 @@ function ComboboxWidget({
 }) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
-  const preventCloseRef = React.useRef(false)
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     const value = typeof opt === "string" ? opt : String(opt.value)
     const label = typeof opt === "string" ? opt : opt.label
@@ -514,16 +513,7 @@ function ComboboxWidget({
   const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen && preventCloseRef.current) {
-          preventCloseRef.current = false
-          return
-        }
-        setOpen(nextOpen)
-      }}
-    >
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -543,7 +533,19 @@ function ComboboxWidget({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent
+        className="w-full p-0"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault()
+          ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()
+        }}
+        onEscapeKeyDown={(e) => {
+          if (searchValue) {
+            e.preventDefault()
+            setSearchValue("")
+          }
+        }}
+      >
         <Command
           filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
         >
@@ -551,13 +553,6 @@ function ComboboxWidget({
             placeholder={def.placeholder || "Search..."}
             value={searchValue}
             onValueChange={setSearchValue}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && searchValue) {
-                e.preventDefault()
-                preventCloseRef.current = true
-                setSearchValue("")
-              }
-            }}
           />
           <CommandList>
             <CommandEmpty className="py-1.5 px-2 text-left">
@@ -620,7 +615,6 @@ function MultiSelectWidget({
 }) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
-  const preventCloseRef = React.useRef(false)
   const selectedValues: string[] = Array.isArray(field.value) ? (field.value as string[]) : []
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     const value = typeof opt === "string" ? opt : String(opt.value)
@@ -636,30 +630,33 @@ function MultiSelectWidget({
   }
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-  const readonlyClass = def.readonly ? "pointer-events-none" : ""
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen && preventCloseRef.current) {
-          preventCloseRef.current = false
-          return
-        }
-        setOpen(nextOpen)
-      }}
-      modal
-    >
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+    <Popover open={open} onOpenChange={setOpen} modal>
+      {/* Use PopoverAnchor so the container div has no Radix click listener —
+          X badge clicks can stopPropagation in React without being overridden */}
+      <PopoverAnchor asChild>
+        <div
           role="combobox"
+          aria-expanded={open}
+          tabIndex={def.disabled || def.readonly ? -1 : 0}
+          onClick={() => {
+            if (!def.disabled && !def.readonly) setOpen((v) => !v)
+          }}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && !def.disabled && !def.readonly) {
+              e.preventDefault()
+              setOpen((v) => !v)
+            }
+          }}
           className={cn(
-            "w-full justify-between h-auto min-h-[40px] hover:bg-background dark:hover:bg-input/30",
+            "flex min-h-[40px] w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
+            "hover:bg-accent dark:hover:bg-input/30",
+            "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
             errorClass,
-            readonlyClass
+            def.disabled && "opacity-50 pointer-events-none",
+            def.readonly && "pointer-events-none"
           )}
-          disabled={def.disabled}
         >
           <div className="flex flex-wrap gap-1">
             {selectedValues.length > 0 ? (
@@ -668,7 +665,6 @@ function MultiSelectWidget({
                   {options.find((o) => o.value === val)?.label || val}
                   <XIcon
                     className="ml-1 h-3 w-3 cursor-pointer"
-                    onPointerDown={(e) => e.preventDefault()}
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleValue(val)
@@ -681,9 +677,21 @@ function MultiSelectWidget({
             )}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+        </div>
+      </PopoverAnchor>
+      <PopoverContent
+        className="w-full p-0"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault()
+          ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()
+        }}
+        onEscapeKeyDown={(e) => {
+          if (searchValue) {
+            e.preventDefault()
+            setSearchValue("")
+          }
+        }}
+      >
         <Command
           filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
         >
@@ -691,13 +699,6 @@ function MultiSelectWidget({
             placeholder={def.placeholder || "Search..."}
             value={searchValue}
             onValueChange={setSearchValue}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && searchValue) {
-                e.preventDefault()
-                preventCloseRef.current = true
-                setSearchValue("")
-              }
-            }}
           />
           <CommandList>
             <CommandEmpty className="py-1.5 px-2 text-left">
@@ -846,11 +847,23 @@ function RelationshipWidget({
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal>
-      <PopoverTrigger asChild>
+      {/* Use PopoverAnchor so the container div has no Radix click listener —
+          X badge clicks can stopPropagation in React without being overridden */}
+      <PopoverAnchor asChild>
         {/* Input-like container with chips inside */}
         <div
-          role="button"
-          tabIndex={readonlyClass ? -1 : 0}
+          role="combobox"
+          aria-expanded={open}
+          tabIndex={def.disabled || def.readonly ? -1 : 0}
+          onClick={() => {
+            if (!def.disabled && !def.readonly) setOpen((v) => !v)
+          }}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && !def.disabled && !def.readonly) {
+              e.preventDefault()
+              setOpen((v) => !v)
+            }
+          }}
           className={cn(
             "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-1 text-sm shadow-xs cursor-pointer",
             "dark:bg-input/30 transition-[color,box-shadow]",
@@ -879,7 +892,6 @@ function RelationshipWidget({
                     {!def.readonly && !def.disabled && (
                       <XIcon
                         className="h-2.5 w-2.5 cursor-pointer shrink-0 hover:text-destructive"
-                        onPointerDown={(e) => e.preventDefault()}
                         onClick={(e) => {
                           e.stopPropagation()
                           removeItem(val)
@@ -912,8 +924,21 @@ function RelationshipWidget({
             <ChevronsUpDown className="h-4 w-4 text-muted-foreground opacity-50" />
           </div>
         </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto min-w-75 p-0" align="start">
+      </PopoverAnchor>
+      <PopoverContent
+        className="w-auto min-w-75 p-0"
+        align="start"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault()
+          ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()
+        }}
+        onEscapeKeyDown={(e) => {
+          if (searchValue) {
+            e.preventDefault()
+            setSearchValue("")
+          }
+        }}
+      >
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={`Search ${targetEntity}...`}
@@ -1428,22 +1453,26 @@ function ProcessButtonGroup({
             className="relative h-9"
             style={{
               marginLeft: index > 0 ? `-${ARROW}px` : undefined,
-              // Decreasing z-index left→right so each button covers the next one's notch,
-              // resulting in a single clean border at each junction.
+              // Decreasing z-index left→right: each button's right-arrow border
+              // (1px extension) is visible above the next button's content.
               // Active button always on top.
               zIndex: isActive ? options.length + 1 : options.length - index,
             }}
           >
-            {/* Border layer - only for active button to show colored border */}
+            {/* Border layer — non-first buttons: no left expansion (inset-left=0)
+                so only the left button's right-arrow border shows at each junction,
+                eliminating the double-border artifact. */}
             {clipPath && isActive && (
               <div
                 className={cn("absolute", getActiveBgClass(opt.variant))}
-                style={{ clipPath, inset: "-1px" }}
+                style={{ clipPath, inset: index === 0 ? "-1px" : "-1px -1px -1px 0" }}
               />
             )}
-            {/* Inactive border layer */}
             {clipPath && !isActive && (
-              <div className="absolute bg-border" style={{ clipPath, inset: "-1px" }} />
+              <div
+                className="absolute bg-border"
+                style={{ clipPath, inset: index === 0 ? "-1px" : "-1px -1px -1px 0" }}
+              />
             )}
             {/* Button */}
             <button
