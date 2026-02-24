@@ -663,13 +663,26 @@ function MultiSelectWidget({
               selectedValues.map((val) => (
                 <Badge key={val} variant="secondary" className="mr-1">
                   {options.find((o) => o.value === val)?.label || val}
-                  <XIcon
-                    className="ml-1 h-3 w-3 cursor-pointer"
+                  {/* Badge applies [&>svg]:pointer-events-none to direct SVG children,
+                      so wrap XIcon in a span to keep onClick functional */}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="ml-1 inline-flex cursor-pointer items-center hover:text-destructive"
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleValue(val)
                     }}
-                  />
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        toggleValue(val)
+                      }
+                    }}
+                  >
+                    <XIcon className="h-3 w-3" />
+                  </span>
                 </Badge>
               ))
             ) : (
@@ -890,13 +903,26 @@ function RelationshipWidget({
                   >
                     <span className="truncate">{getDisplayText(val, chipDisplayFields)}</span>
                     {!def.readonly && !def.disabled && (
-                      <XIcon
-                        className="h-2.5 w-2.5 cursor-pointer shrink-0 hover:text-destructive"
+                      /* Badge applies [&>svg]:pointer-events-none to direct SVG children;
+                         wrap in span so onClick fires */
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="inline-flex cursor-pointer shrink-0 items-center hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation()
                           removeItem(val)
                         }}
-                      />
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            removeItem(val)
+                          }
+                        }}
+                      >
+                        <XIcon className="h-2.5 w-2.5" />
+                      </span>
                     )}
                   </Badge>
                 ))}
@@ -1453,10 +1479,11 @@ function ProcessButtonGroup({
             className="relative h-9"
             style={{
               marginLeft: index > 0 ? `-${ARROW}px` : undefined,
-              // Decreasing z-index left→right: each button's right-arrow border
-              // (1px extension) is visible above the next button's content.
-              // Active button always on top.
-              zIndex: isActive ? options.length + 1 : options.length - index,
+              // Strictly decreasing z-index left→right ensures each button's
+              // 1px right-border extension is always painted above the next
+              // button's content — giving a single clean junction line even
+              // when the active button is not at index 0.
+              zIndex: options.length - index,
             }}
           >
             {/* Border layer — non-first buttons: no left expansion (inset-left=0)
