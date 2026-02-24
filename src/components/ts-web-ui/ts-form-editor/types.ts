@@ -1,7 +1,28 @@
-/**
- * Types for Form Editor
- * Defines the structure of the form, fields, and layout
- */
+import {
+  AlignLeft,
+  Calendar,
+  CalendarClock,
+  CheckSquare,
+  ChevronDown,
+  CircleDot,
+  FileText,
+  Hash,
+  Image,
+  Info,
+  KeyRound,
+  Link2,
+  List,
+  Minus,
+  MousePointerClick,
+  Search,
+  SlidersHorizontal,
+  TableProperties,
+  ToggleLeft,
+  ToggleRight,
+  Type,
+  Upload,
+} from "lucide-react"
+
 import { TsFieldDef, TsFormButton } from "../ts-form/types"
 
 /**
@@ -90,40 +111,45 @@ export interface EditorSelection {
 /**
  * Available field types for adding to the form
  */
-export const AVAILABLE_FIELD_TYPES: { type: TsFieldDef["type"]; label: string; group: string }[] = [
+export const AVAILABLE_FIELD_TYPES: {
+  type: TsFieldDef["type"]
+  label: string
+  group: string
+  icon: React.ElementType
+}[] = [
   // Text inputs
-  { type: "text", label: "Text", group: "Text" },
-  { type: "textarea", label: "Textarea", group: "Text" },
-  { type: "password", label: "Password", group: "Text" },
-  { type: "number", label: "Number", group: "Text" },
+  { type: "text", label: "Text", group: "Text", icon: Type },
+  { type: "textarea", label: "Textarea", group: "Text", icon: AlignLeft },
+  { type: "password", label: "Password", group: "Text", icon: KeyRound },
+  { type: "number", label: "Number", group: "Text", icon: Hash },
 
   // Selection
-  { type: "select", label: "Select", group: "Selection" },
-  { type: "multiselect", label: "Multi Select", group: "Selection" },
-  { type: "combobox", label: "Combobox", group: "Selection" },
-  { type: "radio", label: "Radio", group: "Selection" },
-  { type: "checkbox", label: "Checkbox", group: "Selection" },
-  { type: "switch", label: "Switch", group: "Selection" },
-  { type: "button-group", label: "Button Group", group: "Selection" },
+  { type: "select", label: "Select", group: "Selection", icon: ChevronDown },
+  { type: "multiselect", label: "Multi Select", group: "Selection", icon: List },
+  { type: "combobox", label: "Combobox", group: "Selection", icon: Search },
+  { type: "radio", label: "Radio", group: "Selection", icon: CircleDot },
+  { type: "checkbox", label: "Checkbox", group: "Selection", icon: CheckSquare },
+  { type: "switch", label: "Switch", group: "Selection", icon: ToggleLeft },
+  { type: "button-group", label: "Button Group", group: "Selection", icon: ToggleRight },
 
   // Date
-  { type: "date", label: "Date", group: "Date" },
-  { type: "datetime", label: "Date and Time", group: "Date" },
+  { type: "date", label: "Date", group: "Date", icon: Calendar },
+  { type: "datetime", label: "Date and Time", group: "Date", icon: CalendarClock },
 
   // Other inputs
-  { type: "slider", label: "Slider", group: "Others" },
-  { type: "file", label: "File", group: "Others" },
-  { type: "image", label: "Image", group: "Others" },
-  { type: "relationship", label: "Relationship", group: "Others" },
+  { type: "slider", label: "Slider", group: "Others", icon: SlidersHorizontal },
+  { type: "file", label: "File", group: "Others", icon: Upload },
+  { type: "image", label: "Image", group: "Others", icon: Image },
+  { type: "relationship", label: "Relationship", group: "Others", icon: Link2 },
 
   // Layout and display
-  { type: "separator", label: "Separator", group: "Layout" },
-  { type: "infobox", label: "Info Box", group: "Layout" },
-  { type: "markdown", label: "Markdown", group: "Layout" },
-  { type: "button", label: "Button", group: "Layout" },
+  { type: "separator", label: "Separator", group: "Layout", icon: Minus },
+  { type: "infobox", label: "Info Box", group: "Layout", icon: Info },
+  { type: "markdown", label: "Markdown", group: "Layout", icon: FileText },
+  { type: "button", label: "Button", group: "Layout", icon: MousePointerClick },
 
   // Complex
-  { type: "table", label: "Table", group: "Complex" },
+  { type: "table", label: "Table", group: "Complex", icon: TableProperties },
 ]
 
 /**

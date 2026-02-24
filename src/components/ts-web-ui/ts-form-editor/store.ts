@@ -158,7 +158,7 @@ export interface FormEditorState {
   // Rows
   addRow: (tabIndex: number, afterRowIndex?: number) => void
   removeRow: (tabIndex: number, rowIndex: number) => void
-  moveRow: (tabIndex: number, fromIndex: number, toIndex: number) => void
+  reorderRows: (tabIndex: number, fromIndex: number, toIndex: number) => void
 
   // Columns (grid)
   addColumnToRow: (tabIndex: number, rowIndex: number) => void
@@ -558,19 +558,69 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     const { form, saveToHistory } = get()
     saveToHistory()
 
-    // Get source and target rows
-    const getRow = (tabIdx: number, rowIdx: number): EditorRow | undefined => {
-      if (form.mode === "single") return form.rows?.[rowIdx]
-      return form.tabs?.[tabIdx]?.rows[rowIdx]
+    const newForm = JSON.parse(JSON.stringify(form)) as EditorFormDefinition
+
+    // Get source item
+    const sourceRows = newForm.mode === "single" ? newForm.rows : newForm.tabs?.[fromTab]?.rows
+    if (!sourceRows) return
+
+    const sourceItem = sourceRows[fromRow].items[fromItem]
+    const fieldName = sourceItem.field
+    const fieldType = sourceItem.type
+
+    // Remove from source (make it empty)
+    sourceRows[fromRow].items[fromItem] = {
+      id: generateId(),
+      field: "",
+      type: "empty",
+      width: sourceItem.width,
     }
 
-    const sourceRow = getRow(fromTab, fromRow)
-    const targetRow = getRow(toTab, toRow)
+    // Find first empty slot in target row or append
+    const targetRows = newForm.mode === "single" ? newForm.rows : newForm.tabs?.[toTab]?.rows
+    if (!targetRows) return
 
-    if (!sourceRow || !targetRow) return
+    const targetRow = targetRows[toRow]
+    let placed = false
 
-    // Movement implementation - simplified version
-    // TODO: Full implementation for tabs
+    // Try to find an empty slot in the target row
+    for (let i = 0; i < targetRow.items.length; i++) {
+      if (targetRow.items[i].type === "empty" && !targetRow.items[i].field) {
+        targetRow.items[i].field = fieldName
+        targetRow.items[i].type = fieldType
+        placed = true
+        break
+      }
+    }
+
+    // If no empty slot, append to items
+    if (!placed) {
+      targetRow.items.push({
+        id: generateId(),
+        field: fieldName,
+        type: fieldType,
+        width: "1fr",
+      })
+    }
+
+    set({ form: newForm })
+  },
+
+  reorderRows: (tabIndex: number, fromIndex: number, toIndex: number) => {
+    const { form, saveToHistory } = get()
+    saveToHistory()
+
+    const newForm = JSON.parse(JSON.stringify(form)) as EditorFormDefinition
+
+    if (newForm.mode === "single" && newForm.rows) {
+      const [movedRow] = newForm.rows.splice(fromIndex, 1)
+      newForm.rows.splice(toIndex, 0, movedRow)
+    } else if (newForm.tabs?.[tabIndex]) {
+      const [movedRow] = newForm.tabs[tabIndex].rows.splice(fromIndex, 1)
+      newForm.tabs[tabIndex].rows.splice(toIndex, 0, movedRow)
+    }
+
+    set({ form: newForm })
   },
 
   // === Buttons ===

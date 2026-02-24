@@ -1,6 +1,18 @@
 "use client"
 
 import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import {
   Columns,
   Copy,
   Download,
@@ -86,6 +98,7 @@ export function TsFormEditor() {
     setActiveTabIndex,
     addRow,
     removeRow,
+    reorderRows,
     addColumnToRow,
     removeColumnFromRow,
     updateColumnWidth,
@@ -110,6 +123,56 @@ export function TsFormEditor() {
   const [showImportDialog, setShowImportDialog] = React.useState(false)
   const [importJsonText, setImportJsonText] = React.useState("")
   const [importError, setImportError] = React.useState("")
+  const [activeDragId, setActiveDragId] = React.useState<string | null>(null)
+  const [dragType, setActiveDragType] = React.useState<"palette" | "field" | "row" | null>(null)
+
+  // DND setup
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event
+    setActiveDragId(active.id as string)
+    setActiveDragType(active.data.current?.type || "field")
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveDragId(null)
+    setActiveDragType(null)
+
+    if (!over) return
+
+    // SOURCE: Palette
+    if (active.data.current?.source === "palette") {
+      const fieldType = active.data.current.fieldType
+
+      // TARGET: Cell
+      if (over.data.current?.type === "cell") {
+        const { rowIndex, itemIndex } = over.data.current
+        addField(fieldType, activeTabIndex, rowIndex, itemIndex)
+        return
+      }
+
+      // TARGET: Row (add to first empty or end)
+      if (over.data.current?.type === "row") {
+        const { rowIndex } = over.data.current
+        addField(fieldType, activeTabIndex, rowIndex, 0)
+        return
+      }
+    }
+
+    // SOURCE: Row (Reordering)
+    if (active.data.current?.type === "row" && over.data.current?.type === "row") {
+      if (active.id !== over.id) {
+        const rows = getCurrentRows()
+        const oldIndex = rows.findIndex((r) => r.id === active.id)
+        const newIndex = rows.findIndex((r) => r.id === over.id)
+        if (oldIndex !== -1 && newIndex !== -1) {
+          reorderRows(activeTabIndex, oldIndex, newIndex)
+        }
+      }
+    }
+  }
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -358,12 +421,13 @@ export function TsFormEditor() {
                       {group}
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="grid gap-1 pb-2">
+                      <div className="grid grid-cols-2 gap-1 pb-2">
                         {fields.map((field) => (
                           <FieldPaletteItem
                             key={field.type}
                             type={field.type}
                             label={field.label}
+                            icon={field.icon}
                             onAdd={() => {
                               const rows = getCurrentRows()
                               // Add to the first empty slot or new row
@@ -408,124 +472,163 @@ export function TsFormEditor() {
 
           {/* Canvas */}
           <div className="flex-1 bg-slate-50 dark:bg-slate-900 overflow-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-4">
-              {/* Tabs (if mode === 'tabs') */}
-              {form.mode === "tabs" && form.tabs && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="max-w-4xl mx-auto space-y-4">
+                {/* Tabs (if mode === 'tabs') */}
+                {form.mode === "tabs" && form.tabs && (
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {form.tabs.map((tab: EditorTab, index: number) => (
+                          <div
+                            key={tab.id}
+                            className={cn(
+                              "flex items-center gap-1 px-3 py-1.5 rounded-md cursor-pointer border transition-colors",
+                              index === activeTabIndex
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted hover:bg-muted/80 border-transparent"
+                            )}
+                            onClick={() => setActiveTabIndex(index)}
+                          >
+                            <Input
+                              value={tab.label}
+                              onChange={(e) => updateTabLabel(index, e.target.value)}
+                              className="h-6 w-24 bg-transparent border-none text-center p-0 focus-visible:ring-0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            {form.tabs && form.tabs.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeTab(index)
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        <Button variant="outline" size="sm" onClick={() => addTab()}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Canvas with rows */}
                 <Card>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {form.tabs.map((tab: EditorTab, index: number) => (
-                        <div
-                          key={tab.id}
-                          className={cn(
-                            "flex items-center gap-1 px-3 py-1.5 rounded-md cursor-pointer border transition-colors",
-                            index === activeTabIndex
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-muted hover:bg-muted/80 border-transparent"
-                          )}
-                          onClick={() => setActiveTabIndex(index)}
-                        >
-                          <Input
-                            value={tab.label}
-                            onChange={(e) => updateTabLabel(index, e.target.value)}
-                            className="h-6 w-24 bg-transparent border-none text-center p-0 focus-visible:ring-0"
-                            onClick={(e) => e.stopPropagation()}
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Form Layout</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SortableContext
+                      items={getCurrentRows().map((r) => r.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2 min-h-[200px]">
+                        {getCurrentRows().map((row, rowIndex) => (
+                          <CanvasRow
+                            key={row.id}
+                            row={row}
+                            rowIndex={rowIndex}
+                            tabIndex={activeTabIndex}
+                            selection={selection}
+                            onSelect={setSelection}
+                            onRemoveRow={() => removeRow(activeTabIndex, rowIndex)}
+                            onAddColumn={() => addColumnToRow(activeTabIndex, rowIndex)}
+                            onRemoveColumn={(itemIndex) =>
+                              removeColumnFromRow(activeTabIndex, rowIndex, itemIndex)
+                            }
+                            onUpdateColumnWidth={(itemIndex, width) =>
+                              updateColumnWidth(activeTabIndex, rowIndex, itemIndex, width)
+                            }
+                            fields={form.fields}
                           />
-                          {form.tabs && form.tabs.length > 1 && (
+                        ))}
+
+                        {/* Button to add row */}
+                        <Button
+                          variant="outline"
+                          className="w-full border-dashed"
+                          onClick={() => addRow(activeTabIndex)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add row
+                        </Button>
+                      </div>
+                    </SortableContext>
+                  </CardContent>
+                </Card>
+
+                {/* Form Buttons */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">Buttons</CardTitle>
+                      <Button variant="outline" size="sm" onClick={addButton}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {form.buttons.map((button: TsFormButton, index: number) => (
+                        <div key={index} className="flex items-center gap-1 group relative">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "py-1.5 px-3 cursor-pointer hover:border-primary transition-colors",
+                              selection.type === "button" && selection.itemIndex === index
+                                ? "border-primary ring-1 ring-primary"
+                                : ""
+                            )}
+                            onClick={() =>
+                              setSelection({ type: "button", id: "button", itemIndex: index })
+                            }
+                          >
+                            {button.label}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-5 w-5"
+                              className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                removeTab(index)
+                                removeButton(index)
                               }}
                             >
                               <X className="h-3 w-3" />
                             </Button>
-                          )}
+                          </Badge>
                         </div>
                       ))}
-                      <Button variant="outline" size="sm" onClick={() => addTab()}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              </div>
 
-              {/* Canvas with rows */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Form Layout</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {getCurrentRows().map((row, rowIndex) => (
-                      <CanvasRow
-                        key={row.id}
-                        row={row}
-                        rowIndex={rowIndex}
-                        tabIndex={activeTabIndex}
-                        selection={selection}
-                        onSelect={setSelection}
-                        onRemoveRow={() => removeRow(activeTabIndex, rowIndex)}
-                        onAddColumn={() => addColumnToRow(activeTabIndex, rowIndex)}
-                        onRemoveColumn={(itemIndex) =>
-                          removeColumnFromRow(activeTabIndex, rowIndex, itemIndex)
-                        }
-                        onUpdateColumnWidth={(itemIndex, width) =>
-                          updateColumnWidth(activeTabIndex, rowIndex, itemIndex, width)
-                        }
-                        fields={form.fields}
-                      />
-                    ))}
-
-                    {/* Button to add row */}
-                    <Button
-                      variant="outline"
-                      className="w-full border-dashed"
-                      onClick={() => addRow(activeTabIndex)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add row
-                    </Button>
+              <DragOverlay dropAnimation={null}>
+                {activeDragId ? (
+                  <div className="bg-primary text-primary-foreground px-4 py-2 rounded-md shadow-2xl opacity-90 cursor-grabbing flex items-center gap-2 border-2 border-primary-foreground/20">
+                    <GripVertical className="h-4 w-4 shrink-0" />
+                    <span className="text-sm font-medium">
+                      {dragType === "palette"
+                        ? `Adding ${String(activeDragId).replace("palette-", "")}...`
+                        : "Moving row..."}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Form Buttons */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Buttons</CardTitle>
-                    <Button variant="outline" size="sm" onClick={addButton}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {form.buttons.map((button: TsFormButton, index: number) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <Badge variant="outline" className="py-1.5 px-3">
-                          {button.label}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-4 w-4 ml-1"
-                            onClick={() => removeButton(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           </div>
 
           {/* Properties Panel */}
@@ -608,12 +711,40 @@ export function TsFormEditor() {
 /**
  * Item in the component palette
  */
-function FieldPaletteItem({ label, onAdd }: { type: string; label: string; onAdd: () => void }) {
+function FieldPaletteItem({
+  type,
+  label,
+  icon: Icon,
+  onAdd,
+}: {
+  type: string
+  label: string
+  icon: React.ElementType
+  onAdd: () => void
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${type}`,
+    data: {
+      source: "palette",
+      fieldType: type,
+      type: "palette",
+    },
+  })
+
   return (
-    <Button variant="ghost" size="sm" className="w-full justify-start text-sm h-8" onClick={onAdd}>
-      <Plus className="h-3 w-3 mr-2" />
-      {label}
-    </Button>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={cn(
+        "group flex flex-col items-center justify-center p-2 rounded-md border bg-card hover:border-primary/50 hover:bg-accent transition-all cursor-grab active:cursor-grabbing",
+        isDragging && "opacity-50 border-primary"
+      )}
+      onClick={onAdd}
+    >
+      <Icon className="h-5 w-5 mb-1 text-muted-foreground group-hover:text-primary" />
+      <span className="text-[10px] font-medium text-center leading-tight">{label}</span>
+    </div>
   )
 }
 
@@ -649,10 +780,34 @@ function CanvasRow({
   onUpdateColumnWidth: (itemIndex: number, width: string) => void
   fields: Record<string, TsFieldDef>
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.id,
+    data: {
+      type: "row",
+      rowIndex,
+    },
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
   return (
-    <div className="group flex items-stretch gap-2 p-2 border rounded-md bg-card hover:border-primary/50 transition-colors">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group flex items-stretch gap-2 p-2 border rounded-md bg-card hover:border-primary/50 transition-colors",
+        isDragging && "opacity-50 border-primary z-50"
+      )}
+    >
       {/* Row grip */}
-      <div className="flex items-center text-muted-foreground cursor-grab">
+      <div
+        className="flex items-center text-muted-foreground cursor-grab active:cursor-grabbing"
+        {...listeners}
+        {...attributes}
+      >
         <GripVertical className="h-4 w-4" />
       </div>
 
@@ -665,6 +820,9 @@ function CanvasRow({
           <CanvasCell
             key={item.id}
             item={item}
+            tabIndex={tabIndex}
+            rowIndex={rowIndex}
+            itemIndex={itemIndex}
             isSelected={selection.type === "field" && selection.id === item.field}
             onSelect={() => {
               if (item.field) {
@@ -718,6 +876,9 @@ function CanvasCell({
   fieldConfig,
   showRemove,
   onRemove,
+  tabIndex,
+  rowIndex,
+  itemIndex,
 }: {
   item: EditorRowItem
   isSelected: boolean
@@ -726,15 +887,30 @@ function CanvasCell({
   fieldConfig?: TsFieldDef
   showRemove: boolean
   onRemove: () => void
+  tabIndex: number
+  rowIndex: number
+  itemIndex: number
 }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: item.id,
+    data: {
+      type: "cell",
+      tabIndex,
+      rowIndex,
+      itemIndex,
+    },
+  })
+
   const isEmpty = !item.field || item.type === "empty"
 
   return (
     <div
+      ref={setNodeRef}
       className={cn(
-        "relative min-h-[60px] p-2 border rounded transition-colors cursor-pointer",
+        "relative min-h-[60px] p-2 border rounded transition-all cursor-pointer",
         isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
-        isSelected && "ring-2 ring-primary border-primary"
+        isSelected && "ring-2 ring-primary border-primary",
+        isOver && "bg-primary/10 border-primary border-solid scale-[1.02] shadow-sm"
       )}
       onClick={onSelect}
     >
@@ -804,6 +980,79 @@ function FieldPropertiesPanel({
   onUpdate: (config: TsFieldUpdate) => void
   onDelete: () => void
 }) {
+  const { form, selection, updateButton } = useFormEditorStore()
+
+  // If a button is selected, show button properties
+  if (selection.type === "button" && selection.itemIndex !== undefined) {
+    const button = form.buttons[selection.itemIndex]
+    if (!button) return null
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Badge>Button</Badge>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Label</Label>
+          <Input
+            value={button.label}
+            onChange={(e) => updateButton(selection.itemIndex!, { label: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Action</Label>
+          <Input
+            value={button.action}
+            onChange={(e) => updateButton(selection.itemIndex!, { action: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Variant</Label>
+          <Select
+            value={button.variant || "default"}
+            onValueChange={(v) =>
+              updateButton(selection.itemIndex!, { variant: v as TsFormButton["variant"] })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="secondary">Secondary</SelectItem>
+              <SelectItem value="outline">Outline</SelectItem>
+              <SelectItem value="destructive">Destructive</SelectItem>
+              <SelectItem value="ghost">Ghost</SelectItem>
+              <SelectItem value="link">Link</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Type</Label>
+          <Select
+            value={button.type || "button"}
+            onValueChange={(v) =>
+              updateButton(selection.itemIndex!, { type: v as TsFormButton["type"] })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="button">Normal Button</SelectItem>
+              <SelectItem value="submit">Submit Form</SelectItem>
+              <SelectItem value="reset">Reset Form</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    )
+  }
+
   // Cast to TsFieldUpdate for reading optional properties that not every field type carries
   // (e.g. placeholder on checkbox). Type-specific properties are accessed via narrowed config below.
   const configProps = config as TsFieldUpdate
@@ -991,9 +1240,90 @@ function FieldPropertiesPanel({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="information">Information</SelectItem>
+              <SelectItem value="warning">Warning</SelectItem>
+              <SelectItem value="success">Success</SelectItem>
               <SelectItem value="destructive">Destructive</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      {config.type === "button-group" && (
+        <div className="space-y-2">
+          <Label>Visual Style</Label>
+          <Select
+            value={config.variant || ""}
+            onValueChange={(v) => onUpdate({ variant: v as "process" | undefined })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value=" ">Standard</SelectItem>
+              <SelectItem value="process">Process (Chevron)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {config.type === "relationship" && (
+        <div className="space-y-3">
+          <Separator />
+          <h4 className="font-medium text-sm">Relationship</h4>
+          <div className="space-y-2">
+            <Label className="text-xs">Target Entity</Label>
+            <Input
+              value={config.targetEntity || ""}
+              onChange={(e) => onUpdate({ targetEntity: e.target.value })}
+              placeholder="e.g. users"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Selection Mode</Label>
+            <Select
+              value={config.mode || "single"}
+              onValueChange={(v) => onUpdate({ mode: v as "single" | "multiple" })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="multiple">Multiple</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {config.type === "table" && (
+        <div className="space-y-3">
+          <Separator />
+          <h4 className="font-medium text-sm">Table Configuration</h4>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Create Button</Label>
+            <Switch
+              checked={config.showCreateButton || false}
+              onCheckedChange={(checked) => onUpdate({ showCreateButton: checked })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Columns (JSON)</Label>
+            <Textarea
+              value={JSON.stringify(config.columns || [], null, 2)}
+              onChange={(e) => {
+                try {
+                  const columns = JSON.parse(e.target.value)
+                  onUpdate({ columns })
+                } catch {
+                  /* ignore */
+                }
+              }}
+              rows={5}
+              className="font-mono text-xs"
+            />
+          </div>
         </div>
       )}
     </div>
