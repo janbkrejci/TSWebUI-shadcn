@@ -297,28 +297,43 @@ function renderWidget(
           )}
         >
           {(def.options || []).map((opt: TsFieldOptions | string, index, arr) => {
-            const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
-            const label = typeof opt === "string" ? opt.split("/").pop() : opt.label
-            const optVariant = typeof opt !== "string" ? opt.variant : undefined
+            let value: string
+            let label: string
+            let optVariant: string | undefined
+            let isDisabled = false
+
+            if (typeof opt === "string") {
+              const parts = opt.split("/")
+              // Format: value/enabled/variant/label
+              value = parts[0]
+              isDisabled = parts[1] === "false"
+              optVariant = parts[2] || undefined
+              label = parts[3] || parts[0]
+            } else {
+              value = String(opt.value)
+              label = opt.label
+              optVariant = opt.variant
+              isDisabled = !!opt.disabled
+            }
+
             const isActive = field.value === value
             const isFirst = index === 0
             const isLast = index === arr.length - 1
+
+            // In reference: (value === val) ? (variant || 'primary') : (variant || 'default')
+            // Mapping to Shadcn/UI variants:
+            const variant = isActive
+              ? ((optVariant || "default") as TsButtonVariant)
+              : optVariant
+                ? (optVariant as TsButtonVariant)
+                : "outline"
+
             return (
               <Button
                 key={value}
                 type="button"
-                variant={
-                  isActive
-                    ? (((optVariant as TsButtonVariant) ?? "default") as
-                        | "default"
-                        | "destructive"
-                        | "outline"
-                        | "secondary"
-                        | "ghost"
-                        | "link")
-                    : "outline"
-                }
-                disabled={def.disabled}
+                variant={variant as TsButtonVariant}
+                disabled={def.disabled || isDisabled}
                 className={cn(
                   !isFirst && "-ml-px",
                   isFirst && !isLast && "rounded-r-none",
@@ -328,7 +343,7 @@ function renderWidget(
                   hasError && "border-destructive text-destructive"
                 )}
                 onClick={() => {
-                  if (!def.disabled && !def.readonly) field.onChange(value)
+                  if (!def.disabled && !def.readonly && !isDisabled) field.onChange(value)
                 }}
               >
                 {label}
@@ -1432,92 +1447,93 @@ function ProcessButtonGroup({
   hasError?: boolean
 }) {
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
-    const value = typeof opt === "string" ? opt.split("/")[0] : String(opt.value)
-    const label = typeof opt === "string" ? (opt.split("/")[1] ?? opt.split("/")[0]) : opt.label
-    const variant = typeof opt !== "string" ? opt.variant : undefined
-    return { value, label, variant }
+    if (typeof opt === "string") {
+      const parts = opt.split("/")
+      // Format: value/enabled/variant/label
+      const value = parts[0]
+      const isEnabled = parts[1] !== "false"
+      const variant = parts[2] || undefined
+      const label = parts[3] || parts[0]
+      return { value, label, variant, disabled: !isEnabled }
+    }
+    return {
+      value: String(opt.value),
+      label: opt.label,
+      variant: opt.variant,
+      disabled: opt.disabled,
+    }
   })
 
   const ARROW = 12
 
-  const getClipPath = (index: number, total: number): string | undefined => {
-    if (total <= 1) return undefined
-    const first = index === 0
-    const last = index === total - 1
-    if (first)
-      return `polygon(0 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, 0 100%)`
-    if (last) return `polygon(${ARROW}px 0, 100% 0, 100% 100%, ${ARROW}px 100%, 0 50%)`
-    return `polygon(${ARROW}px 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, ${ARROW}px 100%, 0 50%)`
+  const getClipPath = (): string => {
+    // Arrow shape: pointed right, notched left (for all buttons)
+    return `polygon(0 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, 0 100%, ${ARROW}px 50%)`
   }
 
-  const getActiveBgClass = (variant?: string): string => {
-    switch (variant) {
-      case "success":
-        return "bg-green-600 text-white dark:bg-green-500"
-      case "destructive":
-      case "danger":
-        return "bg-destructive text-destructive-foreground"
-      case "warning":
-        return "bg-amber-500 text-white"
-      case "secondary":
-        return "bg-secondary text-secondary-foreground"
-      default:
-        return "bg-primary text-primary-foreground"
+  const getBgClass = (variant: string | undefined, isActive: boolean): string => {
+    if (isActive) {
+      switch (variant) {
+        case "success":
+          return "bg-green-600 text-white dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-400"
+        case "destructive":
+        case "danger":
+          return "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        case "warning":
+          return "bg-amber-500 text-white hover:bg-amber-600"
+        case "secondary":
+          return "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+        default:
+          return "bg-primary text-primary-foreground hover:bg-primary/90"
+      }
+    } else {
+      // Inactive but with variant - dimmed color
+      switch (variant) {
+        case "success":
+          return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200"
+        case "destructive":
+        case "danger":
+          return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200"
+        case "warning":
+          return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 hover:bg-amber-200"
+        case "secondary":
+          return "bg-secondary/30 text-secondary-foreground hover:bg-secondary/50"
+        default:
+          return "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+      }
     }
   }
 
   return (
-    <div className="flex items-stretch rounded-md overflow-hidden">
+    <div className="flex items-stretch">
       {options.map((opt, index) => {
         const isActive = field.value === opt.value
-        const clipPath = getClipPath(index, options.length)
+        const clipPath = getClipPath()
         const isInteractive = !def.disabled && !def.readonly
 
         return (
           <div
             key={opt.value}
-            className="relative h-9"
+            className="relative h-10"
             style={{
-              marginLeft: index > 0 ? `-${ARROW}px` : undefined,
-              // Strictly decreasing z-index left→right ensures each button's
-              // 1px right-border extension is always painted above the next
-              // button's content — giving a single clean junction line even
-              // when the active button is not at index 0.
-              zIndex: options.length - index,
+              marginLeft: index > 0 ? `${-ARROW}px` : undefined,
+              // Active button should be on top of its neighbors
+              zIndex: isActive ? 10 : options.length - index,
             }}
           >
-            {/* Border layer — non-first buttons: no left expansion (inset-left=0)
-                so only the left button's right-arrow border shows at each junction,
-                eliminating the double-border artifact. */}
-            {clipPath && isActive && (
-              <div
-                className={cn("absolute", getActiveBgClass(opt.variant))}
-                style={{ clipPath, inset: index === 0 ? "-1px" : "-1px -1px -1px 0" }}
-              />
-            )}
-            {clipPath && !isActive && (
-              <div
-                className="absolute bg-border"
-                style={{ clipPath, inset: index === 0 ? "-1px" : "-1px -1px -1px 0" }}
-              />
-            )}
-            {/* Button */}
             <button
               type="button"
-              disabled={def.disabled}
+              disabled={def.disabled || opt.disabled}
               onClick={() => {
-                if (isInteractive) field.onChange(opt.value)
+                if (isInteractive && !opt.disabled) field.onChange(opt.value)
               }}
               className={cn(
-                "relative h-full px-4 text-sm font-medium transition-colors",
-                clipPath ? "" : "rounded-md border",
-                isActive
-                  ? getActiveBgClass(opt.variant)
-                  : cn("bg-background text-foreground", isInteractive && "hover:bg-accent"),
-                def.disabled && "opacity-50 cursor-not-allowed",
+                "relative h-full px-10 text-sm font-medium transition-colors",
+                getBgClass(opt.variant, isActive),
+                (def.disabled || opt.disabled) && "opacity-50 cursor-not-allowed",
                 def.readonly && "pointer-events-none"
               )}
-              style={clipPath ? { clipPath } : undefined}
+              style={{ clipPath }}
             >
               {opt.label}
             </button>
