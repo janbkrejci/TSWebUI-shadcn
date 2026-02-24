@@ -1021,8 +1021,10 @@ function RelationshipWidget({
             onValueChange={setSearchValue}
           />
           <CommandList className="max-h-60">
-            <CommandEmpty>
-              {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
+            <CommandEmpty className="py-1.5 px-2 text-left">
+              <span className="italic text-muted-foreground text-sm">
+                {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
+              </span>
             </CommandEmpty>
             <CommandGroup>
               {filteredItems.map((item) => (
