@@ -1048,6 +1048,24 @@ function RelationshipWidget({
 
 // ─── Helper functions for number formatting ──────────────────────────────────
 
+function evaluateMathExpression(expression: string): number | undefined {
+  try {
+    // Replace comma with dot
+    let expr = expression.replace(/,/g, ".")
+    // Replace ^ with **
+    expr = expr.replace(/\\^/g, "**")
+    // Validate characters: only numbers, operators, brackets and spaces
+    if (/[^0-9.+\\-*/^() ]/.test(expr)) return undefined
+
+    // Use Function constructor for evaluation
+    const result = new Function(`return ${expr}`)()
+    if (!isFinite(result) || isNaN(result)) return undefined
+    return result
+  } catch {
+    return undefined
+  }
+}
+
 function formatNumericValue(val: number | null | undefined, roundTo?: number): string {
   if (val === null || val === undefined || isNaN(val)) return ""
   let num = val
@@ -1063,7 +1081,13 @@ function formatNumericValue(val: number | null | undefined, roundTo?: number): s
 
 function parseNumericValue(text: string): number | undefined {
   if (!text.trim()) return undefined
-  const clean = text.replace(/\s/g, "").replace(",", ".")
+
+  // If it contains math operators, try to evaluate it
+  if (/[+\\-*/^()]/.test(text)) {
+    return evaluateMathExpression(text)
+  }
+
+  const clean = text.replace(/\\s/g, "").replace(",", ".")
   const num = parseFloat(clean)
   return isNaN(num) ? undefined : num
 }
@@ -1118,8 +1142,8 @@ function NumberWidget({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
-    // Allow: digits, spaces, minus, comma, dot
-    const clean = val.replace(/[^0-9 .,-]/g, "")
+    // Allow: digits, spaces, minus, comma, dot, and math operators
+    const clean = val.replace(/[^0-9 .,+\\-*/^()]/g, "")
     setDisplayValue(clean !== val ? clean : val)
   }
 
