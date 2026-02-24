@@ -1389,7 +1389,7 @@ function FileUploadWidget({
   const isInteractive = !def.disabled && !def.readonly
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       {/* Drop zone */}
       <div
         className={cn(
