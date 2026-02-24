@@ -50,6 +50,7 @@ export interface TsFieldOptions {
   value: string | number | boolean
   /** Button variant used when this option is the active selection (button-group) */
   variant?: TsButtonVariant
+  disabled?: boolean
 }
 
 // ─── Shared base properties (present on every field type) ─────────────────────
