@@ -70,7 +70,7 @@ export default function NumberWidgetDemo() {
   return (
     <WidgetDemoWrapper
       title="Number Input"
-      description="A numeric input with locale-aware formatting (space for thousands, comma for decimals). Supports rounding, Enter/Escape key actions, and select-all-on-focus."
+      description="A numeric input with locale-aware formatting (space for thousands, comma for decimals). Supports math calculations (e.g., 10+5*2), rounding, Enter/Escape key actions, and select-all-on-focus."
       widgetType="number"
       attributes={attributes}
       defaultFieldValue={1234.56}

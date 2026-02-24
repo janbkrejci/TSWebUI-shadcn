@@ -1,7 +1,6 @@
 "use client"
 
 import { format, isValid as isValidDate, parse } from "date-fns"
-import { cs } from "date-fns/locale"
 import {
   AlertTriangle,
   CalendarIcon,
@@ -1072,7 +1071,7 @@ function formatNumericValue(val: number | null | undefined, roundTo?: number): s
   if (roundTo !== undefined) {
     num = Math.round(num * Math.pow(10, roundTo)) / Math.pow(10, roundTo)
   }
-  return new Intl.NumberFormat("cs-CZ", {
+  return new Intl.NumberFormat(undefined, {
     useGrouping: true,
     minimumFractionDigits: 0,
     maximumFractionDigits: roundTo !== undefined ? roundTo : 10,
@@ -1214,7 +1213,7 @@ function DateTimeWidget({
   const [inputValue, setInputValue] = React.useState(() => {
     const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
     const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
-    return validDate ? format(validDate, dateFormat, { locale: cs }) : ""
+    return validDate ? format(validDate, dateFormat) : ""
   })
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
@@ -1225,7 +1224,7 @@ function DateTimeWidget({
     const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
     const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
     if (validDate && !open) {
-      setInputValue(format(validDate, dateFormat, { locale: cs }))
+      setInputValue(format(validDate, dateFormat))
     } else if (!field.value) {
       setInputValue("")
     }
@@ -1271,12 +1270,12 @@ function DateTimeWidget({
       field.onChange(undefined)
       return
     }
-    const parsed = parse(inputValue, dateFormat, new Date(), { locale: cs })
+    const parsed = parse(inputValue, dateFormat, new Date())
     if (isValidDate(parsed)) {
       field.onChange(parsed)
     } else {
       const vd = getValidDate()
-      setInputValue(vd ? format(vd, dateFormat, { locale: cs }) : "")
+      setInputValue(vd ? format(vd, dateFormat) : "")
     }
   }
 
@@ -1306,7 +1305,7 @@ function DateTimeWidget({
           readOnly={def.readonly}
           tabIndex={def.readonly ? -1 : undefined}
           className={cn(
-            "pr-10",
+            "pr-10 text-right",
             errorClass,
             def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
           )}
@@ -1332,7 +1331,6 @@ function DateTimeWidget({
           selected={getValidDate()}
           onSelect={handleDateSelect}
           initialFocus
-          locale={cs}
         />
         <div className="border-t p-3">
           <div className="flex items-center gap-2">
@@ -1341,7 +1339,7 @@ function DateTimeWidget({
               type="time"
               value={getTimeValue()}
               onChange={handleTimeChange}
-              className="h-8 text-sm"
+              className="h-8 text-sm text-right"
             />
           </div>
         </div>
@@ -1621,13 +1619,13 @@ function DatePickerWidget({
   const [inputValue, setInputValue] = React.useState(() => {
     const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
     const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
-    return validDate ? format(validDate, dateFormat, { locale: cs }) : ""
+    return validDate ? format(validDate, dateFormat) : ""
   })
 
   // Compute calendar date from inputValue first, then field.value as fallback
   const calendarDate = React.useMemo(() => {
     if (inputValue.trim()) {
-      const parsed = parse(inputValue, dateFormat, new Date(), { locale: cs })
+      const parsed = parse(inputValue, dateFormat, new Date())
       if (isValidDate(parsed)) return parsed
     }
     const dv = field.value ? new Date(field.value as string | number | Date) : undefined
@@ -1642,7 +1640,7 @@ function DatePickerWidget({
     const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
     const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
     if (validDate && !open) {
-      setInputValue(format(validDate, dateFormat, { locale: cs }))
+      setInputValue(format(validDate, dateFormat))
     } else if (!field.value) {
       setInputValue("")
     }
@@ -1654,14 +1652,14 @@ function DatePickerWidget({
       field.onChange(undefined)
       return
     }
-    const parsed = parse(inputValue, dateFormat, new Date(), { locale: cs })
+    const parsed = parse(inputValue, dateFormat, new Date())
     if (isValidDate(parsed)) {
       field.onChange(parsed)
     } else {
       // Revert to valid value if parsing fails
       const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
       const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
-      setInputValue(validDate ? format(validDate, dateFormat, { locale: cs }) : "")
+      setInputValue(validDate ? format(validDate, dateFormat) : "")
     }
   }
 
@@ -1691,7 +1689,7 @@ function DatePickerWidget({
           readOnly={def.readonly}
           tabIndex={def.readonly ? -1 : undefined}
           className={cn(
-            "pr-10",
+            "pr-10 text-right",
             errorClass,
             def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
           )}
@@ -1721,7 +1719,6 @@ function DatePickerWidget({
             setOpen(false)
           }}
           initialFocus
-          locale={cs}
         />
       </PopoverContent>
     </Popover>
