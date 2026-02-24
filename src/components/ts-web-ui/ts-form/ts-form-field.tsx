@@ -433,9 +433,9 @@ function renderWidget(
           <Markdown
             remarkPlugins={[remarkGfm]}
             components={{
-              a: ({ ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+              a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
               /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-              code: ({ inline, className, children, ...props }: any) => {
+              code: ({ node, inline, className, children, ...props }: any) => {
                 if (inline) {
                   return (
                     <code className={className} {...props}>

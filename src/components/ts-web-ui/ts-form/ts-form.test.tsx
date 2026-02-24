@@ -115,4 +115,19 @@ describe("TsForm", () => {
       expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ step: "2" }), "submit")
     })
   })
+
+  it("renders markdown widget", () => {
+    const mdFields: Record<string, TsFieldDef> = {
+      content: {
+        type: "markdown",
+        value: "### Hello\\n[Link](https://google.com)\\n```js\\nconst a = 1;\\n```",
+      },
+    }
+    const mdLayout: TsFormLayout = { rows: [[{ field: "content" }]] }
+
+    render(<TsForm layout={mdLayout} fields={mdFields} buttons={[]} />)
+
+    expect(screen.getByText(/Hello/i)).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Link/i })).toHaveAttribute("target", "_blank")
+  })
 })
