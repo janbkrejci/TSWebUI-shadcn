@@ -163,6 +163,20 @@ export function TsFormEditor() {
       }
     }
 
+    // SOURCE: Field (Moving within form)
+    if (active.data.current?.type === "field" && over.data.current?.type === "cell") {
+      const from = active.data.current
+      const to = over.data.current
+      if (
+        from.tabIndex !== to.tabIndex ||
+        from.rowIndex !== to.rowIndex ||
+        from.itemIndex !== to.itemIndex
+      ) {
+        moveField(from.tabIndex, from.rowIndex, from.itemIndex, to.tabIndex, to.rowIndex)
+      }
+      return
+    }
+
     // SOURCE: Row (Reordering)
     if (active.data.current?.type === "row" && over.data.current?.type === "row") {
       if (active.id !== over.id) {
@@ -172,6 +186,15 @@ export function TsFormEditor() {
         if (oldIndex !== -1 && newIndex !== -1) {
           reorderRows(activeTabIndex, oldIndex, newIndex)
         }
+      }
+    }
+
+    // SOURCE: Button (Reordering)
+    if (active.data.current?.type === "button-move" && over.data.current?.type === "button-move") {
+      const fromIndex = active.data.current.index
+      const toIndex = over.data.current.index
+      if (fromIndex !== toIndex) {
+        moveButton(fromIndex, toIndex)
       }
     }
   }
@@ -405,81 +428,81 @@ export function TsFormEditor() {
         </div>
 
         {/* Main content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar - Component Palette */}
-          <div className="w-64 border-r bg-muted/20 flex flex-col">
-            <div className="p-3 border-b">
-              <h3 className="font-semibold text-sm">Components</h3>
-            </div>
-            <ScrollArea className="flex-1">
-              <Accordion
-                type="multiple"
-                defaultValue={Object.keys(GROUPED_FIELD_TYPES)}
-                className="px-2 py-1"
-              >
-                {Object.entries(GROUPED_FIELD_TYPES).map(([group, fields]) => (
-                  <AccordionItem key={group} value={group} className="border-none">
-                    <AccordionTrigger className="py-2 text-sm hover:no-underline">
-                      {group}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 gap-1 pb-2">
-                        {fields.map((field) => (
-                          <FieldPaletteItem
-                            key={field.type}
-                            type={field.type}
-                            label={field.label}
-                            icon={field.icon}
-                            onAdd={() => {
-                              const rows = getCurrentRows()
-                              // Add to the first empty slot or new row
-                              let added = false
-                              for (let ri = 0; ri < rows.length && !added; ri++) {
-                                for (let ii = 0; ii < rows[ri].items.length && !added; ii++) {
-                                  if (
-                                    rows[ri].items[ii].type === "empty" &&
-                                    !rows[ri].items[ii].field
-                                  ) {
-                                    addField(
-                                      field.type as TsFieldDef["type"],
-                                      activeTabIndex,
-                                      ri,
-                                      ii
-                                    )
-                                    added = true
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex-1 flex overflow-hidden">
+            {/* Sidebar - Component Palette */}
+            <div className="w-64 border-r bg-muted/20 flex flex-col min-h-0">
+              <div className="p-3 border-b shrink-0">
+                <h3 className="font-semibold text-sm">Components</h3>
+              </div>
+              <ScrollArea className="flex-1 min-h-0">
+                <Accordion
+                  type="multiple"
+                  defaultValue={Object.keys(GROUPED_FIELD_TYPES)}
+                  className="px-2 py-1"
+                >
+                  {Object.entries(GROUPED_FIELD_TYPES).map(([group, fields]) => (
+                    <AccordionItem key={group} value={group} className="border-none">
+                      <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                        {group}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="grid grid-cols-2 gap-1 pb-2">
+                          {fields.map((field) => (
+                            <FieldPaletteItem
+                              key={field.type}
+                              type={field.type}
+                              label={field.label}
+                              icon={field.icon}
+                              onAdd={() => {
+                                const rows = getCurrentRows()
+                                // Add to the first empty slot or new row
+                                let added = false
+                                for (let ri = 0; ri < rows.length && !added; ri++) {
+                                  for (let ii = 0; ii < rows[ri].items.length && !added; ii++) {
+                                    if (
+                                      rows[ri].items[ii].type === "empty" &&
+                                      !rows[ri].items[ii].field
+                                    ) {
+                                      addField(
+                                        field.type as TsFieldDef["type"],
+                                        activeTabIndex,
+                                        ri,
+                                        ii
+                                      )
+                                      added = true
+                                    }
                                   }
                                 }
-                              }
-                              if (!added) {
-                                // Add new row
-                                addRow(activeTabIndex)
-                                const newRows = getCurrentRows()
-                                addField(
-                                  field.type as TsFieldDef["type"],
-                                  activeTabIndex,
-                                  newRows.length - 1,
-                                  0
-                                )
-                              }
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </ScrollArea>
-          </div>
+                                if (!added) {
+                                  // Add new row
+                                  addRow(activeTabIndex)
+                                  const newRows = getCurrentRows()
+                                  addField(
+                                    field.type as TsFieldDef["type"],
+                                    activeTabIndex,
+                                    newRows.length - 1,
+                                    0
+                                  )
+                                }
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </ScrollArea>
+            </div>
 
-          {/* Canvas */}
-          <div className="flex-1 bg-slate-50 dark:bg-slate-900 overflow-auto p-6">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
+            {/* Canvas */}
+            <div className="flex-1 bg-slate-50 dark:bg-slate-900 overflow-auto p-6">
               <div className="max-w-4xl mx-auto space-y-4">
                 {/* Tabs (if mode === 'tabs') */}
                 {form.mode === "tabs" && form.tabs && (
@@ -525,7 +548,6 @@ export function TsFormEditor() {
                     </CardContent>
                   </Card>
                 )}
-
                 {/* Canvas with rows */}
                 <Card>
                   <CardHeader className="pb-2">
@@ -570,7 +592,6 @@ export function TsFormEditor() {
                     </SortableContext>
                   </CardContent>
                 </Card>
-
                 {/* Form Buttons */}
                 <Card>
                   <CardHeader className="pb-2">
@@ -583,39 +604,29 @@ export function TsFormEditor() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {form.buttons.map((button: TsFormButton, index: number) => (
-                        <div key={index} className="flex items-center gap-1 group relative">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "py-1.5 px-3 cursor-pointer hover:border-primary transition-colors",
+                    <SortableContext
+                      items={form.buttons.map((_, i) => `button-${i}`)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="flex flex-wrap gap-2">
+                        {form.buttons.map((button: TsFormButton, index: number) => (
+                          <SortableButton
+                            key={index}
+                            button={button}
+                            index={index}
+                            isSelected={
                               selection.type === "button" && selection.itemIndex === index
-                                ? "border-primary ring-1 ring-primary"
-                                : ""
-                            )}
-                            onClick={() =>
+                            }
+                            onSelect={() =>
                               setSelection({ type: "button", id: "button", itemIndex: index })
                             }
-                          >
-                            {button.label}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeButton(index)
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
+                            onRemove={() => removeButton(index)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
                   </CardContent>
-                </Card>
+                </Card>{" "}
               </div>
 
               <DragOverlay dropAnimation={null}>
@@ -625,46 +636,49 @@ export function TsFormEditor() {
                     <span className="text-sm font-medium">
                       {dragType === "palette"
                         ? `Adding ${String(activeDragId).replace("palette-", "")}...`
-                        : "Moving row..."}
+                        : activeDragId.startsWith("button-")
+                          ? "Reordering buttons..."
+                          : "Moving row..."}
                     </span>
                   </div>
                 ) : null}
               </DragOverlay>
-            </DndContext>
-          </div>
-
-          {/* Properties Panel */}
-          <div className="w-80 border-l bg-background flex flex-col">
-            <div className="p-3 border-b">
-              <h3 className="font-semibold text-sm">Properties</h3>
             </div>
-            <ScrollArea className="flex-1">
-              <div className="p-3">
-                {selection.type === "field" && selection.id && form.fields[selection.id] ? (
-                  <FieldPropertiesPanel
-                    fieldName={selection.id}
-                    config={form.fields[selection.id]}
-                    onUpdate={(config) => updateFieldConfig(selection.id!, config)}
-                    onDelete={() => removeField(selection.id!)}
-                  />
-                ) : (
-                  <div className="text-sm text-muted-foreground text-center py-10">
-                    Select a field to edit properties
-                  </div>
-                )}
+
+            {/* Properties Panel */}
+            <div className="w-80 border-l bg-background flex flex-col min-h-0">
+              <div className="p-3 border-b shrink-0">
+                <h3 className="font-semibold text-sm">Properties</h3>
               </div>
-            </ScrollArea>
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="p-3">
+                  {(selection.type === "field" && selection.id && form.fields[selection.id]) ||
+                  (selection.type === "button" && selection.itemIndex !== undefined) ? (
+                    <FieldPropertiesPanel
+                      fieldName={selection.id || "button"}
+                      config={form.fields[selection.id || ""] || ({} as TsFieldDef)}
+                      onUpdate={(config) => updateFieldConfig(selection.id!, config)}
+                      onDelete={() => removeField(selection.id!)}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground text-center py-10">
+                      Select a field or button to edit properties
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
           </div>
-        </div>
+        </DndContext>
 
         {/* Preview Dialog */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogContent className="max-w-none w-[98vw] min-w-[1200px] max-h-[95vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Form Preview</DialogTitle>
               <DialogDescription>Interactive preview of your form</DialogDescription>
             </DialogHeader>
-            <div className="border rounded-lg p-6">
+            <div className="border rounded-lg p-6 bg-background shadow-sm">
               <TsForm
                 fields={form.fields}
                 layout={
@@ -697,9 +711,9 @@ export function TsFormEditor() {
                 onSubmit={(data) => console.log("Form submit:", data)}
               />
             </div>
-            <div className="mt-4">
+            <div className="mt-6">
               <h4 className="font-medium mb-2">JSON Output:</h4>
-              <pre className="p-4 bg-muted rounded-lg text-xs overflow-auto max-h-48">
+              <pre className="p-4 bg-muted rounded-lg text-xs overflow-auto max-h-64 font-mono">
                 {exportJson()}
               </pre>
             </div>
@@ -893,7 +907,7 @@ function CanvasCell({
   rowIndex: number
   itemIndex: number
 }) {
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: item.id,
     data: {
       type: "cell",
@@ -905,49 +919,76 @@ function CanvasCell({
 
   const isEmpty = !item.field || item.type === "empty"
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    isDragging,
+  } = useDraggable({
+    id: `field-${item.field || item.id}`,
+    data: {
+      type: "field",
+      tabIndex,
+      rowIndex,
+      itemIndex,
+      fieldId: item.field,
+    },
+    disabled: isEmpty,
+  })
+
   return (
     <div
-      ref={setNodeRef}
+      ref={setDroppableRef}
       className={cn(
         "relative min-h-[60px] p-2 border rounded transition-all cursor-pointer",
         isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
         isSelected && "ring-2 ring-primary border-primary",
-        isOver && "bg-primary/10 border-primary border-solid scale-[1.02] shadow-sm"
+        isOver && "bg-primary/10 border-primary border-solid scale-[1.02] shadow-sm",
+        isDragging && "opacity-50"
       )}
       onClick={onSelect}
     >
-      {isEmpty ? (
-        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-          <Plus className="h-4 w-4 mr-1" />
-          Drag a field here
-        </div>
-      ) : (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-sm truncate">{fieldConfig?.label || item.field}</span>
-            {showRemove && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 opacity-0 group-hover:opacity-100"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRemove()
-                }}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
+      <div
+        ref={setDraggableRef}
+        {...listeners}
+        {...attributes}
+        className={cn("h-full w-full", !isEmpty && "cursor-grab active:cursor-grabbing")}
+      >
+        {isEmpty ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Drag a field here
           </div>
-          <Badge variant="secondary" className="text-xs">
-            {fieldConfig?.type || "field"}
-          </Badge>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-sm truncate">
+                {fieldConfig?.label || item.field}
+              </span>
+              {showRemove && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRemove()
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              {fieldConfig?.type || "field"}
+            </Badge>
+          </div>
+        )}
+      </div>
 
       {/* Width selector */}
       {!isEmpty && (
-        <div className="absolute bottom-1 right-1">
+        <div className="absolute bottom-1 right-1 z-10" onClick={(e) => e.stopPropagation()}>
           <Select value={item.width || "1fr"} onValueChange={onUpdateWidth}>
             <SelectTrigger className="h-5 w-16 text-xs">
               <SelectValue />
@@ -982,7 +1023,7 @@ function FieldPropertiesPanel({
   onUpdate: (config: TsFieldUpdate) => void
   onDelete: () => void
 }) {
-  const { form, selection, updateButton } = useFormEditorStore()
+  const { form, selection, updateButton, removeButton } = useFormEditorStore()
 
   // If a button is selected, show button properties
   if (selection.type === "button" && selection.itemIndex !== undefined) {
@@ -993,6 +1034,35 @@ function FieldPropertiesPanel({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Badge>Button</Badge>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              removeButton(selection.itemIndex!)
+            }}
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Delete
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Position</Label>
+          <Select
+            value={button.position || "right"}
+            onValueChange={(v) =>
+              updateButton(selection.itemIndex!, { position: v as "left" | "center" | "right" })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="left">Left</SelectItem>
+              <SelectItem value="center">Center</SelectItem>
+              <SelectItem value="right">Right</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -1012,6 +1082,15 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
+          <Label>Icon (Lucide name)</Label>
+          <Input
+            value={button.icon || ""}
+            onChange={(e) => updateButton(selection.itemIndex!, { icon: e.target.value })}
+            placeholder="e.g. Save, Trash, Send"
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label>Variant</Label>
           <Select
             value={button.variant || "default"}
@@ -1024,38 +1103,102 @@ function FieldPropertiesPanel({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="primary">Primary (Blue)</SelectItem>
               <SelectItem value="secondary">Secondary</SelectItem>
+              <SelectItem value="success">Success (Green)</SelectItem>
+              <SelectItem value="warning">Warning (Amber)</SelectItem>
+              <SelectItem value="danger">Danger (Red)</SelectItem>
               <SelectItem value="outline">Outline</SelectItem>
-              <SelectItem value="destructive">Destructive</SelectItem>
               <SelectItem value="ghost">Ghost</SelectItem>
               <SelectItem value="link">Link</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Type</Label>
-          <Select
-            value={button.type || "button"}
-            onValueChange={(v) =>
-              updateButton(selection.itemIndex!, { type: v as TsFormButton["type"] })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="button">Normal Button</SelectItem>
-              <SelectItem value="submit">Submit Form</SelectItem>
-              <SelectItem value="reset">Reset Form</SelectItem>
-            </SelectContent>
-          </Select>
+        <Separator />
+
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm">Confirmation Dialog</h4>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Enabled</Label>
+            <Switch
+              checked={!!button.confirmation}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  updateButton(selection.itemIndex!, {
+                    confirmation: {
+                      title: "Are you sure?",
+                      text: "This action cannot be undone.",
+                      buttons: [
+                        { action: "cancel", label: "No", position: "right" },
+                        {
+                          action: "confirm",
+                          label: "Yes",
+                          variant: "destructive",
+                          confirm: true,
+                          position: "right",
+                        },
+                      ],
+                    },
+                  })
+                } else {
+                  updateButton(selection.itemIndex!, { confirmation: undefined })
+                }
+              }}
+            />
+          </div>
+
+          {button.confirmation && (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs">Title</Label>
+                <Input
+                  value={button.confirmation.title}
+                  onChange={(e) =>
+                    updateButton(selection.itemIndex!, {
+                      confirmation: { ...button.confirmation!, title: e.target.value },
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Message</Label>
+                <Textarea
+                  value={button.confirmation.text}
+                  onChange={(e) =>
+                    updateButton(selection.itemIndex!, {
+                      confirmation: { ...button.confirmation!, text: e.target.value },
+                    })
+                  }
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Buttons (JSON)</Label>
+                <Textarea
+                  value={JSON.stringify(button.confirmation.buttons, null, 2)}
+                  onChange={(e) => {
+                    try {
+                      updateButton(selection.itemIndex!, {
+                        confirmation: {
+                          ...button.confirmation!,
+                          buttons: JSON.parse(e.target.value),
+                        },
+                      })
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
+                  rows={4}
+                  className="font-mono text-[10px]"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     )
-  }
-
-  // Cast to TsFieldUpdate for reading optional properties that not every field type carries
+  } // Cast to TsFieldUpdate for reading optional properties that not every field type carries
   // (e.g. placeholder on checkbox). Type-specific properties are accessed via narrowed config below.
   const configProps = config as TsFieldUpdate
   return (
@@ -1124,6 +1267,36 @@ function FieldPropertiesPanel({
           />
         </div>
 
+        {config.type !== "infobox" && config.type !== "markdown" && (
+          <>
+            <div className="flex items-center justify-between">
+              <Label>Select all on focus</Label>
+              <Switch
+                checked={configProps.selectAllOnFocus || false}
+                onCheckedChange={(checked: boolean) => onUpdate({ selectAllOnFocus: checked })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Enter Action</Label>
+              <Input
+                value={configProps.enterAction || ""}
+                onChange={(e) => onUpdate({ enterAction: e.target.value })}
+                placeholder="e.g. submit, focus:next"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Escape Action</Label>
+              <Input
+                value={configProps.escapeAction || ""}
+                onChange={(e) => onUpdate({ escapeAction: e.target.value })}
+                placeholder="e.g. clear, cancel"
+              />
+            </div>
+          </>
+        )}
+
         <div className="flex items-center justify-between">
           <Label>Hidden</Label>
           <Switch
@@ -1138,7 +1311,7 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="font-medium text-sm">Number</h4>
+            <h4 className="font-medium text-sm">Numeric Settings</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Min</Label>
@@ -1171,6 +1344,18 @@ function FieldPropertiesPanel({
                 />
               </div>
             </div>
+            {config.type === "number" && (
+              <div className="space-y-1">
+                <Label className="text-xs">Round to (decimals)</Label>
+                <Input
+                  type="number"
+                  value={config.roundTo ?? ""}
+                  onChange={(e) =>
+                    onUpdate({ roundTo: e.target.value ? Number(e.target.value) : undefined })
+                  }
+                />
+              </div>
+            )}
           </div>
         </>
       )}
@@ -1197,21 +1382,113 @@ function FieldPropertiesPanel({
         config.type === "button-group") && (
         <>
           <Separator />
-          <div className="space-y-2">
-            <Label>Options (JSON)</Label>
-            <Textarea
-              value={JSON.stringify(config.options || [], null, 2)}
-              onChange={(e) => {
-                try {
-                  const options = JSON.parse(e.target.value)
-                  onUpdate({ options })
-                } catch {
-                  // Ignore invalid JSON while typing
-                }
-              }}
-              rows={5}
-              className="font-mono text-xs"
-            />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-sm">Options</h4>
+              {config.type === "combobox" && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Allow Custom</Label>
+                  <Switch
+                    checked={config.allowCustom || false}
+                    onCheckedChange={(checked) => onUpdate({ allowCustom: checked })}
+                  />
+                </div>
+              )}
+              {config.type === "button-group" && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Process Style</Label>
+                  <Switch
+                    checked={config.variant === "process"}
+                    onCheckedChange={(checked) =>
+                      onUpdate({ variant: checked ? "process" : undefined })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+            {(config.type === "combobox" || config.type === "multiselect") && (
+              <div className="space-y-2">
+                <Label className="text-xs">Not Found Message</Label>
+                <Input
+                  value={config.notFoundMessage || ""}
+                  onChange={(e) => onUpdate({ notFoundMessage: e.target.value })}
+                  placeholder="Not found."
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-xs">Options (JSON)</Label>
+              <Textarea
+                value={JSON.stringify(config.options || [], null, 2)}
+                onChange={(e) => {
+                  try {
+                    const options = JSON.parse(e.target.value)
+                    onUpdate({ options })
+                  } catch {
+                    // Ignore invalid JSON while typing
+                  }
+                }}
+                rows={5}
+                className="font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Format: [{'{ \"label\": \"...\", \"value\": \"...\" }'}] or [&quot;a&quot;,
+                &quot;b&quot;]
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {(config.type === "date" || config.type === "datetime") && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm">Date Settings</h4>
+            <div className="space-y-2">
+              <Label className="text-xs">Date Format</Label>
+              <Input
+                value={config.dateFormat || ""}
+                onChange={(e) => onUpdate({ dateFormat: e.target.value })}
+                placeholder={config.type === "date" ? "d.M.yyyy" : "d.M.yyyy HH:mm"}
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Uses date-fns tokens (e.g., d.M.yyyy)
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {(config.type === "file" || config.type === "image") && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm">File Upload</h4>
+            <div className="space-y-2">
+              <Label className="text-xs">Accept (mime types)</Label>
+              <Input
+                value={config.accept || ""}
+                onChange={(e) => onUpdate({ accept: e.target.value })}
+                placeholder="e.g. .pdf,image/*"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Inner Label</Label>
+              <Input
+                value={config.innerLabel || ""}
+                onChange={(e) => onUpdate({ innerLabel: e.target.value })}
+                placeholder="Drop files here..."
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Allow Multiple</Label>
+              <Switch
+                checked={config.multiple || false}
+                onCheckedChange={(checked) => onUpdate({ multiple: checked })}
+              />
+            </div>
           </div>
         </>
       )}
@@ -1256,7 +1533,9 @@ function FieldPropertiesPanel({
           <Label>Visual Style</Label>
           <Select
             value={config.variant || ""}
-            onValueChange={(v) => onUpdate({ variant: v as "process" | undefined })}
+            onValueChange={(v) =>
+              onUpdate({ variant: (v.trim() || undefined) as "process" | undefined })
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -1269,10 +1548,44 @@ function FieldPropertiesPanel({
         </div>
       )}
 
+      {config.type === "button" && (
+        <div className="space-y-3">
+          <Separator />
+          <div className="space-y-2">
+            <Label>Action Name</Label>
+            <Input
+              value={config.action || ""}
+              onChange={(e) => onUpdate({ action: e.target.value })}
+              placeholder="e.g. click:save"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Button Variant</Label>
+            <Select
+              value={(config.variant as string) || "default"}
+              onValueChange={(v) => onUpdate({ variant: v as TsButtonVariant })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="primary">Primary</SelectItem>
+                <SelectItem value="secondary">Secondary</SelectItem>
+                <SelectItem value="destructive">Destructive</SelectItem>
+                <SelectItem value="outline">Outline</SelectItem>
+                <SelectItem value="ghost">Ghost</SelectItem>
+                <SelectItem value="link">Link</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       {config.type === "relationship" && (
         <div className="space-y-3">
           <Separator />
-          <h4 className="font-medium text-sm">Relationship</h4>
+          <h4 className="font-medium text-sm">Relationship Settings</h4>
           <div className="space-y-2">
             <Label className="text-xs">Target Entity</Label>
             <Input
@@ -1295,6 +1608,41 @@ function FieldPropertiesPanel({
                 <SelectItem value="multiple">Multiple</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Value Field (ID)</Label>
+            <Input
+              value={config.valueField || "id"}
+              onChange={(e) => onUpdate({ valueField: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Display Fields (JSON Array)</Label>
+            <Input
+              value={JSON.stringify(config.displayFields || ["name"])}
+              onChange={(e) => {
+                try {
+                  onUpdate({ displayFields: JSON.parse(e.target.value) })
+                } catch {
+                  /* ignore */
+                }
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Mock Options (JSON)</Label>
+            <Textarea
+              value={JSON.stringify(config.options || [], null, 2)}
+              onChange={(e) => {
+                try {
+                  onUpdate({ options: JSON.parse(e.target.value) })
+                } catch {
+                  /* ignore */
+                }
+              }}
+              rows={5}
+              className="font-mono text-[10px]"
+            />
           </div>
         </div>
       )}
@@ -1328,6 +1676,72 @@ function FieldPropertiesPanel({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Sortable item for form buttons
+ */
+function SortableButton({
+  button,
+  index,
+  isSelected,
+  onSelect,
+  onRemove,
+}: {
+  button: TsFormButton
+  index: number
+  isSelected: boolean
+  onSelect: () => void
+  onRemove: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `button-${index}`,
+    data: {
+      type: "button-move",
+      index,
+    },
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn("flex items-center gap-1 group relative", isDragging && "opacity-50 z-50")}
+    >
+      <Badge
+        variant="outline"
+        className={cn(
+          "py-1.5 px-3 cursor-grab active:cursor-grabbing hover:border-primary transition-colors flex items-center gap-2",
+          isSelected ? "border-primary ring-1 ring-primary" : ""
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect()
+        }}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3 w-3 text-muted-foreground" />
+        {button.label}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </Badge>
     </div>
   )
 }

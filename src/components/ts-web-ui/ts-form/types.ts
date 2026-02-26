@@ -352,6 +352,7 @@ export interface TsFormConfirmation {
     label: string
     variant?: TsButtonVariant
     confirm?: boolean
+    position?: "left" | "center" | "right"
   }[]
 }
 
@@ -361,5 +362,6 @@ export interface TsFormButton {
   variant?: TsButtonVariant
   type?: "submit" | "button" | "reset"
   icon?: string
+  position?: "left" | "center" | "right"
   confirmation?: TsFormConfirmation
 }
