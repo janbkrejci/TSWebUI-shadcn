@@ -9,8 +9,6 @@ import { useForm } from "react-hook-form"
 
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -140,13 +138,68 @@ export function TsForm({
   }
 
   const handleConfirmationAction = (btnConfig: { action: string; confirm?: boolean }) => {
-    setConfirmation((prev) => ({ ...prev, isOpen: false }))
-
     if (btnConfig.confirm && confirmation.pendingAction && confirmation.pendingData) {
-      setSubmittingAction(confirmation.pendingAction)
       onSubmit?.(confirmation.pendingData as Record<string, unknown>, confirmation.pendingAction)
-      setSubmittingAction(null)
     }
+    setConfirmation((prev) => ({ ...prev, isOpen: false }))
+  }
+
+  const renderButtons = (btns: (TsFormButton | TsFormConfirmation["buttons"][0])[]) => {
+    return btns.map((btn, idx) => {
+      // Map variants
+      type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+      let variant: ButtonVariant = "default"
+      let customClass = ""
+
+      if (btn.variant === "primary") {
+        customClass = "bg-blue-600 text-white hover:bg-blue-700 border-none"
+      } else if (btn.variant === "success") {
+        customClass = "bg-green-600 text-white hover:bg-green-700 border-none"
+      } else if (btn.variant === "warning") {
+        customClass = "bg-amber-500 text-white hover:bg-amber-600 border-none"
+      } else if (btn.variant === "danger" || btn.variant === "destructive") {
+        variant = "destructive"
+      } else if (
+        btn.variant === "default" ||
+        btn.variant === "outline" ||
+        btn.variant === "secondary" ||
+        btn.variant === "ghost" ||
+        btn.variant === "link"
+      ) {
+        variant = btn.variant
+      }
+
+      // Check if it's a confirmation button
+      const isConfirmBtn = "confirm" in btn
+
+      return (
+        <Button
+          key={idx}
+          type={!isConfirmBtn ? (btn as TsFormButton).type || "submit" : "button"}
+          variant={variant}
+          className={customClass}
+          onClick={(e) => {
+            if (isConfirmBtn) {
+              handleConfirmationAction(btn as TsFormConfirmation["buttons"][0])
+            } else {
+              handleButtonClick(e, btn as TsFormButton)
+            }
+          }}
+          disabled={
+            !isConfirmBtn &&
+            form.formState.isSubmitting &&
+            submittingAction === (btn as TsFormButton).action
+          }
+        >
+          {!isConfirmBtn &&
+            form.formState.isSubmitting &&
+            submittingAction === (btn as TsFormButton).action && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+          {btn.label}
+        </Button>
+      )
+    })
   }
 
   return (
@@ -157,45 +210,16 @@ export function TsForm({
 
           {/* Buttons Bar */}
           {buttons.length > 0 && (
-            <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t">
-              {buttons.map((btn, idx) => {
-                // Map variants
-                type ButtonVariant =
-                  | "default"
-                  | "destructive"
-                  | "outline"
-                  | "secondary"
-                  | "ghost"
-                  | "link"
-                let variant: ButtonVariant = "default"
-                if (btn.variant === "primary") variant = "default"
-                else if (btn.variant === "danger") variant = "destructive"
-                else if (
-                  btn.variant === "default" ||
-                  btn.variant === "destructive" ||
-                  btn.variant === "outline" ||
-                  btn.variant === "secondary" ||
-                  btn.variant === "ghost" ||
-                  btn.variant === "link"
-                ) {
-                  variant = btn.variant
-                }
-
-                return (
-                  <Button
-                    key={idx}
-                    type={btn.type || "submit"}
-                    variant={variant}
-                    onClick={(e) => handleButtonClick(e, btn)}
-                    disabled={form.formState.isSubmitting && submittingAction === btn.action}
-                  >
-                    {form.formState.isSubmitting && submittingAction === btn.action && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    {btn.label}
-                  </Button>
-                )
-              })}
+            <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">
+              <div className="flex flex-1 flex-row items-center justify-start gap-2">
+                {renderButtons(buttons.filter((b) => b.position === "left"))}
+              </div>
+              <div className="flex flex-1 flex-row items-center justify-center gap-2">
+                {renderButtons(buttons.filter((b) => b.position === "center"))}
+              </div>
+              <div className="flex flex-1 flex-row items-center justify-end gap-2">
+                {renderButtons(buttons.filter((b) => !b.position || b.position === "right"))}
+              </div>
             </div>
           )}
         </form>
@@ -207,29 +231,23 @@ export function TsForm({
           open={confirmation.isOpen}
           onOpenChange={(open: boolean) => setConfirmation((prev) => ({ ...prev, isOpen: open }))}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle>{confirmation.config.title}</AlertDialogTitle>
               <AlertDialogDescription>{confirmation.config.text}</AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              {confirmation.config.buttons.map((btn, idx) =>
-                btn.confirm ? (
-                  <AlertDialogAction
-                    key={idx}
-                    onClick={() => handleConfirmationAction(btn)}
-                    className={
-                      btn.variant === "danger" ? "bg-destructive hover:bg-destructive/90" : ""
-                    }
-                  >
-                    {btn.label}
-                  </AlertDialogAction>
-                ) : (
-                  <AlertDialogCancel key={idx} onClick={() => handleConfirmationAction(btn)}>
-                    {btn.label}
-                  </AlertDialogCancel>
-                )
-              )}
+            <AlertDialogFooter className="flex items-center justify-between gap-2 w-full sm:justify-between flex-row">
+              <div className="flex items-center gap-2">
+                {renderButtons(confirmation.config.buttons.filter((b) => b.position === "left"))}
+              </div>
+              <div className="flex items-center gap-2">
+                {renderButtons(confirmation.config.buttons.filter((b) => b.position === "center"))}
+              </div>
+              <div className="flex items-center gap-2 sm:space-x-0 sm:justify-end">
+                {renderButtons(
+                  confirmation.config.buttons.filter((b) => !b.position || b.position === "right")
+                )}
+              </div>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
