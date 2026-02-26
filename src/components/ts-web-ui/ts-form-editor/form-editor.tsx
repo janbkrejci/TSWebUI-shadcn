@@ -74,7 +74,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 import { TsForm } from "../ts-form"
-import { TsFieldDef, TsFieldUpdate, TsFormButton, TsInfoboxVariant } from "../ts-form/types"
+import {
+  TsButtonVariant,
+  TsFieldDef,
+  TsFieldUpdate,
+  TsFormButton,
+  TsInfoboxVariant,
+} from "../ts-form/types"
 import { useFormEditorStore } from "./store"
 import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./types"
 
@@ -107,8 +113,10 @@ export function TsFormEditor() {
     addField,
     removeField,
     updateFieldConfig,
+    moveField,
     addButton,
     removeButton,
+    moveButton,
     setSelection,
     clearSelection,
     importJson,
