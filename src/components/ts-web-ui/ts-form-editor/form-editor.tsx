@@ -8,6 +8,7 @@ import {
   PointerSensor,
   closestCenter,
   useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
