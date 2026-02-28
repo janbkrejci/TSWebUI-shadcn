@@ -127,8 +127,12 @@ function renderWidget(
 ) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Extract actions reliably from any field type
-    const enterAction = (def as Record<string, unknown>).enterAction as string | undefined
-    const escapeAction = (def as Record<string, unknown>).escapeAction as string | undefined
+    const enterAction = (def as unknown as Record<string, unknown>).enterAction as
+      | string
+      | undefined
+    const escapeAction = (def as unknown as Record<string, unknown>).escapeAction as
+      | string
+      | undefined
 
     if (e.key === "Enter") {
       if (enterAction) {
