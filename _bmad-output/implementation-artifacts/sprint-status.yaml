@@ -41,7 +41,7 @@ story_location: /Users/jbk/Documents/TSWebUI-shadcn/_bmad-output/implementation-
 
 development_status:
   epic-1: in-progress
-  1-1-modularni-architektura-widgetu: ready-for-dev
+  1-1-modularni-architektura-widgetu: done
   1-2-odstraneni-zod-resolveru-a-schema-generatoru-z-jadra: ready-for-dev
   1-3-migrace-textovych-widgetu-na-bezvalidacni-rezim: ready-for-dev
   1-4-migrace-vyberovych-a-komplexnich-widgetu-na-bezvalidacni-rezim: ready-for-dev
