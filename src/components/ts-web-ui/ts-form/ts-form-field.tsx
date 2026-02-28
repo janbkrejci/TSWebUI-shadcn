@@ -126,8 +126,10 @@ function renderWidget(
   hasError: boolean = false
 ) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const enterAction = "enterAction" in def ? def.enterAction : undefined
-    const escapeAction = "escapeAction" in def ? def.escapeAction : undefined
+    // Extract actions reliably from any field type
+    const enterAction = (def as Record<string, unknown>).enterAction as string | undefined
+    const escapeAction = (def as Record<string, unknown>).escapeAction as string | undefined
+
     if (e.key === "Enter") {
       if (enterAction) {
         e.preventDefault()
@@ -140,9 +142,12 @@ function renderWidget(
       }
     } else if (e.key === "Escape") {
       e.preventDefault()
+      e.stopPropagation()
       if (!escapeAction || escapeAction === "clear") {
         field.onChange("")
-      } else {
+      }
+
+      if (escapeAction) {
         const event = new CustomEvent("form-key-action", {
           detail: { key: "Escape", action: escapeAction, field: name },
           bubbles: true,
@@ -432,8 +437,11 @@ function renderWidget(
           <Markdown
             remarkPlugins={[remarkGfm]}
             components={{
-              a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
-              /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+              /* eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+              a: ({ node, ...props }: any) => (
+                <a {...props} target="_blank" rel="noopener noreferrer" />
+              ),
+              /* eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
               code: ({ node, inline, className, children, ...props }: any) => {
                 if (inline) {
                   return (
@@ -509,7 +517,7 @@ function renderWidget(
 
     case "empty":
       // Empty placeholder for layout purposes
-      return <div className="min-h-[40px]" />
+      return <div className="min-h-10" />
 
     case "relationship":
       // Relationship picker for entity selection
@@ -697,7 +705,7 @@ function MultiSelectWidget({
             }
           }}
           className={cn(
-            "flex min-h-[40px] w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
+            "flex min-h-10 w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
             "hover:bg-accent dark:hover:bg-input/30",
             "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
             errorClass,
@@ -948,7 +956,7 @@ function RelationshipWidget({
                   <Badge
                     key={String(val)}
                     variant="secondary"
-                    className="shrink-0 gap-1 text-xs h-6 max-w-[120px]"
+                    className="shrink-0 gap-1 text-xs h-6 max-w-30"
                   >
                     <span className="truncate">{getDisplayText(val, chipDisplayFields)}</span>
                     {!def.readonly && !def.disabled && (
@@ -1110,6 +1118,7 @@ function NumberWidget({
     formatNumericValue(field.value as number | undefined, def.roundTo)
   )
   const [isFocused, setIsFocused] = React.useState(false)
+  const isClearingRef = React.useRef(false)
 
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
@@ -1126,6 +1135,7 @@ function NumberWidget({
       return
     }
     setIsFocused(true)
+    isClearingRef.current = false
     // Remove thousands separators for editing
     const clean = displayValue.replace(/\s/g, "")
     setDisplayValue(clean)
@@ -1135,6 +1145,10 @@ function NumberWidget({
 
   const handleBlur = () => {
     setIsFocused(false)
+    if (isClearingRef.current) {
+      isClearingRef.current = false
+      return
+    }
     const num = parseNumericValue(displayValue)
     field.onChange(num)
     field.onBlur()
@@ -1149,14 +1163,18 @@ function NumberWidget({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const enterAction = def.enterAction
+    const escapeAction = def.escapeAction || "clear"
+
     if (e.key === "Enter") {
       e.preventDefault()
-      if (def.enterAction) {
-        e.stopPropagation()
-        const num = parseNumericValue(displayValue)
-        field.onChange(num)
+      e.stopPropagation()
+      const num = parseNumericValue(displayValue)
+      field.onChange(num)
+
+      if (enterAction) {
         const event = new CustomEvent("form-key-action", {
-          detail: { key: "Enter", action: def.enterAction, field: name },
+          detail: { key: "Enter", action: enterAction, field: name },
           bubbles: true,
         })
         ;(e.currentTarget as HTMLElement).dispatchEvent(event)
@@ -1165,15 +1183,23 @@ function NumberWidget({
       }
     } else if (e.key === "Escape") {
       e.preventDefault()
-      if (def.escapeAction && def.escapeAction !== "clear") {
+      e.stopPropagation()
+
+      if (escapeAction === "clear") {
+        isClearingRef.current = true
+        setDisplayValue("")
+        field.onChange(undefined)
+      }
+
+      if (escapeAction) {
         const event = new CustomEvent("form-key-action", {
-          detail: { key: "Escape", action: def.escapeAction, field: name },
+          detail: { key: "Escape", action: escapeAction, field: name },
           bubbles: true,
         })
         ;(e.currentTarget as HTMLElement).dispatchEvent(event)
-      } else {
-        setDisplayValue("")
-        field.onChange(undefined)
+      }
+
+      if (!escapeAction || escapeAction === "clear") {
         e.currentTarget.blur()
       }
     }
@@ -1779,7 +1805,7 @@ function SliderWithTooltip({
         onPointerLeave={() => setShowTooltip(false)}
         disabled={def.disabled}
         className={cn(
-          hasError && "[&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
+          hasError && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive"
         )}
       />
     </div>

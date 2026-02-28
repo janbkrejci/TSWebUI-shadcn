@@ -135,6 +135,50 @@ export function TsFormEditor() {
   const [importError, setImportError] = React.useState("")
   const [activeDragId, setActiveDragId] = React.useState<string | null>(null)
   const [dragType, setActiveDragType] = React.useState<"palette" | "field" | "row" | null>(null)
+  const [eventLog, setEventLog] = React.useState<
+    { id: string; time: string; type: string; data: unknown }[]
+  >([])
+  const previewContainerRef = React.useRef<HTMLDivElement>(null)
+
+  const addLog = React.useCallback((type: string, data: unknown) => {
+    setEventLog((prev) => [
+      {
+        id: Math.random().toString(36).substring(2, 9),
+        time: new Date().toLocaleTimeString(),
+        type,
+        data,
+      },
+      ...prev.slice(0, 49), // Keep last 50 events
+    ])
+  }, [])
+
+  // Handle preview events
+  React.useEffect(() => {
+    if (!showPreview) return
+
+    const handleFieldAction = (e: Event) => {
+      const customEvent = e as CustomEvent
+      // Only log events from our preview container
+      if (previewContainerRef.current?.contains(e.target as Node)) {
+        addLog("FIELD_ACTION", customEvent.detail)
+      }
+    }
+    const handleKeyAction = (e: Event) => {
+      const customEvent = e as CustomEvent
+      // Only log events from our preview container
+      if (previewContainerRef.current?.contains(e.target as Node)) {
+        addLog("KEY_ACTION", customEvent.detail)
+      }
+    }
+
+    window.addEventListener("form-field-action", handleFieldAction)
+    window.addEventListener("form-key-action", handleKeyAction)
+
+    return () => {
+      window.removeEventListener("form-field-action", handleFieldAction)
+      window.removeEventListener("form-key-action", handleKeyAction)
+    }
+  }, [showPreview, addLog])
 
   // DND setup
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -180,7 +224,14 @@ export function TsFormEditor() {
         from.rowIndex !== to.rowIndex ||
         from.itemIndex !== to.itemIndex
       ) {
-        moveField(from.tabIndex, from.rowIndex, from.itemIndex, to.tabIndex, to.rowIndex)
+        moveField(
+          from.tabIndex,
+          from.rowIndex,
+          from.itemIndex,
+          to.tabIndex,
+          to.rowIndex,
+          to.itemIndex
+        )
       }
       return
     }
@@ -392,7 +443,7 @@ export function TsFormEditor() {
                     value={importJsonText}
                     onChange={(e) => setImportJsonText(e.target.value)}
                     placeholder='{"fields": {}, "layout": {}, "buttons": []}'
-                    className="min-h-[300px] font-mono text-sm"
+                    className="min-h-75 font-mono text-sm"
                   />
                   {importError && <p className="text-sm text-destructive">{importError}</p>}
                 </div>
@@ -566,7 +617,7 @@ export function TsFormEditor() {
                       items={getCurrentRows().map((r) => r.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="space-y-2 min-h-[200px]">
+                      <div className="space-y-2 min-h-50">
                         {getCurrentRows().map((row, rowIndex) => (
                           <CanvasRow
                             key={row.id}
@@ -639,15 +690,26 @@ export function TsFormEditor() {
 
               <DragOverlay dropAnimation={null}>
                 {activeDragId ? (
-                  <div className="bg-primary text-primary-foreground px-4 py-2 rounded-md shadow-2xl opacity-90 cursor-grabbing flex items-center gap-2 border-2 border-primary-foreground/20">
+                  <div className="bg-primary text-primary-foreground px-4 py-2 rounded-md shadow-2xl opacity-90 cursor-grabbing flex items-center gap-2 border-2 border-primary-foreground/20 min-w-37.5">
                     <GripVertical className="h-4 w-4 shrink-0" />
-                    <span className="text-sm font-medium">
-                      {dragType === "palette"
-                        ? `Adding ${String(activeDragId).replace("palette-", "")}...`
-                        : activeDragId.startsWith("button-")
-                          ? "Reordering buttons..."
-                          : "Moving row..."}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase opacity-70 font-bold leading-none mb-1">
+                        {dragType === "palette"
+                          ? "Adding"
+                          : dragType === "row"
+                            ? "Moving Row"
+                            : "Moving Field"}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {dragType === "palette"
+                          ? String(activeDragId).replace("palette-", "")
+                          : dragType === "field"
+                            ? String(activeDragId).replace("field-", "")
+                            : activeDragId.startsWith("button-")
+                              ? "Button"
+                              : "Row"}
+                      </span>
+                    </div>
                   </div>
                 ) : null}
               </DragOverlay>
@@ -681,12 +743,21 @@ export function TsFormEditor() {
 
         {/* Preview Dialog */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-none w-[98vw] min-w-[1200px] max-h-[95vh] overflow-auto">
+          <DialogContent
+            className="max-w-none w-[98vw] min-w-300 max-h-[95vh] overflow-auto"
+            onEscapeKeyDown={(e) => {
+              // Prevent dialog from closing on Escape so that form fields can handle it
+              e.preventDefault()
+            }}
+          >
             <DialogHeader>
               <DialogTitle>Form Preview</DialogTitle>
               <DialogDescription>Interactive preview of your form</DialogDescription>
             </DialogHeader>
-            <div className="border rounded-lg p-6 bg-background shadow-sm">
+            <div
+              ref={previewContainerRef}
+              className="border rounded-lg p-6 bg-background shadow-sm"
+            >
               <TsForm
                 fields={form.fields}
                 layout={
@@ -716,14 +787,43 @@ export function TsFormEditor() {
                       }
                 }
                 buttons={form.buttons}
-                onSubmit={(data) => console.log("Form submit:", data)}
+                onSubmit={(data, action) => addLog("SUBMIT", { action, data })}
               />
             </div>
-            <div className="mt-6">
-              <h4 className="font-medium mb-2">JSON Output:</h4>
-              <pre className="p-4 bg-muted rounded-lg text-xs overflow-auto max-h-64 font-mono">
-                {exportJson()}
-              </pre>
+            <div className="mt-6 flex flex-col h-75">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium">Event Log</h4>
+                <Button variant="ghost" size="sm" onClick={() => setEventLog([])}>
+                  Clear Log
+                </Button>
+              </div>
+              <ScrollArea className="flex-1 border rounded-md bg-muted/20 p-2 font-mono text-xs">
+                {eventLog.length === 0 ? (
+                  <div className="text-muted-foreground text-center py-10">
+                    No events recorded yet
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {eventLog.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex gap-2 border-b border-muted py-1 last:border-0"
+                      >
+                        <span className="text-blue-500 shrink-0">[{log.time}]</span>
+                        <Badge
+                          variant="outline"
+                          className="h-4 px-1 text-[10px] uppercase shrink-0"
+                        >
+                          {log.type}
+                        </Badge>
+                        <span className="text-foreground break-all">
+                          {typeof log.data === "string" ? log.data : JSON.stringify(log.data)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </div>
           </DialogContent>
         </Dialog>
@@ -948,7 +1048,7 @@ function CanvasCell({
     <div
       ref={setDroppableRef}
       className={cn(
-        "relative min-h-[60px] p-2 border rounded transition-all cursor-pointer",
+        "relative min-h-15 p-2 border rounded transition-all cursor-pointer",
         isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
         isSelected && "ring-2 ring-primary border-primary",
         isOver && "bg-primary/10 border-primary border-solid scale-[1.02] shadow-sm",

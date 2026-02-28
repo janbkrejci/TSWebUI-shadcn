@@ -80,29 +80,75 @@ export function TsForm({
   }>({ isOpen: false, config: null, pendingAction: null, pendingData: null })
 
   // 3. Handle Submit (called by form onSubmit)
-  const onFormSubmit = (data: FormValues) => {
-    // This logic handles implicit submission via Enter key or direct button click
+  const onFormSubmit = React.useCallback(
+    (data: FormValues) => {
+      // This logic handles implicit submission via Enter key or direct button click
 
-    if (submittingAction) {
-      onSubmit?.(data as Record<string, unknown>, submittingAction)
-      setSubmittingAction(null)
-    } else {
-      // Default submit (e.g. Enter key) - find primary submit button
-      const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
-      if (submitBtn) {
-        if (submitBtn.confirmation) {
-          setConfirmation({
-            isOpen: true,
-            config: submitBtn.confirmation,
-            pendingAction: submitBtn.action,
-            pendingData: data,
-          })
-        } else {
-          onSubmit?.(data as Record<string, unknown>, submitBtn.action)
+      if (submittingAction) {
+        onSubmit?.(data as Record<string, unknown>, submittingAction)
+        setSubmittingAction(null)
+      } else {
+        // Default submit (e.g. Enter key) - find primary submit button
+        const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
+        if (submitBtn) {
+          if (submitBtn.confirmation) {
+            setConfirmation({
+              isOpen: true,
+              config: submitBtn.confirmation,
+              pendingAction: submitBtn.action,
+              pendingData: data,
+            })
+          } else {
+            onSubmit?.(data as Record<string, unknown>, submitBtn.action)
+          }
+        }
+      }
+    },
+    [submittingAction, onSubmit, buttons]
+  )
+
+  // Handle field-level keyboard actions (Enter/Escape)
+  React.useEffect(() => {
+    const handleKeyAction = (e: Event) => {
+      const customEvent = e as CustomEvent<{ key: string; action: string; field: string }>
+      const { key, action } = customEvent.detail
+
+      if (key === "Enter") {
+        if (action === "submit") {
+          form.handleSubmit(onFormSubmit)()
+        } else if (action === "focus:next") {
+          // Find next focusable element in the form
+          const formElement = (e.target as HTMLElement).closest("form")
+          if (formElement) {
+            const inputs = Array.from(
+              formElement.querySelectorAll("input, textarea, select, button")
+            ).filter((el) => {
+              const htmlEl = el as
+                | HTMLInputElement
+                | HTMLTextAreaElement
+                | HTMLSelectElement
+                | HTMLButtonElement
+              return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
+            })
+            const currentIndex = inputs.indexOf(e.target as Element)
+            if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
+              ;(inputs[currentIndex + 1] as HTMLElement).focus()
+            }
+          }
+        }
+      } else if (key === "Escape") {
+        if (action === "clear") {
+          // The clearing is already handled at the field level in ts-form-field.tsx
+          // but we can add additional logic here if needed.
+        } else if (action === "cancel") {
+          // Logic for cancel if needed
         }
       }
     }
-  }
+
+    window.addEventListener("form-key-action", handleKeyAction)
+    return () => window.removeEventListener("form-key-action", handleKeyAction)
+  }, [form, onFormSubmit])
 
   const handleButtonClick = (e: React.MouseEvent, btn: TsFormButton) => {
     if (btn.confirmation) {

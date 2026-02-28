@@ -179,7 +179,8 @@ export interface FormEditorState {
     fromRow: number,
     fromItem: number,
     toTab: number,
-    toRow: number
+    toRow: number,
+    toItem: number
   ) => void
 
   // Buttons
@@ -554,7 +555,14 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     })
   },
 
-  moveField: (fromTab: number, fromRow: number, fromItem: number, toTab: number, toRow: number) => {
+  moveField: (
+    fromTab: number,
+    fromRow: number,
+    fromItem: number,
+    toTab: number,
+    toRow: number,
+    toItem: number
+  ) => {
     const { form, saveToHistory } = get()
     saveToHistory()
 
@@ -576,31 +584,35 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       width: sourceItem.width,
     }
 
-    // Find first empty slot in target row or append
+    // Place in target slot
     const targetRows = newForm.mode === "single" ? newForm.rows : newForm.tabs?.[toTab]?.rows
     if (!targetRows) return
 
     const targetRow = targetRows[toRow]
-    let placed = false
+    const targetItem = targetRow.items[toItem]
 
-    // Try to find an empty slot in the target row
-    for (let i = 0; i < targetRow.items.length; i++) {
-      if (targetRow.items[i].type === "empty" && !targetRow.items[i].field) {
-        targetRow.items[i].field = fieldName
-        targetRow.items[i].type = fieldType
-        placed = true
-        break
-      }
-    }
-
-    // If no empty slot, append to items
-    if (!placed) {
-      targetRow.items.push({
-        id: generateId(),
+    // If target is empty, just place it there
+    if (!targetItem.field || targetItem.type === "empty") {
+      targetRow.items[toItem] = {
+        ...targetItem,
         field: fieldName,
         type: fieldType,
-        width: "1fr",
-      })
+      }
+    } else {
+      // If target is occupied, swap them or find first empty slot?
+      // For now, let's swap for better UX
+      const oldTargetField = targetItem.field
+      const oldTargetType = targetItem.type
+
+      targetRow.items[toItem] = {
+        ...targetItem,
+        field: fieldName,
+        type: fieldType,
+      }
+
+      // Return old target to source position
+      sourceRows[fromRow].items[fromItem].field = oldTargetField
+      sourceRows[fromRow].items[fromItem].type = oldTargetType
     }
 
     set({ form: newForm })
