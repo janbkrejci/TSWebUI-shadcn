@@ -62,6 +62,8 @@ export interface TsFieldBase {
   disabled?: boolean
   readonly?: boolean
   hint?: string
+  /** Do not include this field's value in the final submission data */
+  excludeFromSubmit?: boolean
   /**
    * Static error message from definition.
    * NOTE: For dynamic validation, prefer passing errors via the `errors` prop of TsForm.

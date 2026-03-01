@@ -44,7 +44,7 @@ development_status:
   1-1-modularni-architektura-widgetu: done
   1-2-odstraneni-zod-resolveru-a-schema-generatoru-z-jadra: "done"
   1-3-migrace-textovych-widgetu-na-bezvalidacni-rezim: done
-  1-4-migrace-vyberovych-a-komplexnich-widgetu-na-bezvalidacni-rezim: ready-for-dev
+  1-4-migrace-vyberovych-a-komplexnich-widgetu-na-bezvalidacni-rezim: done
   1-5-striktni-typescript-a-sjednocene-prefixovani: ready-for-dev
   1-6-sjednocene-callbacky-a-filtrace-excludefromsubmit: ready-for-dev
   epic-1-retrospective: optional

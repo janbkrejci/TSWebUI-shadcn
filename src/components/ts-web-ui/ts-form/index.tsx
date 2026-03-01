@@ -96,9 +96,16 @@ export function TsForm({
   // Central submission logic - pass action explicitly
   const executeAction = React.useCallback(
     (action: string, data: Record<string, unknown>) => {
-      onAction?.(action, data)
+      // Filter out fields with excludeFromSubmit: true
+      const filteredData = { ...data }
+      Object.keys(fields).forEach((key) => {
+        if (fields[key]?.excludeFromSubmit) {
+          delete filteredData[key]
+        }
+      })
+      onAction?.(action, filteredData)
     },
-    [onAction]
+    [onAction, fields]
   )
 
   // Handle Enter/Escape actions - Scoped to form element
@@ -129,16 +136,27 @@ export function TsForm({
             }
           }
         } else if (action === "focus:next") {
-          const inputs = Array.from(el.querySelectorAll("input, textarea, select, button")).filter(
-            (el) => {
-              const htmlEl = el as HTMLElement & { disabled?: boolean; tabIndex: number }
-              return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
-            }
-          )
+          const inputs = Array.from(
+            el.querySelectorAll('input:not([type="hidden"]), textarea, select, button')
+          ).filter((el) => {
+            const htmlEl = el as HTMLElement & { disabled?: boolean; tabIndex: number }
+            return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
+          })
           const currentIndex = inputs.indexOf(e.target as Element)
           if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
             ;(inputs[currentIndex + 1] as HTMLElement).focus()
           }
+        } else if (action) {
+          // Custom action on Enter
+          executeAction(action, form.getValues())
+        }
+      } else if (key === "Escape") {
+        if (action === "cancel") {
+          // Find the first button with action cancel, or just emit it
+          executeAction(action, form.getValues())
+        } else if (action) {
+          // Custom action on Escape
+          executeAction(action, form.getValues())
         }
       }
     }

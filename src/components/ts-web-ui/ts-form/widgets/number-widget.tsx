@@ -72,17 +72,18 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // For Enter, we MUST sync the parsed value BEFORE handleFieldKeyDown
+      // triggers a submit action (which uses form values from react-hook-form)
+      if (e.key === "Enter") {
+        const num = parseNumericValue(displayValue)
+        field.onChange(num)
+      }
+
       handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {
         isClearingRef.current = true
         setDisplayValue("")
         field.onChange(undefined)
       })
-
-      // If enter was pressed, we also need to sync the parsed value before potential blur/action
-      if (e.key === "Enter") {
-        const num = parseNumericValue(displayValue)
-        field.onChange(num)
-      }
     }
 
     return (

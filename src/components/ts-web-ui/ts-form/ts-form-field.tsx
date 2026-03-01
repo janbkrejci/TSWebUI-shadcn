@@ -62,6 +62,9 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
     <FormField
       control={form.control}
       name={name}
+      rules={{
+        required: fieldDef.required ? `${fieldDef.label || name} is required` : false,
+      }}
       render={({ field, fieldState }) => {
         // External errors from TsForm's 'errors' prop are synchronized into react-hook-form's state.
         // We prioritize this live state over the static definition.

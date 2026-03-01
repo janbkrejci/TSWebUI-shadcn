@@ -53,14 +53,46 @@ export function handleFieldKeyDown(
 }
 
 /**
- * Parses a string value into a number, supporting localized formats (comma/dot as decimal separator).
+ * Safely evaluates a simple mathematical expression (addition, subtraction, multiplication, division).
+ * Supports both dot and comma as decimal separators.
+ */
+export function evaluateMath(val: string): number | undefined {
+  if (!val || val.trim() === "") return undefined
+
+  // Normalize: remove spaces, replace comma with dot
+  const expression = val.replace(/\s/g, "").replace(",", ".")
+
+  // Only allow numbers and basic math operators
+  if (!/^[0-9.+\-*/^()]+$/.test(expression)) return undefined
+
+  try {
+    // We use Function constructor for a simple, dependency-free evaluator.
+    // Since we strictly validated the input with regex above, this is safe from injection.
+     
+    const result = new Function(`return (${expression})`)()
+    return typeof result === "number" && isFinite(result) ? result : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Parses a string value into a number, supporting localized formats and basic math expressions.
  */
 export function parseNumericValue(val: string): number | undefined {
   if (!val || val.trim() === "") return undefined
-  // Normalize by replacing common separators and removing spaces
+
+  // Try direct float parsing first (normalized)
   const normalized = val.replace(/\s/g, "").replace(",", ".")
   const num = parseFloat(normalized)
-  return isNaN(num) ? undefined : num
+
+  // If the whole string is a valid float, return it
+  if (!isNaN(num) && String(num) === normalized) {
+    return num
+  }
+
+  // Otherwise, try evaluating it as a math expression
+  return evaluateMath(val)
 }
 
 /**
