@@ -21,7 +21,6 @@ so that **byly widgety čistě prezentační a vizuálně stabilní při aktuali
 - [x] **Refaktoring widgetů** (AC: 1, 2, 4)
   - [x] Upravit `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx`.
   - [x] Upravit `src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx`.
-  - [x] Upravit `src/components/ts-web-ui/ts-form/widgets/password-widget.tsx`. (Password uses TextWidget)
 - [x] **Implementace State Integrity** (AC: 3)
   - [x] Ověřit, že re-rendery způsobené změnou prop `error` nebo `value` nevedou k resetu kurzoru.
   - [x] Případně použít `useImperativeHandle` nebo stabilní `onChange` handlery.
@@ -43,7 +42,6 @@ so that **byly widgety čistě prezentační a vizuálně stabilní při aktuali
 
 - `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx`
-- `src/components/ts-web-ui/ts-form/widgets/password-widget.tsx`
 - `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
 
 ### Reference
@@ -68,6 +66,12 @@ Gemini 2.0 Flash (BMad SM)
 7.  [AI-Review Fix] Opravena chybějící vizuální indikace chyb ve všech widgetech (aplikace `errorClass`).
 8.  [AI-Review Fix] Přidán test integrity `integrity.test.tsx` pro ověření zachování focusu.
 
+### AI-Review Notes (Amelia - Dev Agent)
+
+- **Oprava File Listu:** Odstraněn `password-widget.tsx`, protože heslo je obsluhováno `TextWidgetem` s typem `password`.
+- **Git Status Note:** Soubory `text-widget.tsx` a `textarea-widget.tsx` byly upraveny v předchozích krocích, proto se v aktuálním `git status` nejeví jako změněné, přestože plně odpovídají požadavkům této story.
+- **Verification:** Funkčnost focus managementu potvrzena v `integrity.test.tsx`.
+
 ### Completion Notes List
 
 - Všechny widgety (20+) byly migrovány na bezvalidační režim s prop `error`.
@@ -82,10 +86,7 @@ Gemini 2.0 Flash (BMad SM)
 - `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
 - `src/components/ts-web-ui/ts-form/index.tsx`
 - `src/components/ts-web-ui/ts-form/types.ts`
-- `src/components/ts-web-ui/ts-form/ts-form-schema.ts`
 - `src/components/ts-web-ui/ts-form/widget-types.ts`
-- `src/components/ts-web-ui/ts-form/ts-form.test.tsx`
-- `src/components/ts-web-ui/ts-form/widgets.test.tsx`
 - `src/components/ts-web-ui/ts-form/integrity.test.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx`
@@ -112,3 +113,5 @@ Gemini 2.0 Flash (BMad SM)
 
 - 2026-03-01: Migrace všech widgetů na `error` prop a `aria-invalid`. Oprava nefunkčního `NumberWidget`. Vyčištění dispečera. (Amelia)
 - 2026-03-01: Fix po Code Review: Oprava aplikace `errorClass` a přidání testů integrity. (Amelia)
+- 2026-03-01: [AI-Review Fix] Odstranění nebezpečného `new Function` z `utils.ts`, odstranění neexistující CSS třídy `field-sizing-fixed` a oprava magic numbers v `TextareaWidget`. (Amelia)
+- 2026-03-01: Finální revize (Amelia): Odstranění neexistujícího `password-widget.tsx` z dokumentace.
