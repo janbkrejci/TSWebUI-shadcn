@@ -12,12 +12,12 @@ import { TsSliderField } from "../types"
 export interface TsSliderWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsSliderField
-  hasError?: boolean
+  error?: string
   name: string
 }
 
 export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps>(
-  ({ field, def, hasError = false, ...props }, ref) => {
+  ({ field, def, error, ...props }, ref) => {
     const [showTooltip, setShowTooltip] = React.useState(false)
     const [localValue, setLocalValue] = React.useState<number>(field.value ?? def.min ?? 0)
     const readonlyPointerClass = def.readonly ? "pointer-events-none" : ""
@@ -58,8 +58,9 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
           onPointerEnter={() => setShowTooltip(true)}
           onPointerLeave={() => setShowTooltip(false)}
           disabled={def.disabled}
+          aria-invalid={!!error}
           className={cn(
-            hasError && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive"
+            error && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive"
           )}
         />
       </div>

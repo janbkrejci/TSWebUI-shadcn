@@ -19,17 +19,17 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 import { TsFieldOptions, TsMultiselectField } from "../types"
-import { sanitizeId } from "../utils"
+import { getFieldClasses, sanitizeId } from "../utils"
 
 export interface TsMultiSelectWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsMultiselectField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
+  ({ field, def, name, error, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
@@ -47,7 +47,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
       field.onChange(newValues)
     }
 
-    const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
+    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Popover open={open} onOpenChange={setOpen} modal>
@@ -70,9 +70,9 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
               "flex min-h-10 w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
               "hover:bg-accent dark:hover:bg-input/30",
               "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-              errorClass,
+              "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
               def.disabled && "opacity-50 pointer-events-none",
-              def.readonly && "pointer-events-none"
+              readonlyPointerClass
             )}
             {...props}
             ref={ref}

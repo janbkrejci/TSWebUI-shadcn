@@ -13,12 +13,13 @@ import { getFieldClasses } from "../utils"
 export interface TsButtonGroupWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsButtonGroupField
-  hasError?: boolean
+  error?: string
 }
 
 export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupWidgetProps>(
-  ({ field, def, hasError = false, ...props }, ref) => {
-    const { readonlyPointerClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, error, ...props }, ref) => {
+    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
+    const hasError = !!error
 
     if (def.variant === "process") {
       return <ProcessButtonGroup field={field} def={def} />
@@ -88,6 +89,7 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
               onClick={() => {
                 if (!def.disabled && !def.readonly && !isDisabled) field.onChange(value)
               }}
+              aria-invalid={hasError}
             >
               {label}
             </Button>

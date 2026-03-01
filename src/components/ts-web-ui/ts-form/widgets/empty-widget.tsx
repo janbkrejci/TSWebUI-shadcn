@@ -7,12 +7,12 @@ import { TsEmptyField } from "../types"
 export interface TsEmptyWidgetProps {
   def: TsEmptyField
   name?: string
-  hasError?: boolean
+  error?: string
 }
 
 export const EmptyWidget = React.forwardRef<HTMLDivElement, TsEmptyWidgetProps>(
-  ({ ...props }, ref) => {
-    return <div className="min-h-10" {...props} ref={ref} />
+  ({ error, ...props }, ref) => {
+    return <div className="min-h-10" {...props} ref={ref} aria-invalid={!!error} />
   }
 )
 EmptyWidget.displayName = "EmptyWidget"

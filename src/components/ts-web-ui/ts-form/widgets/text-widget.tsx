@@ -12,12 +12,12 @@ export interface TsTextWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsTextField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
-    const { errorClass, readonlyClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, name, error, ...props }, ref) => {
+    const { readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Input
@@ -33,6 +33,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
         disabled={def.disabled}
         readOnly={def.readonly}
         tabIndex={def.readonly ? -1 : undefined}
+        aria-invalid={!!error}
         onFocus={(e) => {
           if (def.readonly) {
             e.currentTarget.blur()
@@ -46,7 +47,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
         onClick={(e) => {
           if (def.selectAllOnFocus) e.currentTarget.select()
         }}
-        className={cn(errorClass, readonlyClass)}
+        className={cn(readonlyClass)}
       />
     )
   }

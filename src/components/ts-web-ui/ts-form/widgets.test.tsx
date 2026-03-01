@@ -13,7 +13,7 @@ const TestForm = ({ name, fieldDef }: { name: string; fieldDef: TsFieldDef }) =>
     defaultValues: {
       [name]:
         fieldDef.type === "multiselect" ||
-        (fieldDef.type === "relationship" && fieldDef.mode === "multi")
+        (fieldDef.type === "relationship" && fieldDef.mode === "multiple")
           ? []
           : "",
     },
@@ -76,7 +76,7 @@ describe("Widget Architecture & Sanity", () => {
       type: "infobox",
       label: "Information",
       value: "This is a hint",
-      variant: "info",
+      variant: "information",
     }
     render(<TestForm name="info" fieldDef={fieldDef} />)
 

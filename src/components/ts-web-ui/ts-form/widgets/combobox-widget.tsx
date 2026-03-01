@@ -19,17 +19,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsComboboxField, TsFieldOptions } from "../types"
-import { sanitizeId } from "../utils"
+import { getFieldClasses, sanitizeId } from "../utils"
 
 export interface TsComboboxWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsComboboxField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
+  ({ field, def, name, error, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
@@ -45,8 +45,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
       searchValue &&
       !options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase())
 
-    const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-    const readonlyClass = def.readonly ? "pointer-events-none" : ""
+    const { readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -55,10 +54,10 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-invalid={!!error}
             aria-controls={`popover-content-${safeId}`}
             className={cn(
               "w-full justify-between hover:bg-background dark:hover:bg-input/30",
-              errorClass,
               readonlyClass
             )}
             disabled={def.disabled}

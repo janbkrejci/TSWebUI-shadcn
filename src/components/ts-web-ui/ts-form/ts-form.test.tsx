@@ -24,9 +24,9 @@ describe("TsForm", () => {
     expect(screen.getByRole("button", { name: /Submit/i })).toBeInTheDocument()
   })
 
-  it("calls onSubmit when form is valid", async () => {
-    const onSubmit = vi.fn()
-    render(<TsForm layout={layout} fields={fields} buttons={buttons} onSubmit={onSubmit} />)
+  it("calls onAction when form is submitted", async () => {
+    const onAction = vi.fn()
+    render(<TsForm layout={layout} fields={fields} buttons={buttons} onAction={onAction} />)
 
     fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: "John" } })
     fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: "Doe" } })
@@ -35,24 +35,68 @@ describe("TsForm", () => {
 
     // Form submission is async in react-hook-form
     await vi.waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({ firstName: "John", lastName: "Doe" }),
-        "submit"
+      expect(onAction).toHaveBeenCalledWith(
+        "submit",
+        expect.objectContaining({ firstName: "John", lastName: "Doe" })
       )
     })
   })
 
-  it("shows validation error for required field", async () => {
-    render(<TsForm layout={layout} fields={fields} buttons={buttons} values={{ firstName: "" }} />)
+  it("calls onFieldChange when a field value changes", async () => {
+    const onFieldChange = vi.fn()
+    render(<TsForm layout={layout} fields={fields} buttons={[]} onFieldChange={onFieldChange} />)
 
+    fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: "Jane" } })
+
+    expect(onFieldChange).toHaveBeenCalledWith("firstName", "Jane", expect.any(Object))
+  })
+
+  it("shows external validation errors via props", async () => {
+    render(
+      <TsForm
+        layout={layout}
+        fields={fields}
+        buttons={buttons}
+        errors={{ firstName: "External error message" }}
+      />
+    )
+
+    expect(await screen.findByText(/External error message/i)).toBeInTheDocument()
+  })
+
+  it("blocks submission when required fields are empty", async () => {
+    const onAction = vi.fn()
+    render(<TsForm layout={layout} fields={fields} buttons={buttons} onAction={onAction} />)
+
+    // Attempt to submit without filling firstName (which is required)
     fireEvent.click(screen.getByRole("button", { name: /Submit/i }))
 
-    // The actual message is "This field is required" in our schema
-    expect(await screen.findByText(/This field is required/i)).toBeInTheDocument()
+    // In a correct implementation, onAction should NOT be called
+    // because react-hook-form should catch the validation error
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(onAction).not.toHaveBeenCalled()
+  })
+
+  it("shows nested validation errors (e.g., items.0.name)", async () => {
+    const nestedFields: Record<string, TsFieldDef> = {
+      "items.0.name": { type: "text", label: "Item Name" },
+    }
+    const nestedLayout: TsFormLayout = { rows: [[{ field: "items.0.name" }]] }
+
+    render(
+      <TsForm
+        layout={nestedLayout}
+        fields={nestedFields}
+        buttons={[]}
+        errors={{ "items.0.name": "Nested error message" }}
+      />
+    )
+
+    expect(await screen.findByText(/Nested error message/i)).toBeInTheDocument()
   })
 
   it("renders and handles button-group", async () => {
-    const onSubmit = vi.fn()
+    const onAction = vi.fn()
     const bgFields: Record<string, TsFieldDef> = {
       status: {
         type: "button-group",
@@ -67,7 +111,7 @@ describe("TsForm", () => {
         layout={bgLayout}
         fields={bgFields}
         buttons={buttons}
-        onSubmit={onSubmit}
+        onAction={onAction}
         values={{ status: "open" }}
       />
     )
@@ -79,12 +123,12 @@ describe("TsForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /Submit/i }))
 
     await vi.waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ status: "closed" }), "submit")
+      expect(onAction).toHaveBeenCalledWith("submit", expect.objectContaining({ status: "closed" }))
     })
   })
 
   it("renders and handles ProcessButtonGroup", async () => {
-    const onSubmit = vi.fn()
+    const onAction = vi.fn()
     const procFields: Record<string, TsFieldDef> = {
       step: {
         type: "button-group",
@@ -100,7 +144,7 @@ describe("TsForm", () => {
         layout={procLayout}
         fields={procFields}
         buttons={buttons}
-        onSubmit={onSubmit}
+        onAction={onAction}
         values={{ step: "1" }}
       />
     )
@@ -112,7 +156,7 @@ describe("TsForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /Submit/i }))
 
     await vi.waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ step: "2" }), "submit")
+      expect(onAction).toHaveBeenCalledWith("submit", expect.objectContaining({ step: "2" }))
     })
   })
 

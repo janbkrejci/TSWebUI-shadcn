@@ -13,15 +13,16 @@ export interface TsFileWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsFileField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
-  ({ field, def, hasError = false, ...props }, ref) => {
+  ({ field, def, error, ...props }, ref) => {
     const [isDragOver, setIsDragOver] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
     const accept = def.accept || (def.type === "image" ? "image/*" : undefined)
     const multiple = def.multiple
+    const hasError = !!error
 
     const files: File[] = React.useMemo(() => {
       if (!field.value) return []
@@ -80,6 +81,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
             isDragOver && "border-primary bg-primary/5",
             !isInteractive && "opacity-50"
           )}
+          aria-invalid={hasError}
           onClick={() => isInteractive && inputRef.current?.click()}
           onDragOver={(e) => {
             e.preventDefault()

@@ -19,8 +19,7 @@ interface MarkdownComponentProps {
 
 export interface TsMarkdownWidgetProps {
   def: TsMarkdownField
-  name?: string
-  hasError?: boolean
+  error?: string
 }
 
 function MarkdownCopyButton({ text }: { text: string }) {
@@ -45,12 +44,13 @@ function MarkdownCopyButton({ text }: { text: string }) {
 }
 
 export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetProps>(
-  ({ def, ...props }, ref) => {
+  ({ def, error, ...props }, ref) => {
     return (
       <div
         className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2"
         {...props}
         ref={ref}
+        aria-invalid={!!error}
       >
         <Markdown
           remarkPlugins={[remarkGfm]}

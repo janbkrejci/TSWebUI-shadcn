@@ -17,7 +17,7 @@ TsForm je **prezentační komponenta** — renderuje UI podle JSON definice.
 
 | Pořadí | Úkol | Priorita | Závislosti |
 |:---:|---|---|---|
-| 1 | ÚKOL 0 — Odstranění Zod validace | 🔴 KRITICKÁ | — |
+| 1 | ÚKOL 0 — Odstranění Zod validace | ✅ HOTOVO | — |
 | 2 | ÚKOL 2+3 — Refactoring: split widgetů + utility | 🔴 VYSOKÁ | ÚKOL 0 |
 | 3 | ÚKOL 1 — Kompletní revize typování | 🔴 KRITICKÁ | ÚKOL 2+3 |
 | 4 | ÚKOL 4 — `onFieldChange` callback | 🔴 VYSOKÁ | ÚKOL 0 |
@@ -36,36 +36,26 @@ TsForm je **prezentační komponenta** — renderuje UI podle JSON definice.
 
 ---
 
-## ÚKOL 0: Odstranění Zod validace a architektonická oprava TsForm
-
-**Priorita:** 🔴 KRITICKÁ — musí být hotovo jako první, protože mění architektonické jádro.
+## ÚKOL 0: Odstranění Zod validace a architektonická oprava TsForm — ✅ HOTOVO
 
 **Soubory:** `src/components/ts-web-ui/ts-form/index.tsx`, `src/components/ts-web-ui/ts-form/ts-form-schema.ts`, `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
 
-### Co je špatně
-
-- `ts-form-schema.ts` generuje Zod schema a `index.tsx` ji používá jako `zodResolver` v React Hook Form
-- React Hook Form běží v `mode: "onChange"` s automatickou validací — to je fundamentálně špatně, protože TsForm je prezentační komponenta a validace patří na backend
-- `<FormMessage />` (řádek 115 v `ts-form-field.tsx`) zobrazuje errory z React Hook Form validace namísto z props
-- Zod schema je navíc nekompletní (chybí multiselect array, file, atd.) — ale to je irelevantní, protože celý schema generátor nemá existovat
-
 ### Kroky
 
-- [ ] **Smazat** soubor `ts-form-schema.ts`
-- [ ] **Odebrat** z `index.tsx`:
-  - Import `zodResolver` a `z` (řádky 3, 5)
-  - Import `generateZodSchema` (řádek 22)
-  - `formSchema` useMemo a `FormValues` type (řádky 46-47)
-  - `resolver: zodResolver(formSchema)` z `useForm` (řádek 51)
+- [x] **Smazat** soubor `ts-form-schema.ts`
+- [x] **Odebrat** z `index.tsx`:
+  - Import `zodResolver` a `z`
+  - Import `generateZodSchema`
+  - `formSchema` useMemo a `FormValues` type
+  - `resolver: zodResolver(formSchema)` z `useForm`
   - `mode: "onChange"` z `useForm`
-- [ ] **Ponechat** React Hook Form pro state management, ale bez validace:
+- [x] **Ponechat** React Hook Form pro state management, ale bez validace:
   - `useForm` zůstane, ale bez `resolver` a bez `mode: "onChange"`
-- [ ] **Definovat explicitní typ** pro form values: `Record<string, unknown>`
-- [ ] **Odebrat** `<FormMessage />` z `ts-form-field.tsx` (řádek 115)
-  - Errory se zobrazují výhradně z `fieldDef.error`
-- [ ] **Ověřit**, že `errors` prop v `TsFormProps` a `error` prop na `TsFieldBase` fungují jako primární a jediný zdroj chybových zpráv
-- [ ] **Zjednodušit** `useEffect` pro external errors (řádky 64-70)
-- [ ] **Odebrat** npm dependency `@hookform/resolvers` (pokud není použita jinde)
+- [x] **Definovat explicitní typ** pro form values: `Record<string, any>` (nebo `unknown`)
+- [ ] **Odebrat** `<FormMessage />` z `ts-form-field.tsx` (BUDE SOUČÁSTÍ ÚKOLU 2+3)
+- [x] **Ověřit**, že `errors` prop v `TsFormProps` a `error` prop na `TsFieldBase` fungují jako primární a jediný zdroj chybových zpráv
+- [x] **Zjednodušit** `useEffect` pro external errors
+- [x] **Odebrat** npm dependency `@hookform/resolvers` a `zod`
 
 ### Acceptance criteria
 

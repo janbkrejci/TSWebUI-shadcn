@@ -57,35 +57,38 @@ const WIDGETS_WITHOUT_EXTERNAL_LABEL: Set<TsFieldDef["type"]> = new Set([
 
 export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
   const form = useFormContext()
-  const hasError = !!fieldDef.error
 
   return (
     <FormField
       control={form.control}
       name={name}
-      render={({ field }) => (
-        <FormItem
-          className={cn(fieldDef.hidden && "hidden", hasError && "[&_label]:text-destructive")}
-        >
-          {!WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && (
-            <FormLabel className={cn(hasError && "text-destructive")}>
-              {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
-            </FormLabel>
-          )}
+      render={({ field, fieldState }) => {
+        // External errors from TsForm's 'errors' prop are synchronized into react-hook-form's state.
+        // We prioritize this live state over the static definition.
+        const errorMessage = fieldState.error?.message || fieldDef.error
+        const hasError = !!errorMessage
 
-          <FormControl>{renderWidget(field, fieldDef, name, hasError)}</FormControl>
+        return (
+          <FormItem
+            className={cn(fieldDef.hidden && "hidden", hasError && "[&_label]:text-destructive")}
+          >
+            {!WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && (
+              <FormLabel className={cn(hasError && "text-destructive")}>
+                {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
+              </FormLabel>
+            )}
 
-          {/* Error message has priority over hint */}
-          {hasError ? (
-            <p className="text-sm text-destructive leading-none">{fieldDef.error}</p>
-          ) : (
-            fieldDef.hint && (
+            <FormControl>{renderWidget(field, fieldDef, name, errorMessage)}</FormControl>
+
+            <FormMessage />
+
+            {/* Hint message (only shown if no error) */}
+            {!hasError && fieldDef.hint && (
               <FormDescription className="leading-none">{fieldDef.hint}</FormDescription>
-            )
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
+            )}
+          </FormItem>
+        )
+      }}
     />
   )
 }
@@ -94,53 +97,53 @@ function renderWidget(
   field: ControllerRenderProps<FieldValues, string>,
   def: TsFieldDef,
   name: string,
-  hasError: boolean = false
+  error?: string
 ) {
   switch (def.type) {
     case "text":
     case "password":
-      return <TextWidget field={field} def={def} name={name} hasError={hasError} />
+      return <TextWidget field={field} def={def} name={name} error={error} />
     case "textarea":
-      return <TextareaWidget field={field} def={def} name={name} hasError={hasError} />
+      return <TextareaWidget field={field} def={def} name={name} error={error} />
     case "number":
-      return <NumberWidget field={field} def={def} name={name} hasError={hasError} />
+      return <NumberWidget field={field} def={def} name={name} error={error} />
     case "slider":
-      return <SliderWidget field={field} def={def} name={name} hasError={hasError} />
+      return <SliderWidget field={field} def={def} name={name} error={error} />
     case "select":
-      return <SelectWidget field={field} def={def} name={name} hasError={hasError} />
+      return <SelectWidget field={field} def={def} name={name} error={error} />
     case "combobox":
-      return <ComboboxWidget field={field} def={def} name={name} hasError={hasError} />
+      return <ComboboxWidget field={field} def={def} name={name} error={error} />
     case "multiselect":
-      return <MultiSelectWidget field={field} def={def} name={name} hasError={hasError} />
+      return <MultiSelectWidget field={field} def={def} name={name} error={error} />
     case "checkbox":
-      return <CheckboxWidget field={field} def={def} name={name} hasError={hasError} />
+      return <CheckboxWidget field={field} def={def} name={name} error={error} />
     case "switch":
-      return <SwitchWidget field={field} def={def} name={name} hasError={hasError} />
+      return <SwitchWidget field={field} def={def} name={name} error={error} />
     case "radio":
-      return <RadioWidget field={field} def={def} name={name} hasError={hasError} />
+      return <RadioWidget field={field} def={def} name={name} error={error} />
     case "button-group":
-      return <ButtonGroupWidget field={field} def={def} name={name} hasError={hasError} />
+      return <ButtonGroupWidget field={field} def={def} name={name} error={error} />
     case "date":
-      return <DateWidget field={field} def={def} name={name} hasError={hasError} />
+      return <DateWidget field={field} def={def} name={name} error={error} />
     case "datetime":
-      return <DateTimeWidget field={field} def={def} name={name} hasError={hasError} />
+      return <DateTimeWidget field={field} def={def} name={name} error={error} />
     case "file":
     case "image":
-      return <FileWidget field={field} def={def} name={name} hasError={hasError} />
+      return <FileWidget field={field} def={def} name={name} error={error} />
     case "infobox":
-      return <InfoboxWidget def={def} name={name} hasError={hasError} />
+      return <InfoboxWidget def={def} />
     case "markdown":
-      return <MarkdownWidget def={def} name={name} hasError={hasError} />
+      return <MarkdownWidget def={def} error={error} />
     case "table":
-      return <TableWidget field={field} def={def} name={name} hasError={hasError} />
+      return <TableWidget field={field} def={def} error={error} />
     case "button":
       return <ButtonWidget def={def} name={name} />
     case "separator":
-      return <SeparatorWidget def={def} name={name} hasError={hasError} />
+      return <SeparatorWidget def={def} />
     case "empty":
-      return <EmptyWidget def={def} name={name} hasError={hasError} />
+      return <EmptyWidget def={def} error={error} />
     case "relationship":
-      return <RelationshipWidget field={field} def={def} name={name} hasError={hasError} />
+      return <RelationshipWidget field={field} def={def} name={name} error={error} />
     default: {
       const _exhaustive: never = def
       return (

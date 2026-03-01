@@ -134,7 +134,7 @@ export default function TsFormPage() {
     data: Record<string, unknown>
   } | null>(null)
 
-  const handleSubmit = (data: Record<string, unknown>, action: string) => {
+  const handleAction = (action: string, data: Record<string, unknown>) => {
     setFormData({ action, data })
     toast(`Form action: ${action}`, {
       description: action === "save" ? "Successfully saved." : "Action performed.",
@@ -147,7 +147,7 @@ export default function TsFormPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">TS Form</h1>
         <p className="text-muted-foreground mt-2">
-          Dynamic, JSON-driven form generation with built-in validation and layout management.
+          Dynamic, JSON-driven form generation with external validation and layout management.
         </p>
       </div>
 
@@ -173,7 +173,10 @@ export default function TsFormPage() {
                   layout={formLayout}
                   fields={formFields}
                   buttons={formButtons}
-                  onSubmit={handleSubmit}
+                  onAction={handleAction}
+                  onFieldChange={(field, value) => {
+                    console.log(`Field ${field} changed to:`, value)
+                  }}
                 />
               </CardContent>
             </Card>
@@ -229,7 +232,7 @@ export default function MyForm() {
     <TsForm 
       fields={fields} 
       layout={layout} 
-      onSubmit={(data, action) => console.log(data)} 
+      onAction={(action, data) => console.log(action, data)} 
     />
   )
 }`}
@@ -241,14 +244,7 @@ export default function MyForm() {
         <TabsContent value="install" className="pt-4">
           <InstallTab
             componentName="ts-form"
-            dependencies={[
-              "@hookform/resolvers",
-              "react-hook-form",
-              "zod",
-              "lucide-react",
-              "date-fns",
-              "react-markdown",
-            ]}
+            dependencies={["react-hook-form", "lucide-react", "date-fns", "react-markdown"]}
           />
         </TabsContent>
 
@@ -296,6 +292,23 @@ export default function MyForm() {
                       <TableCell className="font-mono text-xs">errors</TableCell>
                       <TableCell className="text-xs italic">Record&lt;string, string&gt;</TableCell>
                       <TableCell>External validation errors map.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-mono text-xs">onAction</TableCell>
+                      <TableCell className="text-xs italic">
+                        (action: string, data: Record&lt;string, unknown&gt;) =&gt; void
+                      </TableCell>
+                      <TableCell>
+                        Callback for all form actions (submit, custom buttons, etc.).
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-mono text-xs">onFieldChange</TableCell>
+                      <TableCell className="text-xs italic">
+                        (field: string, value: unknown, formData: Record&lt;string, unknown&gt;)
+                        =&gt; void
+                      </TableCell>
+                      <TableCell>Callback emitted when any field value changes.</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

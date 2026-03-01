@@ -1,11 +1,9 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
-import * as z from "zod"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { type FieldPath, useForm } from "react-hook-form"
 
 import {
   AlertDialog,
@@ -19,19 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 
 import { TsFormLayout } from "./ts-form-layout"
-import { generateZodSchema } from "./ts-form-schema"
-import { TsFormLayout as LayoutType, TsFieldDef, TsFormButton, TsFormConfirmation } from "./types"
-
-export interface TsFormProps {
-  layout: LayoutType
-  fields: Record<string, TsFieldDef>
-  values?: Record<string, unknown>
-  buttons?: TsFormButton[]
-  errors?: Record<string, string>
-  onSubmit?: (data: Record<string, unknown>, action: string) => void
-  readOnly?: boolean
-  className?: string
-}
+import { TsFormButton, TsFormConfirmation, TsFormProps } from "./types"
 
 export function TsForm({
   layout,
@@ -39,160 +25,160 @@ export function TsForm({
   values,
   buttons = [],
   errors,
-  onSubmit,
+  onAction,
+  onFieldChange,
+  readOnly = false,
   className,
-}: Omit<TsFormProps, "readOnly">) {
-  // 1. Generate Schema based on fields
-  const formSchema = React.useMemo(() => generateZodSchema(fields), [fields])
-  type FormValues = z.infer<typeof formSchema>
+}: TsFormProps) {
+  const formRef = React.useRef<HTMLFormElement>(null)
 
-  // 2. Initialize Form
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: (values as FormValues) || {},
-    mode: "onChange",
+  // 1. Initialize Form
+  const form = useForm<Record<string, unknown>>({
+    defaultValues: values || {},
   })
+
+  // Track field changes and emit onFieldChange
+  const watchedValues = form.watch()
+  const prevValuesRef = React.useRef<Record<string, unknown>>(values || {})
+
+  React.useEffect(() => {
+    const currentValues = form.getValues()
+    Object.keys(currentValues).forEach((key) => {
+      if (currentValues[key] !== prevValuesRef.current[key]) {
+        // Clear manual error for the changed field
+        form.clearErrors(key as FieldPath<Record<string, unknown>>)
+        onFieldChange?.(key, currentValues[key], currentValues)
+      }
+    })
+    prevValuesRef.current = { ...currentValues }
+  }, [watchedValues, onFieldChange, form])
 
   // Update form values when props change
   React.useEffect(() => {
     if (values) {
-      form.reset(values as FormValues)
+      const isDifferent = Object.keys(values).some((k) => values[k] !== prevValuesRef.current[k])
+      if (isDifferent) {
+        form.reset(values, { keepDefaultValues: true, keepDirtyValues: true })
+        prevValuesRef.current = { ...values }
+      }
     }
   }, [values, form])
 
   // Handle external errors
   React.useEffect(() => {
+    form.clearErrors()
     if (errors) {
       Object.entries(errors).forEach(([key, message]) => {
-        form.setError(key as keyof FormValues, { type: "manual", message })
+        form.setError(key as FieldPath<Record<string, unknown>>, { type: "manual", message })
       })
     }
   }, [errors, form])
 
-  const [submittingAction, setSubmittingAction] = React.useState<string | null>(null)
+  // Merge global readOnly into field definitions
+  const mergedFields = React.useMemo(() => {
+    const result = { ...fields }
+    if (readOnly) {
+      Object.keys(result).forEach((key) => {
+        result[key] = { ...result[key], readonly: true }
+      })
+    }
+    return result
+  }, [fields, readOnly])
 
   // Confirmation State
   const [confirmation, setConfirmation] = React.useState<{
     isOpen: boolean
     config: TsFormConfirmation | null
     pendingAction: string | null
-    pendingData: FormValues | null
+    pendingData: Record<string, unknown> | null
   }>({ isOpen: false, config: null, pendingAction: null, pendingData: null })
 
-  // 3. Handle Submit (called by form onSubmit)
-  const onFormSubmit = React.useCallback(
-    (data: FormValues) => {
-      // This logic handles implicit submission via Enter key or direct button click
-
-      if (submittingAction) {
-        onSubmit?.(data as Record<string, unknown>, submittingAction)
-        setSubmittingAction(null)
-      } else {
-        // Default submit (e.g. Enter key) - find primary submit button
-        const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
-        if (submitBtn) {
-          if (submitBtn.confirmation) {
-            setConfirmation({
-              isOpen: true,
-              config: submitBtn.confirmation,
-              pendingAction: submitBtn.action,
-              pendingData: data,
-            })
-          } else {
-            onSubmit?.(data as Record<string, unknown>, submitBtn.action)
-          }
-        }
-      }
+  // Central submission logic - pass action explicitly
+  const executeAction = React.useCallback(
+    (action: string, data: Record<string, unknown>) => {
+      onAction?.(action, data)
     },
-    [submittingAction, onSubmit, buttons]
+    [onAction]
   )
 
-  // Handle field-level keyboard actions (Enter/Escape)
+  // Handle Enter/Escape actions - Scoped to form element
   React.useEffect(() => {
+    const el = formRef.current
+    if (!el) return
+
     const handleKeyAction = (e: Event) => {
       const customEvent = e as CustomEvent<{ key: string; action: string; field: string }>
       const { key, action } = customEvent.detail
 
       if (key === "Enter") {
         if (action === "submit") {
-          form.handleSubmit(onFormSubmit)()
-        } else if (action === "focus:next") {
-          // Find next focusable element in the form
-          const formElement = (e.target as HTMLElement).closest("form")
-          if (formElement) {
-            const inputs = Array.from(
-              formElement.querySelectorAll("input, textarea, select, button")
-            ).filter((el) => {
-              const htmlEl = el as
-                | HTMLInputElement
-                | HTMLTextAreaElement
-                | HTMLSelectElement
-                | HTMLButtonElement
-              return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
-            })
-            const currentIndex = inputs.indexOf(e.target as Element)
-            if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
-              ;(inputs[currentIndex + 1] as HTMLElement).focus()
+          // Default submit action - usually the first submit button
+          const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
+          if (submitBtn) {
+            if (submitBtn.confirmation) {
+              form.handleSubmit((data) => {
+                setConfirmation({
+                  isOpen: true,
+                  config: submitBtn.confirmation!,
+                  pendingAction: submitBtn.action,
+                  pendingData: data,
+                })
+              })()
+            } else {
+              form.handleSubmit((data) => executeAction(submitBtn.action, data))()
             }
           }
-        }
-      } else if (key === "Escape") {
-        if (action === "clear") {
-          // The clearing is already handled at the field level in ts-form-field.tsx
-          // but we can add additional logic here if needed.
-        } else if (action === "cancel") {
-          // Logic for cancel if needed
+        } else if (action === "focus:next") {
+          const inputs = Array.from(el.querySelectorAll("input, textarea, select, button")).filter(
+            (el) => {
+              const htmlEl = el as HTMLElement & { disabled?: boolean; tabIndex: number }
+              return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
+            }
+          )
+          const currentIndex = inputs.indexOf(e.target as Element)
+          if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
+            ;(inputs[currentIndex + 1] as HTMLElement).focus()
+          }
         }
       }
     }
 
-    window.addEventListener("form-key-action", handleKeyAction)
-    return () => window.removeEventListener("form-key-action", handleKeyAction)
-  }, [form, onFormSubmit])
+    el.addEventListener("form-key-action", handleKeyAction)
+    return () => el.removeEventListener("form-key-action", handleKeyAction)
+  }, [form, buttons, executeAction])
 
-  const handleButtonClick = (e: React.MouseEvent, btn: TsFormButton) => {
-    if (btn.confirmation) {
-      e.preventDefault()
+  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>, btn: TsFormButton) => {
+    e.preventDefault()
 
-      const proceedWithConfirmation = (data: FormValues) => {
+    const proceed = (data: Record<string, unknown>) => {
+      if (btn.confirmation) {
         setConfirmation({
           isOpen: true,
-          config: btn.confirmation!,
+          config: btn.confirmation,
           pendingAction: btn.action,
           pendingData: data,
         })
-      }
-
-      if (!btn.type || btn.type === "submit") {
-        // Trigger validation first
-        form.handleSubmit(proceedWithConfirmation)(e)
       } else {
-        // No validation for non-submit buttons
-        proceedWithConfirmation(form.getValues() as FormValues)
+        executeAction(btn.action, data)
       }
-      return
     }
 
-    // Normal flow
     if (!btn.type || btn.type === "submit") {
-      setSubmittingAction(btn.action)
-      // form onSubmit will be called
+      form.handleSubmit(proceed)(e)
     } else {
-      e.preventDefault()
-      onSubmit?.(form.getValues() as Record<string, unknown>, btn.action)
+      proceed(form.getValues() as Record<string, unknown>)
     }
   }
 
   const handleConfirmationAction = (btnConfig: { action: string; confirm?: boolean }) => {
     if (btnConfig.confirm && confirmation.pendingAction && confirmation.pendingData) {
-      onSubmit?.(confirmation.pendingData as Record<string, unknown>, confirmation.pendingAction)
+      executeAction(confirmation.pendingAction, confirmation.pendingData)
     }
     setConfirmation((prev) => ({ ...prev, isOpen: false }))
   }
 
   const renderButtons = (btns: (TsFormButton | TsFormConfirmation["buttons"][0])[]) => {
     return btns.map((btn, idx) => {
-      // Map variants
       type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
       let variant: ButtonVariant = "default"
       let customClass = ""
@@ -205,43 +191,30 @@ export function TsForm({
         customClass = "bg-amber-500 text-white hover:bg-amber-600 border-none"
       } else if (btn.variant === "danger" || btn.variant === "destructive") {
         variant = "destructive"
-      } else if (
-        btn.variant === "default" ||
-        btn.variant === "outline" ||
-        btn.variant === "secondary" ||
-        btn.variant === "ghost" ||
-        btn.variant === "link"
-      ) {
-        variant = btn.variant
+      } else if (["default", "outline", "secondary", "ghost", "link"].includes(btn.variant || "")) {
+        variant = btn.variant as ButtonVariant
       }
 
-      // Check if it's a confirmation button
       const isConfirmBtn = "confirm" in btn
 
       return (
         <Button
           key={idx}
-          type={!isConfirmBtn ? (btn as TsFormButton).type || "submit" : "button"}
+          type="button" // Always use type="button" to handle submission programmatically
           variant={variant}
           className={customClass}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             if (isConfirmBtn) {
               handleConfirmationAction(btn as TsFormConfirmation["buttons"][0])
             } else {
               handleButtonClick(e, btn as TsFormButton)
             }
           }}
-          disabled={
-            !isConfirmBtn &&
-            form.formState.isSubmitting &&
-            submittingAction === (btn as TsFormButton).action
-          }
+          disabled={!isConfirmBtn && form.formState.isSubmitting}
         >
-          {!isConfirmBtn &&
-            form.formState.isSubmitting &&
-            submittingAction === (btn as TsFormButton).action && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+          {!isConfirmBtn && form.formState.isSubmitting && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           {btn.label}
         </Button>
       )
@@ -251,11 +224,15 @@ export function TsForm({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onFormSubmit)} className={className}>
-          <TsFormLayout layout={layout} fields={fields} />
+        <form
+          ref={formRef}
+          onSubmit={(e) => e.preventDefault()} // Prevent native submit
+          className={className}
+        >
+          <TsFormLayout layout={layout} fields={mergedFields} />
 
           {/* Buttons Bar */}
-          {buttons.length > 0 && (
+          {buttons.length > 0 && !readOnly && (
             <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">
               <div className="flex flex-1 flex-row items-center justify-start gap-2">
                 {renderButtons(buttons.filter((b) => b.position === "left"))}

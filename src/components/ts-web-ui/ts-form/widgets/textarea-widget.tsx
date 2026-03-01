@@ -12,12 +12,12 @@ export interface TsTextareaWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsTextareaField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
-    const { errorClass, readonlyClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, name, error, ...props }, ref) => {
+    const { readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Textarea
@@ -33,6 +33,7 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
         disabled={def.disabled}
         readOnly={def.readonly}
         tabIndex={def.readonly ? -1 : undefined}
+        aria-invalid={!!error}
         onFocus={(e) => {
           if (def.readonly) {
             e.currentTarget.blur()
@@ -46,7 +47,7 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
         onClick={(e) => {
           if (def.selectAllOnFocus) e.currentTarget.select()
         }}
-        className={cn("field-sizing-fixed", errorClass, readonlyClass)}
+        className={cn("field-sizing-fixed", readonlyClass)}
         style={def.rows ? { height: `${def.rows * 1.5 + 1}rem` } : undefined}
       />
     )

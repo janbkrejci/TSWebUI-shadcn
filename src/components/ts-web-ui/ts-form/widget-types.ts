@@ -62,7 +62,11 @@ export interface TsFieldBase {
   disabled?: boolean
   readonly?: boolean
   hint?: string
-  /** Error message – when set, the widget renders in error/danger state */
+  /**
+   * Static error message from definition.
+   * NOTE: For dynamic validation, prefer passing errors via the `errors` prop of TsForm.
+   * This field serves as a fallback or for static validation states.
+   */
   error?: string
 }
 

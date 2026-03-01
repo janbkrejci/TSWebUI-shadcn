@@ -10,8 +10,6 @@ import { TsInfoboxField } from "../types"
 
 export interface TsInfoboxWidgetProps {
   def: TsInfoboxField
-  name?: string
-  hasError?: boolean
 }
 
 export const InfoboxWidget = React.forwardRef<HTMLDivElement, TsInfoboxWidgetProps>(

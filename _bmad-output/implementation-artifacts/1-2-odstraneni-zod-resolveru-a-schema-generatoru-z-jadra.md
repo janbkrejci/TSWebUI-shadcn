@@ -1,6 +1,6 @@
 # Story 1.2: Odstranění Zod resolveru a schema generátoru z jádra
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,16 +18,16 @@ so that **byl TsForm čistě prezentační a snadno integrovatelný bez vynucen�
 
 ## Tasks / Subtasks
 
-- [ ] **Odstranění kódu** (AC: 1, 2)
-  - [ ] Smazat soubor `ts-form-schema.ts`.
-  - [ ] Odstranit importy `zod` a `zodResolver` z hlavního souboru formuláře.
-- [ ] **Refaktoring useForm** (AC: 3, 4)
-  - [ ] Upravit inicializaci `useForm` v `index.tsx`.
-  - [ ] Zajistit, aby interní stav `react-hook-form` korektně spolupracoval s externí prop `errors`.
-- [ ] **Cleanup typů** (AC: 2)
-  - [ ] Odstranit veškeré typy v `types.ts`, které se týkaly generování schémat (pokud existují a jsou již nepoužité).
-- [ ] **Verifikace demo stránek** (AC: 4)
-  - [ ] Ověřit, že demo formuláře stále fungují (vykreslují se) i bez vnitřní validace.
+- [x] **Odstranění kódu** (AC: 1, 2)
+  - [x] Smazat soubor `ts-form-schema.ts`.
+  - [x] Odstranit importy `zod` a `zodResolver` z hlavního souboru formuláře.
+- [x] **Refaktoring useForm** (AC: 3, 4)
+  - [x] Upravit inicializaci `useForm` v `index.tsx`.
+  - [x] Zajistit, aby interní stav `react-hook-form` korektně spolupracoval s externí prop `errors`.
+- [x] **Cleanup typů** (AC: 2)
+  - [x] Odstranit veškeré typy v `types.ts`, které se týkaly generování schémat (pokud existují a jsou již nepoužité).
+- [x] **Verifikace demo stránek** (AC: 4)
+  - [x] Ověřit, že demo formuláře stále fungují (vykreslují se) i bez vnitřní validace.
 
 ## Dev Notes
 
@@ -57,5 +57,33 @@ Gemini 2.0 Flash (BMad SM)
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
-- Dependency removal strategy verified against "Prezentační vrstva" mandate.
+- [2026-02-28] Implementation started by Amelia (Dev Agent).
+- [2026-02-28] COMPLETED: Zod and resolvers removed. External validation implemented via `errors` prop merging. `package.json` cleaned up.
+- [2026-02-28] REFACTOR (Story 1.1): Split widgets into separate files (21 files), implemented `onAction` and `onFieldChange` callbacks.
+- [2026-02-28] REFACTOR (Story 1.5): Unified all types with `Ts` prefix in `widget-types.ts` and `types.ts`.
+- [2026-03-01] REGISTRY: Fixed issue with missing widget files in registry. Updated build script to include all 21 widget files dynamically.
+- [2026-03-01] CODE REVIEW FIXES: Fixed focus loss on typing, improved `form.reset` stability, and ensured nested field errors (e.g. "items.0.name") are correctly displayed using react-hook-form's native state.
+- [2026-03-01] AI CODE REVIEW: Added missing `widget-types.ts` to git. Refactored `NumberWidget` to use shared `handleFieldKeyDown` utility. Updated documentation to reflect actual implementation scope (1.1, 1.2, 1.5).
+- [2026-03-01] FINAL CODE REVIEW (Amelia): Verified 100% AC completion. Fixed missing `parseNumericValue` and `formatNumericValue` in `utils.ts`. Polished `TsFieldBase` documentation. Story confirmed as DONE.
+
+### Changed Files
+
+- `src/components/ts-web-ui/ts-form/index.tsx`
+- `src/components/ts-web-ui/ts-form/ts-form-schema.ts` (Deleted)
+- `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
+- `src/components/ts-web-ui/ts-form/ts-form.test.tsx`
+- `src/components/ts-web-ui/ts-form/types.ts`
+- `src/components/ts-web-ui/ts-form/widget-types.ts` (Added to git)
+- `src/components/ts-web-ui/ts-form/utils.ts`
+- `src/components/ts-web-ui/ts-form/widgets.test.tsx`
+- `src/components/ts-web-ui/ts-form/widgets/*.tsx` (21 widget files)
+- `src/app/components/ts-form/page.tsx`
+- `package.json`
+- `public/registry/ts-form.json`
+- `scripts/build-registry.ts`
+- `_bmad-output/implementation-artifacts/1-2-odstraneni-zod-resolveru-a-schema-generatoru-z-jadra.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `CLAUDE.md`
+- `GEMINI.md`
+- `README.md`
+- `TODO.md`

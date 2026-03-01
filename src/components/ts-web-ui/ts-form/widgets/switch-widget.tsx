@@ -15,13 +15,14 @@ export interface TsSwitchWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsSwitchField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
-    const { readonlyPointerClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, name, error, ...props }, ref) => {
+    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
     const safeId = sanitizeId(name)
+    const hasError = !!error
 
     return (
       <div className={cn("flex items-center space-x-2", readonlyPointerClass)}>
@@ -30,9 +31,10 @@ export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetPr
           checked={!!field.value}
           onCheckedChange={field.onChange}
           disabled={def.disabled}
+          aria-invalid={hasError}
           className={cn(
             hasError &&
-              "data-[state=checked]:bg-destructive data-[state=unchecked]:bg-destructive/30"
+              "aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:bg-destructive data-[state=unchecked]:bg-destructive/30"
           )}
           {...props}
           ref={ref || field.ref}

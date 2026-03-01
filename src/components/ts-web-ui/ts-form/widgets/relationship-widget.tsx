@@ -1,3 +1,5 @@
+"use client"
+
 import { Check, ChevronsUpDown, X as XIcon } from "lucide-react"
 
 import * as React from "react"
@@ -25,12 +27,13 @@ export interface TsRelationshipWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsRelationshipField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshipWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
-    const { errorClass, readonlyClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, name, error, ...props }, ref) => {
+    const { readonlyClass } = getFieldClasses(error, def.readonly)
+    const hasError = !!error
 
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
@@ -120,6 +123,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
           <div
             role="combobox"
             aria-expanded={open}
+            aria-invalid={hasError}
             aria-controls={`popover-content-${safeId}`}
             tabIndex={def.disabled || def.readonly ? -1 : 0}
             {...props}
@@ -138,9 +142,9 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
               "dark:bg-input/30 transition-[color,box-shadow]",
               !readonlyClass &&
                 "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+              "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
               def.disabled && "opacity-50 pointer-events-none",
-              readonlyClass && "pointer-events-none",
-              errorClass
+              readonlyClass && "pointer-events-none"
             )}
           >
             <div className="flex flex-1 items-center gap-1 overflow-hidden min-w-0 flex-nowrap">

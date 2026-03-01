@@ -18,12 +18,12 @@ import { TsDateTimeField } from "../types"
 export interface TsDateTimeWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsDateTimeField
-  hasError?: boolean
+  error?: string
   name: string
 }
 
 export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidgetProps>(
-  ({ field, def, hasError = false, ...props }, ref) => {
+  ({ field, def, error, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
 
@@ -33,8 +33,6 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
       const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
       return validDate ? format(validDate, dateFormat) : ""
     })
-
-    const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
 
     // Only sync input from field value when not focused
     React.useEffect(() => {
@@ -122,9 +120,9 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
             disabled={def.disabled}
             readOnly={def.readonly}
             tabIndex={def.readonly ? -1 : undefined}
+            aria-invalid={!!error}
             className={cn(
               "pr-10 text-right",
-              errorClass,
               def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
             )}
             {...props}

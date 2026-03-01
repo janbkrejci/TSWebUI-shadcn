@@ -11,7 +11,8 @@ export function sanitizeId(name: string): string {
     .replace(/^-|-$/g, "")
 }
 
-export function getFieldClasses(hasError?: boolean, readonly?: boolean) {
+export function getFieldClasses(error?: string, readonly?: boolean) {
+  const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
   const readonlyPointerClass = readonly ? "pointer-events-none" : ""
@@ -49,4 +50,33 @@ export function handleFieldKeyDown(
       ;(e.currentTarget as HTMLElement).dispatchEvent(event)
     }
   }
+}
+
+/**
+ * Parses a string value into a number, supporting localized formats (comma/dot as decimal separator).
+ */
+export function parseNumericValue(val: string): number | undefined {
+  if (!val || val.trim() === "") return undefined
+  // Normalize by replacing common separators and removing spaces
+  const normalized = val.replace(/\s/g, "").replace(",", ".")
+  const num = parseFloat(normalized)
+  return isNaN(num) ? undefined : num
+}
+
+/**
+ * Formats a number for display according to locale and rounding settings.
+ */
+export function formatNumericValue(
+  val: number | undefined,
+  roundTo?: number,
+  locale: string = "cs-CZ"
+): string {
+  if (val === undefined || val === null) return ""
+
+  const options: Intl.NumberFormatOptions = {
+    minimumFractionDigits: roundTo !== undefined ? roundTo : 0,
+    maximumFractionDigits: roundTo !== undefined ? roundTo : 2,
+  }
+
+  return new Intl.NumberFormat(locale, options).format(val)
 }

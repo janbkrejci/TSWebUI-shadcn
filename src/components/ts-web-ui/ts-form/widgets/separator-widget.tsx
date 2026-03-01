@@ -7,7 +7,7 @@ import { TsSeparatorField } from "../types"
 export interface TsSeparatorWidgetProps {
   def: TsSeparatorField
   name?: string
-  hasError?: boolean
+  error?: string
 }
 
 export const SeparatorWidget = React.forwardRef<HTMLDivElement, TsSeparatorWidgetProps>(

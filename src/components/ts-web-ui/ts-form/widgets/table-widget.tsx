@@ -13,15 +13,21 @@ export interface TsTableWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsTableField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const TableWidget = React.forwardRef<HTMLDivElement, TsTableWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
-    const { errorClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, error, ...props }, ref) => {
+    const { errorClass } = getFieldClasses(error, def.readonly)
+    const hasError = !!error
 
     return (
-      <div className={cn("border rounded-md p-2", errorClass)} {...props} ref={ref}>
+      <div
+        className={cn("border rounded-md p-2", errorClass)}
+        {...props}
+        ref={ref}
+        aria-invalid={hasError}
+      >
         <TsTable
           data={(field.value as Record<string, unknown>[]) || []}
           columnDefinitions={def.columns || []}

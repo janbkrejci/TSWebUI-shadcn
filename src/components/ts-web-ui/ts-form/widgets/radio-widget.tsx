@@ -15,24 +15,21 @@ export interface TsRadioWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsRadioField
   name: string
-  hasError?: boolean
+  error?: string
 }
 
 export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
-  ({ field, def, name, hasError = false, ...props }, ref) => {
-    const { readonlyPointerClass } = getFieldClasses(hasError, def.readonly)
+  ({ field, def, name, error, ...props }, ref) => {
+    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
     const safeId = sanitizeId(name)
+    const hasError = !!error
 
     return (
       <RadioGroup
         onValueChange={field.onChange}
         defaultValue={field.value}
         disabled={def.disabled}
-        className={cn(
-          "flex flex-col gap-2",
-          hasError && "[&_button]:border-destructive",
-          readonlyPointerClass
-        )}
+        className={cn("flex flex-col gap-2", readonlyPointerClass)}
         {...props}
         ref={ref}
       >
@@ -42,7 +39,7 @@ export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
           const itemId = `${safeId}-${value}`
           return (
             <div key={value} className="flex items-center space-x-2">
-              <RadioGroupItem value={value} id={itemId} />
+              <RadioGroupItem value={value} id={itemId} aria-invalid={hasError} />
               <FormLabel
                 htmlFor={itemId}
                 className={cn("font-normal cursor-pointer", hasError && "text-destructive")}
