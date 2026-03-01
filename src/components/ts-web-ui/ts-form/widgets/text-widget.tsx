@@ -17,7 +17,7 @@ export interface TsTextWidgetProps {
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
-    const { readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Input
@@ -47,7 +47,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
         onClick={(e) => {
           if (def.selectAllOnFocus) e.currentTarget.select()
         }}
-        className={cn(readonlyClass)}
+        className={cn(errorClass, readonlyClass)}
       />
     )
   }

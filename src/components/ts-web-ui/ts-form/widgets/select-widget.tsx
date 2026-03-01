@@ -25,12 +25,12 @@ export interface TsSelectWidgetProps {
 
 export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetProps>(
   ({ field, def, error, ...props }, ref) => {
-    const { readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Select onValueChange={field.onChange} value={field.value} disabled={def.disabled}>
         <SelectTrigger
-          className={cn(readonlyClass, def.readonly ? "pointer-events-none" : "")}
+          className={cn(errorClass, readonlyClass, def.readonly ? "pointer-events-none" : "")}
           aria-invalid={!!error}
           {...props}
           ref={ref || field.ref}

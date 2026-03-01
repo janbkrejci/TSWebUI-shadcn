@@ -1,6 +1,6 @@
 # Story 1.3: Migrace textových widgetů na bezvalidační režim (Text, Textarea, Password)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -65,12 +65,14 @@ Gemini 2.0 Flash (BMad SM)
 4.  Implementovat `aria-invalid` ve widgetech využívajících Shadcn/UI primitiva (`Input`, `Textarea`, `Select`, `Checkbox`, `Radio`, `Button`).
 5.  Opravit chybějící importy v `NumberWidget`, které způsobovaly nefunkčnost.
 6.  Odstranit nepoužívané proměnné a `any` v dotčených souborech dle Mandátů.
+7.  [AI-Review Fix] Opravena chybějící vizuální indikace chyb ve všech widgetech (aplikace `errorClass`).
+8.  [AI-Review Fix] Přidán test integrity `integrity.test.tsx` pro ověření zachování focusu.
 
 ### Completion Notes List
 
 - Všechny widgety (20+) byly migrovány na bezvalidační režim s prop `error`.
 - State Integrity zajištěna použitím `forwardRef` a stabilních props z `react-hook-form`.
-- Vizuální indikace chyb sjednocena přes `aria-invalid` a Shadcn/UI styly.
+- Vizuální indikace chyb sjednocena přes `aria-invalid` a Shadcn/UI styly (`border-destructive`).
 - `<FormMessage />` zůstává v `TsFormField` (dispatcher), což jej izoluje od vnitřku widgetů (AC 1).
 - Projekt je čistý, bez lint errorů a s opravenými typy.
 
@@ -79,6 +81,12 @@ Gemini 2.0 Flash (BMad SM)
 - `src/components/ts-web-ui/ts-form/utils.ts`
 - `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
 - `src/components/ts-web-ui/ts-form/index.tsx`
+- `src/components/ts-web-ui/ts-form/types.ts`
+- `src/components/ts-web-ui/ts-form/ts-form-schema.ts`
+- `src/components/ts-web-ui/ts-form/widget-types.ts`
+- `src/components/ts-web-ui/ts-form/ts-form.test.tsx`
+- `src/components/ts-web-ui/ts-form/widgets.test.tsx`
+- `src/components/ts-web-ui/ts-form/integrity.test.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/number-widget.tsx`
@@ -103,3 +111,4 @@ Gemini 2.0 Flash (BMad SM)
 ## Change Log
 
 - 2026-03-01: Migrace všech widgetů na `error` prop a `aria-invalid`. Oprava nefunkčního `NumberWidget`. Vyčištění dispečera. (Amelia)
+- 2026-03-01: Fix po Code Review: Oprava aplikace `errorClass` a přidání testů integrity. (Amelia)

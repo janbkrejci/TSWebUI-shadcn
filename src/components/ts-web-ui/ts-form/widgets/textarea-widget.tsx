@@ -17,7 +17,7 @@ export interface TsTextareaWidgetProps {
 
 export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
-    const { readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Textarea
@@ -47,7 +47,7 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
         onClick={(e) => {
           if (def.selectAllOnFocus) e.currentTarget.select()
         }}
-        className={cn("field-sizing-fixed", readonlyClass)}
+        className={cn("field-sizing-fixed", errorClass, readonlyClass)}
         style={def.rows ? { height: `${def.rows * 1.5 + 1}rem` } : undefined}
       />
     )

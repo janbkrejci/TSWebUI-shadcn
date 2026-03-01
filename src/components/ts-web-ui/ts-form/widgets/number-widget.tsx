@@ -30,7 +30,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     const [isFocused, setIsFocused] = React.useState(false)
     const isClearingRef = React.useRef(false)
 
-    const { readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     React.useEffect(() => {
       if (!isFocused) {
@@ -99,7 +99,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         readOnly={def.readonly}
         tabIndex={def.readonly ? -1 : undefined}
         aria-invalid={!!error}
-        className={cn("text-right tabular-nums", readonlyClass)}
+        className={cn("text-right tabular-nums", errorClass, readonlyClass)}
         {...props}
         ref={ref || field.ref}
       />
