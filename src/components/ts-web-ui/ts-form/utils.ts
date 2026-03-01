@@ -1,12 +1,17 @@
 import React from "react"
 
 /**
+ * Default values for widgets to avoid magic numbers.
+ */
+export const DEFAULT_TEXTAREA_ROWS = 3
+
+/**
  * Sanitizes a field name for use in HTML ID/aria-controls attributes.
- * Replaces dots, brackets and other non-alphanumeric characters with hyphens.
+ * Replaces any non-alphanumeric character with a hyphen for valid DOM IDs.
  */
 export function sanitizeId(name: string): string {
   return name
-    .replace(/[\[\]\.]/g, "-")
+    .replace(/[^a-zA-Z0-9]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
 }
@@ -55,31 +60,82 @@ export function handleFieldKeyDown(
 /**
  * Safely evaluates a simple mathematical expression (addition, subtraction, multiplication, division).
  * Supports both dot and comma as decimal separators.
+ * Implementation avoids 'eval' or 'new Function' for security.
  */
 export function evaluateMath(val: string): number | undefined {
   if (!val || val.trim() === "") return undefined
 
-  // Normalize: remove spaces, replace comma with dot
-  const expression = val.replace(/\s/g, "").replace(",", ".")
+  // Normalize: remove spaces, replace all commas with dots
+  const expression = val.replace(/\s/g, "").replace(/,/g, ".")
 
   // Only allow numbers and basic math operators
   if (!/^[0-9.+\-*/^()]+$/.test(expression)) return undefined
 
   try {
-    // SECURITY FIX: Replaced 'new Function' with a safer basic math evaluator
-    // to comply with strict CSP policies.
-    // This handles basic arithmetic (+, -, *, /) and parentheses.
-    // For more complex math, a library like mathjs should be used.
+    const tokens = expression.match(/[0-9.]+|[+\-*/()]/g) || []
+    if (tokens.length === 0) return undefined
 
-    // Simple basic evaluator using a restricted set of characters
-    // Since we've already validated the expression with regex, we can process it.
-    // Note: We use a simplified approach here for common math needs.
-    const result = Number(
-       
-      new Function(`return (${expression})`)()
-    )
+    const ops = {
+      "+": (a: number, b: number) => a + b,
+      "-": (a: number, b: number) => a - b,
+      "*": (a: number, b: number) => a * b,
+      "/": (a: number, b: number) => a / b,
+    }
 
-    return typeof result === "number" && isFinite(result) ? result : undefined
+    const precedence: Record<string, number> = { "+": 1, "-": 1, "*": 2, "/": 2 }
+    const values: number[] = []
+    const operators: string[] = []
+
+    const applyOp = (): boolean => {
+      const op = operators.pop()
+      if (!op || values.length < 2) return false
+      const b = values.pop()!
+      const a = values.pop()!
+      const operation = ops[op as keyof typeof ops]
+      if (!operation) return false
+      values.push(operation(a, b))
+      return true
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i]
+
+      // Handle unary minus: if '-' is the first token or follows an opening parenthesis
+      if (token === "-" && (i === 0 || tokens[i - 1] === "(")) {
+        values.push(0) // Treat -X as 0 - X
+        operators.push("-")
+        continue
+      }
+
+      if (!isNaN(Number(token))) {
+        values.push(Number(token))
+      } else if (token === "(") {
+        operators.push(token)
+      } else if (token === ")") {
+        while (operators.length && operators[operators.length - 1] !== "(") {
+          if (!applyOp()) return undefined
+        }
+        operators.pop()
+      } else {
+        while (
+          operators.length &&
+          operators[operators.length - 1] !== "(" &&
+          precedence[operators[operators.length - 1]] >= precedence[token]
+        ) {
+          if (!applyOp()) return undefined
+        }
+        operators.push(token)
+      }
+    }
+
+    while (operators.length) {
+      if (!applyOp()) return undefined
+    }
+
+    const result = values[0]
+    return typeof result === "number" && isFinite(result) && values.length === 1
+      ? result
+      : undefined
   } catch {
     return undefined
   }

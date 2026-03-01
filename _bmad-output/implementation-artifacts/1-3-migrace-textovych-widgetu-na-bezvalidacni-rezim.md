@@ -104,14 +104,21 @@ Gemini 2.0 Flash (BMad SM)
 - `src/components/ts-web-ui/ts-form/widgets/infobox-widget.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/separator-widget.tsx`
 - `src/components/ts-web-ui/ts-form/widgets/markdown-widget.tsx`
-- `src/components/ts-web-ui/ts-form/widgets/table-widget.tsx`
-- `src/components/ts-web-ui/ts-form/widgets/empty-widget.tsx`
-- `src/components/ts-web-ui/ts-form/widgets/file-widget.tsx`
-- `src/components/ts-web-ui/ts-form/widgets/relationship-widget.tsx`
+- `src/components/ts-web-ui/ts-form/utils.test.ts`
+- `src/components/ts-web-ui/ts-form/widgets/multi-select-widget.tsx`
+- `src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx`
+- `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx`
+- `src/components/ts-web-ui/ts-form/widgets/number-widget.tsx`
+- `src/components/ts-web-ui/ts-form/widgets/slider-widget.tsx`
 
 ## Change Log
 
 - 2026-03-01: Migrace všech widgetů na `error` prop a `aria-invalid`. Oprava nefunkčního `NumberWidget`. Vyčištění dispečera. (Amelia)
+- 2026-03-01: Fix po Code Review (Amelia):
+  - Skutečné odstranění `new Function` z `utils.ts` a náhrada bezpečným matematickým evaluátorem (Shunting-yard).
+  - Sjednocení vizuální indikace chyb v `MultiSelectWidget` pomocí `errorClass`.
+  - Odstranění magického čísla `1.5` z `TextareaWidget`.
+  - Přidání unit testů pro matematický evaluátor (`utils.test.ts`).
 - 2026-03-01: Fix po Code Review: Oprava aplikace `errorClass` a přidání testů integrity. (Amelia)
-- 2026-03-01: [AI-Review Fix] Odstranění nebezpečného `new Function` z `utils.ts`, odstranění neexistující CSS třídy `field-sizing-fixed` a oprava magic numbers v `TextareaWidget`. (Amelia)
+- 2026-03-01: [AI-Review Fix] Odstranění neexistující CSS třídy `field-sizing-fixed` a oprava magic numbers v `TextareaWidget`. (Amelia)
 - 2026-03-01: Finální revize (Amelia): Odstranění neexistujícího `password-widget.tsx` z dokumentace.

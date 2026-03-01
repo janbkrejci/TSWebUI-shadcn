@@ -49,8 +49,9 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
       isClearingRef.current = false
       const clean = displayValue.replace(/\s/g, "")
       setDisplayValue(clean)
-      const el = e.currentTarget
-      setTimeout(() => el.select(), 0)
+      if (def.selectAllOnFocus) {
+        e.currentTarget.select()
+      }
     }
 
     const handleBlur = () => {
@@ -73,10 +74,25 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       // For Enter, we MUST sync the parsed value BEFORE handleFieldKeyDown
-      // triggers a submit action (which uses form values from react-hook-form)
+      // triggers a submit action (which uses form values from react-hook-form).
+      // We use a microtask to ensure RHF has processed the change before the custom event bubbles up.
       if (e.key === "Enter") {
         const num = parseNumericValue(displayValue)
         field.onChange(num)
+
+        if (def.enterAction) {
+          e.preventDefault()
+          e.stopPropagation()
+          // Small delay ensures react-hook-form state is updated before the action handler runs
+          setTimeout(() => {
+            handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {
+              isClearingRef.current = true
+              setDisplayValue("")
+              field.onChange(undefined)
+            })
+          }, 0)
+          return
+        }
       }
 
       handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {

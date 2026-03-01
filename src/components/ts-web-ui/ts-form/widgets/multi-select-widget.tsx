@@ -47,7 +47,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
       field.onChange(newValues)
     }
 
-    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyPointerClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Popover open={open} onOpenChange={setOpen} modal>
@@ -70,12 +70,13 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
               "flex min-h-10 w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
               "hover:bg-accent dark:hover:bg-input/30",
               "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-              "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+              errorClass,
               def.disabled && "opacity-50 pointer-events-none",
               readonlyPointerClass
             )}
             {...props}
             ref={ref}
+            aria-invalid={!!error}
           >
             <div className="flex flex-wrap gap-1">
               {selectedValues.length > 0 ? (
@@ -111,7 +112,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
         </PopoverAnchor>
         <PopoverContent
           id={`popover-content-${safeId}`}
-          className="w-full p-0"
+          className="w-[--radix-popover-trigger-width] p-0"
           onOpenAutoFocus={(e) => {
             e.preventDefault()
             ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()

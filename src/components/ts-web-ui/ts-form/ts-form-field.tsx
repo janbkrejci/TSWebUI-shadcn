@@ -72,9 +72,7 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
         const hasError = !!errorMessage
 
         return (
-          <FormItem
-            className={cn(fieldDef.hidden && "hidden", hasError && "[&_label]:text-destructive")}
-          >
+          <FormItem className={cn(fieldDef.hidden && "hidden")}>
             {!WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && (
               <FormLabel className={cn(hasError && "text-destructive")}>
                 {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
@@ -83,7 +81,7 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
 
             <FormControl>{renderWidget(field, fieldDef, name, errorMessage)}</FormControl>
 
-            <FormMessage />
+            <FormMessage>{errorMessage}</FormMessage>
 
             {/* Hint message (only shown if no error) */}
             {!hasError && fieldDef.hint && (
@@ -105,6 +103,9 @@ function renderWidget(
   switch (def.type) {
     case "text":
     case "password":
+    case "email":
+    case "tel":
+    case "url":
       return <TextWidget field={field} def={def} name={name} error={error} />
     case "textarea":
       return <TextareaWidget field={field} def={def} name={name} error={error} />

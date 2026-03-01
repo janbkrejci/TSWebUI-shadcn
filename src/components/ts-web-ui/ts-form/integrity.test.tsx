@@ -1,5 +1,5 @@
-import { act, render, screen } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { act, fireEvent, render, screen } from "@testing-library/react"
+import { describe, expect, it } from "vitest"
 
 import * as React from "react"
 import { FormProvider, useForm } from "react-hook-form"
@@ -57,7 +57,39 @@ describe("State Integrity & Focus Management", () => {
     expect(input.selectionStart).toBe(3)
     expect(screen.getByText("Field is required")).toBeInTheDocument()
 
-    // Check if red border is applied (AC 2 fix verification)
+    // Check if red border is applied
+    expect(input.className).toContain("border-destructive")
+  })
+
+  it("preserves formatted value in NumberWidget when error state changes", async () => {
+    const fieldDef: TsFieldDef = { type: "number", label: "Price", roundTo: 2, locale: "cs-CZ" }
+
+    const { rerender } = render(<TestWrapper name="price" fieldDef={fieldDef} />)
+
+    const input = screen.getByLabelText(/Price/i) as HTMLInputElement
+
+    // Simulate user typing a math expression
+    await act(async () => {
+      fireEvent.focus(input)
+      fireEvent.change(input, { target: { value: "100 + 50" } })
+    })
+
+    expect(input.value).toBe("100 + 50")
+
+    // On blur it should format
+    await act(async () => {
+      fireEvent.blur(input)
+    })
+
+    // We expect formatted value "150,00"
+    expect(input.value).toBe("150,00")
+
+    // Simulate async error arrival
+    rerender(<TestWrapper name="price" fieldDef={fieldDef} externalError="Invalid price" />)
+
+    // Verify value is preserved
+    expect(input.value).toBe("150,00")
+    expect(screen.getByText("Invalid price")).toBeInTheDocument()
     expect(input.className).toContain("border-destructive")
   })
 })

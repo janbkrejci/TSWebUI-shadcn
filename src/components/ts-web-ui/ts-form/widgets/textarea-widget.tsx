@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
 import { TsTextareaField } from "../types"
-import { getFieldClasses, handleFieldKeyDown } from "../utils"
+import { DEFAULT_TEXTAREA_ROWS, getFieldClasses, handleFieldKeyDown } from "../utils"
 
 export interface TsTextareaWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
@@ -26,7 +26,7 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
         {...props}
         ref={ref || field.ref}
         value={(field.value as string) ?? ""}
-        rows={def.rows || 3}
+        rows={def.rows || DEFAULT_TEXTAREA_ROWS}
         onKeyDown={(e) =>
           handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => field.onChange(""))
         }
@@ -48,7 +48,6 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
           if (def.selectAllOnFocus) e.currentTarget.select()
         }}
         className={cn(errorClass, readonlyClass)}
-        style={def.rows ? { minHeight: `${def.rows * 1.5}rem` } : undefined}
       />
     )
   }

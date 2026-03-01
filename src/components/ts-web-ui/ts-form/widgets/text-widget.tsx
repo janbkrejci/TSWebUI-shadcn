@@ -1,6 +1,9 @@
+import { Eye, EyeOff } from "lucide-react"
+
 import * as React from "react"
 import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { cn } from "@/lib/utils"
@@ -17,38 +20,60 @@ export interface TsTextWidgetProps {
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
+    const [showPassword, setShowPassword] = React.useState(false)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
+    const isPassword = def.type === "password"
+    const inputType = isPassword ? (showPassword ? "text" : "password") : def.type
+
     return (
-      <Input
-        type={def.type}
-        placeholder={def.placeholder}
-        {...field}
-        {...props}
-        ref={ref || field.ref}
-        value={(field.value as string) ?? ""}
-        onKeyDown={(e) =>
-          handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => field.onChange(""))
-        }
-        disabled={def.disabled}
-        readOnly={def.readonly}
-        tabIndex={def.readonly ? -1 : undefined}
-        aria-invalid={!!error}
-        onFocus={(e) => {
-          if (def.readonly) {
-            e.currentTarget.blur()
-            return
+      <div className="relative">
+        <Input
+          type={inputType}
+          placeholder={def.placeholder}
+          {...field}
+          {...props}
+          ref={ref || field.ref}
+          value={(field.value as string) ?? ""}
+          onKeyDown={(e) =>
+            handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => field.onChange(""))
           }
-          if (def.selectAllOnFocus) {
-            const el = e.currentTarget
-            setTimeout(() => el.select(), 0)
-          }
-        }}
-        onClick={(e) => {
-          if (def.selectAllOnFocus) e.currentTarget.select()
-        }}
-        className={cn(errorClass, readonlyClass)}
-      />
+          disabled={def.disabled}
+          readOnly={def.readonly}
+          tabIndex={def.readonly ? -1 : undefined}
+          aria-invalid={!!error}
+          onFocus={(e) => {
+            if (def.readonly) {
+              e.currentTarget.blur()
+              return
+            }
+            if (def.selectAllOnFocus) {
+              const el = e.currentTarget
+              setTimeout(() => el.select(), 0)
+            }
+          }}
+          onClick={(e) => {
+            if (def.selectAllOnFocus) e.currentTarget.select()
+          }}
+          className={cn(errorClass, readonlyClass, isPassword && "pr-10")}
+        />
+        {isPassword && !def.readonly && !def.disabled && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 h-full w-10 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+          </Button>
+        )}
+      </div>
     )
   }
 )
