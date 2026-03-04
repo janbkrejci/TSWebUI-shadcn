@@ -13,6 +13,7 @@ import {
   getFieldClasses,
   handleFieldKeyDown,
   parseNumericValue,
+  sanitizeId,
 } from "../utils"
 
 export interface TsNumberWidgetProps {
@@ -24,6 +25,7 @@ export interface TsNumberWidgetProps {
 
 export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetProps>(
   ({ field, def, error, name, ...props }, ref) => {
+    const safeId = sanitizeId(name)
     const [displayValue, setDisplayValue] = React.useState<string>(() =>
       formatNumericValue(field.value as number | undefined, def.roundTo, def.locale)
     )
@@ -41,15 +43,27 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     }, [field.value, isFocused, def.roundTo, def.locale])
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-      if (def.readonly) {
-        e.currentTarget.blur()
-        return
-      }
       setIsFocused(true)
       isClearingRef.current = false
+
+      // Store current selection range to prevent jumping
+      const selectionStart = e.currentTarget.selectionStart
+      const selectionEnd = e.currentTarget.selectionEnd
+
       const clean = displayValue.replace(/\s/g, "")
       setDisplayValue(clean)
-      if (def.selectAllOnFocus) {
+
+      // Restore selection if applicable
+      if (selectionStart !== null && selectionEnd !== null && !def.selectAllOnFocus) {
+        // Calculate new position after spaces removal
+        const spacesBefore = (displayValue.substring(0, selectionStart).match(/\s/g) || []).length
+        const newStart = selectionStart - spacesBefore
+        const newEnd = selectionEnd - spacesBefore
+
+        setTimeout(() => {
+          e.target.setSelectionRange(newStart, newEnd)
+        }, 0)
+      } else if (def.selectAllOnFocus && !def.readonly) {
         e.currentTarget.select()
       }
     }
@@ -68,6 +82,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value
+      // Support numbers and basic math operators matching evaluator
       const clean = val.replace(/[^0-9 .,+*/^()-]/g, "")
       setDisplayValue(clean !== val ? clean : val)
     }
@@ -75,24 +90,18 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       // For Enter, we MUST sync the parsed value BEFORE handleFieldKeyDown
       // triggers a submit action (which uses form values from react-hook-form).
-      // We use a microtask to ensure RHF has processed the change before the custom event bubbles up.
       if (e.key === "Enter") {
         const num = parseNumericValue(displayValue)
         field.onChange(num)
+        setDisplayValue(formatNumericValue(num, def.roundTo, def.locale))
 
-        if (def.enterAction) {
-          e.preventDefault()
-          e.stopPropagation()
-          // Small delay ensures react-hook-form state is updated before the action handler runs
-          setTimeout(() => {
-            handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {
-              isClearingRef.current = true
-              setDisplayValue("")
-              field.onChange(undefined)
-            })
-          }, 0)
-          return
-        }
+        // Let the event bubble up to TsForm for action handling
+        handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {
+          isClearingRef.current = true
+          setDisplayValue("")
+          field.onChange(undefined)
+        })
+        return
       }
 
       handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {
@@ -104,6 +113,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
 
     return (
       <Input
+        id={safeId}
         type="text"
         inputMode="decimal"
         placeholder={def.placeholder}

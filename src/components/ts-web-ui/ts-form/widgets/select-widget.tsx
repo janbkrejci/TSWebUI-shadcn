@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import { TsFieldOptions, TsSelectField } from "../types"
-import { getFieldClasses } from "../utils"
+import { getFieldClasses, sanitizeId } from "../utils"
 
 export interface TsSelectWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
@@ -24,13 +24,15 @@ export interface TsSelectWidgetProps {
 }
 
 export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetProps>(
-  ({ field, def, error, ...props }, ref) => {
+  ({ field, def, name, error, ...props }, ref) => {
+    const safeId = sanitizeId(name)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
-      <Select onValueChange={field.onChange} value={field.value} disabled={def.disabled}>
+      <Select onValueChange={field.onChange} value={field.value ?? ""} disabled={def.disabled}>
         <SelectTrigger
-          className={cn(errorClass, readonlyClass, def.readonly ? "pointer-events-none" : "")}
+          id={`${safeId}-select`}
+          className={cn(errorClass, readonlyClass)}
           aria-invalid={!!error}
           {...props}
           ref={ref || field.ref}

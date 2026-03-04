@@ -20,8 +20,7 @@ export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
-  const readonlyPointerClass = readonly ? "pointer-events-none" : ""
-  return { errorClass, readonlyClass, readonlyPointerClass }
+  return { errorClass, readonlyClass }
 }
 
 export function handleFieldKeyDown(
@@ -32,6 +31,11 @@ export function handleFieldKeyDown(
   onClear?: () => void
 ) {
   if (e.key === "Enter") {
+    // Pro Textarea ignorujeme Enter (chceme nový řádek),
+    // pokud není stisknut s Ctrl/Meta (pak provedeme akci)
+    const isTextarea = (e.currentTarget as HTMLElement).tagName === "TEXTAREA"
+    if (isTextarea && !e.ctrlKey && !e.metaKey) return
+
     if (enterAction) {
       e.preventDefault()
       e.stopPropagation()
@@ -72,7 +76,7 @@ export function evaluateMath(val: string): number | undefined {
   if (!/^[0-9.+\-*/^()]+$/.test(expression)) return undefined
 
   try {
-    const tokens = expression.match(/[0-9.]+|[+\-*/()]/g) || []
+    const tokens = expression.match(/[0-9.]+|[+\-*/^()]/g) || []
     if (tokens.length === 0) return undefined
 
     const ops = {
@@ -80,9 +84,10 @@ export function evaluateMath(val: string): number | undefined {
       "-": (a: number, b: number) => a - b,
       "*": (a: number, b: number) => a * b,
       "/": (a: number, b: number) => a / b,
+      "^": (a: number, b: number) => Math.pow(a, b),
     }
 
-    const precedence: Record<string, number> = { "+": 1, "-": 1, "*": 2, "/": 2 }
+    const precedence: Record<string, number> = { "+": 1, "-": 1, "*": 2, "/": 2, "^": 3 }
     const values: number[] = []
     const operators: string[] = []
 
@@ -100,10 +105,13 @@ export function evaluateMath(val: string): number | undefined {
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i]
 
-      // Handle unary minus: if '-' is the first token or follows an opening parenthesis
-      if (token === "-" && (i === 0 || tokens[i - 1] === "(")) {
-        values.push(0) // Treat -X as 0 - X
-        operators.push("-")
+      // Handle unary minus and plus: if '-' or '+' is the first token or follows an opening parenthesis
+      if ((token === "-" || token === "+") && (i === 0 || tokens[i - 1] === "(")) {
+        if (token === "-") {
+          values.push(0) // Treat -X as 0 - X
+          operators.push("-")
+        }
+        // Unary '+' is just ignored as it doesn't change the value (treat +X as X)
         continue
       }
 
@@ -132,7 +140,10 @@ export function evaluateMath(val: string): number | undefined {
       if (!applyOp()) return undefined
     }
 
-    const result = values[0]
+    const rawResult = values[0]
+    // Fix floating point precision (e.g., 0.1 + 0.2) by rounding to 12 decimal places
+    const result = typeof rawResult === "number" ? Math.round(rawResult * 1e12) / 1e12 : undefined
+
     return typeof result === "number" && isFinite(result) && values.length === 1
       ? result
       : undefined

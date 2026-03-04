@@ -5,17 +5,10 @@ import { Loader2 } from "lucide-react"
 import * as React from "react"
 import { type FieldPath, useForm } from "react-hook-form"
 
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 
+import { TsFormConfirmationDialog } from "./ts-form-confirmation-dialog"
 import { TsFormLayout } from "./ts-form-layout"
 import { TsFormButton, TsFormConfirmation, TsFormProps } from "./types"
 
@@ -267,32 +260,12 @@ export function TsForm({
       </Form>
 
       {/* Confirmation Dialog */}
-      {confirmation.config && (
-        <AlertDialog
-          open={confirmation.isOpen}
-          onOpenChange={(open: boolean) => setConfirmation((prev) => ({ ...prev, isOpen: open }))}
-        >
-          <AlertDialogContent className="max-w-2xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle>{confirmation.config.title}</AlertDialogTitle>
-              <AlertDialogDescription>{confirmation.config.text}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex items-center justify-between gap-2 w-full sm:justify-between flex-row">
-              <div className="flex items-center gap-2">
-                {renderButtons(confirmation.config.buttons.filter((b) => b.position === "left"))}
-              </div>
-              <div className="flex items-center gap-2">
-                {renderButtons(confirmation.config.buttons.filter((b) => b.position === "center"))}
-              </div>
-              <div className="flex items-center gap-2 sm:space-x-0 sm:justify-end">
-                {renderButtons(
-                  confirmation.config.buttons.filter((b) => !b.position || b.position === "right")
-                )}
-              </div>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <TsFormConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onOpenChange={(open) => setConfirmation((prev) => ({ ...prev, isOpen: open }))}
+        config={confirmation.config}
+        renderButtons={renderButtons}
+      />
     </>
   )
 }

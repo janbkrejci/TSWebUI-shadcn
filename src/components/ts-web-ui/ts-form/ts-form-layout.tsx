@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useFormContext } from "react-hook-form"
 
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,15 +15,33 @@ interface TsFormLayoutProps {
 }
 
 export function TsFormLayout({ layout, fields }: TsFormLayoutProps) {
+  const {
+    formState: { errors },
+  } = useFormContext()
+
   if (layout.tabs) {
     return (
       <Tabs defaultValue={layout.tabs[0].label} className="w-full">
-        <TabsList className="w-full justify-start">
-          {layout.tabs.map((tab, index) => (
-            <TabsTrigger key={index} value={tab.label}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden">
+          {layout.tabs.map((tab, index) => {
+            // Check if any field in this tab has an error (from state or definition)
+            const hasError = tab.rows.some((row) =>
+              row.some((item) => {
+                if (!item.field) return false
+                const fieldDef = fields[item.field]
+                return errors[item.field] || (fieldDef && fieldDef.error)
+              })
+            )
+
+            return (
+              <TabsTrigger key={index} value={tab.label} className="relative">
+                {tab.label}
+                {hasError && (
+                  <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-destructive" />
+                )}
+              </TabsTrigger>
+            )
+          })}
         </TabsList>
         {layout.tabs.map((tab, index) => (
           <TabsContent key={index} value={tab.label} className="space-y-4 pt-4">

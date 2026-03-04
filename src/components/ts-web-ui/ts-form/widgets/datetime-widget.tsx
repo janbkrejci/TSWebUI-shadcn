@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsDateTimeField } from "../types"
+import { getFieldClasses } from "../utils"
 
 export interface TsDateTimeWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
@@ -26,6 +27,8 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
   ({ field, def, error, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
+
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     const dateFormat = def.dateFormat || "d.M.yyyy HH:mm"
     const [inputValue, setInputValue] = React.useState(() => {
@@ -113,7 +116,13 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
               }
             }}
             onClick={(e) => {
-              if (def.selectAllOnFocus) e.currentTarget.select()
+              if (
+                def.selectAllOnFocus &&
+                !def.readonly &&
+                document.activeElement !== e.currentTarget
+              ) {
+                e.currentTarget.select()
+              }
             }}
             onBlur={handleInputBlur}
             placeholder={def.placeholder || dateFormat.toLowerCase()}
@@ -121,10 +130,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
             readOnly={def.readonly}
             tabIndex={def.readonly ? -1 : undefined}
             aria-invalid={!!error}
-            className={cn(
-              "pr-10 text-right",
-              def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
-            )}
+            className={cn("pr-10 text-right", errorClass, readonlyClass)}
             {...props}
             ref={ref || field.ref}
           />
@@ -150,7 +156,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
             onSelect={handleDateSelect}
             initialFocus
           />
-          <div className="border-t p-3">
+          <div className="border-t p-3 space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground w-10">Time</span>
               <Input
@@ -160,6 +166,15 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
                 className="h-8 text-sm text-right"
               />
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full h-8 text-xs"
+              onClick={() => setOpen(false)}
+            >
+              Zavřít
+            </Button>
           </div>
         </PopoverContent>
       </Popover>

@@ -62,31 +62,41 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
     <FormField
       control={form.control}
       name={name}
-      rules={{
-        required: fieldDef.required ? `${fieldDef.label || name} is required` : false,
-      }}
       render={({ field, fieldState }) => {
-        // External errors from TsForm's 'errors' prop are synchronized into react-hook-form's state.
-        // We prioritize this live state over the static definition.
         const errorMessage = fieldState.error?.message || fieldDef.error
-        const hasError = !!errorMessage
+        const showExternalLabel = !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type)
 
         return (
-          <FormItem className={cn(fieldDef.hidden && "hidden")}>
-            {!WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && (
-              <FormLabel className={cn(hasError && "text-destructive")}>
-                {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
-              </FormLabel>
-            )}
+          <FormItem className={cn(fieldDef.hidden && "hidden", "flex flex-col")}>
+            {/* 
+              Top-aligned grid rule: Always render the label slot.
+              If the widget handles its own label, we render an empty but sized slot 
+              to keep interactive elements aligned across the row.
+            */}
+            <div className="min-h-6 flex items-end">
+              {showExternalLabel ? (
+                <FormLabel className="pb-1">
+                  {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
+                </FormLabel>
+              ) : (
+                <div className="h-full w-full" aria-hidden="true" />
+              )}
+            </div>
 
-            <FormControl>{renderWidget(field, fieldDef, name, errorMessage)}</FormControl>
+            <FormControl>
+              {renderWidget(field, fieldDef, name, errorMessage || undefined)}
+            </FormControl>
 
-            <FormMessage>{errorMessage}</FormMessage>
-
-            {/* Hint message (only shown if no error) */}
-            {!hasError && fieldDef.hint && (
-              <FormDescription className="leading-none">{fieldDef.hint}</FormDescription>
-            )}
+            <div className="min-h-5 mt-1 space-y-1">
+              {errorMessage && (
+                <FormMessage className="text-[0.8rem] font-medium text-destructive leading-tight">
+                  {errorMessage}
+                </FormMessage>
+              )}
+              {fieldDef.hint && (
+                <FormDescription className="leading-tight">{fieldDef.hint}</FormDescription>
+              )}
+            </div>
           </FormItem>
         )
       }}
@@ -98,7 +108,7 @@ function renderWidget(
   field: ControllerRenderProps<FieldValues, string>,
   def: TsFieldDef,
   name: string,
-  error?: string
+  error?: string | undefined
 ) {
   switch (def.type) {
     case "text":

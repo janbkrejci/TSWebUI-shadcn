@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 import { TsTextField } from "../types"
-import { getFieldClasses, handleFieldKeyDown } from "../utils"
+import { getFieldClasses, handleFieldKeyDown, sanitizeId } from "../utils"
 
 export interface TsTextWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
@@ -20,6 +20,7 @@ export interface TsTextWidgetProps {
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
+    const safeId = sanitizeId(name)
     const [showPassword, setShowPassword] = React.useState(false)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
@@ -29,6 +30,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
     return (
       <div className="relative">
         <Input
+          id={safeId}
           type={inputType}
           placeholder={def.placeholder}
           {...field}
@@ -43,17 +45,19 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
           tabIndex={def.readonly ? -1 : undefined}
           aria-invalid={!!error}
           onFocus={(e) => {
-            if (def.readonly) {
-              e.currentTarget.blur()
-              return
-            }
-            if (def.selectAllOnFocus) {
+            if (def.selectAllOnFocus && !def.readonly) {
               const el = e.currentTarget
               setTimeout(() => el.select(), 0)
             }
           }}
           onClick={(e) => {
-            if (def.selectAllOnFocus) e.currentTarget.select()
+            if (
+              def.selectAllOnFocus &&
+              !def.readonly &&
+              document.activeElement !== e.currentTarget
+            ) {
+              e.currentTarget.select()
+            }
           }}
           className={cn(errorClass, readonlyClass, isPassword && "pr-10")}
         />

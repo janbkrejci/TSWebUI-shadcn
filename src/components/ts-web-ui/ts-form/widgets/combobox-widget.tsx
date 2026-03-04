@@ -45,12 +45,13 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
       searchValue &&
       !options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase())
 
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            id={safeId}
             variant="outline"
             role="combobox"
             aria-expanded={open}

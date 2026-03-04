@@ -32,7 +32,7 @@ export interface TsRelationshipWidgetProps {
 
 export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshipWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { readonlyClass } = getFieldClasses(error, def.readonly)
     const hasError = !!error
 
     const [open, setOpen] = React.useState(false)

@@ -20,24 +20,24 @@ export interface TsCheckboxWidgetProps {
 
 export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
-    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
     const safeId = sanitizeId(name)
-    const hasError = !!error
+    const { errorClass } = getFieldClasses(error, def.readonly)
 
     return (
-      <div className={cn("flex items-center space-x-2", readonlyPointerClass)}>
+      <div className={cn("flex items-center space-x-2 min-h-10")}>
         <Checkbox
           id={`${safeId}-checkbox`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
           disabled={def.disabled}
-          aria-invalid={hasError}
+          aria-invalid={!!error}
+          className={errorClass}
           {...props}
           ref={ref || field.ref}
         />
         <FormLabel
           htmlFor={`${safeId}-checkbox`}
-          className={cn("font-normal cursor-pointer", hasError && "text-destructive")}
+          className={cn("font-normal cursor-pointer", !!error && "text-destructive")}
         >
           {def.label}
           {def.required && " *"}

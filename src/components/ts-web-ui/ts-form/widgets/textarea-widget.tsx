@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
 import { TsTextareaField } from "../types"
-import { DEFAULT_TEXTAREA_ROWS, getFieldClasses, handleFieldKeyDown } from "../utils"
+import { DEFAULT_TEXTAREA_ROWS, getFieldClasses, handleFieldKeyDown, sanitizeId } from "../utils"
 
 export interface TsTextareaWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
@@ -17,10 +17,12 @@ export interface TsTextareaWidgetProps {
 
 export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
+    const safeId = sanitizeId(name)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Textarea
+        id={safeId}
         placeholder={def.placeholder}
         {...field}
         {...props}
@@ -35,17 +37,15 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
         tabIndex={def.readonly ? -1 : undefined}
         aria-invalid={!!error}
         onFocus={(e) => {
-          if (def.readonly) {
-            e.currentTarget.blur()
-            return
-          }
-          if (def.selectAllOnFocus) {
+          if (def.selectAllOnFocus && !def.readonly) {
             const el = e.currentTarget
             setTimeout(() => el.select(), 0)
           }
         }}
         onClick={(e) => {
-          if (def.selectAllOnFocus) e.currentTarget.select()
+          if (def.selectAllOnFocus && !def.readonly && document.activeElement !== e.currentTarget) {
+            e.currentTarget.select()
+          }
         }}
         className={cn(errorClass, readonlyClass)}
       />

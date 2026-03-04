@@ -54,6 +54,9 @@ so that **byl kód čitelný, udržitelný a snadno rozšiřitelný**.
 
 ## Change Log
 
+- 2026-03-04: Code Review Fix (Amelia):
+  - Doplněna inicializace `vitest.setup.ts` pro Shadcn/UI matchery (jest-dom).
+  - Synchronizace dokumentace Change Logu.
 - 2026-02-28: Druhá vlna oprav po code review (Amelia):
   - **CRITICAL**: Oprava chybějícího importu `cn` v `TableWidget`.
   - **HIGH**: Implementace `sanitizeId` a oprava destrukce props v `SwitchWidget`.

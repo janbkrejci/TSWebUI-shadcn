@@ -42,12 +42,25 @@ describe("TsForm Utils - Math Evaluation", () => {
       expect(evaluateMath("1,5 + 2,5")).toBe(4)
     })
 
+    it("handles unary plus", () => {
+      expect(evaluateMath("+10 + 5")).toBe(15)
+    })
+
     it("handles leading negative numbers", () => {
       expect(evaluateMath("-10 + 5")).toBe(-5)
     })
 
     it("handles negative numbers in parentheses", () => {
       expect(evaluateMath("5 + (-2 * 3)")).toBe(-1)
+    })
+
+    it("evaluates power operator", () => {
+      expect(evaluateMath("2 ^ 3")).toBe(8)
+      expect(evaluateMath("2 + 3 ^ 2")).toBe(11) // Precedence check: 2 + (3^2)
+    })
+
+    it("handles floating point precision", () => {
+      expect(evaluateMath("0.1 + 0.2")).toBe(0.3)
     })
   })
 

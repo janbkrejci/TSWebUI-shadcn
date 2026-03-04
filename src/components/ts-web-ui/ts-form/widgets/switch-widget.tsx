@@ -20,28 +20,24 @@ export interface TsSwitchWidgetProps {
 
 export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
-    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
     const safeId = sanitizeId(name)
-    const hasError = !!error
+    const { errorClass } = getFieldClasses(error, def.readonly)
 
     return (
-      <div className={cn("flex items-center space-x-2", readonlyPointerClass)}>
+      <div className={cn("flex items-center space-x-2 min-h-10")}>
         <Switch
           id={`${safeId}-switch`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
           disabled={def.disabled}
-          aria-invalid={hasError}
-          className={cn(
-            hasError &&
-              "aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:bg-destructive data-[state=unchecked]:bg-destructive/30"
-          )}
+          aria-invalid={!!error}
+          className={errorClass}
           {...props}
           ref={ref || field.ref}
         />
         <FormLabel
           htmlFor={`${safeId}-switch`}
-          className={cn("font-normal cursor-pointer", hasError && "text-destructive")}
+          className={cn("font-normal cursor-pointer", !!error && "text-destructive")}
         >
           {def.required ? `${def.label} *` : def.label}
         </FormLabel>

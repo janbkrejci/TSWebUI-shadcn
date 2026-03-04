@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsDateField } from "../types"
+import { getFieldClasses } from "../utils"
 
 export interface TsDateWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
@@ -26,6 +27,8 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
   ({ field, def, error, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
+
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     const dateFormat = def.dateFormat || "d.M.yyyy"
     const [inputValue, setInputValue] = React.useState(() => {
@@ -93,7 +96,13 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
               }
             }}
             onClick={(e) => {
-              if (def.selectAllOnFocus) e.currentTarget.select()
+              if (
+                def.selectAllOnFocus &&
+                !def.readonly &&
+                document.activeElement !== e.currentTarget
+              ) {
+                e.currentTarget.select()
+              }
             }}
             onBlur={handleInputBlur}
             placeholder={def.placeholder || dateFormat.toLowerCase()}
@@ -101,10 +110,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             readOnly={def.readonly}
             tabIndex={def.readonly ? -1 : undefined}
             aria-invalid={!!error}
-            className={cn(
-              "pr-10 text-right",
-              def.readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
-            )}
+            className={cn("pr-10 text-right", errorClass, readonlyClass)}
             {...props}
             ref={ref || field.ref}
           />

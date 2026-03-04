@@ -53,6 +53,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
       <Popover open={open} onOpenChange={setOpen} modal>
         <PopoverAnchor asChild>
           <div
+            id={safeId}
             role="combobox"
             aria-expanded={open}
             aria-controls={`popover-content-${safeId}`}
