@@ -45,7 +45,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
       searchValue &&
       !options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase())
 
-    const { readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -59,6 +59,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
             aria-controls={`popover-content-${safeId}`}
             className={cn(
               "w-full justify-between hover:bg-background dark:hover:bg-input/30",
+              errorClass,
               readonlyClass
             )}
             disabled={def.disabled}

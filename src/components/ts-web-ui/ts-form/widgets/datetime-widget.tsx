@@ -24,9 +24,10 @@ export interface TsDateTimeWidgetProps {
 }
 
 export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidgetProps>(
-  ({ field, def, error, ...props }, ref) => {
+  ({ field, def, error, name, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
+    const safeId = sanitizeId(name)
 
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
@@ -102,6 +103,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
       <Popover open={open} onOpenChange={def.readonly || def.disabled ? undefined : setOpen}>
         <div className="relative">
           <Input
+            id={safeId}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onFocus={(e) => {

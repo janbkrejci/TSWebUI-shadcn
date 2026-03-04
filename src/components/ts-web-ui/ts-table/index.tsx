@@ -30,6 +30,7 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   onRowClick?: (row: TData, columnKey?: string) => void
   onCreateClick?: () => void
   onAction?: (action: string, row: TData) => void
+  onDataChange?: (data: TData[]) => void
   pageSize?: number
   pageSizeOptions?: number[]
   singleItemActions?: string // "action/Label,..."
@@ -48,6 +49,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   onRowClick,
   onCreateClick,
   onAction,
+  onDataChange,
   pageSize = 10,
   pageSizeOptions = [5, 10, 20, 50, 100],
   singleItemActions,
@@ -75,6 +77,11 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   React.useEffect(() => {
     setData(initialData)
   }, [initialData])
+
+  // Propagate local data changes back up
+  React.useEffect(() => {
+    onDataChange?.(data)
+  }, [data, onDataChange])
 
   // Parse row actions
   const rowActions = React.useMemo<TsTableRowAction[]>(() => {

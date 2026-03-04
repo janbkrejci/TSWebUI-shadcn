@@ -29,15 +29,19 @@ export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidg
           id={`${safeId}-checkbox`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
-          disabled={def.disabled}
+          disabled={def.disabled || def.readonly}
           aria-invalid={!!error}
-          className={errorClass}
+          className={cn(errorClass, def.readonly && "opacity-70 cursor-default")}
           {...props}
           ref={ref || field.ref}
         />
         <FormLabel
           htmlFor={`${safeId}-checkbox`}
-          className={cn("font-normal cursor-pointer", !!error && "text-destructive")}
+          className={cn(
+            "font-normal cursor-pointer",
+            !!error && "text-destructive",
+            def.readonly && "cursor-default"
+          )}
         >
           {def.label}
           {def.required && " *"}

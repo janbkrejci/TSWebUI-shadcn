@@ -32,6 +32,12 @@ export const TableWidget = React.forwardRef<HTMLDivElement, TsTableWidgetProps>(
           data={(field.value as Record<string, unknown>[]) || []}
           columnDefinitions={def.columns || []}
           showCreateButton={def.showCreateButton}
+          onDataChange={(newData) => {
+            // Prevent infinite loop by checking if data actually changed
+            if (JSON.stringify(field.value) !== JSON.stringify(newData)) {
+              field.onChange(newData)
+            }
+          }}
         />
       </div>
     )

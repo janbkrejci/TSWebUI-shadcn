@@ -20,7 +20,8 @@ export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
-  return { errorClass, readonlyClass }
+  const readonlyPointerClass = readonly ? "cursor-default" : ""
+  return { errorClass, readonlyClass, readonlyPointerClass }
 }
 
 export function handleFieldKeyDown(

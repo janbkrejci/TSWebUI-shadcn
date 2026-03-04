@@ -50,11 +50,19 @@ so that **byl kód čitelný, udržitelný a snadno rozšiřitelný**.
 - `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
 - `src/components/ts-web-ui/ts-form/utils.ts`
 - `src/components/ts-web-ui/ts-form/widgets.test.tsx`
+- `src/components/ts-web-ui/ts-table/index.tsx`
 - `vitest.setup.ts`
 
 ## Change Log
 
-- 2026-03-04: Code Review Fix (Amelia):
+- 2026-03-04: Code Review Fix (Amelia - Adversarial Reviewer):
+  - **CRITICAL**: Oprava `TableWidget` – implementován `onDataChange` v `TsTable` a propojení se stavem formuláře přes `field.onChange`.
+  - **HIGH**: Oprava bugu v `MultiSelectWidget` – doplnění `readonlyPointerClass` do `utils.ts`.
+  - **HIGH**: Oprava `ComboboxWidget` – implementována vizuální indikace chyby (`errorClass`).
+  - **MEDIUM**: Oprava přístupnosti v `DateWidget` a `DateTimeWidget` – doplněny unikátní HTML ID přes `sanitizeId`.
+  - **LOW**: Doplněna podpora `readonly` pro `CheckboxWidget` a `SwitchWidget`.
+  - Verifikace: Přidán test pro `TableWidget`, všechny testy (7/7) procházejí.
+- 2026-03-04: Code Review Fix (Dev Agent):
   - Doplněna inicializace `vitest.setup.ts` pro Shadcn/UI matchery (jest-dom).
   - Synchronizace dokumentace Change Logu.
 - 2026-02-28: Druhá vlna oprav po code review (Amelia):

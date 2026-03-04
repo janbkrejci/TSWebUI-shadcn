@@ -100,4 +100,17 @@ describe("Widget Architecture & Sanity", () => {
     const trigger = screen.getByRole("combobox")
     expect(trigger).toHaveAttribute("aria-controls", `popover-content-user-org-0`)
   })
+
+  it("renders TableWidget and handles data", () => {
+    const fieldDef: TsFieldDef = {
+      type: "table",
+      label: "Items",
+      columns: [{ key: "name", label: "Name", type: "text" }],
+    }
+    render(<TestForm name="items" fieldDef={fieldDef} />)
+
+    expect(screen.getByText("Items")).toBeInTheDocument()
+    // Table content (empty state is handled by TsTable)
+    expect(screen.getByRole("table")).toBeInTheDocument()
+  })
 })

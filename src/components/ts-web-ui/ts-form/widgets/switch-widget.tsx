@@ -29,15 +29,19 @@ export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetPr
           id={`${safeId}-switch`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
-          disabled={def.disabled}
+          disabled={def.disabled || def.readonly}
           aria-invalid={!!error}
-          className={errorClass}
+          className={cn(errorClass, def.readonly && "opacity-70 cursor-default")}
           {...props}
           ref={ref || field.ref}
         />
         <FormLabel
           htmlFor={`${safeId}-switch`}
-          className={cn("font-normal cursor-pointer", !!error && "text-destructive")}
+          className={cn(
+            "font-normal cursor-pointer",
+            !!error && "text-destructive",
+            def.readonly && "cursor-default"
+          )}
         >
           {def.required ? `${def.label} *` : def.label}
         </FormLabel>
