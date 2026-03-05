@@ -84,7 +84,14 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
       const val = e.target.value
       // Support numbers and basic math operators matching evaluator
       const clean = val.replace(/[^0-9 .,+*/^()-]/g, "")
-      setDisplayValue(clean !== val ? clean : val)
+      const finalVal = clean !== val ? clean : val
+      setDisplayValue(finalVal)
+
+      // Emit change if the current input is a valid numeric value or expression
+      const num = parseNumericValue(finalVal)
+      if (num !== undefined) {
+        field.onChange(num)
+      }
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -96,11 +103,18 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         setDisplayValue(formatNumericValue(num, def.roundTo, def.locale))
 
         // Let the event bubble up to TsForm for action handling
-        handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => {
-          isClearingRef.current = true
-          setDisplayValue("")
-          field.onChange(undefined)
-        })
+        handleFieldKeyDown(
+          e,
+          name,
+          def.enterAction,
+          def.escapeAction,
+          () => {
+            isClearingRef.current = true
+            setDisplayValue("")
+            field.onChange(undefined)
+          },
+          num // Pass committed value
+        )
         return
       }
 
@@ -126,6 +140,10 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         readOnly={def.readonly}
         tabIndex={def.readonly ? -1 : undefined}
         aria-invalid={!!error}
+        aria-valuemin={def.min}
+        aria-valuemax={def.max}
+        min={def.min}
+        max={def.max}
         className={cn("text-right tabular-nums", errorClass, readonlyClass)}
         {...props}
         ref={ref || field.ref}

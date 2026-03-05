@@ -51,15 +51,22 @@ export interface TsFormButton {
 
 // ─── Main Form Props ──────────────────────────────────────────────────────────
 
+/**
+ * Recursive type for form errors, supporting flat keys, nested objects, and arrays.
+ */
+export type TsFormErrors = {
+  [key: string]: string | TsFormErrors | TsFormErrors[] | Record<string, unknown> | undefined
+}
+
 export interface TsFormProps {
   layout: TsFormLayout
   fields: Record<string, TsFieldDef>
   values?: Record<string, unknown>
   buttons?: TsFormButton[]
-  errors?: Record<string, string>
+  errors?: TsFormErrors
   onAction?: (action: string, data: Record<string, unknown>) => void
-  onFieldChange?: (field: string, value: unknown, formData: Record<string, unknown>) => void
+  onFieldChange?: (name: string, value: unknown, data: Record<string, unknown>) => void
   readOnly?: boolean
   className?: string
-  activeTab?: string
+  locale?: string
 }

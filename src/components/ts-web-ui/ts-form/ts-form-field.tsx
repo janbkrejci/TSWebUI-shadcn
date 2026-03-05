@@ -63,25 +63,29 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
       control={form.control}
       name={name}
       render={({ field, fieldState }) => {
+        // External dynamic error (from form props or manual setError) has priority.
+        // The fieldDef.error is a static fallback from the JSON definition itself.
         const errorMessage = fieldState.error?.message || fieldDef.error
         const showExternalLabel = !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type)
 
         return (
-          <FormItem className={cn(fieldDef.hidden && "hidden", "flex flex-col")}>
+          <FormItem className={cn(fieldDef.hidden && "hidden", "flex flex-col")} data-field={name}>
             {/* 
-              Top-aligned grid rule: Always render the label slot.
-              If the widget handles its own label, we render an empty but sized slot 
-              to keep interactive elements aligned across the row.
+              Top-aligned grid rule: Only render the label slot if needed.
+              We still use min-h-6 to keep interactive elements aligned across the row 
+              if other fields in the same row have labels.
             */}
-            <div className="min-h-6 flex items-end">
-              {showExternalLabel ? (
+            {showExternalLabel ? (
+              <div className="min-h-6 flex items-end">
                 <FormLabel className="pb-1">
-                  {fieldDef.required ? `${fieldDef.label} *` : fieldDef.label}
+                  {fieldDef.label}
+                  {fieldDef.required && <span className="ml-1 text-destructive">*</span>}
                 </FormLabel>
-              ) : (
-                <div className="h-full w-full" aria-hidden="true" />
-              )}
-            </div>
+              </div>
+            ) : (
+              // Empty but sized placeholder for alignment in complex grid layouts
+              <div className="min-h-6" aria-hidden="true" />
+            )}
 
             <FormControl>
               {renderWidget(field, fieldDef, name, errorMessage || undefined)}
@@ -110,40 +114,48 @@ function renderWidget(
   name: string,
   error?: string | undefined
 ) {
+  const commonProps = {
+    field,
+    def,
+    name,
+    error,
+    "aria-required": def.required,
+  }
+
   switch (def.type) {
     case "text":
     case "password":
     case "email":
     case "tel":
     case "url":
-      return <TextWidget field={field} def={def} name={name} error={error} />
+      return <TextWidget {...commonProps} />
     case "textarea":
-      return <TextareaWidget field={field} def={def} name={name} error={error} />
+      return <TextareaWidget {...commonProps} />
     case "number":
-      return <NumberWidget field={field} def={def} name={name} error={error} />
+      return <NumberWidget {...commonProps} />
     case "slider":
-      return <SliderWidget field={field} def={def} name={name} error={error} />
+      return <SliderWidget {...commonProps} />
     case "select":
-      return <SelectWidget field={field} def={def} name={name} error={error} />
+      return <SelectWidget {...commonProps} />
     case "combobox":
-      return <ComboboxWidget field={field} def={def} name={name} error={error} />
+      return <ComboboxWidget {...commonProps} />
     case "multiselect":
-      return <MultiSelectWidget field={field} def={def} name={name} error={error} />
+      return <MultiSelectWidget {...commonProps} />
     case "checkbox":
-      return <CheckboxWidget field={field} def={def} name={name} error={error} />
+      return <CheckboxWidget {...commonProps} />
     case "switch":
-      return <SwitchWidget field={field} def={def} name={name} error={error} />
+      return <SwitchWidget {...commonProps} />
     case "radio":
-      return <RadioWidget field={field} def={def} name={name} error={error} />
+      return <RadioWidget {...commonProps} />
     case "button-group":
-      return <ButtonGroupWidget field={field} def={def} name={name} error={error} />
+      return <ButtonGroupWidget {...commonProps} />
     case "date":
-      return <DateWidget field={field} def={def} name={name} error={error} />
+      return <DateWidget {...commonProps} />
     case "datetime":
-      return <DateTimeWidget field={field} def={def} name={name} error={error} />
+      return <DateTimeWidget {...commonProps} />
     case "file":
     case "image":
-      return <FileWidget field={field} def={def} name={name} error={error} />
+      return <FileWidget {...commonProps} />
     case "infobox":
       return <InfoboxWidget def={def} />
     case "markdown":
@@ -157,7 +169,7 @@ function renderWidget(
     case "empty":
       return <EmptyWidget def={def} error={error} />
     case "relationship":
-      return <RelationshipWidget field={field} def={def} name={name} error={error} />
+      return <RelationshipWidget {...commonProps} />
     default: {
       const _exhaustive: never = def
       return (

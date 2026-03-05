@@ -110,7 +110,7 @@ The form system is **entirely JSON-driven** and supports 20+ field types.
 - `index.tsx` - Main form component with external validation
 - `ts-form-field.tsx` - Field renderer (maps types to widgets)
 - `ts-form-layout.tsx` - Layout engine (rows/columns/tabs)
-- `ts-form-schema.ts` - Zod schema generator
+- `utils.ts` - Shared normalization and deep-path utilities
 
 **Field Types:** text, textarea, password, number, slider, select, multiselect, combobox, radio, checkbox, switch, date, datetime, file, image, button, separator, table, relationship, infobox, markdown, button-group
 

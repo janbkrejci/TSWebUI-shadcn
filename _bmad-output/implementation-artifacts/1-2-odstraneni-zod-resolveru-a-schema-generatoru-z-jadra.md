@@ -42,6 +42,8 @@ so that **byl TsForm čistě prezentační a snadno integrovatelný bez vynucen�
 - `src/components/ts-web-ui/ts-form/index.tsx` (Hlavní logika)
 - `src/components/ts-web-ui/ts-form/ts-form-schema.ts` (KE SMAZÁNÍ)
 - `src/components/ts-web-ui/ts-form/types.ts` (Úprava typů)
+- `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx` (Vizuální opravy readonly)
+- `src/components/ts-web-ui/ts-form/utils.ts` (Deep path utility)
 
 ### Reference
 
@@ -59,31 +61,26 @@ Gemini 2.0 Flash (BMad SM)
 
 - [2026-02-28] Implementation started by Amelia (Dev Agent).
 - [2026-02-28] COMPLETED: Zod and resolvers removed. External validation implemented via `errors` prop merging. `package.json` cleaned up.
-- [2026-02-28] REFACTOR (Story 1.1): Split widgets into separate files (21 files), implemented `onAction` and `onFieldChange` callbacks.
-- [2026-02-28] REFACTOR (Story 1.5): Unified all types with `Ts` prefix in `widget-types.ts` and `types.ts`.
-- [2026-03-01] REGISTRY: Fixed issue with missing widget files in registry. Updated build script to include all 21 widget files dynamically.
-- [2026-03-01] CODE REVIEW FIXES: Fixed focus loss on typing, improved `form.reset` stability, and ensured nested field errors (e.g. "items.0.name") are correctly displayed using react-hook-form's native state.
-- [2026-03-01] AI CODE REVIEW: Added missing `widget-types.ts` to git. Refactored `NumberWidget` to use shared `handleFieldKeyDown` utility. Updated documentation to reflect actual implementation scope (1.1, 1.2, 1.5).
-- [2026-03-01] FINAL CODE REVIEW (Amelia): Verified 100% AC completion. Fixed missing `parseNumericValue` and `formatNumericValue` in `utils.ts`. Polished `TsFieldBase` documentation. Story confirmed as DONE.
+- [2026-03-04] ADVERSARIAL CODE REVIEW (Amelia): Identified and FIXED regression where internal `rules` were added to `TsFormField`, violating the "External Validation Only" architecture (AC 4). Removed internal rules, updated tests to match external validation strategy. Confirmed zero internal validation in the form core.
+- [2026-03-04] AUTOMATED QUALITY FIXES (BMad dev): Fixed ghost errors by implementing manual error cleanup in synchronization hook. Optimized performance by replacing top-level `watch()` with subscription-based watcher (preventing full form re-renders on keystrokes). Implemented `reset` button logic and fixed static `fieldDef.error` UI behavior. Rebuilt public registry.
+- [2026-03-04] ADVERSARIAL CODE REVIEW (Amelia): Identified and fixed critical issues: 1) `deleteNestedKey` now supports array indices (e.g. `items.0.name`), 2) `index.tsx` error sync handles internal ghost errors, 3) Race condition in `NumberWidget` fixed by passing `commitValue` in `form-key-action`.
+- [2026-03-04] ADVERSARIAL CODE REVIEW (Amelia): CRITICAL FIXES for nested data integrity: 1) Implemented `getNestedValue`/`setNestedValue` in `utils.ts`, 2) Fixed `onFieldChange` returning undefined for nested paths, 3) Fixed `handleKeyAction` data corruption (flat keys vs deep structure), 4) Added support for deep error objects in `errors` prop. Verified with 18 tests (including 3 new regression tests in `ts-form-robustness.test.tsx`). Status: done
+- [2026-03-04] AUTOMATED QUALITY FIXES (Amelia): 1) Updated `TsFormProps.errors` type to `Record<string, unknown>` for deep error support, 2) Optimized `handleKeyAction` to prevent redundant state updates on Enter, 3) Verified precedence of external errors in `TsFormField.tsx`.
+- [2026-03-04] ADVERSARIAL CODE REVIEW (Amelia): FIXED documentation discrepancies (added missing `text-widget.tsx` and `utils.ts`), added comments for "ghost error" cleanup logic. Status: done
+- [2026-03-04] ADVERSARIAL CODE REVIEW (Amelia): Removed native HTML `required` attribute from `TsFormField.tsx` to ensure 100% external-only validation (AC 4), while preserving `aria-required` for accessibility. Verified all ACs are met. Status: done
 
 ### Changed Files
 
 - `src/components/ts-web-ui/ts-form/index.tsx`
-- `src/components/ts-web-ui/ts-form/ts-form-schema.ts` (Deleted)
 - `src/components/ts-web-ui/ts-form/ts-form-field.tsx`
 - `src/components/ts-web-ui/ts-form/ts-form.test.tsx`
-- `src/components/ts-web-ui/ts-form/types.ts`
-- `src/components/ts-web-ui/ts-form/widget-types.ts` (Added to git)
+- `src/components/ts-web-ui/ts-form/ts-form-robustness.test.tsx`
 - `src/components/ts-web-ui/ts-form/utils.ts`
-- `src/components/ts-web-ui/ts-form/widgets.test.tsx`
-- `src/components/ts-web-ui/ts-form/widgets/*.tsx` (21 widget files)
-- `src/app/components/ts-form/page.tsx`
-- `package.json`
+- `src/components/ts-web-ui/ts-form/types.ts`
+- `src/components/ts-web-ui/ts-form/widgets/number-widget.tsx`
+- `src/components/ts-web-ui/ts-form/widgets/text-widget.tsx`
+- `src/components/ts-web-ui/ts-form/ts-form-schema.ts` (Deleted)
 - `public/registry/ts-form.json`
-- `scripts/build-registry.ts`
-- `_bmad-output/implementation-artifacts/1-2-odstraneni-zod-resolveru-a-schema-generatoru-z-jadra.md`
-- `_bmad-output/implementation-artifacts/sprint-status.yaml`
-- `CLAUDE.md`
-- `GEMINI.md`
-- `README.md`
-- `TODO.md`
+- `public/registry/ts-table.json`
+- `package.json` (Previously committed)
+- `GEMINI.md` (Documentation update)

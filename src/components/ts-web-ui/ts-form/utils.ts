@@ -16,6 +16,11 @@ export function sanitizeId(name: string): string {
     .replace(/^-|-$/g, "")
 }
 
+/**
+ * Generates standard Tailwind classes for field states (error, readonly).
+ * @param error Optional error message to trigger error styling.
+ * @param readonly Whether the field is in read-only mode.
+ */
 export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
@@ -24,16 +29,174 @@ export function getFieldClasses(error?: string, readonly?: boolean) {
   return { errorClass, readonlyClass, readonlyPointerClass }
 }
 
+/**
+ * Safely gets a nested value from an object using a dot-notated path (e.g., "user.address.street" or "items.0.name").
+ * @param obj The source object.
+ * @param path Dot-notated path to the key.
+ */
+export function getNestedValue(obj: Record<string, unknown> | undefined, path: string): unknown {
+  if (!obj || !path) return undefined
+
+  // Prototype pollution protection
+  if (path.includes("__proto__") || path.includes("constructor") || path.includes("prototype")) {
+    return undefined
+  }
+
+  // 1. Try direct key access first (for flat structures or exact matches)
+  if (Object.prototype.hasOwnProperty.call(obj, path)) {
+    return obj[path]
+  }
+  // 2. Fallback to deep traversal
+  const parts = path.split(".")
+  let current: unknown = obj
+  for (const part of parts) {
+    if (current === null || typeof current !== "object") return undefined
+    // Check if current part is an array index
+    const isArrayIndex = /^\d+$/.test(part)
+    current = isArrayIndex
+      ? (current as unknown[])[parseInt(part, 10)]
+      : (current as Record<string, unknown>)[part]
+  }
+  return current
+}
+
+/**
+ * Safely sets a nested value in an object using a dot-notated path.
+ * Mutates the original object. Creates missing objects/arrays along the path.
+ * @param obj The target object.
+ * @param path Dot-notated path.
+ * @param value Value to set.
+ */
+export function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
+  if (!path) return
+
+  const parts = path.split(".")
+  const last = parts.pop()
+  if (!last) return
+
+  let current: unknown = obj
+  for (const part of parts) {
+    // Prototype pollution protection
+    if (part === "__proto__" || part === "constructor" || part === "prototype") {
+      return
+    }
+
+    const isArrayIndex = /^\d+$/.test(part)
+    const key = isArrayIndex ? parseInt(part, 10) : part
+    const currentObj = current as Record<string, unknown>
+
+    if (
+      currentObj[key] === undefined ||
+      currentObj[key] === null ||
+      typeof currentObj[key] !== "object"
+    ) {
+      // Peek ahead to see if the next part is an array index
+      const nextPart = parts[parts.indexOf(part) + 1] || last
+      currentObj[key] = /^\d+$/.test(nextPart) ? [] : {}
+    }
+    current = currentObj[key]
+  }
+
+  if (last === "__proto__" || last === "constructor" || last === "prototype") {
+    return
+  }
+
+  const lastIsIndex = /^\d+$/.test(last)
+  if (lastIsIndex && Array.isArray(current)) {
+    ;(current as unknown[])[parseInt(last, 10)] = value
+  } else {
+    ;(current as Record<string, unknown>)[last!] = value
+  }
+}
+
+/**
+ * Safely deletes a nested key from an object using a dot-notated path (e.g., "user.address.street" or "items.0.name").
+ * Mutates the original object.
+ * @param obj The target object.
+ * @param path Dot-notated path to the key.
+ */
+export function deleteNestedKey(obj: Record<string, unknown>, path: string): void {
+  if (!path) return
+
+  // Prototype pollution protection
+  if (
+    path.includes("__proto__") ||
+    path.split(".").some((p) => p === "constructor" || p === "prototype")
+  ) {
+    return
+  }
+
+  const parts = path.split(".")
+  const last = parts.pop()
+  if (!last) return
+
+  let current: unknown = obj
+  for (const part of parts) {
+    const isArrayIndex = /^\d+$/.test(part)
+    const key = isArrayIndex ? parseInt(part, 10) : part
+    const currentObj = current as Record<string, unknown>
+    const next = currentObj[key]
+
+    if (next && typeof next === "object") {
+      current = next
+    } else {
+      return
+    }
+  }
+
+  const lastIsIndex = /^\d+$/.test(last)
+  if (lastIsIndex && Array.isArray(current)) {
+    const index = parseInt(last, 10)
+    if (index >= 0 && index < (current as unknown[]).length) {
+      ;(current as unknown[]).splice(index, 1)
+    }
+  } else if (
+    current &&
+    typeof current === "object" &&
+    Object.prototype.hasOwnProperty.call(current, last)
+  ) {
+    delete (current as Record<string, unknown>)[last]
+  }
+}
+
+/**
+ * A safer alternative to structuredClone for form data.
+ * Handles primitives, plain objects, arrays, Dates and Files.
+ *
+ * NOTE: Files/Blobs are kept by reference (not cloned) because they are immutable
+ * and structuredClone is not reliably available for Files in all target environments.
+ */
+export function deepClone<T>(val: T): T {
+  if (val === null || typeof val !== "object") return val
+
+  if (val instanceof Date) return new Date(val.getTime()) as unknown as T
+  if (val instanceof File || val instanceof Blob) return val as unknown as T
+
+  if (Array.isArray(val)) {
+    return val.map((item) => deepClone(item)) as unknown as T
+  }
+
+  const clonedObj: Record<string, unknown> = {}
+  const sourceObj = val as Record<string, unknown>
+  for (const key in sourceObj) {
+    if (Object.prototype.hasOwnProperty.call(sourceObj, key)) {
+      clonedObj[key] = deepClone(sourceObj[key])
+    }
+  }
+  return clonedObj as unknown as T
+}
+
 export function handleFieldKeyDown(
   e: React.KeyboardEvent,
   name: string,
   enterAction?: string,
   escapeAction?: string,
-  onClear?: () => void
+  onClear?: () => void,
+  commitValue?: unknown
 ) {
   if (e.key === "Enter") {
-    // Pro Textarea ignorujeme Enter (chceme nový řádek),
-    // pokud není stisknut s Ctrl/Meta (pak provedeme akci)
+    // For Textarea we ignore Enter (want new line),
+    // unless pressed with Ctrl/Meta (then we perform action)
     const isTextarea = (e.currentTarget as HTMLElement).tagName === "TEXTAREA"
     if (isTextarea && !e.ctrlKey && !e.metaKey) return
 
@@ -41,7 +204,12 @@ export function handleFieldKeyDown(
       e.preventDefault()
       e.stopPropagation()
       const event = new CustomEvent("form-key-action", {
-        detail: { key: "Enter", action: enterAction, field: name },
+        detail: {
+          key: "Enter",
+          action: enterAction,
+          field: name,
+          value: commitValue, // Pass current value to avoid race conditions
+        },
         bubbles: true,
       })
       ;(e.currentTarget as HTMLElement).dispatchEvent(event)
@@ -178,7 +346,7 @@ export function parseNumericValue(val: string): number | undefined {
 export function formatNumericValue(
   val: number | undefined,
   roundTo?: number,
-  locale: string = "cs-CZ"
+  locale?: string
 ): string {
   if (val === undefined || val === null) return ""
 
@@ -187,5 +355,33 @@ export function formatNumericValue(
     maximumFractionDigits: roundTo !== undefined ? roundTo : 2,
   }
 
-  return new Intl.NumberFormat(locale, options).format(val)
+  return new Intl.NumberFormat(locale || undefined, options).format(val)
+}
+
+/**
+ * Maps custom TsButtonVariant to Shadcn button variants and additional CSS classes.
+ */
+export function getButtonVariantClasses(variant?: string): {
+  variant: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  className: string
+} {
+  let shadcnVariant: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" =
+    "default"
+  let className = ""
+
+  if (!variant) return { variant: shadcnVariant, className }
+
+  if (variant === "primary") {
+    className = "bg-blue-600 text-white hover:bg-blue-700 border-none"
+  } else if (variant === "success") {
+    className = "bg-green-600 text-white hover:bg-green-700 border-none"
+  } else if (variant === "warning") {
+    className = "bg-amber-500 text-white hover:bg-amber-600 border-none"
+  } else if (variant === "danger" || variant === "destructive") {
+    shadcnVariant = "destructive"
+  } else if (["default", "outline", "secondary", "ghost", "link"].includes(variant)) {
+    shadcnVariant = variant as typeof shadcnVariant
+  }
+
+  return { variant: shadcnVariant, className }
 }

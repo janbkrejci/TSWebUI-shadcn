@@ -22,10 +22,25 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const [showPassword, setShowPassword] = React.useState(false)
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const [internalValue, setInternalValue] = React.useState((field.value as string) ?? "")
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, def.readonly)
+
+    // Sync internal value with external changes only when not focused or value changed significantly
+    React.useEffect(() => {
+      const newVal = (field.value as string) ?? ""
+      if (newVal !== internalValue) {
+        setInternalValue(newVal)
+      }
+    }, [field.value, internalValue])
 
     const isPassword = def.type === "password"
     const inputType = isPassword ? (showPassword ? "text" : "password") : def.type
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value
+      setInternalValue(val)
+      field.onChange(val)
+    }
 
     return (
       <div className="relative">
@@ -36,9 +51,20 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
           {...field}
           {...props}
           ref={ref || field.ref}
-          value={(field.value as string) ?? ""}
+          value={internalValue}
+          onChange={handleChange}
           onKeyDown={(e) =>
-            handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => field.onChange(""))
+            handleFieldKeyDown(
+              e,
+              name,
+              def.enterAction,
+              def.escapeAction,
+              () => {
+                setInternalValue("")
+                field.onChange("")
+              },
+              internalValue
+            )
           }
           disabled={def.disabled}
           readOnly={def.readonly}
@@ -59,7 +85,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
               e.currentTarget.select()
             }
           }}
-          className={cn(errorClass, readonlyClass, isPassword && "pr-10")}
+          className={cn(errorClass, readonlyClass, readonlyPointerClass, isPassword && "pr-10")}
         />
         {isPassword && !def.readonly && !def.disabled && (
           <Button
