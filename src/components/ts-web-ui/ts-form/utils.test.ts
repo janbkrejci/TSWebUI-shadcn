@@ -1,6 +1,57 @@
 import { describe, expect, it } from "vitest"
 
-import { evaluateMath, parseNumericValue } from "./utils"
+import { TsFieldDef } from "./types"
+import { evaluateMath, filterExcludeFromSubmit, parseNumericValue } from "./utils"
+
+describe("TsForm Utils - Data Filtering", () => {
+  describe("filterExcludeFromSubmit", () => {
+    it("filters simple top-level fields", () => {
+      const fields: Record<string, TsFieldDef> = {
+        name: { type: "text", label: "Name" },
+        temp: { type: "text", label: "Temp", excludeFromSubmit: true },
+      }
+      const data = { name: "Alice", temp: "secret" }
+      const filtered = filterExcludeFromSubmit(data, fields)
+      expect(filtered).toEqual({ name: "Alice" })
+    })
+
+    it("filters nested properties without affecting siblings in the same object", () => {
+      const fields: Record<string, TsFieldDef> = {
+        "user.name": { type: "text", label: "Name" },
+        "user.token": { type: "text", label: "Token", excludeFromSubmit: true },
+      }
+      const data = { user: { name: "Bob", token: "xyz" } }
+      const filtered = filterExcludeFromSubmit(data, fields)
+      expect(filtered).toEqual({ user: { name: "Bob" } })
+    })
+
+    it("filters properties within array elements without deleting the whole element", () => {
+      const fields: Record<string, TsFieldDef> = {
+        "items.0.name": { type: "text", label: "Name", excludeFromSubmit: true },
+        "items.0.age": { type: "number", label: "Age" },
+      }
+      const data = {
+        items: [{ name: "Alice", age: 30 }],
+      }
+      const filtered = filterExcludeFromSubmit(data, fields)
+      // items[0].name should be gone, but items[0].age must remain
+      expect(filtered.items).toHaveLength(1)
+      expect((filtered.items as Record<string, unknown>[])[0]).toEqual({ age: 30 })
+    })
+
+    it("correctly handles entire array element removal from end to start", () => {
+      const fields: Record<string, TsFieldDef> = {
+        "items.0": { type: "text", label: "Item 0", excludeFromSubmit: true },
+        "items.1": { type: "text", label: "Item 1", excludeFromSubmit: true },
+        "items.2": { type: "text", label: "Item 2" },
+      }
+      const data = { items: ["A", "B", "C"] }
+      const filtered = filterExcludeFromSubmit(data, fields)
+      // Items 0 and 1 removed, Item 2 remains (becomes index 0)
+      expect(filtered.items).toEqual(["C"])
+    })
+  })
+})
 
 describe("TsForm Utils - Math Evaluation", () => {
   describe("evaluateMath", () => {

@@ -1,6 +1,6 @@
 # Story 1.6: Sjednocené callbacky a filtrace excludeFromSubmit
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -10,26 +10,26 @@ so that **integrace do aplikace byla jednoduchá a data byla vždy čistá**.
 
 ## Acceptance Criteria
 
-1. [ ] Všechny akce tlačítek (submit, cancel, custom) volají jednotný callback `onAction(action: string, data: Record<string, unknown>)`.
-2. [ ] Callback `onFieldChange(field: string, value: unknown, formData: Record<string, unknown>)` je korektně volán při každé změně pole.
-3. [ ] Pole, která mají v definici `excludeFromSubmit: true`, jsou automaticky odfiltrována z dat předávaných v `onAction` i `onFieldChange`.
-4. [ ] Pokud tlačítko vyžaduje potvrzení (`confirmation` v JSONu), `onAction` se zavolá až po potvrzení uživatelem.
-5. [ ] Staré callbacky (např. `onSubmit`) jsou odstraněny nebo označeny jako deprecated (preferováno: odstraněny v rámci v1.0).
+1. [x] Všechny akce tlačítek (submit, cancel, custom) volají jednotný callback `onAction(action: string, data: Record<string, unknown>)`.
+2. [x] Callback `onFieldChange(field: string, value: unknown, formData: Record<string, unknown>)` je korektně volán při každé změně pole.
+3. [x] Pole, která mají v definici `excludeFromSubmit: true`, jsou automaticky odfiltrována z dat předávaných v `onAction` i `onFieldChange`.
+4. [x] Pokud tlačítko vyžaduje potvrzení (`confirmation` v JSONu), `onAction` se zavolá až po potvrzení uživatelem.
+5. [x] Staré callbacky (např. `onSubmit`) jsou odstraněny nebo označeny jako deprecated (preferováno: odstraněny v rámci v1.0).
 
 ## Tasks / Subtasks
 
-- [ ] **Implementace filtrace dat** (AC: 3)
-  - [ ] Vytvořit utilitu pro čištění dat na základě `TsFieldDef` a property `excludeFromSubmit`.
-  - [ ] Aplikovat tuto utilitu v místě, kde se připravují data pro callbacky.
-- [ ] **Refaktoring onAction** (AC: 1, 4, 5)
-  - [ ] Upravit `index.tsx` tak, aby zpracovával všechny button akce přes `onAction`.
-  - [ ] Implementovat logiku pro `confirmation` dialogy před voláním `onAction`.
-- [ ] **Implementace onFieldChange** (AC: 2)
-  - [ ] Zajistit volání `onFieldChange` z `useForm` nebo z jednotlivých widgetů (přes dispatcher).
-  - [ ] Ověřit, že `formData` v tomto callbacku jsou rovněž vyčištěna od `excludeFromSubmit` polí.
-- [ ] **Verifikace a cleanup** (AC: 5)
-  - [ ] Aktualizovat demo stránky tak, aby používaly nové API.
-  - [ ] Odstranit nepoužívané props a logiku.
+- [x] **Implementace filtrace dat** (AC: 3)
+  - [x] Vytvořit utilitu pro čištění dat na základě `TsFieldDef` a property `excludeFromSubmit`.
+  - [x] Aplikovat tuto utilitu v místě, kde se připravují data pro callbacky.
+- [x] **Refaktoring onAction** (AC: 1, 4, 5)
+  - [x] Upravit `index.tsx` tak, aby zpracovával všechny button akce přes `onAction`.
+  - [x] Implementovat logiku pro `confirmation` dialogy před voláním `onAction`.
+- [x] **Implementace onFieldChange** (AC: 2)
+  - [x] Zajistit volání `onFieldChange` z `useForm` nebo z jednotlivých widgetů (přes dispatcher).
+  - [x] Ověřit, že `formData` v tomto callbacku jsou rovněž vyčištěna od `excludeFromSubmit` polí.
+- [x] **Verifikace a cleanup** (AC: 5)
+  - [x] Aktualizovat demo stránky tak, aby používaly nové API.
+  - [x] Odstranit nepoužívané props a logiku.
 
 ## Dev Notes
 
@@ -53,11 +53,19 @@ so that **integrace do aplikace byla jednoduchá a data byla vždy čistá**.
 
 ## Dev Agent Record
 
-### Agent Model Used
+Status: done
 
-Gemini 2.0 Flash (BMad SM)
+## Story
+
+...
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Data filtering and unified callback strategy aligned with API consistency mandates.
+- Implemented `filterExcludeFromSubmit` utility in `utils.ts` with support for nested and array paths.
+- FIXED CRITICAL BUG: `filterExcludeFromSubmit` now correctly handles nested properties within arrays without deleting the entire array element.
+- Refactored `TsForm` to use `onAction` for all button actions (including reset).
+- Integrated data filtering in `onAction` and `onFieldChange`.
+- Verified all tests pass, including complex nested array exclusion scenarios.
+- Updated demo page with an example of an excluded field.

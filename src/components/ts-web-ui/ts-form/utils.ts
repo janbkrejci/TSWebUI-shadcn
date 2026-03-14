@@ -1,9 +1,70 @@
 import React from "react"
 
+import { TsFieldDef } from "./types"
+
 /**
  * Default values for widgets to avoid magic numbers.
  */
 export const DEFAULT_TEXTAREA_ROWS = 3
+
+/**
+ * Filters out fields marked with excludeFromSubmit: true from the data object.
+ * Handles nested paths and array indices by deleting from the end of each array
+ * to preserve correct remaining indices.
+ * @param data The form data object.
+ * @param fields Dictionary of field definitions.
+ */
+export function filterExcludeFromSubmit(
+  data: Record<string, unknown>,
+  fields: Record<string, TsFieldDef>
+): Record<string, unknown> {
+  const filteredData = deepClone(data)
+  const keysToDelete = Object.keys(fields).filter((k) => fields[k]?.excludeFromSubmit)
+
+  const arrayElementKeys: string[] = []
+  const propertyKeys: string[] = []
+
+  keysToDelete.forEach((path) => {
+    const parts = path.split(".")
+    const last = parts[parts.length - 1]
+    if (/^\d+$/.test(last)) {
+      arrayElementKeys.push(path)
+    } else {
+      propertyKeys.push(path)
+    }
+  })
+
+  // 1. Delete property keys first. These do not affect array indices.
+  propertyKeys.forEach((p) => deleteNestedKey(filteredData, p))
+
+  // 2. Delete array elements. We must group them by parent array path
+  // and delete indices from HIGHEST to LOWEST to avoid index shifts.
+  const arrayGroups: Record<string, number[]> = {}
+  arrayElementKeys.forEach((path) => {
+    const parts = path.split(".")
+    const indexStr = parts.pop()
+    if (indexStr !== undefined) {
+      const index = parseInt(indexStr, 10)
+      const parent = parts.join(".")
+      if (!arrayGroups[parent]) arrayGroups[parent] = []
+      if (!arrayGroups[parent].includes(index)) arrayGroups[parent].push(index)
+    }
+  })
+
+  // Sort parent paths by length descending to handle nested arrays correctly
+  Object.keys(arrayGroups)
+    .sort((a, b) => b.length - a.length)
+    .forEach((parent) => {
+      // Sort indices descending to maintain correct indices during splice
+      arrayGroups[parent]
+        .sort((a, b) => b - a)
+        .forEach((index) => {
+          deleteNestedKey(filteredData, `${parent}.${index}`)
+        })
+    })
+
+  return filteredData
+}
 
 /**
  * Sanitizes a field name for use in HTML ID/aria-controls attributes.

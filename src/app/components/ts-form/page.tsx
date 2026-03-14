@@ -68,6 +68,12 @@ const formFields: Record<string, TsFieldDef> = {
   },
   active: { type: "switch", label: "Active Account" },
   birthDate: { type: "date", label: "Date of Birth", required: true },
+  tempInternalNote: {
+    type: "text",
+    label: "Internal Note (Excluded from Submit)",
+    excludeFromSubmit: true,
+    placeholder: "This will not appear in the JSON output",
+  },
   notes: {
     type: "markdown",
     value: "### Important Notes\n- Use **Markdown** for styling\n- Lists and links are supported",
@@ -91,6 +97,7 @@ const formLayout: TsLayout = {
           { field: "birthDate", width: "1fr" },
           { field: "gender", width: "1fr" },
         ],
+        [{ field: "tempInternalNote", width: "1fr" }],
         [{ field: "bio", width: "1fr" }],
       ],
     },

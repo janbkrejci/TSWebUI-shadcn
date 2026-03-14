@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-28
+generated: 2026-03-14
 project: TSWebUI-shadcn
 project_key: NOKEY
 tracking_system: file-system
@@ -46,7 +46,7 @@ development_status:
   1-3-migrace-textovych-widgetu-na-bezvalidacni-rezim: done
   1-4-migrace-vyberovych-a-komplexnich-widgetu-na-bezvalidacni-rezim: done
   1-5-striktni-typescript-a-sjednocene-prefixovani: done
-  1-6-sjednocene-callbacky-a-filtrace-excludefromsubmit: ready-for-dev
+  1-6-sjednocene-callbacky-a-filtrace-excludefromsubmit: done
   epic-1-retrospective: optional
 
   epic-2: backlog

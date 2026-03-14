@@ -13,7 +13,7 @@ import { TsFormLayout } from "./ts-form-layout"
 import { TsButton, TsConfirmation, TsErrors, TsFormProps } from "./types"
 import {
   deepClone,
-  deleteNestedKey,
+  filterExcludeFromSubmit,
   getButtonVariantClasses,
   getNestedValue,
   setNestedValue,
@@ -38,6 +38,15 @@ export function TsForm({
     defaultValues: values || {},
   })
 
+  // Central submission logic - pass action explicitly
+  const executeAction = React.useCallback(
+    (action: string, data: Record<string, unknown>) => {
+      const filteredData = filterExcludeFromSubmit(data, fields)
+      onAction?.(action, filteredData)
+    },
+    [onAction, fields]
+  )
+
   // Track field changes and emit onFieldChange without triggering parent re-render
   // Store previous values as deep object to match RHF structure
   const prevValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
@@ -56,14 +65,15 @@ export function TsForm({
         }
 
         const val = getNestedValue(data as Record<string, unknown>, name)
-        onFieldChange?.(name, val, data as Record<string, unknown>)
+        const filteredData = filterExcludeFromSubmit(data as Record<string, unknown>, fields)
+        onFieldChange?.(name, val, filteredData)
 
         // Update ref to keep in sync with internal changes using deep set
         setNestedValue(prevValuesRef.current, name, val)
       }
     })
     return () => subscription.unsubscribe()
-  }, [onFieldChange, form])
+  }, [onFieldChange, form, fields])
 
   // Update form values when props change surgically to preserve focus and avoid race conditions
   React.useEffect(() => {
@@ -72,26 +82,20 @@ export function TsForm({
     let hasChanged = false
     const activeElement = document.activeElement as HTMLElement
     // Find the field name by looking at the closest container with data-field attribute
-    // This is more robust than activeElement.name for complex widgets
     const activeFieldName = activeElement?.closest("[data-field]")?.getAttribute("data-field")
 
-    // Iterate over defined fields to check for changes (deep-path aware)
     Object.keys(fields).forEach((key) => {
       const path = key as FieldPath<Record<string, unknown>>
 
-      // Skip synchronization ONLY for the field that currently has focus
-      // to avoid cursor jumping. We allow updates for 'isDirty' fields if they are not active,
-      // as the parent component's state should be the ultimate source of truth.
       if (key === activeFieldName) return
 
       const propValue = getNestedValue(values as Record<string, unknown>, key)
       const internalValue = getNestedValue(prevValuesRef.current, key)
 
-      // Use basic comparison for primitives, assume object reference change means update
       if (propValue !== internalValue) {
         hasChanged = true
         form.setValue(path, propValue ?? null, {
-          shouldDirty: false, // Maintain dirty state if it was already dirty
+          shouldDirty: false,
           shouldTouch: false,
           shouldValidate: false,
         })
@@ -100,12 +104,11 @@ export function TsForm({
     })
 
     if (hasChanged) {
-      // Sync the whole ref as a fallback for any missed keys or deep structures
       prevValuesRef.current = deepClone(values)
     }
   }, [values, fields, form])
 
-  // Handle external errors with cleanup and efficiency
+  // Handle external errors
   React.useEffect(() => {
     if (!errors) {
       if (prevErrorPathsRef.current.size > 0) {
@@ -117,11 +120,9 @@ export function TsForm({
 
     const currentErrorPaths = new Set<string>()
 
-    // Recursively discover and set error messages
     const syncErrors = (errs: TsErrors | string | unknown, currentPath: string = "") => {
       if (!errs || typeof errs !== "object") return
 
-      // Direct string error message at path
       if (typeof errs === "string") {
         const path = currentPath as FieldPath<Record<string, unknown>>
         const currentInternal = form.getFieldState(path, form.formState).error
@@ -132,7 +133,6 @@ export function TsForm({
         return
       }
 
-      // Handle arrays of errors
       if (Array.isArray(errs)) {
         errs.forEach((item, index) => {
           syncErrors(item, currentPath ? `${currentPath}.${index}` : `${index}`)
@@ -140,7 +140,6 @@ export function TsForm({
         return
       }
 
-      // Handle nested error objects or RHF-style { message: "..." } objects
       const errorObj = errs as Record<string, unknown>
       Object.keys(errorObj).forEach((key) => {
         const val = errorObj[key]
@@ -171,7 +170,6 @@ export function TsForm({
 
     syncErrors(errors)
 
-    // Flat key support for errors object root (e.g. { "items.0.name": "error" })
     const errorsDict = errors as Record<string, unknown>
     Object.keys(errorsDict).forEach((path) => {
       if (path.includes(".") && !currentErrorPaths.has(path)) {
@@ -187,15 +185,12 @@ export function TsForm({
       }
     })
 
-    // Efficient cleanup: Clear only those paths that were previously manual errors
-    // but are no longer present in current error set.
     prevErrorPathsRef.current.forEach((path) => {
       if (!currentErrorPaths.has(path)) {
         form.clearErrors(path as FieldPath<Record<string, unknown>>)
       }
     })
 
-    // Store current paths for next sync
     prevErrorPathsRef.current = currentErrorPaths
   }, [errors, fields, form])
 
@@ -205,7 +200,6 @@ export function TsForm({
       Object.entries(fields).map(([key, field]) => {
         const merged = { ...field }
         if (readOnly) merged.readonly = true
-        // Propagate global locale if not field-specific
         if (merged.type === "number" && !merged.locale && locale) {
           merged.locale = locale
         }
@@ -221,57 +215,6 @@ export function TsForm({
     pendingAction: string | null
     pendingData: Record<string, unknown> | null
   }>({ isOpen: false, config: null, pendingAction: null, pendingData: null })
-
-  // Central submission logic - pass action explicitly
-  const executeAction = React.useCallback(
-    (action: string, data: Record<string, unknown>) => {
-      const filteredData = deepClone(data)
-
-      const keysToDelete = Object.keys(fields).filter((k) => fields[k]?.excludeFromSubmit)
-
-      const arrayPaths: Record<string, number[]> = {}
-      const simplePaths: string[] = []
-
-      keysToDelete.forEach((path) => {
-        // Support any array index in path (not just at the end), e.g. "users.0.tags.1"
-        // We match all groups of digits that follow a dot
-        const parts = path.split(".")
-        let hasArrayIdx = false
-        for (let i = parts.length - 1; i >= 0; i--) {
-          if (/^\d+$/.test(parts[i])) {
-            const parent = parts.slice(0, i).join(".")
-            const index = parseInt(parts[i], 10)
-            if (!arrayPaths[parent]) arrayPaths[parent] = []
-            if (!arrayPaths[parent].includes(index)) arrayPaths[parent].push(index)
-            hasArrayIdx = true
-            // We break because deleting parent array element removes the child path
-            break
-          }
-        }
-        if (!hasArrayIdx) {
-          simplePaths.push(path)
-        }
-      })
-
-      // 1. Delete simple flat paths first
-      simplePaths.forEach((p) => deleteNestedKey(filteredData, p))
-
-      // 2. Delete array indices FROM END TO START for each array level
-      // to maintain correct indices for remaining elements
-      Object.keys(arrayPaths)
-        .sort((a, b) => b.length - a.length)
-        .forEach((parent) => {
-          arrayPaths[parent]
-            .sort((a, b) => b - a)
-            .forEach((index) => {
-              deleteNestedKey(filteredData, `${parent}.${index}`)
-            })
-        })
-
-      onAction?.(action, filteredData)
-    },
-    [onAction, fields]
-  )
 
   // Handle Enter/Escape actions - Scoped to form element
   React.useEffect(() => {
@@ -366,7 +309,7 @@ export function TsForm({
       if (btn.type === "reset") {
         form.reset(values || {})
         prevValuesRef.current = values ? deepClone(values) : {}
-        onAction?.(btn.action, form.getValues())
+        executeAction(btn.action, form.getValues() as Record<string, unknown>)
         return
       }
 
@@ -389,7 +332,7 @@ export function TsForm({
         proceed(form.getValues() as Record<string, unknown>)
       }
     },
-    [form, values, executeAction, onAction]
+    [form, values, executeAction]
   )
 
   const handleConfirmationAction = React.useCallback(
