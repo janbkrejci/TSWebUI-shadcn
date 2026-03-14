@@ -135,9 +135,9 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
     const isSelected = (item: Record<string, unknown>) => selectedValues.includes(item[valueField])
 
     const dispatchAction = (action: string, data?: unknown) => {
-      // Find the element to dispatch from. Priority: our ref (if it's a DOM element),
-      // or the document active element if we are inside it.
-      const el = (ref && "current" in ref ? ref.current : null) || document.activeElement
+      const el =
+        (ref && typeof ref === "object" && "current" in ref ? ref.current : null) ||
+        document.activeElement
       if (el) {
         el.dispatchEvent(
           new CustomEvent("form-field-action", {
@@ -267,7 +267,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
                           toggleItem(row as Record<string, unknown>)
                         }
                       }}
-                      onDataChange={(selectedRows) => {
+                      onSelectionChange={(selectedRows) => {
                         if (mode === "multiple") {
                           const newValues = selectedRows.map(
                             (r) => (r as Record<string, unknown>)[valueField]
