@@ -92,7 +92,7 @@ function renderRows(rows: TsRow[], fields: Record<string, TsFieldDef>) {
             )
           }
 
-          return <TsFormField key={colIndex} name={item.field} fieldDef={fieldDef} />
+          return <TsFormField key={item.field} name={item.field} fieldDef={fieldDef} />
         })}
       </div>
     )

@@ -1,11 +1,12 @@
 "use client"
 
-import { Check, ChevronsUpDown, X as XIcon } from "lucide-react"
+import { Check, ChevronsUpDown, Search, X as XIcon } from "lucide-react"
 
 import * as React from "react"
 import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -14,10 +15,18 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
+import { TsTable } from "../../ts-table"
 import { TsRelationshipField } from "../types"
 import { getFieldClasses, sanitizeId } from "../utils"
 
@@ -36,6 +45,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
     const hasError = !!error
 
     const [open, setOpen] = React.useState(false)
+    const [pickerOpen, setPickerOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
 
@@ -55,6 +65,15 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
       if (!field.value) return []
       return Array.isArray(field.value) ? (field.value as unknown[]) : [field.value]
     }, [field.value])
+
+    const tableColumns = React.useMemo(() => {
+      return displayFields.map((f) => ({
+        key: f,
+        title: f.charAt(0).toUpperCase() + f.slice(1),
+        sortable: true,
+        filterable: true,
+      }))
+    }, [displayFields])
 
     const getDisplayText = (item: unknown, fields: string[]) => {
       if (!item) return ""
@@ -94,6 +113,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
       if (mode === "single") {
         field.onChange(itemValue)
         setOpen(false)
+        setPickerOpen(false)
       } else {
         const isSelected = selectedValues.includes(itemValue)
         if (isSelected) {
@@ -114,141 +134,207 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
 
     const isSelected = (item: Record<string, unknown>) => selectedValues.includes(item[valueField])
 
+    const dispatchAction = (action: string, data?: unknown) => {
+      // Find the element to dispatch from. Priority: our ref (if it's a DOM element),
+      // or the document active element if we are inside it.
+      const el = (ref && "current" in ref ? ref.current : null) || document.activeElement
+      if (el) {
+        el.dispatchEvent(
+          new CustomEvent("form-field-action", {
+            detail: { field: name, action, data },
+            bubbles: true,
+          })
+        )
+      }
+    }
+
     return (
-      <Popover open={open} onOpenChange={setOpen} modal>
-        <PopoverAnchor asChild>
-          <div
-            role="combobox"
-            aria-expanded={open}
-            aria-invalid={hasError}
-            aria-controls={`popover-content-${safeId}`}
-            tabIndex={def.disabled || def.readonly ? -1 : 0}
-            {...props}
-            ref={ref}
-            onClick={() => {
-              if (!def.disabled && !def.readonly) setOpen((v) => !v)
+      <div className="flex flex-col gap-2">
+        <Popover open={open} onOpenChange={setOpen} modal>
+          <div className="flex gap-2 w-full">
+            <PopoverAnchor asChild>
+              <div
+                role="combobox"
+                aria-expanded={open}
+                aria-invalid={hasError}
+                aria-controls={`popover-content-${safeId}`}
+                tabIndex={def.disabled || def.readonly ? -1 : 0}
+                {...props}
+                ref={ref}
+                onClick={() => {
+                  if (!def.disabled && !def.readonly) setOpen((v) => !v)
+                }}
+                onKeyDown={(e) => {
+                  if ((e.key === "Enter" || e.key === " ") && !def.disabled && !def.readonly) {
+                    e.preventDefault()
+                    setOpen((v) => !v)
+                  }
+                }}
+                className={cn(
+                  "flex h-9 flex-1 items-center justify-between gap-2 rounded-md border bg-background px-3 py-1 text-sm shadow-xs cursor-pointer",
+                  "dark:bg-input/30 transition-[color,box-shadow]",
+                  !readonlyClass &&
+                    "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+                  "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+                  def.disabled && "opacity-50 pointer-events-none",
+                  readonlyClass && "pointer-events-none"
+                )}
+              >
+                <div className="flex flex-1 items-center gap-1 overflow-hidden min-w-0 flex-nowrap">
+                  {selectedValues.length === 0 ? (
+                    <span className="text-muted-foreground truncate">
+                      {def.placeholder || `Select ${targetEntity}...`}
+                    </span>
+                  ) : (
+                    <>
+                      {selectedValues.slice(0, 3).map((val) => (
+                        <Badge
+                          key={String(val)}
+                          variant="secondary"
+                          className="shrink-0 gap-1 text-xs h-6 max-w-30"
+                        >
+                          <span className="truncate">{getDisplayText(val, chipDisplayFields)}</span>
+                          {!def.readonly && !def.disabled && (
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              className="inline-flex cursor-pointer shrink-0 items-center hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeItem(val)
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  removeItem(val)
+                                }
+                              }}
+                            >
+                              <XIcon className="h-2.5 w-2.5" />
+                            </span>
+                          )}
+                        </Badge>
+                      ))}
+                      {selectedValues.length > 3 && (
+                        <Badge variant="outline" className="shrink-0 text-xs h-6 whitespace-nowrap">
+                          +{selectedValues.length - 3}
+                        </Badge>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0 ml-1">
+                  {selectedValues.length > 0 && !def.readonly && !def.disabled && (
+                    <XIcon
+                      className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        field.onChange(mode === "single" ? null : [])
+                        setOpen(false)
+                      }}
+                    />
+                  )}
+                  <ChevronsUpDown className="h-4 w-4 text-muted-foreground opacity-50" />
+                </div>
+              </div>
+            </PopoverAnchor>
+
+            {!def.readonly && !def.disabled && (
+              <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    title={`Browse ${targetEntity}`}
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+                  <DialogHeader className="px-6 py-4 border-b">
+                    <DialogTitle>Select {targetEntity}</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex-1 overflow-auto p-6 pt-2">
+                    <TsTable
+                      data={availableItems}
+                      columnDefinitions={tableColumns}
+                      enableSelection={mode === "multiple"}
+                      onRowClick={(row) => {
+                        if (mode === "single") {
+                          toggleItem(row as Record<string, unknown>)
+                        }
+                      }}
+                      onDataChange={(selectedRows) => {
+                        if (mode === "multiple") {
+                          const newValues = selectedRows.map(
+                            (r) => (r as Record<string, unknown>)[valueField]
+                          )
+                          // Only update if something actually changed to avoid cycles
+                          if (JSON.stringify(field.value) !== JSON.stringify(newValues)) {
+                            field.onChange(newValues)
+                          }
+                        }
+                      }}
+                      onAction={(action, row) => dispatchAction(action, row)}
+                      onCreateClick={() => dispatchAction(`picker:create:${targetEntity}`)}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+          <PopoverContent
+            id={`popover-content-${safeId}`}
+            className="w-[--radix-popover-trigger-width] p-0"
+            align="start"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault()
+              ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()
             }}
-            onKeyDown={(e) => {
-              if ((e.key === "Enter" || e.key === " ") && !def.disabled && !def.readonly) {
+            onEscapeKeyDown={(e) => {
+              if (searchValue) {
                 e.preventDefault()
-                setOpen((v) => !v)
+                setSearchValue("")
               }
             }}
-            className={cn(
-              "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-1 text-sm shadow-xs cursor-pointer",
-              "dark:bg-input/30 transition-[color,box-shadow]",
-              !readonlyClass &&
-                "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-              "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-              def.disabled && "opacity-50 pointer-events-none",
-              readonlyClass && "pointer-events-none"
-            )}
           >
-            <div className="flex flex-1 items-center gap-1 overflow-hidden min-w-0 flex-nowrap">
-              {selectedValues.length === 0 ? (
-                <span className="text-muted-foreground truncate">
-                  {def.placeholder || `Select ${targetEntity}...`}
-                </span>
-              ) : (
-                <>
-                  {selectedValues.slice(0, 3).map((val) => (
-                    <Badge
-                      key={String(val)}
-                      variant="secondary"
-                      className="shrink-0 gap-1 text-xs h-6 max-w-30"
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder={`Search ${targetEntity}...`}
+                value={searchValue}
+                onValueChange={setSearchValue}
+              />
+              <CommandList className="max-h-60">
+                <CommandEmpty className="py-1.5 px-2 text-left">
+                  <span className="italic text-muted-foreground text-sm">
+                    {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
+                  </span>
+                </CommandEmpty>
+                <CommandGroup>
+                  {filteredItems.map((item) => (
+                    <CommandItem
+                      key={String(item[valueField])}
+                      value={String(item[valueField])}
+                      onSelect={() => toggleItem(item)}
                     >
-                      <span className="truncate">{getDisplayText(val, chipDisplayFields)}</span>
-                      {!def.readonly && !def.disabled && (
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          className="inline-flex cursor-pointer shrink-0 items-center hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeItem(val)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              removeItem(val)
-                            }
-                          }}
-                        >
-                          <XIcon className="h-2.5 w-2.5" />
-                        </span>
-                      )}
-                    </Badge>
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          isSelected(item) ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {getDisplayText(item, displayFields)}
+                    </CommandItem>
                   ))}
-                  {selectedValues.length > 3 && (
-                    <Badge variant="outline" className="shrink-0 text-xs h-6 whitespace-nowrap">
-                      +{selectedValues.length - 3}
-                    </Badge>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0 ml-1">
-              {selectedValues.length > 0 && !def.readonly && !def.disabled && (
-                <XIcon
-                  className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    field.onChange(mode === "single" ? null : [])
-                    setOpen(false)
-                  }}
-                />
-              )}
-              <ChevronsUpDown className="h-4 w-4 text-muted-foreground opacity-50" />
-            </div>
-          </div>
-        </PopoverAnchor>
-        <PopoverContent
-          id={`popover-content-${safeId}`}
-          className="w-auto min-w-75 p-0"
-          align="start"
-          onOpenAutoFocus={(e) => {
-            e.preventDefault()
-            ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()
-          }}
-          onEscapeKeyDown={(e) => {
-            if (searchValue) {
-              e.preventDefault()
-              setSearchValue("")
-            }
-          }}
-        >
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder={`Search ${targetEntity}...`}
-              value={searchValue}
-              onValueChange={setSearchValue}
-            />
-            <CommandList className="max-h-60">
-              <CommandEmpty className="py-1.5 px-2 text-left">
-                <span className="italic text-muted-foreground text-sm">
-                  {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
-                </span>
-              </CommandEmpty>
-              <CommandGroup>
-                {filteredItems.map((item) => (
-                  <CommandItem
-                    key={String(item[valueField])}
-                    value={String(item[valueField])}
-                    onSelect={() => toggleItem(item)}
-                  >
-                    <Check
-                      className={cn("mr-2 h-4 w-4", isSelected(item) ? "opacity-100" : "opacity-0")}
-                    />
-                    {getDisplayText(item, displayFields)}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
     )
   }
 )

@@ -175,7 +175,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
               className="w-full h-8 text-xs"
               onClick={() => setOpen(false)}
             >
-              Zavřít
+              Close
             </Button>
           </div>
         </PopoverContent>

@@ -340,7 +340,23 @@ export function TsForm({
     }
 
     el.addEventListener("form-key-action", handleKeyAction)
-    return () => el.removeEventListener("form-key-action", handleKeyAction)
+
+    const handleFieldAction = (e: Event) => {
+      if (!(e instanceof CustomEvent)) return
+      const { action, data } = e.detail as { action: string; data: Record<string, unknown> }
+      if (action) {
+        executeAction(action, data || form.getValues())
+      }
+    }
+
+    el.addEventListener("form-field-action", handleFieldAction)
+    el.addEventListener("form-table-action", handleFieldAction)
+
+    return () => {
+      el.removeEventListener("form-key-action", handleKeyAction)
+      el.removeEventListener("form-field-action", handleFieldAction)
+      el.removeEventListener("form-table-action", handleFieldAction)
+    }
   }, [form, buttons, executeAction])
 
   const handleButtonClick = React.useCallback(
