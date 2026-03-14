@@ -116,7 +116,6 @@ function renderWidget(
 ) {
   const commonProps = {
     field,
-    def,
     name,
     error,
     "aria-required": def.required,
@@ -125,43 +124,40 @@ function renderWidget(
   switch (def.type) {
     case "text":
     case "password":
-    case "email":
-    case "tel":
-    case "url":
-      return <TextWidget {...commonProps} />
+      return <TextWidget {...commonProps} def={def} />
     case "textarea":
-      return <TextareaWidget {...commonProps} />
+      return <TextareaWidget {...commonProps} def={def} />
     case "number":
-      return <NumberWidget {...commonProps} />
+      return <NumberWidget {...commonProps} def={def} />
     case "slider":
-      return <SliderWidget {...commonProps} />
+      return <SliderWidget {...commonProps} def={def} />
     case "select":
-      return <SelectWidget {...commonProps} />
+      return <SelectWidget {...commonProps} def={def} />
     case "combobox":
-      return <ComboboxWidget {...commonProps} />
+      return <ComboboxWidget {...commonProps} def={def} />
     case "multiselect":
-      return <MultiSelectWidget {...commonProps} />
+      return <MultiSelectWidget {...commonProps} def={def} />
     case "checkbox":
-      return <CheckboxWidget {...commonProps} />
+      return <CheckboxWidget {...commonProps} def={def} />
     case "switch":
-      return <SwitchWidget {...commonProps} />
+      return <SwitchWidget {...commonProps} def={def} />
     case "radio":
-      return <RadioWidget {...commonProps} />
+      return <RadioWidget {...commonProps} def={def} />
     case "button-group":
-      return <ButtonGroupWidget {...commonProps} />
+      return <ButtonGroupWidget {...commonProps} def={def} />
     case "date":
-      return <DateWidget {...commonProps} />
+      return <DateWidget {...commonProps} def={def} />
     case "datetime":
-      return <DateTimeWidget {...commonProps} />
+      return <DateTimeWidget {...commonProps} def={def} />
     case "file":
     case "image":
-      return <FileWidget {...commonProps} />
+      return <FileWidget {...commonProps} def={def} />
     case "infobox":
       return <InfoboxWidget def={def} />
     case "markdown":
       return <MarkdownWidget def={def} error={error} />
     case "table":
-      return <TableWidget field={field} def={def} error={error} />
+      return <TableWidget field={field} def={def} name={name} error={error} />
     case "button":
       return <ButtonWidget def={def} name={name} />
     case "separator":
@@ -169,7 +165,7 @@ function renderWidget(
     case "empty":
       return <EmptyWidget def={def} error={error} />
     case "relationship":
-      return <RelationshipWidget {...commonProps} />
+      return <RelationshipWidget {...commonProps} def={def} />
     default: {
       const _exhaustive: never = def
       return (

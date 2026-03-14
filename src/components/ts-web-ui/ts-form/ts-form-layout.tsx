@@ -7,10 +7,10 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TsFormField } from "./ts-form-field"
-import { TsFormLayout as LayoutType, TsFieldDef, TsFormRow } from "./types"
+import { TsFieldDef, TsLayout, TsRow } from "./types"
 
 interface TsFormLayoutProps {
-  layout: LayoutType
+  layout: TsLayout
   fields: Record<string, TsFieldDef>
 }
 
@@ -19,7 +19,7 @@ export function TsFormLayout({ layout, fields }: TsFormLayoutProps) {
     formState: { errors },
   } = useFormContext()
 
-  if (layout.tabs) {
+  if (layout.tabs && layout.tabs.length > 0) {
     return (
       <Tabs defaultValue={layout.tabs[0].label} className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto scrollbar-hidden">
@@ -59,7 +59,7 @@ export function TsFormLayout({ layout, fields }: TsFormLayoutProps) {
   return null
 }
 
-function renderRows(rows: TsFormRow[], fields: Record<string, TsFieldDef>) {
+function renderRows(rows: TsRow[], fields: Record<string, TsFieldDef>) {
   return rows.map((row, rowIndex) => {
     // Calculate grid template columns based on widths
     // Default width is 1fr if not specified

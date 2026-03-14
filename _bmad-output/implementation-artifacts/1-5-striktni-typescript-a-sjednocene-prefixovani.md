@@ -1,6 +1,6 @@
 # Story 1.5: Striktní TypeScript a sjednocené prefixování (Ts prefix)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -10,25 +10,25 @@ so that **mi IDE poskytovalo přesné napovídání a kód byl odolný proti chy
 
 ## Acceptance Criteria
 
-1. [ ] Všechny globální TypeScript interfaces a typy v `src/components/ts-web-ui/ts-form/types.ts` začínají prefixem `Ts` (např. `TsFormDef`, `TsFieldDef`, `TsLayout`, `TsButton`).
-2. [ ] V celém adresáři `ts-form/` nejsou použity žádné `any` typy.
-3. [ ] Nejsou použity žádné casty typu `as unknown as` nebo `as any`. Pokud je cast nutný, musí být vysvětlen nebo nahrazen korektním narrowingem.
-4. [ ] Všechny exportované interfaces mají základní JSDoc dokumentaci vysvětlující jejich účel a klíčové vlastnosti.
-5. [ ] Widgety používají své specifické narrowed props (např. `TsTextWidgetProps`) namísto generických props.
+1. [x] Všechny globální TypeScript interfaces a typy v `src/components/ts-web-ui/ts-form/types.ts` začínají prefixem `Ts` (např. `TsFormDef`, `TsFieldDef`, `TsLayout`, `TsButton`).
+2. [x] V celém adresáři `ts-form/` nejsou použity žádné `any` typy.
+3. [x] Nejsou použity žádné casty typu `as unknown as` nebo `as any`. Pokud je cast nutný, musí být vysvětlen nebo nahrazen korektním narrowingem.
+4. [x] Všechny exportované interfaces mají základní JSDoc dokumentaci vysvětlující jejich účel a klíčové vlastnosti.
+5. [x] Widgety používají své specifické narrowed props (např. `TsTextWidgetProps`) namísto generických props.
 
 ## Tasks / Subtasks
 
-- [ ] **Audit a přejmenování v types.ts** (AC: 1, 4)
-  - [ ] Přejmenovat existující typy na varianty s `Ts` prefixem.
-  - [ ] Doplnit JSDoc k hlavním rozhraním.
-- [ ] **Refaktoring codebase** (AC: 1, 2, 3)
-  - [ ] Aktualizovat importy a usage v `index.tsx`, `ts-form-field.tsx` a `ts-form-layout.tsx`.
-  - [ ] Aktualizovat všechny soubory ve `widgets/` na nové názvy typů.
-- [ ] **Eliminace 'any' a castů** (AC: 2, 3)
-  - [ ] Vyhledat `any` v adresáři `ts-form/` a nahradit je korektními typy.
-  - [ ] Nahradit nebezpečné casty bezpečným narrowingem.
-- [ ] **Verifikace** (AC: 5)
-  - [ ] Ověřit, že `pnpm tsc` (nebo ekvivalentní type-check) nehlásí žádné chyby v adresáři komponenty.
+- [x] **Audit a přejmenování v types.ts** (AC: 1, 4)
+  - [x] Přejmenovat existující typy na varianty s `Ts` prefixem.
+  - [x] Doplnit JSDoc k hlavním rozhraním.
+- [x] **Refaktoring codebase** (AC: 1, 2, 3)
+  - [x] Aktualizovat importy a usage v `index.tsx`, `ts-form-field.tsx` a `ts-form-layout.tsx`.
+  - [x] Aktualizovat všechny soubory ve `widgets/` na nové názvy typů.
+- [x] **Eliminace 'any' a castů** (AC: 2, 3)
+  - [x] Vyhledat `any` v adresáři `ts-form/` a nahradit je korektními typy.
+  - [x] Nahradit nebezpečné casty bezpečným narrowingem.
+- [x] **Verifikace** (AC: 5)
+  - [x] Ověřit, že `pnpm tsc` (nebo ekvivalentní type-check) nehlásí žádné chyby v adresáři komponenty.
 
 ## Dev Notes
 

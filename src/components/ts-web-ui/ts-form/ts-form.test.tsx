@@ -3,10 +3,10 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import { TsForm } from "./index"
-import { TsFieldDef, TsFormLayout } from "./types"
+import { TsErrors, TsFieldDef, TsLayout } from "./types"
 
 describe("TsForm", () => {
-  const layout: TsFormLayout = {
+  const layout: TsLayout = {
     rows: [[{ field: "firstName" }, { field: "lastName" }]],
   }
 
@@ -71,7 +71,7 @@ describe("TsForm", () => {
     const nestedFields: Record<string, TsFieldDef> = {
       "items.0.name": { type: "text", label: "Item Name" },
     }
-    const nestedLayout: TsFormLayout = { rows: [[{ field: "items.0.name" }]] }
+    const nestedLayout: TsLayout = { rows: [[{ field: "items.0.name" }]] }
 
     render(
       <TsForm
@@ -95,7 +95,7 @@ describe("TsForm", () => {
         options: ["open/true/default/Open", "closed/true/secondary/Closed"],
       },
     }
-    const bgLayout: TsFormLayout = { rows: [[{ field: "status" }]] }
+    const bgLayout: TsLayout = { rows: [[{ field: "status" }]] }
 
     render(
       <TsForm
@@ -129,7 +129,7 @@ describe("TsForm", () => {
         options: ["1/true/primary/Step 1", "2/true/success/Step 2"],
       },
     }
-    const procLayout: TsFormLayout = { rows: [[{ field: "step" }]] }
+    const procLayout: TsLayout = { rows: [[{ field: "step" }]] }
 
     render(
       <TsForm
@@ -159,7 +159,7 @@ describe("TsForm", () => {
         value: "### Hello\\n[Link](https://google.com)\\n```js\\nconst a = 1;\\n```",
       },
     }
-    const mdLayout: TsFormLayout = { rows: [[{ field: "content" }]] }
+    const mdLayout: TsLayout = { rows: [[{ field: "content" }]] }
 
     render(<TsForm layout={mdLayout} fields={mdFields} buttons={[]} />)
 
@@ -174,7 +174,7 @@ describe("TsForm", () => {
       "user.name": { type: "text", label: "Name" },
       "user.password": { type: "password", label: "Password", excludeFromSubmit: true },
     }
-    const nestedLayout: TsFormLayout = {
+    const nestedLayout: TsLayout = {
       rows: [[{ field: "user.name" }, { field: "user.password" }]],
     }
 
@@ -234,7 +234,7 @@ describe("TsForm", () => {
     const nestedFields: Record<string, TsFieldDef> = {
       "items.0.name": { type: "text", label: "Item Name" },
     }
-    const nestedLayout: TsFormLayout = { rows: [[{ field: "items.0.name" }]] }
+    const nestedLayout: TsLayout = { rows: [[{ field: "items.0.name" }]] }
 
     render(<TsForm layout={nestedLayout} fields={nestedFields} onFieldChange={onFieldChange} />)
 
@@ -246,13 +246,13 @@ describe("TsForm", () => {
     const nestedFields: Record<string, TsFieldDef> = {
       "user.name": { type: "text", label: "User Name" },
     }
-    const nestedLayout: TsFormLayout = { rows: [[{ field: "user.name" }]] }
+    const nestedLayout: TsLayout = { rows: [[{ field: "user.name" }]] }
 
     render(
       <TsForm
         layout={nestedLayout}
         fields={nestedFields}
-        errors={{ user: { name: "Deep error" } } as unknown as Record<string, string>}
+        errors={{ user: { name: "Deep error" } } as TsErrors}
       />
     )
 
@@ -265,7 +265,7 @@ describe("TsForm", () => {
     const nestedFields: Record<string, TsFieldDef> = {
       "user.name": { type: "text", label: "User Name", enterAction: "submit" },
     }
-    const nestedLayout: TsFormLayout = { rows: [[{ field: "user.name" }]] }
+    const nestedLayout: TsLayout = { rows: [[{ field: "user.name" }]] }
 
     render(
       <TsForm
@@ -294,7 +294,7 @@ describe("TsForm", () => {
       "user.name": { type: "text", label: "Name" },
       "user.email": { type: "text", label: "Email" },
     }
-    const siblingLayout: TsFormLayout = {
+    const siblingLayout: TsLayout = {
       rows: [[{ field: "user.name" }, { field: "user.email" }]],
     }
 
@@ -328,7 +328,7 @@ describe("TsForm", () => {
       "items.1": { type: "text", label: "Item 1", excludeFromSubmit: true },
       "items.2": { type: "text", label: "Item 2" },
     }
-    const arrayLayout: TsFormLayout = {
+    const arrayLayout: TsLayout = {
       rows: [[{ field: "items.0" }, { field: "items.1" }, { field: "items.2" }]],
     }
 

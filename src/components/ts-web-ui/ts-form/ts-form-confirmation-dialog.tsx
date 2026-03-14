@@ -11,13 +11,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-import { TsFormButton, TsFormConfirmation } from "./types"
+import { TsButton, TsConfirmation } from "./types"
 
 interface TsFormConfirmationDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  config: TsFormConfirmation | null
-  renderButtons: (btns: (TsFormButton | TsFormConfirmation["buttons"][0])[]) => React.ReactNode
+  config: TsConfirmation | null
+  renderButtons: (btns: (TsButton | TsConfirmation["buttons"][0])[]) => React.ReactNode
 }
 
 export function TsFormConfirmationDialog({

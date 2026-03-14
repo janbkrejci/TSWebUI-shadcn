@@ -23,7 +23,7 @@ import {
   Upload,
 } from "lucide-react"
 
-import { TsFieldDef, TsFormButton } from "../ts-form/types"
+import { TsButton, TsFieldDef } from "../ts-form/types"
 
 /**
  * Extended field definition for the editor with a unique ID
@@ -91,7 +91,7 @@ export interface EditorFormDefinition {
   /** Definitions of all fields */
   fields: Record<string, TsFieldDef>
   /** Form buttons */
-  buttons: TsFormButton[]
+  buttons: TsButton[]
 }
 
 /**

@@ -105,7 +105,7 @@ describe("Widget Architecture & Sanity", () => {
     const fieldDef: TsFieldDef = {
       type: "table",
       label: "Items",
-      columns: [{ key: "name", label: "Name", type: "text" }],
+      columns: [{ key: "name", title: "Name", type: "text" }],
     }
     render(<TestForm name="items" fieldDef={fieldDef} />)
 

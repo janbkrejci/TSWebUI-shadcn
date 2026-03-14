@@ -2,6 +2,9 @@ import type { ReactNode } from "react"
 
 import { TsTableColumnDef } from "../ts-table/columns"
 
+/**
+ * All available field types in the TsForm system.
+ */
 export type TsFieldType =
   | "text"
   | "textarea"
@@ -29,6 +32,9 @@ export type TsFieldType =
 
 // ─── Variant unions ────────────────────────────────────────────────────────────
 
+/**
+ * Standard visual variants for buttons based on Shadcn UI.
+ */
 export type TsButtonVariant =
   | "default"
   | "primary"
@@ -41,26 +47,44 @@ export type TsButtonVariant =
   | "success"
   | "warning"
 
+/**
+ * Visual variants for the Infobox widget.
+ */
 export type TsInfoboxVariant = "default" | "information" | "warning" | "success" | "destructive"
 
 // ─── Options ──────────────────────────────────────────────────────────────────
 
+/**
+ * Represents a single selectable option in fields like Select, Radio, or Combobox.
+ */
 export interface TsFieldOptions {
+  /** Human-readable text shown to the user */
   label: string
+  /** Technical value stored in the form state */
   value: string | number | boolean
   /** Button variant used when this option is the active selection (button-group) */
   variant?: TsButtonVariant
+  /** Whether the option is selectable */
   disabled?: boolean
 }
 
 // ─── Shared base properties (present on every field type) ─────────────────────
 
+/**
+ * Base properties shared by all field definitions in the TsForm system.
+ */
 export interface TsFieldBase {
+  /** Label text shown above or next to the field */
   label?: string
+  /** Whether the field is mandatory (visual indicator and validator check) */
   required?: boolean
+  /** Whether the field is hidden from the UI (but still present in DOM and data) */
   hidden?: boolean
+  /** Whether the field is disabled for user interaction */
   disabled?: boolean
+  /** Whether the field is read-only (visual state, not necessarily disabling interaction) */
   readonly?: boolean
+  /** Hint text shown below the field */
   hint?: string
   /** Do not include this field's value in the final submission data */
   excludeFromSubmit?: boolean
@@ -70,28 +94,43 @@ export interface TsFieldBase {
    * This field serves as a fallback or for static validation states.
    */
   error?: string
-}
-
-// ─── Shared behaviour mixins ───────────────────────────────────────────────────
-
-export interface TsFieldInputBehavior {
-  placeholder?: string
-  /** Select all text when the field is focused or clicked */
-  selectAllOnFocus?: boolean
   /** Action emitted when Enter is pressed (e.g. 'focus:next', 'submit', 'click:save') */
   enterAction?: string
   /** Action on Escape: 'clear' clears the value, any other string emits form-key-action */
   escapeAction?: string
 }
 
+// ─── Shared behaviour mixins ───────────────────────────────────────────────────
+
+/**
+ * Mixin for fields with text-based input behavior.
+ */
+export interface TsFieldInputBehavior {
+  /** Placeholder text shown when the field is empty */
+  placeholder?: string
+  /** Select all text when the field is focused or clicked */
+  selectAllOnFocus?: boolean
+}
+
+/**
+ * Mixin for fields that support numeric ranges (Number, Slider).
+ */
 export interface TsFieldNumericRange {
+  /** Minimum allowed value */
   min?: number
+  /** Maximum allowed value */
   max?: number
+  /** Step increment for the value */
   step?: number
 }
 
+/**
+ * Mixin for fields that provide a list of options.
+ */
 export interface TsFieldWithOptions {
+  /** Placeholder shown when no option is selected */
   placeholder?: string
+  /** Static list of options or a reference to a dynamic source */
   options?: TsFieldOptions[] | string[]
   /** Message shown when no option matches the search (default: "Not found.") */
   notFoundMessage?: string
@@ -99,15 +138,19 @@ export interface TsFieldWithOptions {
 
 // ─── Per-type field interfaces ─────────────────────────────────────────────────
 
+/** Definition for standard text and password input fields. */
 export interface TsTextField extends TsFieldBase, TsFieldInputBehavior {
   type: "text" | "password"
 }
 
+/** Definition for multi-line text input fields. */
 export interface TsTextareaField extends TsFieldBase, TsFieldInputBehavior {
   type: "textarea"
+  /** Number of visible text lines */
   rows?: number
 }
 
+/** Definition for numeric input fields with rounding and localization. */
 export interface TsNumberField extends TsFieldBase, TsFieldInputBehavior, TsFieldNumericRange {
   type: "number"
   /** Number of decimal places for rounding and display */
@@ -116,63 +159,83 @@ export interface TsNumberField extends TsFieldBase, TsFieldInputBehavior, TsFiel
   locale?: string
 }
 
+/** Definition for slider-based numeric input. */
 export interface TsSliderField extends TsFieldBase, TsFieldNumericRange {
   type: "slider"
 }
 
+/** Definition for standard single-selection dropdown. */
 export interface TsSelectField extends TsFieldBase {
   type: "select"
+  /** Placeholder shown when no option is selected */
   placeholder?: string
+  /** Available options */
   options?: TsFieldOptions[] | string[]
 }
 
+/** Definition for multi-selection tag-based field. */
 export interface TsMultiselectField extends TsFieldBase, TsFieldWithOptions {
   type: "multiselect"
 }
 
+/** Definition for searchable dropdown with optional custom values. */
 export interface TsComboboxField extends TsFieldBase, TsFieldWithOptions {
   type: "combobox"
   /** Allow the user to enter a custom value not present in the options list */
   allowCustom?: boolean
+  /** Select all text when the field is focused or clicked */
   selectAllOnFocus?: boolean
 }
 
+/** Definition for radio button groups. */
 export interface TsRadioField extends TsFieldBase {
   type: "radio"
+  /** Available options */
   options?: TsFieldOptions[] | string[]
 }
 
+/** Definition for standard boolean checkbox. */
 export interface TsCheckboxField extends TsFieldBase {
   type: "checkbox"
 }
 
+/** Definition for standard boolean toggle switch. */
 export interface TsSwitchField extends TsFieldBase {
   type: "switch"
 }
 
+/** Definition for a group of buttons acting as a selection field. */
 export interface TsButtonGroupField extends TsFieldBase {
   type: "button-group"
+  /** Available options */
   options?: TsFieldOptions[] | string[]
   /** "process" renders a chevron-style process stepper; omit for a standard button group */
   variant?: "process"
 }
 
+/** Definition for date picker. */
 export interface TsDateField extends TsFieldBase {
   type: "date"
+  /** Placeholder for the text input part */
   placeholder?: string
   /** Date format string using date-fns tokens (default: "d.M.yyyy") */
   dateFormat?: string
+  /** Select all text when the field is focused or clicked */
   selectAllOnFocus?: boolean
 }
 
+/** Definition for date and time picker. */
 export interface TsDateTimeField extends TsFieldBase {
   type: "datetime"
+  /** Placeholder for the text input part */
   placeholder?: string
   /** Date format string using date-fns tokens (default: "d.M.yyyy HH:mm") */
   dateFormat?: string
+  /** Select all text when the field is focused or clicked */
   selectAllOnFocus?: boolean
 }
 
+/** Definition for file and image uploaders. */
 export interface TsFileField extends TsFieldBase {
   type: "file" | "image"
   /** Accepted file types (e.g. ".pdf,.doc" or "image/*") */
@@ -183,29 +246,38 @@ export interface TsFileField extends TsFieldBase {
   innerLabel?: string
 }
 
+/** Definition for action-only buttons within the form layout. */
 export interface TsButtonField extends TsFieldBase {
   type: "button"
   /** Action name emitted when the button is clicked */
   action?: string
+  /** Visual variant of the button */
   variant?: TsButtonVariant
 }
 
+/** Definition for horizontal section dividers. */
 export interface TsSeparatorField extends TsFieldBase {
   type: "separator"
 }
 
+/** Definition for empty layout placeholders. */
 export interface TsEmptyField extends TsFieldBase {
   type: "empty"
 }
 
+/** Definition for nested editable data tables. */
 export interface TsTableField extends TsFieldBase {
   type: "table"
+  /** Column definitions for the nested table */
   columns?: TsTableColumnDef[]
+  /** Whether to show a button for adding new rows */
   showCreateButton?: boolean
 }
 
+/** Definition for complex entity relationship selectors. */
 export interface TsRelationshipField extends TsFieldBase {
   type: "relationship"
+  /** Placeholder text */
   placeholder?: string
   /** Entity name used for placeholder text and search label */
   targetEntity?: string
@@ -217,25 +289,36 @@ export interface TsRelationshipField extends TsFieldBase {
   chipDisplayFields?: string[]
   /** Field used as the stored value / primary key */
   valueField?: string
-  /** Available records to select from */
+  /** Available records to select from (static or pre-fetched) */
   options?: Record<string, unknown>[]
 }
 
+/** Definition for information display boxes. */
 export interface TsInfoboxField extends TsFieldBase {
   type: "infobox"
+  /** Static string content */
   content?: string
+  /** Dynamic ReactNode content */
   value?: ReactNode
+  /** Visual variant of the box */
   variant?: TsInfoboxVariant
 }
 
+/** Definition for read-only markdown rendering. */
 export interface TsMarkdownField extends TsFieldBase {
   type: "markdown"
+  /** Static markdown content */
   content?: string
+  /** Dynamic markdown content from form data */
   value?: string
 }
 
 // ─── Main discriminated union ──────────────────────────────────────────────────
 
+/**
+ * Union of all possible field definitions.
+ * Discriminated by the 'type' property.
+ */
 export type TsFieldDef =
   | TsTextField
   | TsTextareaField
@@ -261,6 +344,10 @@ export type TsFieldDef =
 
 // ─── Utility type for partial updates ──────────────────────────────────────────
 
+/**
+ * Flat structure containing all possible field properties for easier partial updates.
+ * Used primarily in the Form Editor or for dynamic field modifications.
+ */
 export interface TsFieldUpdate {
   type?: TsFieldType
   label?: string

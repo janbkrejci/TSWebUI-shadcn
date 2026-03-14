@@ -49,10 +49,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
     )
 
     const valueField = def.valueField || "id"
-    const availableItems = React.useMemo(
-      () => (def.options as unknown as Record<string, unknown>[]) || [],
-      [def.options]
-    )
+    const availableItems = React.useMemo(() => def.options || [], [def.options])
 
     const selectedValues = React.useMemo(() => {
       if (!field.value) return []

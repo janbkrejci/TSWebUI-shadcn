@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { TsMarkdownField } from "../types"
 
 // Proper types for Markdown components to satisfy AC 4 (Zero Any)
-interface MarkdownComponentProps {
+interface TsMarkdownComponentProps {
   children?: React.ReactNode
   className?: string
   href?: string
@@ -55,12 +55,12 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
         <Markdown
           remarkPlugins={[remarkGfm]}
           components={{
-            a: ({ href, children, ...props }: MarkdownComponentProps) => (
+            a: ({ href, children, ...props }: TsMarkdownComponentProps) => (
               <a href={href} {...props} target="_blank" rel="noopener noreferrer">
                 {children}
               </a>
             ),
-            code: ({ className, children, ...props }: MarkdownComponentProps) => {
+            code: ({ className, children, ...props }: TsMarkdownComponentProps) => {
               const isInline = !className?.includes("language-")
               if (isInline) {
                 return (

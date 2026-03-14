@@ -75,10 +75,10 @@ import { cn } from "@/lib/utils"
 
 import { TsForm } from "../ts-form"
 import {
+  TsButton,
   TsButtonVariant,
   TsFieldDef,
   TsFieldUpdate,
-  TsFormButton,
   TsInfoboxVariant,
 } from "../ts-form/types"
 import { useFormEditorStore } from "./store"
@@ -668,7 +668,7 @@ export function TsFormEditor() {
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="flex flex-wrap gap-2">
-                        {form.buttons.map((button: TsFormButton, index: number) => (
+                        {form.buttons.map((button: TsButton, index: number) => (
                           <SortableButton
                             key={index}
                             button={button}
@@ -787,7 +787,7 @@ export function TsFormEditor() {
                       }
                 }
                 buttons={form.buttons}
-                onSubmit={(data, action) => addLog("SUBMIT", { action, data })}
+                onAction={(action, data) => addLog("SUBMIT", { action, data })}
               />
             </div>
             <div className="mt-6 flex flex-col h-75">
@@ -1203,7 +1203,7 @@ function FieldPropertiesPanel({
           <Select
             value={button.variant || "default"}
             onValueChange={(v) =>
-              updateButton(selection.itemIndex!, { variant: v as TsFormButton["variant"] })
+              updateButton(selection.itemIndex!, { variant: v as TsButton["variant"] })
             }
           >
             <SelectTrigger>
@@ -1798,7 +1798,7 @@ function SortableButton({
   onSelect,
   onRemove,
 }: {
-  button: TsFormButton
+  button: TsButton
   index: number
   isSelected: boolean
   onSelect: () => void

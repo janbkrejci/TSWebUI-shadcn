@@ -167,15 +167,24 @@ export function deleteNestedKey(obj: Record<string, unknown>, path: string): voi
  * and structuredClone is not reliably available for Files in all target environments.
  */
 export function deepClone<T>(val: T): T {
+  // Primitives and null are returned as-is
   if (val === null || typeof val !== "object") return val
 
+  // Dates are cloned to a new instance.
+  // Cast is necessary because T is a generic type and TS cannot guarantee it matches Date.
   if (val instanceof Date) return new Date(val.getTime()) as unknown as T
+
+  // Files and Blobs are considered immutable for our purposes and kept by reference.
+  // Cast is necessary because T is generic.
   if (val instanceof File || val instanceof Blob) return val as unknown as T
 
+  // Recursively clone arrays.
+  // Cast is necessary because map returns a new array that TS doesn't automatically map back to T.
   if (Array.isArray(val)) {
     return val.map((item) => deepClone(item)) as unknown as T
   }
 
+  // Recursively clone plain objects.
   const clonedObj: Record<string, unknown> = {}
   const sourceObj = val as Record<string, unknown>
   for (const key in sourceObj) {
@@ -183,6 +192,7 @@ export function deepClone<T>(val: T): T {
       clonedObj[key] = deepClone(sourceObj[key])
     }
   }
+  // Cast is necessary to convert our cloned record back to the original generic type T.
   return clonedObj as unknown as T
 }
 

@@ -10,7 +10,7 @@ import { Form } from "@/components/ui/form"
 
 import { TsFormConfirmationDialog } from "./ts-form-confirmation-dialog"
 import { TsFormLayout } from "./ts-form-layout"
-import { TsFormButton, TsFormConfirmation, TsFormErrors, TsFormProps } from "./types"
+import { TsButton, TsConfirmation, TsErrors, TsFormProps } from "./types"
 import {
   deepClone,
   deleteNestedKey,
@@ -118,7 +118,7 @@ export function TsForm({
     const currentErrorPaths = new Set<string>()
 
     // Recursively discover and set error messages
-    const syncErrors = (errs: TsFormErrors | string | unknown, currentPath: string = "") => {
+    const syncErrors = (errs: TsErrors | string | unknown, currentPath: string = "") => {
       if (!errs || typeof errs !== "object") return
 
       // Direct string error message at path
@@ -141,8 +141,9 @@ export function TsForm({
       }
 
       // Handle nested error objects or RHF-style { message: "..." } objects
-      Object.keys(errs).forEach((key) => {
-        const val = errs[key]
+      const errorObj = errs as Record<string, unknown>
+      Object.keys(errorObj).forEach((key) => {
+        const val = errorObj[key]
         const newPath = currentPath ? `${currentPath}.${key}` : key
 
         if (typeof val === "string") {
@@ -153,11 +154,12 @@ export function TsForm({
           }
           currentErrorPaths.add(newPath)
         } else if (val && typeof val === "object") {
-          if (typeof val.message === "string") {
+          const nestedVal = val as Record<string, unknown>
+          if (typeof nestedVal.message === "string") {
             const path = newPath as FieldPath<Record<string, unknown>>
             const currentInternal = form.getFieldState(path, form.formState).error
-            if (currentInternal?.message !== val.message) {
-              form.setError(path, { type: "manual", message: val.message })
+            if (currentInternal?.message !== nestedVal.message) {
+              form.setError(path, { type: "manual", message: nestedVal.message as string })
             }
             currentErrorPaths.add(newPath)
           } else {
@@ -170,9 +172,10 @@ export function TsForm({
     syncErrors(errors)
 
     // Flat key support for errors object root (e.g. { "items.0.name": "error" })
-    Object.keys(errors as Record<string, unknown>).forEach((path) => {
+    const errorsDict = errors as Record<string, unknown>
+    Object.keys(errorsDict).forEach((path) => {
       if (path.includes(".") && !currentErrorPaths.has(path)) {
-        const message = getNestedValue(errors as Record<string, unknown>, path)
+        const message = getNestedValue(errorsDict, path)
         if (typeof message === "string") {
           const fieldPath = path as FieldPath<Record<string, unknown>>
           const currentInternal = form.getFieldState(fieldPath, form.formState).error
@@ -214,7 +217,7 @@ export function TsForm({
   // Confirmation State
   const [confirmation, setConfirmation] = React.useState<{
     isOpen: boolean
-    config: TsFormConfirmation | null
+    config: TsConfirmation | null
     pendingAction: string | null
     pendingData: Record<string, unknown> | null
   }>({ isOpen: false, config: null, pendingAction: null, pendingData: null })
@@ -278,12 +281,13 @@ export function TsForm({
     const handleKeyAction = (e: Event) => {
       if (!(e instanceof CustomEvent)) return
 
-      const { key, action, field, value } = e.detail as {
+      const detail = e.detail as {
         key: string
         action: string
         field: string
         value?: unknown
       }
+      const { key, action, field, value } = detail
 
       if (value !== undefined) {
         const currentValue = form.getValues(field as FieldPath<Record<string, unknown>>)
@@ -340,7 +344,7 @@ export function TsForm({
   }, [form, buttons, executeAction])
 
   const handleButtonClick = React.useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>, btn: TsFormButton) => {
+    (e: React.MouseEvent<HTMLButtonElement>, btn: TsButton) => {
       e.preventDefault()
 
       if (btn.type === "reset") {
@@ -383,7 +387,7 @@ export function TsForm({
   )
 
   const renderButtons = React.useCallback(
-    (btns: (TsFormButton | TsFormConfirmation["buttons"][0])[]) => {
+    (btns: (TsButton | TsConfirmation["buttons"][0])[]) => {
       return btns.map((btn, idx) => {
         const { variant, className: customClass } = getButtonVariantClasses(btn.variant)
         const isConfirmBtn = "confirm" in btn
@@ -396,9 +400,9 @@ export function TsForm({
             className={customClass}
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               if (isConfirmBtn) {
-                handleConfirmationAction(btn as TsFormConfirmation["buttons"][0])
+                handleConfirmationAction(btn as TsConfirmation["buttons"][0])
               } else {
-                handleButtonClick(e, btn as TsFormButton)
+                handleButtonClick(e, btn as TsButton)
               }
             }}
             disabled={!isConfirmBtn && form.formState.isSubmitting}

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import * as React from "react"
 
 import { TsForm } from "./index"
-import { TsFieldDef, TsFormLayout } from "./types"
+import { TsFieldDef, TsLayout } from "./types"
 
 describe("TsForm - Regression & Robustness", () => {
   it("should successfully submit even with File objects (deepClone support)", async () => {
@@ -16,7 +16,7 @@ describe("TsForm - Regression & Robustness", () => {
     const fields: Record<string, TsFieldDef> = {
       avatar: { type: "file", label: "Avatar" },
     }
-    const layout: TsFormLayout = { rows: [[{ field: "avatar" }]] }
+    const layout: TsLayout = { rows: [[{ field: "avatar" }]] }
     const buttons = [{ action: "submit", label: "Submit", type: "submit" as const }]
 
     render(
@@ -49,7 +49,7 @@ describe("TsForm - Regression & Robustness", () => {
       name: { type: "text", label: "Name" },
       other: { type: "text", label: "Other" },
     }
-    const layout: TsFormLayout = { rows: [[{ field: "name" }, { field: "other" }]] }
+    const layout: TsLayout = { rows: [[{ field: "name" }, { field: "other" }]] }
 
     const TestWrapper = () => {
       const [values, setValues] = React.useState({ name: "", other: "" })

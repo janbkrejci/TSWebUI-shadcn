@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsDateTimeField } from "../types"
-import { getFieldClasses } from "../utils"
+import { getFieldClasses, sanitizeId } from "../utils"
 
 export interface TsDateTimeWidgetProps {
   field: ControllerRenderProps<FieldValues, string>

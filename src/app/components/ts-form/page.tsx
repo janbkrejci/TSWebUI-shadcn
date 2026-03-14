@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TsForm } from "@/components/ts-web-ui/ts-form"
-import { TsFieldDef, TsFormButton, TsFormLayout } from "@/components/ts-web-ui/ts-form/types"
+import { TsButton, TsFieldDef, TsLayout } from "@/components/ts-web-ui/ts-form/types"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const formFields: Record<string, TsFieldDef> = {
@@ -74,7 +74,7 @@ const formFields: Record<string, TsFieldDef> = {
   },
 }
 
-const formLayout: TsFormLayout = {
+const formLayout: TsLayout = {
   tabs: [
     {
       label: "General Info",
@@ -110,7 +110,7 @@ const formLayout: TsFormLayout = {
   ],
 }
 
-const formButtons: TsFormButton[] = [
+const formButtons: TsButton[] = [
   {
     action: "delete",
     label: "Delete Account",
@@ -273,12 +273,12 @@ export default function MyForm() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs">layout</TableCell>
-                      <TableCell className="text-xs italic">TsFormLayout</TableCell>
+                      <TableCell className="text-xs italic">TsLayout</TableCell>
                       <TableCell>Visual structure (rows or tabs).</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs">buttons</TableCell>
-                      <TableCell className="text-xs italic">TsFormButton[]</TableCell>
+                      <TableCell className="text-xs italic">TsButton[]</TableCell>
                       <TableCell>Buttons rendered at the bottom of the form.</TableCell>
                     </TableRow>
                     <TableRow>
@@ -290,7 +290,7 @@ export default function MyForm() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs">errors</TableCell>
-                      <TableCell className="text-xs italic">Record&lt;string, string&gt;</TableCell>
+                      <TableCell className="text-xs italic">TsErrors</TableCell>
                       <TableCell>External validation errors map.</TableCell>
                     </TableRow>
                     <TableRow>

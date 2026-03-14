@@ -6,7 +6,7 @@
  */
 import { create } from "zustand"
 
-import { TsFieldDef, TsFieldUpdate, TsFormButton } from "../ts-form/types"
+import { TsButton, TsFieldDef, TsFieldUpdate } from "../ts-form/types"
 import { EditorFormDefinition, EditorRow, EditorRowItem, EditorSelection, EditorTab } from "./types"
 
 // ============================================================================
@@ -186,7 +186,7 @@ export interface FormEditorState {
   // Buttons
   addButton: () => void
   removeButton: (index: number) => void
-  updateButton: (index: number, button: Partial<TsFormButton>) => void
+  updateButton: (index: number, button: Partial<TsButton>) => void
   moveButton: (fromIndex: number, toIndex: number) => void
 
   // Selection
@@ -641,7 +641,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     const { form, saveToHistory } = get()
     saveToHistory()
 
-    const newButton: TsFormButton = {
+    const newButton: TsButton = {
       action: `action_${form.buttons.length + 1}`,
       label: `Button ${form.buttons.length + 1}`,
       variant: "outline",
@@ -656,12 +656,12 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     set({
       form: {
         ...form,
-        buttons: form.buttons.filter((_: TsFormButton, i: number) => i !== index),
+        buttons: form.buttons.filter((_: TsButton, i: number) => i !== index),
       },
     })
   },
 
-  updateButton: (index: number, button: Partial<TsFormButton>) => {
+  updateButton: (index: number, button: Partial<TsButton>) => {
     const { form, saveToHistory } = get()
     saveToHistory()
 
@@ -752,7 +752,7 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
         tabs?: { label: string; rows: { field?: string; width?: string }[][] }[]
         rows?: { field?: string; width?: string }[][]
       }
-      buttons: TsFormButton[]
+      buttons: TsButton[]
     } = {
       fields: form.fields,
       layout: {},
