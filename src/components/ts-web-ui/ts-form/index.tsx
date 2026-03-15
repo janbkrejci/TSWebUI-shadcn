@@ -1,37 +1,23 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
-import * as z from "zod"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { type FieldPath, useForm } from "react-hook-form"
 
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 
+import { TsFormConfirmationDialog } from "./ts-form-confirmation-dialog"
 import { TsFormLayout } from "./ts-form-layout"
-import { generateZodSchema } from "./ts-form-schema"
-import { TsFormLayout as LayoutType, TsFieldDef, TsFormButton, TsFormConfirmation } from "./types"
-
-export interface TsFormProps {
-  layout: LayoutType
-  fields: Record<string, TsFieldDef>
-  values?: Record<string, unknown>
-  buttons?: TsFormButton[]
-  errors?: Record<string, string>
-  onSubmit?: (data: Record<string, unknown>, action: string) => void
-  readOnly?: boolean
-  className?: string
-}
+import { TsButton, TsConfirmation, TsErrors, TsFormProps } from "./types"
+import {
+  deepClone,
+  filterExcludeFromSubmit,
+  getButtonVariantClasses,
+  getNestedValue,
+  setNestedValue,
+} from "./utils"
 
 export function TsForm({
   layout,
@@ -39,223 +25,366 @@ export function TsForm({
   values,
   buttons = [],
   errors,
-  onSubmit,
+  onAction,
+  onFieldChange,
+  readOnly = false,
   className,
-}: Omit<TsFormProps, "readOnly">) {
-  // 1. Generate Schema based on fields
-  const formSchema = React.useMemo(() => generateZodSchema(fields), [fields])
-  type FormValues = z.infer<typeof formSchema>
+  locale,
+}: TsFormProps) {
+  const formRef = React.useRef<HTMLFormElement>(null)
 
-  // 2. Initialize Form
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: (values as FormValues) || {},
-    mode: "onChange",
+  // 1. Initialize Form
+  const form = useForm<Record<string, unknown>>({
+    defaultValues: values || {},
   })
 
-  // Update form values when props change
+  // Central submission logic - pass action explicitly
+  const executeAction = React.useCallback(
+    (action: string, data: Record<string, unknown>) => {
+      const filteredData = filterExcludeFromSubmit(data, fields)
+      onAction?.(action, filteredData)
+    },
+    [onAction, fields]
+  )
+
+  // Track field changes and emit onFieldChange without triggering parent re-render
+  // Store previous values as deep object to match RHF structure
+  const prevValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
+
+  // Track paths that have manual errors from props to allow efficient cleanup
+  const prevErrorPathsRef = React.useRef<Set<string>>(new Set())
+
   React.useEffect(() => {
-    if (values) {
-      form.reset(values as FormValues)
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const subscription = form.watch((data, { name }) => {
+      // name is undefined if the whole form is reset or changed, we only care about field-level changes
+      if (name) {
+        // Prototype pollution protection for incoming field names
+        if (name === "__proto__" || name === "constructor" || name === "prototype") {
+          return
+        }
+
+        const val = getNestedValue(data as Record<string, unknown>, name)
+        const filteredData = filterExcludeFromSubmit(data as Record<string, unknown>, fields)
+        onFieldChange?.(name, val, filteredData)
+
+        // Update ref to keep in sync with internal changes using deep set
+        setNestedValue(prevValuesRef.current, name, val)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [onFieldChange, form, fields])
+
+  // Update form values when props change surgically to preserve focus and avoid race conditions
+  React.useEffect(() => {
+    if (!values) return
+
+    let hasChanged = false
+    const activeElement = document.activeElement as HTMLElement
+    // Find the field name by looking at the closest container with data-field attribute
+    const activeFieldName = activeElement?.closest("[data-field]")?.getAttribute("data-field")
+
+    Object.keys(fields).forEach((key) => {
+      const path = key as FieldPath<Record<string, unknown>>
+
+      if (key === activeFieldName) return
+
+      const propValue = getNestedValue(values as Record<string, unknown>, key)
+      const internalValue = getNestedValue(prevValuesRef.current, key)
+
+      if (propValue !== internalValue) {
+        hasChanged = true
+        form.setValue(path, propValue ?? null, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        })
+        setNestedValue(prevValuesRef.current, key, propValue)
+      }
+    })
+
+    if (hasChanged) {
+      prevValuesRef.current = deepClone(values)
     }
-  }, [values, form])
+  }, [values, fields, form])
 
   // Handle external errors
   React.useEffect(() => {
-    if (errors) {
-      Object.entries(errors).forEach(([key, message]) => {
-        form.setError(key as keyof FormValues, { type: "manual", message })
-      })
-    }
-  }, [errors, form])
-
-  const [submittingAction, setSubmittingAction] = React.useState<string | null>(null)
-
-  // Confirmation State
-  const [confirmation, setConfirmation] = React.useState<{
-    isOpen: boolean
-    config: TsFormConfirmation | null
-    pendingAction: string | null
-    pendingData: FormValues | null
-  }>({ isOpen: false, config: null, pendingAction: null, pendingData: null })
-
-  // 3. Handle Submit (called by form onSubmit)
-  const onFormSubmit = React.useCallback(
-    (data: FormValues) => {
-      // This logic handles implicit submission via Enter key or direct button click
-
-      if (submittingAction) {
-        onSubmit?.(data as Record<string, unknown>, submittingAction)
-        setSubmittingAction(null)
-      } else {
-        // Default submit (e.g. Enter key) - find primary submit button
-        const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
-        if (submitBtn) {
-          if (submitBtn.confirmation) {
-            setConfirmation({
-              isOpen: true,
-              config: submitBtn.confirmation,
-              pendingAction: submitBtn.action,
-              pendingData: data,
-            })
-          } else {
-            onSubmit?.(data as Record<string, unknown>, submitBtn.action)
-          }
-        }
-      }
-    },
-    [submittingAction, onSubmit, buttons]
-  )
-
-  // Handle field-level keyboard actions (Enter/Escape)
-  React.useEffect(() => {
-    const handleKeyAction = (e: Event) => {
-      const customEvent = e as CustomEvent<{ key: string; action: string; field: string }>
-      const { key, action } = customEvent.detail
-
-      if (key === "Enter") {
-        if (action === "submit") {
-          form.handleSubmit(onFormSubmit)()
-        } else if (action === "focus:next") {
-          // Find next focusable element in the form
-          const formElement = (e.target as HTMLElement).closest("form")
-          if (formElement) {
-            const inputs = Array.from(
-              formElement.querySelectorAll("input, textarea, select, button")
-            ).filter((el) => {
-              const htmlEl = el as
-                | HTMLInputElement
-                | HTMLTextAreaElement
-                | HTMLSelectElement
-                | HTMLButtonElement
-              return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
-            })
-            const currentIndex = inputs.indexOf(e.target as Element)
-            if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
-              ;(inputs[currentIndex + 1] as HTMLElement).focus()
-            }
-          }
-        }
-      } else if (key === "Escape") {
-        if (action === "clear") {
-          // The clearing is already handled at the field level in ts-form-field.tsx
-          // but we can add additional logic here if needed.
-        } else if (action === "cancel") {
-          // Logic for cancel if needed
-        }
-      }
-    }
-
-    window.addEventListener("form-key-action", handleKeyAction)
-    return () => window.removeEventListener("form-key-action", handleKeyAction)
-  }, [form, onFormSubmit])
-
-  const handleButtonClick = (e: React.MouseEvent, btn: TsFormButton) => {
-    if (btn.confirmation) {
-      e.preventDefault()
-
-      const proceedWithConfirmation = (data: FormValues) => {
-        setConfirmation({
-          isOpen: true,
-          config: btn.confirmation!,
-          pendingAction: btn.action,
-          pendingData: data,
-        })
-      }
-
-      if (!btn.type || btn.type === "submit") {
-        // Trigger validation first
-        form.handleSubmit(proceedWithConfirmation)(e)
-      } else {
-        // No validation for non-submit buttons
-        proceedWithConfirmation(form.getValues() as FormValues)
+    if (!errors) {
+      if (prevErrorPathsRef.current.size > 0) {
+        form.clearErrors()
+        prevErrorPathsRef.current.clear()
       }
       return
     }
 
-    // Normal flow
-    if (!btn.type || btn.type === "submit") {
-      setSubmittingAction(btn.action)
-      // form onSubmit will be called
-    } else {
-      e.preventDefault()
-      onSubmit?.(form.getValues() as Record<string, unknown>, btn.action)
-    }
-  }
+    const currentErrorPaths = new Set<string>()
 
-  const handleConfirmationAction = (btnConfig: { action: string; confirm?: boolean }) => {
-    if (btnConfig.confirm && confirmation.pendingAction && confirmation.pendingData) {
-      onSubmit?.(confirmation.pendingData as Record<string, unknown>, confirmation.pendingAction)
-    }
-    setConfirmation((prev) => ({ ...prev, isOpen: false }))
-  }
+    const syncErrors = (errs: TsErrors | string | unknown, currentPath: string = "") => {
+      if (!errs || typeof errs !== "object") return
 
-  const renderButtons = (btns: (TsFormButton | TsFormConfirmation["buttons"][0])[]) => {
-    return btns.map((btn, idx) => {
-      // Map variants
-      type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
-      let variant: ButtonVariant = "default"
-      let customClass = ""
-
-      if (btn.variant === "primary") {
-        customClass = "bg-blue-600 text-white hover:bg-blue-700 border-none"
-      } else if (btn.variant === "success") {
-        customClass = "bg-green-600 text-white hover:bg-green-700 border-none"
-      } else if (btn.variant === "warning") {
-        customClass = "bg-amber-500 text-white hover:bg-amber-600 border-none"
-      } else if (btn.variant === "danger" || btn.variant === "destructive") {
-        variant = "destructive"
-      } else if (
-        btn.variant === "default" ||
-        btn.variant === "outline" ||
-        btn.variant === "secondary" ||
-        btn.variant === "ghost" ||
-        btn.variant === "link"
-      ) {
-        variant = btn.variant
+      if (typeof errs === "string") {
+        const path = currentPath as FieldPath<Record<string, unknown>>
+        const currentInternal = form.getFieldState(path, form.formState).error
+        if (currentInternal?.message !== errs) {
+          form.setError(path, { type: "manual", message: errs })
+        }
+        currentErrorPaths.add(currentPath)
+        return
       }
 
-      // Check if it's a confirmation button
-      const isConfirmBtn = "confirm" in btn
+      if (Array.isArray(errs)) {
+        errs.forEach((item, index) => {
+          syncErrors(item, currentPath ? `${currentPath}.${index}` : `${index}`)
+        })
+        return
+      }
 
-      return (
-        <Button
-          key={idx}
-          type={!isConfirmBtn ? (btn as TsFormButton).type || "submit" : "button"}
-          variant={variant}
-          className={customClass}
-          onClick={(e) => {
-            if (isConfirmBtn) {
-              handleConfirmationAction(btn as TsFormConfirmation["buttons"][0])
-            } else {
-              handleButtonClick(e, btn as TsFormButton)
-            }
-          }}
-          disabled={
-            !isConfirmBtn &&
-            form.formState.isSubmitting &&
-            submittingAction === (btn as TsFormButton).action
+      const errorObj = errs as Record<string, unknown>
+      Object.keys(errorObj).forEach((key) => {
+        const val = errorObj[key]
+        const newPath = currentPath ? `${currentPath}.${key}` : key
+
+        if (typeof val === "string") {
+          const path = newPath as FieldPath<Record<string, unknown>>
+          const currentInternal = form.getFieldState(path, form.formState).error
+          if (currentInternal?.message !== val) {
+            form.setError(path, { type: "manual", message: val })
           }
-        >
-          {!isConfirmBtn &&
-            form.formState.isSubmitting &&
-            submittingAction === (btn as TsFormButton).action && (
+          currentErrorPaths.add(newPath)
+        } else if (val && typeof val === "object") {
+          const nestedVal = val as Record<string, unknown>
+          if (typeof nestedVal.message === "string") {
+            const path = newPath as FieldPath<Record<string, unknown>>
+            const currentInternal = form.getFieldState(path, form.formState).error
+            if (currentInternal?.message !== nestedVal.message) {
+              form.setError(path, { type: "manual", message: nestedVal.message as string })
+            }
+            currentErrorPaths.add(newPath)
+          } else {
+            syncErrors(val, newPath)
+          }
+        }
+      })
+    }
+
+    syncErrors(errors)
+
+    const errorsDict = errors as Record<string, unknown>
+    Object.keys(errorsDict).forEach((path) => {
+      if (path.includes(".") && !currentErrorPaths.has(path)) {
+        const message = getNestedValue(errorsDict, path)
+        if (typeof message === "string") {
+          const fieldPath = path as FieldPath<Record<string, unknown>>
+          const currentInternal = form.getFieldState(fieldPath, form.formState).error
+          if (currentInternal?.message !== message) {
+            form.setError(fieldPath, { type: "manual", message })
+          }
+          currentErrorPaths.add(path)
+        }
+      }
+    })
+
+    prevErrorPathsRef.current.forEach((path) => {
+      if (!currentErrorPaths.has(path)) {
+        form.clearErrors(path as FieldPath<Record<string, unknown>>)
+      }
+    })
+
+    prevErrorPathsRef.current = currentErrorPaths
+  }, [errors, fields, form])
+
+  // Merge global properties into field definitions
+  const mergedFields = React.useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(fields).map(([key, field]) => {
+        const merged = { ...field }
+        if (readOnly) merged.readonly = true
+        if (["number", "date", "datetime"].includes(merged.type) && locale) {
+          const lField = merged as { locale?: string }
+          if (!lField.locale) lField.locale = locale
+        }
+        return [key, merged]
+      })
+    )
+  }, [fields, readOnly, locale])
+
+  // Confirmation State
+  const [confirmation, setConfirmation] = React.useState<{
+    isOpen: boolean
+    config: TsConfirmation | null
+    pendingAction: string | null
+    pendingData: Record<string, unknown> | null
+  }>({ isOpen: false, config: null, pendingAction: null, pendingData: null })
+
+  // Handle Enter/Escape actions - Scoped to form element
+  React.useEffect(() => {
+    const el = formRef.current
+    if (!el) return
+
+    const handleKeyAction = (e: Event) => {
+      if (!(e instanceof CustomEvent)) return
+
+      const detail = e.detail as {
+        key: string
+        action: string
+        field: string
+        value?: unknown
+      }
+      const { key, action, field, value } = detail
+
+      if (value !== undefined) {
+        const currentValue = form.getValues(field as FieldPath<Record<string, unknown>>)
+        if (currentValue !== value) {
+          form.setValue(field as FieldPath<Record<string, unknown>>, value, { shouldDirty: true })
+        }
+      }
+
+      const currentValues = form.getValues() as Record<string, unknown>
+      if (value !== undefined) {
+        setNestedValue(currentValues, field, value)
+      }
+
+      if (key === "Enter") {
+        if (action === "submit") {
+          const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
+          if (submitBtn) {
+            if (submitBtn.confirmation) {
+              setConfirmation({
+                isOpen: true,
+                config: submitBtn.confirmation!,
+                pendingAction: submitBtn.action,
+                pendingData: currentValues,
+              })
+            } else {
+              executeAction(submitBtn.action, currentValues)
+            }
+          }
+        } else if (action === "focus:next") {
+          const inputs = Array.from(
+            el.querySelectorAll('input:not([type="hidden"]), textarea, select, button')
+          ).filter((el) => {
+            const htmlEl = el as HTMLElement & { disabled?: boolean; tabIndex: number }
+            return !htmlEl.disabled && htmlEl.tabIndex !== -1 && htmlEl.offsetParent !== null
+          })
+          const currentIndex = inputs.indexOf(e.target as Element)
+          if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
+            ;(inputs[currentIndex + 1] as HTMLElement).focus()
+          }
+        } else if (action) {
+          executeAction(action, currentValues)
+        }
+      } else if (key === "Escape") {
+        if (action === "cancel") {
+          executeAction(action, currentValues)
+        } else if (action) {
+          executeAction(action, currentValues)
+        }
+      }
+    }
+
+    el.addEventListener("form-key-action", handleKeyAction)
+
+    const handleFieldAction = (e: Event) => {
+      if (!(e instanceof CustomEvent)) return
+      const { action, data } = e.detail as { action: string; data: Record<string, unknown> }
+      if (action) {
+        executeAction(action, data || form.getValues())
+      }
+    }
+
+    el.addEventListener("form-field-action", handleFieldAction)
+    el.addEventListener("form-table-action", handleFieldAction)
+
+    return () => {
+      el.removeEventListener("form-key-action", handleKeyAction)
+      el.removeEventListener("form-field-action", handleFieldAction)
+      el.removeEventListener("form-table-action", handleFieldAction)
+    }
+  }, [form, buttons, executeAction])
+
+  const handleButtonClick = React.useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, btn: TsButton) => {
+      e.preventDefault()
+
+      if (btn.type === "reset") {
+        form.reset(values || {})
+        prevValuesRef.current = values ? deepClone(values) : {}
+        executeAction(btn.action, form.getValues() as Record<string, unknown>)
+        return
+      }
+
+      const proceed = (data: Record<string, unknown>) => {
+        if (btn.confirmation) {
+          setConfirmation({
+            isOpen: true,
+            config: btn.confirmation,
+            pendingAction: btn.action,
+            pendingData: data,
+          })
+        } else {
+          executeAction(btn.action, data)
+        }
+      }
+
+      if (!btn.type || btn.type === "submit") {
+        form.handleSubmit(proceed)(e)
+      } else {
+        proceed(form.getValues() as Record<string, unknown>)
+      }
+    },
+    [form, values, executeAction]
+  )
+
+  const handleConfirmationAction = React.useCallback(
+    (btnConfig: { action: string; confirm?: boolean }) => {
+      if (btnConfig.confirm && confirmation.pendingAction && confirmation.pendingData) {
+        executeAction(confirmation.pendingAction, confirmation.pendingData)
+      }
+      setConfirmation((prev) => ({ ...prev, isOpen: false }))
+    },
+    [confirmation.pendingAction, confirmation.pendingData, executeAction]
+  )
+
+  const renderButtons = React.useCallback(
+    (btns: (TsButton | TsConfirmation["buttons"][0])[]) => {
+      return btns.map((btn, idx) => {
+        const { variant, className: customClass } = getButtonVariantClasses(btn.variant)
+        const isConfirmBtn = "confirm" in btn
+
+        return (
+          <Button
+            key={idx}
+            type="button"
+            variant={variant}
+            className={customClass}
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              if (isConfirmBtn) {
+                handleConfirmationAction(btn as TsConfirmation["buttons"][0])
+              } else {
+                handleButtonClick(e, btn as TsButton)
+              }
+            }}
+            disabled={!isConfirmBtn && form.formState.isSubmitting}
+          >
+            {!isConfirmBtn && form.formState.isSubmitting && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-          {btn.label}
-        </Button>
-      )
-    })
-  }
+            {btn.label}
+          </Button>
+        )
+      })
+    },
+    [form.formState.isSubmitting, handleConfirmationAction, handleButtonClick]
+  )
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onFormSubmit)} className={className}>
-          <TsFormLayout layout={layout} fields={fields} />
+        <form ref={formRef} onSubmit={(e) => e.preventDefault()} className={className}>
+          <TsFormLayout layout={layout} fields={mergedFields} />
 
-          {/* Buttons Bar */}
-          {buttons.length > 0 && (
+          {buttons.length > 0 && !readOnly && (
             <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">
               <div className="flex flex-1 flex-row items-center justify-start gap-2">
                 {renderButtons(buttons.filter((b) => b.position === "left"))}
@@ -271,33 +400,12 @@ export function TsForm({
         </form>
       </Form>
 
-      {/* Confirmation Dialog */}
-      {confirmation.config && (
-        <AlertDialog
-          open={confirmation.isOpen}
-          onOpenChange={(open: boolean) => setConfirmation((prev) => ({ ...prev, isOpen: open }))}
-        >
-          <AlertDialogContent className="max-w-2xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle>{confirmation.config.title}</AlertDialogTitle>
-              <AlertDialogDescription>{confirmation.config.text}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex items-center justify-between gap-2 w-full sm:justify-between flex-row">
-              <div className="flex items-center gap-2">
-                {renderButtons(confirmation.config.buttons.filter((b) => b.position === "left"))}
-              </div>
-              <div className="flex items-center gap-2">
-                {renderButtons(confirmation.config.buttons.filter((b) => b.position === "center"))}
-              </div>
-              <div className="flex items-center gap-2 sm:space-x-0 sm:justify-end">
-                {renderButtons(
-                  confirmation.config.buttons.filter((b) => !b.position || b.position === "right")
-                )}
-              </div>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <TsFormConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onOpenChange={(open) => setConfirmation((prev) => ({ ...prev, isOpen: open }))}
+        config={confirmation.config}
+        renderButtons={renderButtons}
+      />
     </>
   )
 }

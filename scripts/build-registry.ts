@@ -59,14 +59,7 @@ const REGISTRY_COMPONENTS = [
   },
   {
     name: "ts-web-ui/ts-form",
-    dependencies: [
-      "@hookform/resolvers",
-      "react-hook-form",
-      "zod",
-      "lucide-react",
-      "date-fns",
-      "react-markdown",
-    ],
+    dependencies: ["react-hook-form", "lucide-react", "date-fns", "react-markdown", "remark-gfm"],
     registryDependencies: [
       "alert-dialog",
       "button",
@@ -90,8 +83,12 @@ const REGISTRY_COMPONENTS = [
       "ts-form/index.tsx",
       "ts-form/ts-form-field.tsx",
       "ts-form/ts-form-layout.tsx",
-      "ts-form/ts-form-schema.ts",
       "ts-form/types.ts",
+      "ts-form/utils.ts",
+      ...fs
+        .readdirSync(path.join(COMPONENTS_BASE_PATH, "ts-form", "widgets"))
+        .filter((file) => file.endsWith(".tsx"))
+        .map((file) => `ts-form/widgets/${file}`),
     ],
   },
   {
@@ -134,6 +131,7 @@ async function buildRegistry() {
         const processedContent = content
           .replace(/@\/components\/ui\//g, "@/components/ui/")
           .replace(/\.\.\/client-only/g, "@/components/ts-web-ui/client-only")
+          .replace(/\.\.\/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table") // Handle widget depth
           .replace(/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table")
           .replace(/\.\.\/ts-form/g, "@/components/ts-web-ui/ts-form")
           .replace(/\.\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")

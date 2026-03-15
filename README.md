@@ -34,7 +34,7 @@ npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-ta
 Each command will automatically:
 
 1. Download the component files to your `components/ts-web-ui/` directory.
-2. Install necessary NPM dependencies (like `react-rnd`, `zod`, etc.).
+2. Install necessary NPM dependencies (like `react-rnd`, etc.).
 3. Install required shadcn UI primitives (like `button`, `input`, etc.).
 
 ## Features
@@ -51,7 +51,7 @@ Each command will automatically:
 - **Framework:** Next.js 16 (App Router, React 19)
 - **Styling:** Tailwind CSS v4
 - **UI Library:** Shadcn/UI (Radix UI + Tailwind)
-- **Forms:** React Hook Form + Zod validation
+- **Forms:** React Hook Form + External validation
 - **Tables:** TanStack Table v8
 - **Drag & Drop:** @dnd-kit (form editor), react-rnd (windows)
 - **State:** Zustand

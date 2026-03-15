@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { TsForm } from "@/components/ts-web-ui/ts-form"
-import { TsFieldDef, TsFormButton, TsFormLayout } from "@/components/ts-web-ui/ts-form/types"
+import { TsButton, TsFieldDef, TsLayout } from "@/components/ts-web-ui/ts-form/types"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const formFields: Record<string, TsFieldDef> = {
@@ -68,13 +68,19 @@ const formFields: Record<string, TsFieldDef> = {
   },
   active: { type: "switch", label: "Active Account" },
   birthDate: { type: "date", label: "Date of Birth", required: true },
+  tempInternalNote: {
+    type: "text",
+    label: "Internal Note (Excluded from Submit)",
+    excludeFromSubmit: true,
+    placeholder: "This will not appear in the JSON output",
+  },
   notes: {
     type: "markdown",
     value: "### Important Notes\n- Use **Markdown** for styling\n- Lists and links are supported",
   },
 }
 
-const formLayout: TsFormLayout = {
+const formLayout: TsLayout = {
   tabs: [
     {
       label: "General Info",
@@ -91,6 +97,7 @@ const formLayout: TsFormLayout = {
           { field: "birthDate", width: "1fr" },
           { field: "gender", width: "1fr" },
         ],
+        [{ field: "tempInternalNote", width: "1fr" }],
         [{ field: "bio", width: "1fr" }],
       ],
     },
@@ -110,7 +117,7 @@ const formLayout: TsFormLayout = {
   ],
 }
 
-const formButtons: TsFormButton[] = [
+const formButtons: TsButton[] = [
   {
     action: "delete",
     label: "Delete Account",
@@ -134,7 +141,7 @@ export default function TsFormPage() {
     data: Record<string, unknown>
   } | null>(null)
 
-  const handleSubmit = (data: Record<string, unknown>, action: string) => {
+  const handleAction = (action: string, data: Record<string, unknown>) => {
     setFormData({ action, data })
     toast(`Form action: ${action}`, {
       description: action === "save" ? "Successfully saved." : "Action performed.",
@@ -147,7 +154,7 @@ export default function TsFormPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">TS Form</h1>
         <p className="text-muted-foreground mt-2">
-          Dynamic, JSON-driven form generation with built-in validation and layout management.
+          Dynamic, JSON-driven form generation with external validation and layout management.
         </p>
       </div>
 
@@ -173,7 +180,10 @@ export default function TsFormPage() {
                   layout={formLayout}
                   fields={formFields}
                   buttons={formButtons}
-                  onSubmit={handleSubmit}
+                  onAction={handleAction}
+                  onFieldChange={(field, value) => {
+                    console.log(`Field ${field} changed to:`, value)
+                  }}
                 />
               </CardContent>
             </Card>
@@ -229,7 +239,7 @@ export default function MyForm() {
     <TsForm 
       fields={fields} 
       layout={layout} 
-      onSubmit={(data, action) => console.log(data)} 
+      onAction={(action, data) => console.log(action, data)} 
     />
   )
 }`}
@@ -241,14 +251,7 @@ export default function MyForm() {
         <TabsContent value="install" className="pt-4">
           <InstallTab
             componentName="ts-form"
-            dependencies={[
-              "@hookform/resolvers",
-              "react-hook-form",
-              "zod",
-              "lucide-react",
-              "date-fns",
-              "react-markdown",
-            ]}
+            dependencies={["react-hook-form", "lucide-react", "date-fns", "react-markdown"]}
           />
         </TabsContent>
 
@@ -277,12 +280,12 @@ export default function MyForm() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs">layout</TableCell>
-                      <TableCell className="text-xs italic">TsFormLayout</TableCell>
+                      <TableCell className="text-xs italic">TsLayout</TableCell>
                       <TableCell>Visual structure (rows or tabs).</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs">buttons</TableCell>
-                      <TableCell className="text-xs italic">TsFormButton[]</TableCell>
+                      <TableCell className="text-xs italic">TsButton[]</TableCell>
                       <TableCell>Buttons rendered at the bottom of the form.</TableCell>
                     </TableRow>
                     <TableRow>
@@ -294,8 +297,25 @@ export default function MyForm() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-mono text-xs">errors</TableCell>
-                      <TableCell className="text-xs italic">Record&lt;string, string&gt;</TableCell>
+                      <TableCell className="text-xs italic">TsErrors</TableCell>
                       <TableCell>External validation errors map.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-mono text-xs">onAction</TableCell>
+                      <TableCell className="text-xs italic">
+                        (action: string, data: Record&lt;string, unknown&gt;) =&gt; void
+                      </TableCell>
+                      <TableCell>
+                        Callback for all form actions (submit, custom buttons, etc.).
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-mono text-xs">onFieldChange</TableCell>
+                      <TableCell className="text-xs italic">
+                        (field: string, value: unknown, formData: Record&lt;string, unknown&gt;)
+                        =&gt; void
+                      </TableCell>
+                      <TableCell>Callback emitted when any field value changes.</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -326,7 +346,6 @@ export default function MyForm() {
                     "switch",
                     "slider",
                     "file",
-                    "image",
                     "markdown",
                     "infobox",
                     "table",

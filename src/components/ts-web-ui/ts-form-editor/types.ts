@@ -7,7 +7,6 @@ import {
   CircleDot,
   FileText,
   Hash,
-  Image,
   Info,
   KeyRound,
   Link2,
@@ -23,7 +22,7 @@ import {
   Upload,
 } from "lucide-react"
 
-import { TsFieldDef, TsFormButton } from "../ts-form/types"
+import { TsButton, TsFieldDef } from "../ts-form/types"
 
 /**
  * Extended field definition for the editor with a unique ID
@@ -91,7 +90,7 @@ export interface EditorFormDefinition {
   /** Definitions of all fields */
   fields: Record<string, TsFieldDef>
   /** Form buttons */
-  buttons: TsFormButton[]
+  buttons: TsButton[]
 }
 
 /**
@@ -139,7 +138,6 @@ export const AVAILABLE_FIELD_TYPES: {
   // Other inputs
   { type: "slider", label: "Slider", group: "Others", icon: SlidersHorizontal },
   { type: "file", label: "File", group: "Others", icon: Upload },
-  { type: "image", label: "Image", group: "Others", icon: Image },
   { type: "relationship", label: "Relationship", group: "Others", icon: Link2 },
 
   // Layout and display

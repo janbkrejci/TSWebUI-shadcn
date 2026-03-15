@@ -91,7 +91,7 @@ src/
 - **UI Library:** Shadcn/UI (Radix UI primitives + Tailwind CSS)
 - **Styling:** Tailwind CSS v4 (CSS-first config)
 - **State Management:** Zustand (used in form editor)
-- **Forms:** React Hook Form + Zod validation
+- **Forms:** React Hook Form + External validation
 - **Tables:** TanStack Table v8
 - **Drag & Drop:** @dnd-kit (form editor), react-rnd (windows)
 - **Theming:** next-themes (dark/light/system modes)
@@ -107,7 +107,7 @@ The form system is **entirely JSON-driven** and supports 20+ field types.
 **Key Files:**
 
 - `types.ts` - TypeScript definitions for all field types and layouts
-- `index.tsx` - Main form component with validation
+- `index.tsx` - Main form component with external validation
 - `ts-form-field.tsx` - Field renderer (maps types to widgets)
 - `ts-form-layout.tsx` - Layout engine (rows/columns/tabs)
 - `ts-form-schema.ts` - Zod schema generator
@@ -267,7 +267,7 @@ Dark mode is handled by `next-themes`:
    />
    ```
 
-3. **Add validation:** Fields with `required: true` are automatically validated via Zod schema
+3. **Add validation:** Fields with `required: true` must be validated externally (e.g. by parent component)
 
 ### Adding a New Field Type
 
@@ -329,7 +329,7 @@ If seeing "Text content does not match server-rendered HTML":
 - **Client Components:** Most components in this library are Client Components. Always include `"use client"` at the top of files using these components or React hooks.
 - **TypeScript:** Use explicit types for props and return values
 - **React:** Prefer function components with hooks
-- **Forms:** Use react-hook-form with zodResolver
+- **Forms:** Use react-hook-form with external validation (no internal Zod resolver)
 - **State:** Local state with useState, global state with Zustand
 - **Naming:** PascalCase for components, camelCase for functions/variables
 - **Files:** Component files match component name (PascalCase)

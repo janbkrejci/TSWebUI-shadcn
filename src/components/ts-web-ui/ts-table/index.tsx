@@ -30,10 +30,14 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   onRowClick?: (row: TData, columnKey?: string) => void
   onCreateClick?: () => void
   onAction?: (action: string, row: TData) => void
+  onDataChange?: (data: TData[]) => void
+  onSelectionChange?: (selectedRows: TData[]) => void
   pageSize?: number
   pageSizeOptions?: number[]
   singleItemActions?: string // "action/Label,..."
   predefinedFilters?: Record<string, unknown>
+  getRowId?: (row: TData) => string
+  initialRowSelection?: Record<string, boolean>
 }
 
 export function TsTable<TData extends Record<string, unknown> = Record<string, unknown>>({
@@ -48,10 +52,14 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   onRowClick,
   onCreateClick,
   onAction,
+  onDataChange,
+  onSelectionChange,
   pageSize = 10,
   pageSizeOptions = [5, 10, 20, 50, 100],
   singleItemActions,
   predefinedFilters,
+  getRowId,
+  initialRowSelection,
 }: TsTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -68,13 +76,25 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       return acc
     }, {} as VisibilityState)
   )
-  const [rowSelection, setRowSelection] = React.useState({})
+  const [rowSelection, setRowSelection] = React.useState(initialRowSelection || {})
   const [globalFilter, setGlobalFilter] = React.useState("")
 
   // Update data if initialData changes
   React.useEffect(() => {
     setData(initialData)
   }, [initialData])
+
+  // Sync row selection if initialRowSelection changes externally
+  React.useEffect(() => {
+    if (initialRowSelection) {
+      setRowSelection(initialRowSelection)
+    }
+  }, [initialRowSelection])
+
+  // Propagate local data changes back up
+  React.useEffect(() => {
+    onDataChange?.(data)
+  }, [data, onDataChange])
 
   // Parse row actions
   const rowActions = React.useMemo<TsTableRowAction[]>(() => {
@@ -111,12 +131,20 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getRowId,
     initialState: {
       pagination: {
         pageSize: pageSize,
       },
     },
   })
+
+  // Propagate selection changes back up
+  React.useEffect(() => {
+    if (!onSelectionChange) return
+    const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
+    onSelectionChange(selectedRows)
+  }, [rowSelection, table, onSelectionChange])
 
   const handleImport = (newData: TData[]) => {
     setData((prev) => [...prev, ...newData])

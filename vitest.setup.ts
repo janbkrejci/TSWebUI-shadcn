@@ -15,3 +15,6 @@ class ResizeObserverMock {
 }
 
 vi.stubGlobal("ResizeObserver", ResizeObserverMock)
+
+// Mock scrollIntoView
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
