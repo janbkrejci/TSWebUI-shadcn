@@ -112,7 +112,7 @@ describe("State Integrity & Focus Management (ULTRA-STRICT)", () => {
     expect(input.value).toBe("50")
   })
 
-  it("displays BOTH hint and error message", async () => {
+  it("displays error message and HIDES hint when both provided", async () => {
     const fieldDef: TsFieldDef = { type: "text", label: "Email", hint: "Enter your work email" }
     const { rerender } = render(<TestApp name="email" fieldDef={fieldDef} />)
 
@@ -120,8 +120,8 @@ describe("State Integrity & Focus Management (ULTRA-STRICT)", () => {
 
     rerender(<TestApp name="email" fieldDef={fieldDef} externalError="Invalid email" />)
 
-    // BOTH should be visible now (FIXED)
+    // Error should be visible, hint should be HIDDEN
     expect(screen.getByText("Invalid email")).toBeInTheDocument()
-    expect(screen.getByText("Enter your work email")).toBeInTheDocument()
+    expect(screen.queryByText("Enter your work email")).not.toBeInTheDocument()
   })
 })

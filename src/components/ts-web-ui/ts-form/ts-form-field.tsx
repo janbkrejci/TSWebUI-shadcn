@@ -94,9 +94,12 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
             </FormControl>
 
             <div className="min-h-5 mt-1 space-y-1">
-              {errorMessage && <FormMessage>{errorMessage}</FormMessage>}
-              {fieldDef.hint && (
-                <FormDescription className="leading-tight">{fieldDef.hint}</FormDescription>
+              {errorMessage ? (
+                <FormMessage>{errorMessage}</FormMessage>
+              ) : (
+                fieldDef.hint && (
+                  <FormDescription className="leading-tight">{fieldDef.hint}</FormDescription>
+                )
               )}
             </div>
           </FormItem>
