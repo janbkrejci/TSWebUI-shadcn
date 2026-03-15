@@ -30,7 +30,7 @@ export interface TsMultiSelectWidgetProps {
 }
 
 export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)

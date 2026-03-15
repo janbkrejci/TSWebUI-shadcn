@@ -20,7 +20,7 @@ export interface TsTextWidgetProps {
 }
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const [showPassword, setShowPassword] = React.useState(false)
     const [internalValue, setInternalValue] = React.useState((field.value as string) ?? "")

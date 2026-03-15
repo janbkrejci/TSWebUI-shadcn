@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 
 import { TsTable } from "../../ts-table"
 import { TsRelationshipField } from "../types"
-import { getFieldClasses } from "../utils"
+import { getFieldClasses, sanitizeId } from "../utils"
 
 // ─── RelationshipWidget ───────────────────────────────────────────────────────
 
@@ -32,7 +32,8 @@ export interface TsRelationshipWidgetProps {
 }
 
 export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshipWidgetProps>(
-  ({ field, def, name, error, hint, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+    const safeId = sanitizeId(name)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     const [pickerOpen, setPickerOpen] = React.useState(false)
@@ -136,7 +137,10 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
           <div className="flex gap-2 w-full">
             <DialogTrigger asChild>
               <div
-                role="button"
+                role="combobox"
+                aria-expanded={pickerOpen}
+                aria-haspopup="dialog"
+                aria-controls={`popover-content-${safeId}`}
                 tabIndex={def.disabled || def.readonly ? -1 : 0}
                 {...props}
                 ref={ref}
@@ -220,7 +224,10 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
               </div>
             </DialogTrigger>
           </div>
-          <DialogContent className="max-w-[98vw] w-[98vw] max-h-[95vh] flex flex-col p-0">
+          <DialogContent
+            id={`popover-content-${safeId}`}
+            className="max-w-[98vw] w-[98vw] max-h-[95vh] flex flex-col p-0"
+          >
             <DialogHeader className="px-6 py-4 border-b text-left">
               <DialogTitle>Select {targetEntity}</DialogTitle>
             </DialogHeader>
@@ -258,17 +265,6 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
             )}
           </DialogContent>
         </Dialog>
-
-        {/* Unified message area: Error replaces Hint */}
-        {(!!error || hint) && (
-          <div className="min-h-5 space-y-1">
-            {error ? (
-              <p className="text-xs text-destructive font-medium leading-tight">{error}</p>
-            ) : (
-              <p className="text-xs text-muted-foreground leading-tight">{hint}</p>
-            )}
-          </div>
-        )}
       </div>
     )
   }

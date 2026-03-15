@@ -25,7 +25,7 @@ export interface TsNumberWidgetProps {
 }
 
 export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const [displayValue, setDisplayValue] = React.useState<string>(() =>
       formatNumericValue(field.value as number | undefined, def.roundTo, def.locale)

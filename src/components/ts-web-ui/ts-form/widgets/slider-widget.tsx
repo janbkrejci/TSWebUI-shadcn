@@ -13,11 +13,12 @@ export interface TsSliderWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsSliderField
   error?: string
+  hint?: string
   name: string
 }
 
 export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps>(
-  ({ field, def, error, ...props }, ref) => {
+  ({ field, def, error, hint: _hint, ...props }, ref) => {
     const [showTooltip, setShowTooltip] = React.useState(false)
     const [localValue, setLocalValue] = React.useState<number>(field.value ?? def.min ?? 0)
 

@@ -18,7 +18,7 @@ export interface TsFileWidgetProps {
 }
 
 export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
-  ({ field, def, error, hint, ...props }, ref) => {
+  ({ field, def, error, hint: _hint, ...props }, ref) => {
     const [isDragOver, setIsDragOver] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -185,16 +185,6 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
               {def.addFileLabel || (multiple ? "Add files" : "Add file")}
             </span>
           </button>
-        )}
-
-        {(hasError || hint) && (
-          <div className="min-h-4 space-y-1">
-            {hasError ? (
-              <p className="text-[11px] text-destructive font-medium leading-tight">{error}</p>
-            ) : (
-              <p className="text-[11px] text-muted-foreground leading-tight">{hint}</p>
-            )}
-          </div>
         )}
       </div>
     )

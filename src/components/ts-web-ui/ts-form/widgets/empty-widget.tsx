@@ -11,7 +11,7 @@ export interface TsEmptyWidgetProps {
 }
 
 export const EmptyWidget = React.forwardRef<HTMLDivElement, TsEmptyWidgetProps>(
-  ({ ...props }, ref) => {
+  ({ def: _def, error: _error, name: _name, ...props }, ref) => {
     return <div className="min-h-10" {...props} ref={ref} />
   }
 )

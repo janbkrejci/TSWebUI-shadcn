@@ -20,7 +20,7 @@ export interface TsCheckboxWidgetProps {
 }
 
 export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const { errorClass } = getFieldClasses(error, def.readonly)
 

@@ -26,7 +26,7 @@ export interface TsDateWidgetProps {
 }
 
 export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
-  ({ field, def, error, name, ...props }, ref) => {
+  ({ field, def, error, hint: _hint, name, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
     const safeId = sanitizeId(name)

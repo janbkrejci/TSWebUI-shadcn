@@ -25,7 +25,7 @@ export interface TsSelectWidgetProps {
 }
 
 export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
     return (

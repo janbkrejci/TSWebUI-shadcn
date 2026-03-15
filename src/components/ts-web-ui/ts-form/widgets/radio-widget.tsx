@@ -20,7 +20,7 @@ export interface TsRadioWidgetProps {
 }
 
 export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const hasError = !!error
 

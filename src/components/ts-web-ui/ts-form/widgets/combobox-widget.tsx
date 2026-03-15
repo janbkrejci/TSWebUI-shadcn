@@ -30,7 +30,7 @@ export interface TsComboboxWidgetProps {
 }
 
 export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
+  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)

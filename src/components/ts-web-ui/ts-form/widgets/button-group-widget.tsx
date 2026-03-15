@@ -19,7 +19,7 @@ export interface TsButtonGroupWidgetProps {
 }
 
 export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupWidgetProps>(
-  ({ field, def, error, ...props }, ref) => {
+  ({ field, def, error, hint: _hint, ...props }, ref) => {
     const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
     const hasError = !!error
 
