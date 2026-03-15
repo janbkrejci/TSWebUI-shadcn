@@ -34,6 +34,13 @@ const attributes: WidgetAttribute[] = [
     hint: "Allows entering a value not in the list",
   },
   {
+    name: "clearable",
+    label: "Clearable",
+    type: "boolean",
+    defaultValue: true,
+    hint: "Allows clearing the selected value",
+  },
+  {
     name: "error",
     label: "Error message",
     type: "string",

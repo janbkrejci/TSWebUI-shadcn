@@ -34,7 +34,6 @@ const getDefaultLabel = (type: TsFieldDef["type"]): string => {
     datetime: "Date and time",
     slider: "Slider",
     file: "File",
-    image: "Image",
     relationship: "Relationship",
     separator: "Section",
     infobox: "Information",
@@ -83,7 +82,6 @@ const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
     case "datetime":
       return { type, label }
     case "file":
-    case "image":
       return { type, label }
     case "infobox":
       return { type, label, content: "Information text", variant: "default" }

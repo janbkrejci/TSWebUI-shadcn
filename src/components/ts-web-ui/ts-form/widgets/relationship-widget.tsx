@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronsUpDown, Search, X as XIcon } from "lucide-react"
+import { Search, X as XIcon } from "lucide-react"
 
 import * as React from "react"
 import { ControllerRenderProps, FieldValues } from "react-hook-form"
@@ -8,27 +8,18 @@ import { ControllerRenderProps, FieldValues } from "react-hook-form"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
 import { TsTable } from "../../ts-table"
 import { TsRelationshipField } from "../types"
-import { getFieldClasses, sanitizeId } from "../utils"
+import { getFieldClasses } from "../utils"
 
 // ─── RelationshipWidget ───────────────────────────────────────────────────────
 
@@ -37,18 +28,14 @@ export interface TsRelationshipWidgetProps {
   def: TsRelationshipField
   name: string
   error?: string
+  hint?: string
 }
 
 export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshipWidgetProps>(
-  ({ field, def, name, error, ...props }, ref) => {
-    const { readonlyClass } = getFieldClasses(error, def.readonly)
-    const hasError = !!error
+  ({ field, def, name, error, hint, ...props }, ref) => {
+    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
-    const [open, setOpen] = React.useState(false)
     const [pickerOpen, setPickerOpen] = React.useState(false)
-    const [searchValue, setSearchValue] = React.useState("")
-    const safeId = sanitizeId(name)
-
     const mode = def.mode || "single"
     const targetEntity = def.targetEntity || ""
 
@@ -94,25 +81,11 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
         .join(" ")
     }
 
-    const filteredItems = React.useMemo(() => {
-      if (!searchValue) return availableItems
-      const lower = searchValue.toLowerCase()
-      return availableItems.filter((item) => {
-        const text = displayFields
-          .map((f: string) => String(item[f]))
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-        return text.includes(lower)
-      })
-    }, [availableItems, searchValue, displayFields])
-
     const toggleItem = (item: Record<string, unknown>) => {
       const itemValue = item[valueField]
 
       if (mode === "single") {
         field.onChange(itemValue)
-        setOpen(false)
         setPickerOpen(false)
       } else {
         const isSelected = selectedValues.includes(itemValue)
@@ -132,8 +105,6 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
       }
     }
 
-    const isSelected = (item: Record<string, unknown>) => selectedValues.includes(item[valueField])
-
     const dispatchAction = (action: string, data?: unknown) => {
       const el =
         (ref && typeof ref === "object" && "current" in ref ? ref.current : null) ||
@@ -148,36 +119,45 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
       }
     }
 
+    const initialRowSelection = React.useMemo(() => {
+      const selection: Record<string, boolean> = {}
+      selectedValues.forEach((val) => {
+        selection[String(val)] = true
+      })
+      return selection
+    }, [selectedValues])
+
     return (
       <div className="flex flex-col gap-2">
-        <Popover open={open} onOpenChange={setOpen} modal>
+        <Dialog
+          open={pickerOpen}
+          onOpenChange={def.readonly || def.disabled ? undefined : setPickerOpen}
+        >
           <div className="flex gap-2 w-full">
-            <PopoverAnchor asChild>
+            <DialogTrigger asChild>
               <div
-                role="combobox"
-                aria-expanded={open}
-                aria-invalid={hasError}
-                aria-controls={`popover-content-${safeId}`}
+                role="button"
                 tabIndex={def.disabled || def.readonly ? -1 : 0}
                 {...props}
                 ref={ref}
                 onClick={() => {
-                  if (!def.disabled && !def.readonly) setOpen((v) => !v)
+                  if (!def.disabled && !def.readonly) setPickerOpen(true)
                 }}
                 onKeyDown={(e) => {
                   if ((e.key === "Enter" || e.key === " ") && !def.disabled && !def.readonly) {
                     e.preventDefault()
-                    setOpen((v) => !v)
+                    setPickerOpen(true)
                   }
                 }}
                 className={cn(
                   "flex h-9 flex-1 items-center justify-between gap-2 rounded-md border bg-background px-3 py-1 text-sm shadow-xs cursor-pointer",
                   "dark:bg-input/30 transition-[color,box-shadow]",
+                  errorClass,
                   !readonlyClass &&
                     "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
                   "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
                   def.disabled && "opacity-50 pointer-events-none",
-                  readonlyClass && "pointer-events-none"
+                  readonlyClass && "opacity-100 cursor-default"
                 )}
               >
                 <div className="flex flex-1 items-center gap-1 overflow-hidden min-w-0 flex-nowrap">
@@ -232,108 +212,63 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
                       onClick={(e) => {
                         e.stopPropagation()
                         field.onChange(mode === "single" ? null : [])
-                        setOpen(false)
                       }}
                     />
                   )}
-                  <ChevronsUpDown className="h-4 w-4 text-muted-foreground opacity-50" />
+                  <Search className="h-4 w-4 text-muted-foreground opacity-50" />
                 </div>
               </div>
-            </PopoverAnchor>
+            </DialogTrigger>
+          </div>
+          <DialogContent className="max-w-[98vw] w-[98vw] max-h-[95vh] flex flex-col p-0">
+            <DialogHeader className="px-6 py-4 border-b text-left">
+              <DialogTitle>Select {targetEntity}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-auto p-6 pt-2">
+              <TsTable
+                data={availableItems}
+                columnDefinitions={tableColumns}
+                enableSelection={mode === "multiple"}
+                getRowId={(row) => String(row[valueField])}
+                initialRowSelection={initialRowSelection}
+                onRowClick={(row) => {
+                  if (mode === "single") {
+                    toggleItem(row as Record<string, unknown>)
+                  }
+                }}
+                onSelectionChange={(selectedRows) => {
+                  if (mode === "multiple") {
+                    const newValues = selectedRows.map(
+                      (r) => (r as Record<string, unknown>)[valueField]
+                    )
+                    // Only update if something actually changed to avoid cycles
+                    if (JSON.stringify(field.value) !== JSON.stringify(newValues)) {
+                      field.onChange(newValues)
+                    }
+                  }
+                }}
+                onAction={(action, row) => dispatchAction(action, row)}
+                onCreateClick={() => dispatchAction(`picker:create:${targetEntity}`)}
+              />
+            </div>
+            {mode === "multiple" && (
+              <div className="p-4 border-t flex justify-end">
+                <Button onClick={() => setPickerOpen(false)}>Done</Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
-            {!def.readonly && !def.disabled && (
-              <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    title={`Browse ${targetEntity}`}
-                  >
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
-                  <DialogHeader className="px-6 py-4 border-b">
-                    <DialogTitle>Select {targetEntity}</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex-1 overflow-auto p-6 pt-2">
-                    <TsTable
-                      data={availableItems}
-                      columnDefinitions={tableColumns}
-                      enableSelection={mode === "multiple"}
-                      onRowClick={(row) => {
-                        if (mode === "single") {
-                          toggleItem(row as Record<string, unknown>)
-                        }
-                      }}
-                      onSelectionChange={(selectedRows) => {
-                        if (mode === "multiple") {
-                          const newValues = selectedRows.map(
-                            (r) => (r as Record<string, unknown>)[valueField]
-                          )
-                          // Only update if something actually changed to avoid cycles
-                          if (JSON.stringify(field.value) !== JSON.stringify(newValues)) {
-                            field.onChange(newValues)
-                          }
-                        }
-                      }}
-                      onAction={(action, row) => dispatchAction(action, row)}
-                      onCreateClick={() => dispatchAction(`picker:create:${targetEntity}`)}
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
+        {/* Unified message area: Error replaces Hint */}
+        {(!!error || hint) && (
+          <div className="min-h-5 space-y-1">
+            {error ? (
+              <p className="text-xs text-destructive font-medium leading-tight">{error}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground leading-tight">{hint}</p>
             )}
           </div>
-          <PopoverContent
-            id={`popover-content-${safeId}`}
-            className="w-[--radix-popover-trigger-width] p-0"
-            align="start"
-            onOpenAutoFocus={(e) => {
-              e.preventDefault()
-              ;(e.currentTarget as HTMLElement).querySelector("input")?.focus()
-            }}
-            onEscapeKeyDown={(e) => {
-              if (searchValue) {
-                e.preventDefault()
-                setSearchValue("")
-              }
-            }}
-          >
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder={`Search ${targetEntity}...`}
-                value={searchValue}
-                onValueChange={setSearchValue}
-              />
-              <CommandList className="max-h-60">
-                <CommandEmpty className="py-1.5 px-2 text-left">
-                  <span className="italic text-muted-foreground text-sm">
-                    {availableItems.length === 0 ? `No items in ${targetEntity}` : "Not found."}
-                  </span>
-                </CommandEmpty>
-                <CommandGroup>
-                  {filteredItems.map((item) => (
-                    <CommandItem
-                      key={String(item[valueField])}
-                      value={String(item[valueField])}
-                      onSelect={() => toggleItem(item)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected(item) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {getDisplayText(item, displayFields)}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        )}
       </div>
     )
   }

@@ -17,13 +17,13 @@ export const InfoboxWidget = React.forwardRef<HTMLDivElement, TsInfoboxWidgetPro
     const v = def.variant || "default"
     const variantClasses: Record<string, string> = {
       destructive:
-        "border-destructive/50 bg-destructive/10 text-destructive dark:text-red-400 [&>svg]:text-destructive",
+        "border-destructive/50 bg-destructive/10 text-destructive dark:text-red-400 [&>svg]:text-destructive [&_div]:text-current",
       information:
-        "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-500",
+        "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-500 [&_div]:text-current",
       warning:
-        "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400 [&>svg]:text-amber-500",
+        "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400 [&>svg]:text-amber-500 [&_div]:text-current",
       success:
-        "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400 [&>svg]:text-green-500",
+        "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400 [&>svg]:text-green-500 [&_div]:text-current",
     }
     const iconMap: Record<string, React.ReactNode> = {
       default: <Info className="h-4 w-4" />,

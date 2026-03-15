@@ -27,7 +27,21 @@ const attributes: WidgetAttribute[] = [
     label: "Multiple files",
     type: "boolean",
     defaultValue: false,
-    hint: "Allows uploading multiple files at once",
+    hint: "Allows uploading multiple files",
+  },
+  {
+    name: "showDropZone",
+    label: "Show Drop Zone",
+    type: "boolean",
+    defaultValue: true,
+    hint: "If false, shows a simple Add button instead",
+  },
+  {
+    name: "addFileLabel",
+    label: "Add File Link Label",
+    type: "string",
+    defaultValue: "Attach document",
+    hint: "Label for the link when dropzone is hidden",
   },
   {
     name: "error",

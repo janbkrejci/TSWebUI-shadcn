@@ -63,13 +63,15 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
       control={form.control}
       name={name}
       render={({ field, fieldState }) => {
+        if (fieldDef.hidden) return <></>
+
         // External dynamic error (from form props or manual setError) has priority.
         // The fieldDef.error is a static fallback from the JSON definition itself.
         const errorMessage = fieldState.error?.message || fieldDef.error
         const showExternalLabel = !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type)
 
         return (
-          <FormItem className={cn(fieldDef.hidden && "hidden", "flex flex-col")} data-field={name}>
+          <FormItem className="flex flex-col" data-field={name}>
             {/* 
               Top-aligned grid rule: Only render the label slot if needed.
               We still use min-h-6 to keep interactive elements aligned across the row 
@@ -77,9 +79,9 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
             */}
             {showExternalLabel ? (
               <div className="min-h-6 flex items-end">
-                <FormLabel className="pb-1">
+                <FormLabel className={cn("pb-1", errorMessage && "text-destructive")}>
                   {fieldDef.label}
-                  {fieldDef.required && <span className="ml-1 text-destructive">*</span>}
+                  {fieldDef.required ? " *" : ""}
                 </FormLabel>
               </div>
             ) : (
@@ -88,15 +90,20 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
             )}
 
             <FormControl>
-              {renderWidget(field, fieldDef, name, errorMessage || undefined)}
+              {renderWidget(field, fieldDef, name, errorMessage || undefined, fieldDef.hint)}
             </FormControl>
 
-            <div className="min-h-5 mt-1 space-y-1">
-              {errorMessage && <FormMessage>{errorMessage}</FormMessage>}
-              {fieldDef.hint && (
-                <FormDescription className="leading-tight">{fieldDef.hint}</FormDescription>
-              )}
-            </div>
+            {fieldDef.type !== "file" && (
+              <div className="min-h-5 mt-1 space-y-1">
+                {errorMessage ? (
+                  <FormMessage>{errorMessage}</FormMessage>
+                ) : (
+                  fieldDef.hint && (
+                    <FormDescription className="leading-tight">{fieldDef.hint}</FormDescription>
+                  )
+                )}
+              </div>
+            )}
           </FormItem>
         )
       }}
@@ -108,12 +115,14 @@ function renderWidget(
   field: ControllerRenderProps<FieldValues, string>,
   def: TsFieldDef,
   name: string,
-  error?: string | undefined
+  error?: string | undefined,
+  hint?: string | undefined
 ) {
   const commonProps = {
     field,
     name,
     error,
+    hint,
     "aria-required": def.required,
   }
 
@@ -146,7 +155,6 @@ function renderWidget(
     case "datetime":
       return <DateTimeWidget {...commonProps} def={def} />
     case "file":
-    case "image":
       return <FileWidget {...commonProps} def={def} />
     case "infobox":
       return <InfoboxWidget def={def} />

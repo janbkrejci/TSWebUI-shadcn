@@ -16,6 +16,7 @@ export interface TsTextWidgetProps {
   def: TsTextField
   name: string
   error?: string
+  hint?: string
 }
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
@@ -71,14 +72,14 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
           tabIndex={def.readonly ? -1 : undefined}
           aria-invalid={!!error}
           onFocus={(e) => {
-            if (def.selectAllOnFocus && !def.readonly) {
+            if (def.selectAllOnFocus !== false && !def.readonly) {
               const el = e.currentTarget
               setTimeout(() => el.select(), 0)
             }
           }}
           onClick={(e) => {
             if (
-              def.selectAllOnFocus &&
+              def.selectAllOnFocus !== false &&
               !def.readonly &&
               document.activeElement !== e.currentTarget
             ) {

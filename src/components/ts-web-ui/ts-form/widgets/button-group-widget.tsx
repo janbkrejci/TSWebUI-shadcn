@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import { TsButtonGroupField, TsFieldOptions } from "../types"
-import { getFieldClasses } from "../utils"
+import { getButtonVariantClasses, getFieldClasses } from "../utils"
 
 export interface TsButtonGroupWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsButtonGroupField
   error?: string
+  hint?: string
+  name: string
 }
 
 export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupWidgetProps>(
@@ -63,14 +65,7 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
               ? optVariant
               : "outline"
 
-          let variant: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" =
-            "outline"
-          if (rawVariant === "destructive" || rawVariant === "danger") variant = "destructive"
-          else if (rawVariant === "secondary") variant = "secondary"
-          else if (rawVariant === "ghost") variant = "ghost"
-          else if (rawVariant === "link") variant = "link"
-          else if (rawVariant === "outline") variant = "outline"
-          else variant = "default"
+          const { variant, className: customClass } = getButtonVariantClasses(rawVariant)
 
           return (
             <Button
@@ -84,7 +79,8 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
                 isLast && !isFirst && "rounded-l-none",
                 !isFirst && !isLast && "rounded-none",
                 isActive && "relative z-10",
-                hasError && "border-destructive text-destructive"
+                hasError && "border-destructive text-destructive",
+                customClass
               )}
               onClick={() => {
                 if (!def.disabled && !def.readonly && !isDisabled) field.onChange(value)

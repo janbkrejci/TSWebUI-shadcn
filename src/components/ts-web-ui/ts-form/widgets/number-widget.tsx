@@ -19,12 +19,13 @@ import {
 export interface TsNumberWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsNumberField
-  error?: string
   name: string
+  error?: string
+  hint?: string
 }
 
 export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetProps>(
-  ({ field, def, error, name, ...props }, ref) => {
+  ({ field, def, name, error, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const [displayValue, setDisplayValue] = React.useState<string>(() =>
       formatNumericValue(field.value as number | undefined, def.roundTo, def.locale)
@@ -46,6 +47,8 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
       setIsFocused(true)
       isClearingRef.current = false
 
+      if (def.readonly) return
+
       // Store current selection range to prevent jumping
       const selectionStart = e.currentTarget.selectionStart
       const selectionEnd = e.currentTarget.selectionEnd
@@ -54,7 +57,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
       setDisplayValue(clean)
 
       // Restore selection if applicable
-      if (selectionStart !== null && selectionEnd !== null && !def.selectAllOnFocus) {
+      if (selectionStart !== null && selectionEnd !== null && def.selectAllOnFocus === false) {
         // Calculate new position after spaces removal
         const spacesBefore = (displayValue.substring(0, selectionStart).match(/\s/g) || []).length
         const newStart = selectionStart - spacesBefore
@@ -63,13 +66,16 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         setTimeout(() => {
           e.target.setSelectionRange(newStart, newEnd)
         }, 0)
-      } else if (def.selectAllOnFocus && !def.readonly) {
-        e.currentTarget.select()
+      } else if (def.selectAllOnFocus !== false) {
+        const el = e.currentTarget
+        setTimeout(() => el.select(), 0)
       }
     }
 
     const handleBlur = () => {
       setIsFocused(false)
+      if (def.readonly) return
+
       if (isClearingRef.current) {
         isClearingRef.current = false
         return
@@ -81,6 +87,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (def.readonly) return
       const val = e.target.value
       // Support numbers and basic math operators matching evaluator
       const clean = val.replace(/[^0-9 .,+*/^()-]/g, "")
@@ -99,8 +106,18 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
       // triggers a submit action (which uses form values from react-hook-form).
       if (e.key === "Enter") {
         const num = parseNumericValue(displayValue)
+        const formatted = formatNumericValue(num, def.roundTo, def.locale)
+        const wasCalculation = displayValue !== formatted && displayValue !== String(num)
+
         field.onChange(num)
-        setDisplayValue(formatNumericValue(num, def.roundTo, def.locale))
+        setDisplayValue(formatted)
+
+        // If it was a calculation, stop propagation so it doesn't trigger a form action
+        if (wasCalculation) {
+          e.preventDefault()
+          e.stopPropagation()
+          return
+        }
 
         // Let the event bubble up to TsForm for action handling
         handleFieldKeyDown(
@@ -142,8 +159,6 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         aria-invalid={!!error}
         aria-valuemin={def.min}
         aria-valuemax={def.max}
-        min={def.min}
-        max={def.max}
         className={cn("text-right tabular-nums", errorClass, readonlyClass)}
         {...props}
         ref={ref || field.ref}

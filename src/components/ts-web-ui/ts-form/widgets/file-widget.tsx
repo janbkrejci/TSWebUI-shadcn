@@ -1,6 +1,6 @@
 "use client"
 
-import { CloudUpload, Download, FileText as FileTextIcon, X as XIcon } from "lucide-react"
+import { CloudUpload, Download, FileText as FileTextIcon, Plus, X as XIcon } from "lucide-react"
 
 import * as React from "react"
 import { ControllerRenderProps, FieldValues } from "react-hook-form"
@@ -14,13 +14,36 @@ export interface TsFileWidgetProps {
   def: TsFileField
   name: string
   error?: string
+  hint?: string
 }
 
 export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
-  ({ field, def, error, ...props }, ref) => {
+  ({ field, def, error, hint, ...props }, ref) => {
     const [isDragOver, setIsDragOver] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
-    const accept = def.accept || (def.type === "image" ? "image/*" : undefined)
+
+    // Support extensions like .pdf,.doc and map common ones
+    const accept = React.useMemo(() => {
+      if (!def.accept) return undefined
+      return def.accept
+        .split(",")
+        .map((ext) => {
+          const e = ext.trim().toLowerCase()
+          if (e === "excel")
+            return ".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          if (e === "word")
+            return ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          if (e === "image") return "image/*"
+          if (e === "pdf") return ".pdf,application/pdf"
+          if (e === "text") return ".txt,text/plain"
+          if (e === "json") return ".json,application/json"
+          if (e === "markdown") return ".md,text/markdown"
+          if (e === "zip") return ".zip,.7z,.rar,application/zip,application/x-7z-compressed"
+          return e.startsWith(".") ? e : `.${e}`
+        })
+        .join(",")
+    }, [def.accept])
+
     const multiple = def.multiple
     const hasError = !!error
 
@@ -70,39 +93,39 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
       ? "border-destructive"
       : "border-dashed border-muted-foreground/40"
     const isInteractive = !def.disabled && !def.readonly
+    const shouldShowDropZone = def.showDropZone !== false && isInteractive
 
     return (
-      <div className="flex flex-col gap-2" {...props} ref={ref}>
-        <div
-          className={cn(
-            "flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 text-center transition-colors",
-            errorBorderClass,
-            isInteractive && "cursor-pointer hover:border-primary hover:bg-muted/30",
-            isDragOver && "border-primary bg-primary/5",
-            !isInteractive && "opacity-50"
-          )}
-          aria-invalid={hasError}
-          onClick={() => isInteractive && inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault()
-            if (isInteractive) setIsDragOver(true)
-          }}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setIsDragOver(false)
-            if (isInteractive && e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files)
-          }}
-        >
-          <CloudUpload className="h-8 w-8 text-muted-foreground" />
-          <div className="text-sm text-muted-foreground">
-            {def.innerLabel ||
-              (multiple
-                ? "Drop files here or click to upload"
-                : "Drop file here or click to upload")}
+      <div className="flex flex-col gap-1.5" {...props} ref={ref}>
+        {shouldShowDropZone && (
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 text-center transition-colors cursor-pointer hover:border-primary hover:bg-muted/30 mb-0.5",
+              errorBorderClass,
+              isDragOver && "border-primary bg-primary/5"
+            )}
+            aria-invalid={hasError}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setIsDragOver(true)
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setIsDragOver(false)
+              if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files)
+            }}
+          >
+            <CloudUpload className="h-8 w-8 text-muted-foreground" />
+            <div className="text-sm text-muted-foreground">
+              {def.innerLabel ||
+                (multiple
+                  ? "Drop files here or click to upload"
+                  : "Drop file here or click to upload")}
+            </div>
           </div>
-          {accept && <div className="text-xs text-muted-foreground/70">{accept}</div>}
-        </div>
+        )}
 
         <input
           ref={inputRef}
@@ -117,7 +140,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
         />
 
         {files.length > 0 && (
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             {files.map((file, index) => (
               <div
                 key={`${file.name}-${index}`}
@@ -148,6 +171,29 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {!shouldShowDropZone && isInteractive && (
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors w-fit group/add py-0.5"
+            onClick={() => inputRef.current?.click()}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="group-hover/add:underline underline-offset-4">
+              {def.addFileLabel || (multiple ? "Add files" : "Add file")}
+            </span>
+          </button>
+        )}
+
+        {(hasError || hint) && (
+          <div className="min-h-4 space-y-1">
+            {hasError ? (
+              <p className="text-[11px] text-destructive font-medium leading-tight">{error}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground leading-tight">{hint}</p>
+            )}
           </div>
         )}
       </div>

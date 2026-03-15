@@ -271,9 +271,11 @@ export function handleFieldKeyDown(
     const isTextarea = (e.currentTarget as HTMLElement).tagName === "TEXTAREA"
     if (isTextarea && !e.ctrlKey && !e.metaKey) return
 
+    // Vždy zabránit nativnímu submitu formuláře v běžných inputech
+    e.preventDefault()
+    e.stopPropagation()
+
     if (enterAction) {
-      e.preventDefault()
-      e.stopPropagation()
       const event = new CustomEvent("form-key-action", {
         detail: {
           key: "Enter",
@@ -448,6 +450,8 @@ export function getButtonVariantClasses(variant?: string): {
     className = "bg-green-600 text-white hover:bg-green-700 border-none"
   } else if (variant === "warning") {
     className = "bg-amber-500 text-white hover:bg-amber-600 border-none"
+  } else if (variant === "info") {
+    className = "bg-blue-600 text-white hover:bg-blue-700 border-none"
   } else if (variant === "danger" || variant === "destructive") {
     shadcnVariant = "destructive"
   } else if (["default", "outline", "secondary", "ghost", "link"].includes(variant)) {

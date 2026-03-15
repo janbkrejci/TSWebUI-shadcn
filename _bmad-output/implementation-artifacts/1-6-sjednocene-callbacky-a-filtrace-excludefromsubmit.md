@@ -1,6 +1,6 @@
 # Story 1.6: Sjednocené callbacky a filtrace excludeFromSubmit
 
-Status: review
+Status: done
 
 ## Story
 

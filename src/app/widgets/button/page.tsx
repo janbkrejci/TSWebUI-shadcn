@@ -21,14 +21,20 @@ const attributes: WidgetAttribute[] = [
     defaultValue: "default",
     options: [
       { label: "Default", value: "default" },
-      { label: "Outline", value: "outline" },
+      { label: "Primary", value: "primary" },
       { label: "Secondary", value: "secondary" },
+      { label: "Outline", value: "outline" },
       { label: "Ghost", value: "ghost" },
-      { label: "Destructive", value: "destructive" },
+      { label: "Link", value: "link" },
+      { label: "Success", value: "success" },
+      { label: "Warning", value: "warning" },
+      { label: "Info", value: "info" },
+      { label: "Danger / Destructive", value: "destructive" },
     ],
     hint: "Visual style of the button",
   },
   { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
+  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
   { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
 ]
 

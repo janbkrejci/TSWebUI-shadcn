@@ -16,6 +16,7 @@ export interface TsSwitchWidgetProps {
   def: TsSwitchField
   name: string
   error?: string
+  hint?: string
 }
 
 export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetProps>(
@@ -24,14 +25,19 @@ export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetPr
     const { errorClass } = getFieldClasses(error, def.readonly)
 
     return (
-      <div className={cn("flex items-center space-x-2 min-h-10")}>
+      <div
+        className={cn(
+          "flex items-center space-x-2 min-h-10",
+          def.readonly && "pointer-events-none"
+        )}
+      >
         <Switch
           id={`${safeId}-switch`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
-          disabled={def.disabled || def.readonly}
+          disabled={def.disabled}
           aria-invalid={!!error}
-          className={cn(errorClass, def.readonly && "opacity-70 cursor-default")}
+          className={cn(errorClass, def.readonly && "opacity-100 cursor-default")}
           {...props}
           ref={ref || field.ref}
         />
@@ -40,7 +46,7 @@ export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetPr
           className={cn(
             "font-normal cursor-pointer",
             !!error && "text-destructive",
-            def.readonly && "cursor-default"
+            def.readonly && "cursor-default opacity-100"
           )}
         >
           {def.required ? `${def.label} *` : def.label}

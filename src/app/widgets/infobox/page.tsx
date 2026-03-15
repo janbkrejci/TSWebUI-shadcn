@@ -20,7 +20,7 @@ const attributes: WidgetAttribute[] = [
     type: "select",
     defaultValue: "default",
     options: [
-      { label: "Default (Blue)", value: "default" },
+      { label: "Default", value: "default" },
       { label: "Destructive (Red)", value: "destructive" },
       { label: "Information (Blue)", value: "information" },
       { label: "Warning (Orange)", value: "warning" },

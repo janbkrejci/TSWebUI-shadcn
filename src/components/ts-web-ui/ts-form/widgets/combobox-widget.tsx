@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import * as React from "react"
 import { ControllerRenderProps, FieldValues } from "react-hook-form"
@@ -26,6 +26,7 @@ export interface TsComboboxWidgetProps {
   def: TsComboboxField
   name: string
   error?: string
+  hint?: string
 }
 
 export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidgetProps>(
@@ -48,30 +49,57 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
 
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(v) => {
+          if (!def.readonly && !def.disabled) setOpen(v)
+        }}
+      >
         <PopoverTrigger asChild>
-          <Button
-            id={safeId}
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-invalid={!!error}
-            aria-controls={`popover-content-${safeId}`}
-            className={cn(
-              "w-full justify-between hover:bg-background dark:hover:bg-input/30",
-              errorClass,
-              readonlyClass
+          <div className="relative group/combobox w-full">
+            <Button
+              id={safeId}
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              aria-invalid={!!error}
+              aria-controls={`popover-content-${safeId}`}
+              className={cn(
+                "w-full justify-between hover:bg-background dark:hover:bg-input/30 pr-8",
+                errorClass,
+                readonlyClass,
+                def.readonly && "opacity-100 cursor-default pointer-events-none pr-3"
+              )}
+              disabled={def.disabled}
+              {...props}
+              ref={ref || (field.ref as React.Ref<HTMLButtonElement>)}
+            >
+              <span className="truncate">
+                {field.value
+                  ? (options.find((framework) => framework.value === field.value)?.label ??
+                    (field.value as string))
+                  : def.placeholder || "Select..."}
+              </span>
+              <ChevronsUpDown
+                className={cn("ml-2 h-4 w-4 shrink-0 opacity-50", def.readonly && "hidden")}
+              />
+            </Button>
+            {!def.readonly && !def.disabled && def.clearable && field.value && (
+              <button
+                type="button"
+                className="absolute right-8 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover/combobox:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  field.onChange("")
+                  setOpen(false)
+                }}
+              >
+                <X className="h-3 w-3" />
+              </button>
             )}
-            disabled={def.disabled}
-            {...props}
-            ref={ref || field.ref}
-          >
-            {field.value
-              ? (options.find((framework) => framework.value === field.value)?.label ??
-                (field.value as string))
-              : def.placeholder || "Select..."}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent
           id={`popover-content-${safeId}`}

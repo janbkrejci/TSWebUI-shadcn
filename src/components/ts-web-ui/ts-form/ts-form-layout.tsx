@@ -61,13 +61,21 @@ export function TsFormLayout({ layout, fields }: TsFormLayoutProps) {
 
 function renderRows(rows: TsRow[], fields: Record<string, TsFieldDef>) {
   return rows.map((row, rowIndex) => {
-    // Calculate grid template columns based on widths
-    // Default width is 1fr if not specified
-    const gridTemplateColumns = row.map((item) => item.width || "1fr").join(" ")
+    // Filter out hidden fields before calculating columns and rendering
+    const visibleItems = row.filter((item) => {
+      if (!item.field) return true // empty or separator
+      const fieldDef = fields[item.field]
+      return !fieldDef?.hidden
+    })
+
+    if (visibleItems.length === 0) return null
+
+    // Calculate grid template columns based on widths of visible items
+    const gridTemplateColumns = visibleItems.map((item) => item.width || "1fr").join(" ")
 
     return (
       <div key={rowIndex} className="grid gap-4 items-start" style={{ gridTemplateColumns }}>
-        {row.map((item, colIndex) => {
+        {visibleItems.map((item, colIndex) => {
           if (item.type === "empty") {
             return <div key={colIndex} />
           }

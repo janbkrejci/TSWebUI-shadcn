@@ -26,6 +26,7 @@ export interface TsMultiSelectWidgetProps {
   def: TsMultiselectField
   name: string
   error?: string
+  hint?: string
 }
 
 export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectWidgetProps>(
@@ -47,7 +48,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
       field.onChange(newValues)
     }
 
-    const { errorClass, readonlyPointerClass } = getFieldClasses(error, def.readonly)
+    const { errorClass } = getFieldClasses(error, def.readonly)
 
     return (
       <Popover open={open} onOpenChange={setOpen} modal>
@@ -69,11 +70,11 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
             }}
             className={cn(
               "flex min-h-10 w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
-              "hover:bg-accent dark:hover:bg-input/30",
+              !def.readonly && "hover:bg-accent dark:hover:bg-input/30",
               "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
               errorClass,
               def.disabled && "opacity-50 pointer-events-none",
-              readonlyPointerClass
+              def.readonly && "cursor-default opacity-100"
             )}
             {...props}
             ref={ref}
@@ -83,32 +84,35 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
               {selectedValues.length > 0 ? (
                 selectedValues.map((val) => (
                   <Badge key={val} variant="secondary" className="mr-1">
-                    {options.find((o) => o.value === val)?.label || val}
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="ml-1 inline-flex cursor-pointer items-center hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleValue(val)
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault()
+                    {options.find((o: { value: string; label: string }) => o.value === val)
+                      ?.label || val}
+                    {!def.readonly && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="ml-1 inline-flex cursor-pointer items-center hover:text-destructive"
+                        onClick={(e) => {
                           e.stopPropagation()
                           toggleValue(val)
-                        }
-                      }}
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </span>
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            toggleValue(val)
+                          }
+                        }}
+                      >
+                        <XIcon className="h-3 w-3" />
+                      </span>
+                    )}
                   </Badge>
                 ))
               ) : (
                 <span className="text-muted-foreground">{def.placeholder || "Select..."}</span>
               )}
             </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            {!def.readonly && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
           </div>
         </PopoverAnchor>
         <PopoverContent
@@ -140,7 +144,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
                 </span>
               </CommandEmpty>
               <CommandGroup>
-                {options.map((opt) => (
+                {options.map((opt: { value: string; label: string }) => (
                   <CommandItem
                     key={opt.value}
                     value={opt.label}

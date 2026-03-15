@@ -346,7 +346,6 @@ export default function MyForm() {
                     "switch",
                     "slider",
                     "file",
-                    "image",
                     "markdown",
                     "infobox",
                     "table",

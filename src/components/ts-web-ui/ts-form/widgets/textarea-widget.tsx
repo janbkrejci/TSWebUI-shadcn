@@ -13,6 +13,7 @@ export interface TsTextareaWidgetProps {
   def: TsTextareaField
   name: string
   error?: string
+  hint?: string
 }
 
 export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWidgetProps>(

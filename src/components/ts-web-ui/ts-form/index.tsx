@@ -200,8 +200,9 @@ export function TsForm({
       Object.entries(fields).map(([key, field]) => {
         const merged = { ...field }
         if (readOnly) merged.readonly = true
-        if (merged.type === "number" && !merged.locale && locale) {
-          merged.locale = locale
+        if (["number", "date", "datetime"].includes(merged.type) && locale) {
+          const lField = merged as { locale?: string }
+          if (!lField.locale) lField.locale = locale
         }
         return [key, merged]
       })

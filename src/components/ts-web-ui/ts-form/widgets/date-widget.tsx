@@ -1,6 +1,7 @@
 "use client"
 
 import { format, isValid as isValidDate, parse } from "date-fns"
+import * as Locales from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 
 import * as React from "react"
@@ -14,12 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsDateField } from "../types"
-import { getFieldClasses, sanitizeId } from "../utils"
+import { getFieldClasses, handleFieldKeyDown, sanitizeId } from "../utils"
 
 export interface TsDateWidgetProps {
   field: ControllerRenderProps<FieldValues, string>
   def: TsDateField
   error?: string
+  hint?: string
   name: string
 }
 
@@ -53,29 +55,52 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
     // Only sync input from field value when not focused
     React.useEffect(() => {
       if (isFocused) return
-      const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
-      const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+      if (!field.value) {
+        setInputValue("")
+        return
+      }
+      const dateValue = new Date(field.value as string | number | Date)
+      const validDate = !isNaN(dateValue.getTime()) ? dateValue : undefined
       if (validDate && !open) {
         setInputValue(format(validDate, dateFormat))
-      } else if (!field.value) {
-        setInputValue("")
       }
     }, [field.value, dateFormat, open, isFocused])
 
+    // Get date-fns locale object from string
+    const dateLocale = React.useMemo(() => {
+      if (!def.locale) return undefined
+      // Try exact match (e.g. 'cs-CZ' -> 'csCZ')
+      const localeKey = def.locale.replace("-", "") as keyof typeof Locales
+      const localeObj = Locales[localeKey]
+      if (localeObj) return localeObj as unknown as Locales.Locale
+      // Try generic part (e.g. 'cs')
+      const genericKey = def.locale.split("-")[0] as keyof typeof Locales
+      return (Locales[genericKey] as unknown as Locales.Locale) || undefined
+    }, [def.locale])
+
     const handleInputBlur = () => {
       setIsFocused(false)
-      if (!inputValue.trim()) {
-        field.onChange(undefined)
+      const trimmed = inputValue.trim()
+      if (!trimmed) {
+        if (field.value) field.onChange(null)
         return
       }
-      const parsed = parse(inputValue, dateFormat, new Date())
+
+      let parsed = parse(trimmed, dateFormat, new Date())
+      // Fallback for compact formats like 01012025
+      if (!isValidDate(parsed)) {
+        const digits = trimmed.replace(/\D/g, "")
+        if (digits.length === 8) {
+          const d = parseInt(digits.substring(0, 2), 10)
+          const m = parseInt(digits.substring(2, 4), 10) - 1
+          const y = parseInt(digits.substring(4, 8), 10)
+          parsed = new Date(y, m, d)
+        }
+      }
+
       if (isValidDate(parsed)) {
         field.onChange(parsed)
-      } else {
-        // Revert to valid value if parsing fails
-        const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
-        const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
-        setInputValue(validDate ? format(validDate, dateFormat) : "")
+        setInputValue(format(parsed, dateFormat))
       }
     }
 
@@ -87,24 +112,62 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onFocus={(e) => {
-              if (def.readonly) {
-                e.currentTarget.blur()
-                return
-              }
+              if (def.readonly) return
               setIsFocused(true)
-              if (def.selectAllOnFocus) {
+              if (def.selectAllOnFocus !== false) {
                 const el = e.currentTarget
                 setTimeout(() => el.select(), 0)
               }
             }}
             onClick={(e) => {
               if (
-                def.selectAllOnFocus &&
+                def.selectAllOnFocus !== false &&
                 !def.readonly &&
                 document.activeElement !== e.currentTarget
               ) {
                 e.currentTarget.select()
               }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                let parsed = parse(inputValue, dateFormat, new Date())
+                // Fallback for compact formats like 01012025
+                if (!isValidDate(parsed)) {
+                  const digits = inputValue.replace(/\D/g, "")
+                  if (digits.length === 8) {
+                    const d = parseInt(digits.substring(0, 2), 10)
+                    const m = parseInt(digits.substring(2, 4), 10) - 1
+                    const y = parseInt(digits.substring(4, 8), 10)
+                    parsed = new Date(y, m, d)
+                  }
+                }
+
+                if (isValidDate(parsed)) {
+                  field.onChange(parsed)
+                  setInputValue(format(parsed, dateFormat))
+
+                  // If it was a manual entry, stop propagation to prevent form action
+                  // unless it's the exact same as current field value
+                  const wasNew =
+                    !field.value || new Date(field.value as string).getTime() !== parsed.getTime()
+                  if (wasNew) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    return
+                  }
+                }
+              }
+              handleFieldKeyDown(
+                e,
+                name,
+                def.enterAction,
+                def.escapeAction,
+                () => {
+                  setInputValue("")
+                  field.onChange(undefined)
+                },
+                field.value
+              )
             }}
             onBlur={handleInputBlur}
             placeholder={def.placeholder || dateFormat.toLowerCase()}
@@ -136,12 +199,46 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             mode="single"
             selected={calendarDate}
             defaultMonth={calendarDate}
+            locale={dateLocale}
             onSelect={(date) => {
               if (date) field.onChange(date)
               setOpen(false)
             }}
             initialFocus
           />
+          {(def.showTodayButton !== false || def.showClearButton !== false) && (
+            <div className="flex items-center justify-between p-2 border-t gap-2 bg-muted/10">
+              {def.showClearButton !== false && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs h-8 px-2 flex-1"
+                  onClick={() => {
+                    field.onChange(null)
+                    setInputValue("")
+                    setOpen(false)
+                  }}
+                >
+                  {def.clearButtonText || "Clear"}
+                </Button>
+              )}
+              {def.showTodayButton !== false && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs h-8 px-2 flex-1"
+                  onClick={() => {
+                    const today = new Date()
+                    field.onChange(today)
+                    setInputValue(format(today, dateFormat))
+                    setOpen(false)
+                  }}
+                >
+                  {def.todayButtonText || "Today"}
+                </Button>
+              )}
+            </div>
+          )}
         </PopoverContent>
       </Popover>
     )

@@ -1,6 +1,6 @@
 # Story 1.4: Migrace výběrových a komplexních widgetů na bezvalidační režim
 
-Status: completed
+Status: done
 
 ## Story
 

@@ -21,23 +21,27 @@ export interface TsSelectWidgetProps {
   def: TsSelectField
   name: string
   error?: string
+  hint?: string
 }
 
 export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetProps>(
   ({ field, def, name, error, ...props }, ref) => {
     const safeId = sanitizeId(name)
     const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
-
     return (
       <Select onValueChange={field.onChange} value={field.value ?? ""} disabled={def.disabled}>
         <SelectTrigger
           id={`${safeId}-select`}
-          className={cn(errorClass, readonlyClass)}
+          className={cn(
+            errorClass,
+            readonlyClass,
+            def.readonly && "opacity-100 cursor-default pointer-events-none"
+          )}
           aria-invalid={!!error}
           {...props}
           ref={ref || field.ref}
         >
-          <SelectValue placeholder={def.placeholder || "Select..."} />
+          <SelectValue placeholder={def.placeholder || "Select category"} />
         </SelectTrigger>
         <SelectContent>
           {(def.options || []).map((opt: TsFieldOptions | string) => {

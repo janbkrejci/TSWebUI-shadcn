@@ -11,7 +11,6 @@ import {
   FormInput,
   Hash,
   Home,
-  Image,
   Info,
   KeyRound,
   LayoutGrid,
@@ -109,7 +108,6 @@ const NAVIGATION: NavSection[] = [
       { name: "datetime", href: "/widgets/datetime", label: "Date Time", icon: CalendarClock },
       { name: "slider", href: "/widgets/slider", label: "Slider", icon: SlidersHorizontal },
       { name: "file", href: "/widgets/file", label: "File Upload", icon: Upload },
-      { name: "image", href: "/widgets/image", label: "Image Upload", icon: Image },
       {
         name: "relationship",
         href: "/widgets/relationship",

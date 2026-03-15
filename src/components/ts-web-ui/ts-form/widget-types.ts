@@ -20,7 +20,6 @@ export type TsFieldType =
   | "date"
   | "datetime"
   | "file"
-  | "image"
   | "button"
   | "separator"
   | "empty"
@@ -185,6 +184,8 @@ export interface TsComboboxField extends TsFieldBase, TsFieldWithOptions {
   allowCustom?: boolean
   /** Select all text when the field is focused or clicked */
   selectAllOnFocus?: boolean
+  /** Whether the field can be cleared by the user */
+  clearable?: boolean
 }
 
 /** Definition for radio button groups. */
@@ -222,6 +223,16 @@ export interface TsDateField extends TsFieldBase {
   dateFormat?: string
   /** Select all text when the field is focused or clicked */
   selectAllOnFocus?: boolean
+  /** Global locale for widgets (e.g. 'cs-CZ') */
+  locale?: string
+  /** Show Today button in calendar popup */
+  showTodayButton?: boolean
+  /** Show Clear button in calendar popup */
+  showClearButton?: boolean
+  /** Custom label for Today button */
+  todayButtonText?: string
+  /** Custom label for Clear button */
+  clearButtonText?: string
 }
 
 /** Definition for date and time picker. */
@@ -233,17 +244,31 @@ export interface TsDateTimeField extends TsFieldBase {
   dateFormat?: string
   /** Select all text when the field is focused or clicked */
   selectAllOnFocus?: boolean
+  /** Global locale for widgets (e.g. 'cs-CZ') */
+  locale?: string
+  /** Show Today button in calendar popup */
+  showTodayButton?: boolean
+  /** Show Clear button in calendar popup */
+  showClearButton?: boolean
+  /** Custom label for Today button */
+  todayButtonText?: string
+  /** Custom label for Clear button */
+  clearButtonText?: string
 }
 
-/** Definition for file and image uploaders. */
+/** Definition for file uploaders. */
 export interface TsFileField extends TsFieldBase {
-  type: "file" | "image"
+  type: "file"
   /** Accepted file types (e.g. ".pdf,.doc" or "image/*") */
   accept?: string
   /** Allow multiple file selection */
   multiple?: boolean
   /** Label shown inside the drop zone */
   innerLabel?: string
+  /** Whether to show the drag and drop area (default: true) */
+  showDropZone?: boolean
+  /** Label for the 'Add file' link (used when dropzone is hidden) */
+  addFileLabel?: string
 }
 
 /** Definition for action-only buttons within the form layout. */

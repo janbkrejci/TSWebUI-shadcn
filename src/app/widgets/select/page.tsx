@@ -7,7 +7,7 @@ import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widge
 
 const attributes: WidgetAttribute[] = [
   { name: "label", label: "Label", type: "string", defaultValue: "Category" },
-  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Select category..." },
+  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "Select category" },
   { name: "hint", label: "Hint", type: "string", defaultValue: "" },
   {
     name: "options",

@@ -1569,7 +1569,7 @@ function FieldPropertiesPanel({
         </>
       )}
 
-      {(config.type === "file" || config.type === "image") && (
+      {config.type === "file" && (
         <>
           <Separator />
           <div className="space-y-3">

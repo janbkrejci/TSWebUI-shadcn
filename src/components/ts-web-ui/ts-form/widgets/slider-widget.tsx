@@ -20,7 +20,6 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
   ({ field, def, error, ...props }, ref) => {
     const [showTooltip, setShowTooltip] = React.useState(false)
     const [localValue, setLocalValue] = React.useState<number>(field.value ?? def.min ?? 0)
-    const readonlyPointerClass = def.readonly ? "pointer-events-none" : ""
 
     React.useEffect(() => {
       setLocalValue(field.value ?? def.min ?? 0)
@@ -32,7 +31,13 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
       max !== min ? Math.min(100, Math.max(0, ((localValue - min) / (max - min)) * 100)) : 0
 
     return (
-      <div className={cn("relative py-2", readonlyPointerClass)} {...props} ref={ref}>
+      <div
+        className={cn("relative py-2")}
+        {...props}
+        ref={ref}
+        onPointerEnter={() => setShowTooltip(true)}
+        onPointerLeave={() => setShowTooltip(false)}
+      >
         {showTooltip && (
           <div
             className="absolute -top-7 -translate-x-1/2 pointer-events-none whitespace-nowrap rounded-md border bg-popover text-popover-foreground px-2 py-0.5 text-xs shadow-md z-50"
@@ -54,13 +59,11 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
             field.onChange(vals[0])
             setTimeout(() => setShowTooltip(false), 300)
           }}
-          onPointerDown={() => setShowTooltip(true)}
-          onPointerEnter={() => setShowTooltip(true)}
-          onPointerLeave={() => setShowTooltip(false)}
           disabled={def.disabled}
           aria-invalid={!!error}
           className={cn(
-            error && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive"
+            error && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive",
+            def.readonly && "pointer-events-none opacity-100"
           )}
         />
       </div>

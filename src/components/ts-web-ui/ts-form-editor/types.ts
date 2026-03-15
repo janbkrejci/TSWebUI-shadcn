@@ -7,7 +7,6 @@ import {
   CircleDot,
   FileText,
   Hash,
-  Image,
   Info,
   KeyRound,
   Link2,
@@ -139,7 +138,6 @@ export const AVAILABLE_FIELD_TYPES: {
   // Other inputs
   { type: "slider", label: "Slider", group: "Others", icon: SlidersHorizontal },
   { type: "file", label: "File", group: "Others", icon: Upload },
-  { type: "image", label: "Image", group: "Others", icon: Image },
   { type: "relationship", label: "Relationship", group: "Others", icon: Link2 },
 
   // Layout and display

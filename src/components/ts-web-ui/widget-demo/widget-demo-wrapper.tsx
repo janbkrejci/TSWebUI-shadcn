@@ -44,7 +44,7 @@ export interface WidgetAttribute {
  * Event log entry recorded from the widget
  */
 interface EventLogEntry {
-  id: number
+  id: string | number
   timestamp: Date
   eventName: string
   detail: unknown
@@ -105,9 +105,10 @@ export function WidgetDemoWrapper({
    */
   const logEvent = React.useCallback((eventName: string, detail: unknown) => {
     eventIdRef.current += 1
+    const id = `${Date.now()}-${eventIdRef.current}`
     setEventLog((prev) => [
       {
-        id: eventIdRef.current,
+        id,
         timestamp: new Date(),
         eventName,
         detail,
@@ -258,18 +259,16 @@ export function WidgetDemoWrapper({
             </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-4">
-                {attributes.map((attr) => (
-                  <AttributeControl
-                    key={attr.name}
-                    attribute={attr}
-                    value={attrValues[attr.name]}
-                    onChange={(value) => updateAttribute(attr.name, value)}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="space-y-4">
+              {attributes.map((attr) => (
+                <AttributeControl
+                  key={attr.name}
+                  attribute={attr}
+                  value={attrValues[attr.name]}
+                  onChange={(value) => updateAttribute(attr.name, value)}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
 

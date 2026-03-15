@@ -5,6 +5,8 @@ import remarkGfm from "remark-gfm"
 
 import * as React from "react"
 import Markdown from "react-markdown"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 import { Button } from "@/components/ui/button"
 
@@ -61,7 +63,8 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
               </a>
             ),
             code: ({ className, children, ...props }: TsMarkdownComponentProps) => {
-              const isInline = !className?.includes("language-")
+              const match = /language-(\w+)/.exec(className || "")
+              const isInline = !match
               if (isInline) {
                 return (
                   <code className={className} {...props}>
@@ -70,11 +73,16 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
                 )
               }
               return (
-                <div className="relative group">
+                <div className="relative group my-4">
                   <MarkdownCopyButton text={String(children)} />
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
+                  <SyntaxHighlighter
+                    language={match[1]}
+                    style={oneDark}
+                    PreTag="div"
+                    className="rounded-md !m-0"
+                  >
+                    {String(children).replace(/\n$/, "")}
+                  </SyntaxHighlighter>
                 </div>
               )
             },
