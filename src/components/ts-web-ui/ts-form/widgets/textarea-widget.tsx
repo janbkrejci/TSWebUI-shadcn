@@ -1,25 +1,32 @@
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Textarea } from "@/components/ui/textarea"
 
 import { cn } from "@/lib/utils"
 
-import { TsTextareaField } from "../types"
+import { TsTextareaField, TsWidgetProps } from "../types"
 import { DEFAULT_TEXTAREA_ROWS, getFieldClasses, handleFieldKeyDown, sanitizeId } from "../utils"
 
-export interface TsTextareaWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsTextareaField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsTextareaWidgetProps = TsWidgetProps<TsTextareaField>
 
 export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     return (
       <Textarea
@@ -34,21 +41,24 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
           handleFieldKeyDown(e, name, def.enterAction, def.escapeAction, () => field.onChange(""))
         }
         disabled={def.disabled}
-        readOnly={def.readonly}
-        tabIndex={def.readonly ? -1 : undefined}
+        readOnly={readOnly}
+        autoFocus={autoFocus}
+        tabIndex={readOnly ? -1 : undefined}
         aria-invalid={!!error}
+        aria-label={ariaLabel}
+        aria-required={ariaRequired}
         onFocus={(e) => {
-          if (def.selectAllOnFocus && !def.readonly) {
+          if (def.selectAllOnFocus && !readOnly) {
             const el = e.currentTarget
             setTimeout(() => el.select(), 0)
           }
         }}
         onClick={(e) => {
-          if (def.selectAllOnFocus && !def.readonly && document.activeElement !== e.currentTarget) {
+          if (def.selectAllOnFocus && !readOnly && document.activeElement !== e.currentTarget) {
             e.currentTarget.select()
           }
         }}
-        className={cn(errorClass, readonlyClass)}
+        className={cn(errorClass, readonlyClass, readonlyPointerClass)}
       />
     )
   }

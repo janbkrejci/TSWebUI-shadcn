@@ -3,7 +3,6 @@
 import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,19 +17,27 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { cn } from "@/lib/utils"
 
-import { TsComboboxField, TsFieldOptions } from "../types"
+import { TsComboboxField, TsFieldOptions, TsWidgetProps } from "../types"
 import { getFieldClasses, sanitizeId } from "../utils"
 
-export interface TsComboboxWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsComboboxField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsComboboxWidgetProps = TsWidgetProps<TsComboboxField>
 
 export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
@@ -46,13 +53,13 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
       searchValue &&
       !options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase())
 
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     return (
       <Popover
         open={open}
         onOpenChange={(v) => {
-          if (!def.readonly && !def.disabled) setOpen(v)
+          if (!readOnly && !def.disabled) setOpen(v)
         }}
       >
         <PopoverTrigger asChild>
@@ -64,12 +71,17 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
               role="combobox"
               aria-expanded={open}
               aria-invalid={!!error}
+              aria-label={ariaLabel}
+              aria-required={ariaRequired}
+              aria-readonly={readOnly}
               aria-controls={`popover-content-${safeId}`}
+              autoFocus={autoFocus}
               className={cn(
                 "w-full justify-between hover:bg-background dark:hover:bg-input/30 pr-8",
                 errorClass,
                 readonlyClass,
-                def.readonly && "opacity-100 cursor-default pointer-events-none pr-3"
+                readonlyPointerClass,
+                readOnly && "opacity-100 pointer-events-none pr-3"
               )}
               disabled={def.disabled}
               {...props}
@@ -82,10 +94,10 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
                   : def.placeholder || "Select..."}
               </span>
               <ChevronsUpDown
-                className={cn("ml-2 h-4 w-4 shrink-0 opacity-50", def.readonly && "hidden")}
+                className={cn("ml-2 h-4 w-4 shrink-0 opacity-50", readOnly && "hidden")}
               />
             </Button>
-            {!def.readonly && !def.disabled && def.clearable && field.value && (
+            {!readOnly && !def.disabled && def.clearable && field.value && (
               <button
                 type="button"
                 className="absolute right-8 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover/combobox:opacity-100 transition-opacity"

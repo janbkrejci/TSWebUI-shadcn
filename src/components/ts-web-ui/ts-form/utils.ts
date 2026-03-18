@@ -18,9 +18,10 @@ export function filterExcludeFromSubmit(
   data: Record<string, unknown>,
   fields: Record<string, TsFieldDef>
 ): Record<string, unknown> {
-  const filteredData = deepClone(data)
   const keysToDelete = Object.keys(fields).filter((k) => fields[k]?.excludeFromSubmit)
+  if (keysToDelete.length === 0) return data
 
+  const filteredData = deepClone(data)
   const arrayElementKeys: string[] = []
   const propertyKeys: string[] = []
 
@@ -85,7 +86,9 @@ export function sanitizeId(name: string): string {
 export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
-  const readonlyClass = readonly ? "focus-visible:ring-0 focus-visible:border-input" : ""
+  const readonlyClass = readonly
+    ? "border-transparent bg-muted/30 focus-visible:ring-0 focus-visible:border-transparent"
+    : ""
   const readonlyPointerClass = readonly ? "cursor-default" : ""
   return { errorClass, readonlyClass, readonlyPointerClass }
 }
@@ -255,6 +258,29 @@ export function deepClone<T>(val: T): T {
   }
   // Cast is necessary to convert our cloned record back to the original generic type T.
   return clonedObj as unknown as T
+}
+
+/**
+ * Dispatches a custom event for form-level actions (e.g. picker selection, button click).
+ */
+export function dispatchFormAction(
+  ref: React.Ref<HTMLElement> | undefined,
+  name: string,
+  action: string,
+  data?: unknown,
+  eventName: "form-field-action" | "form-table-action" = "form-field-action"
+) {
+  const el =
+    (ref && typeof ref === "object" && "current" in ref ? ref.current : null) ||
+    document.activeElement
+  if (el) {
+    el.dispatchEvent(
+      new CustomEvent(eventName, {
+        detail: { field: name, action, data },
+        bubbles: true,
+      })
+    )
+  }
 }
 
 export function handleFieldKeyDown(
@@ -429,6 +455,101 @@ export function formatNumericValue(
   }
 
   return new Intl.NumberFormat(locale || undefined, options).format(val)
+}
+
+/**
+ * Smart parses a string into a Date object.
+ * Supports: DDMMYYYY, DDMMYY, DDMM, DD.MM.YYYY, DD.MM.YY, DD.MM, D.M, D.M.YYYY
+ * Missing year defaults to current year.
+ */
+export function parseSmartDate(val: string): Date | undefined {
+  if (!val || val.trim() === "") return undefined
+
+  const trimmed = val.trim()
+  const today = new Date()
+  const currentYear = today.getFullYear()
+
+  // 1. Try DD.MM.YYYY or D.M.YYYY or DD.MM.YY or D.M.YY (with optional spaces after dots and optional trailing dot)
+  const dotPattern = /^(\d{1,2})\.\s*(\d{1,2})(?:\.\s*(\d{2,4}))?\.?$/
+  const dotMatch = trimmed.match(dotPattern)
+  if (dotMatch) {
+    const d = parseInt(dotMatch[1], 10)
+    const m = parseInt(dotMatch[2], 10) - 1
+    let y = dotMatch[3] ? parseInt(dotMatch[3], 10) : currentYear
+    if (dotMatch[3] && dotMatch[3].length === 2) {
+      y += y > 50 ? 1900 : 2000
+    }
+    const res = new Date(y, m, d)
+    if (!isNaN(res.getTime())) return res
+  }
+
+  // 2. Try compact numeric formats: DDMMYYYY, DDMMYY, DDMM
+  const digits = trimmed.replace(/\D/g, "")
+  if (digits.length === 8) {
+    const d = parseInt(digits.substring(0, 2), 10)
+    const m = parseInt(digits.substring(2, 4), 10) - 1
+    const y = parseInt(digits.substring(4, 8), 10)
+    const res = new Date(y, m, d)
+    if (!isNaN(res.getTime())) return res
+  } else if (digits.length === 6) {
+    const d = parseInt(digits.substring(0, 2), 10)
+    const m = parseInt(digits.substring(2, 4), 10) - 1
+    let y = parseInt(digits.substring(4, 6), 10)
+    y += y > 50 ? 1900 : 2000
+    const res = new Date(y, m, d)
+    if (!isNaN(res.getTime())) return res
+  } else if (digits.length === 4) {
+    const d = parseInt(digits.substring(0, 2), 10)
+    const m = parseInt(digits.substring(2, 4), 10) - 1
+    const res = new Date(currentYear, m, d)
+    if (!isNaN(res.getTime())) return res
+  }
+
+  // 3. Fallback to standard JS Date parsing
+  const fallback = new Date(trimmed)
+  if (!isNaN(fallback.getTime())) return fallback
+
+  return undefined
+}
+
+/**
+ * Smart parses a string into a Date object with time.
+ */
+export function parseSmartDateTime(val: string): Date | undefined {
+  if (!val || val.trim() === "") return undefined
+  const trimmed = val.trim()
+
+  // Try splitting date and time
+  const parts = trimmed.split(/\s+/)
+  if (parts.length === 2) {
+    const d = parseSmartDate(parts[0])
+    if (d) {
+      const timeParts = parts[1].split(/[:.]/)
+      if (timeParts.length >= 1) {
+        const h = parseInt(timeParts[0], 10)
+        const m = timeParts[1] ? parseInt(timeParts[1], 10) : 0
+        d.setHours(h, m, 0, 0)
+        if (!isNaN(d.getTime())) return d
+      }
+    }
+  } else if (parts.length === 1) {
+    // Maybe just date, or compact date time?
+    // Let's check for HH:mm format if it doesn't look like a date
+    if (trimmed.includes(":") && !trimmed.includes(".")) {
+      const today = new Date()
+      const timeParts = trimmed.split(":")
+      today.setHours(
+        parseInt(timeParts[0], 10),
+        timeParts[1] ? parseInt(timeParts[1], 10) : 0,
+        0,
+        0
+      )
+      if (!isNaN(today.getTime())) return today
+    }
+    return parseSmartDate(parts[0])
+  }
+
+  return undefined
 }
 
 /**

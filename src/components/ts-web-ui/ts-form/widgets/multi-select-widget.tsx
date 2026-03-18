@@ -3,7 +3,6 @@
 import { Check, ChevronsUpDown, X as XIcon } from "lucide-react"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -18,19 +17,27 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
-import { TsFieldOptions, TsMultiselectField } from "../types"
+import { TsFieldOptions, TsMultiselectField, TsWidgetProps } from "../types"
 import { getFieldClasses, sanitizeId } from "../utils"
 
-export interface TsMultiSelectWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsMultiselectField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsMultiSelectWidgetProps = TsWidgetProps<TsMultiselectField>
 
 export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
@@ -42,39 +49,46 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
     })
 
     const toggleValue = (val: string) => {
+      if (readOnly) return
       const newValues = selectedValues.includes(val)
         ? selectedValues.filter((v) => v !== val)
         : [...selectedValues, val]
       field.onChange(newValues)
     }
 
-    const { errorClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     return (
-      <Popover open={open} onOpenChange={setOpen} modal>
+      <Popover open={open} onOpenChange={(v) => !readOnly && !def.disabled && setOpen(v)} modal>
         <PopoverAnchor asChild>
           <div
             id={safeId}
             role="combobox"
             aria-expanded={open}
             aria-controls={`popover-content-${safeId}`}
-            tabIndex={def.disabled || def.readonly ? -1 : 0}
+            aria-label={ariaLabel || def.label}
+            aria-required={ariaRequired}
+            aria-readonly={readOnly}
+            tabIndex={def.disabled || readOnly ? -1 : 0}
+            autoFocus={autoFocus}
             onClick={() => {
-              if (!def.disabled && !def.readonly) setOpen((v) => !v)
+              if (!def.disabled && !readOnly) setOpen((v) => !v)
             }}
             onKeyDown={(e) => {
-              if ((e.key === "Enter" || e.key === " ") && !def.disabled && !def.readonly) {
+              if ((e.key === "Enter" || e.key === " ") && !def.disabled && !readOnly) {
                 e.preventDefault()
                 setOpen((v) => !v)
               }
             }}
             className={cn(
               "flex min-h-10 w-full cursor-pointer items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xs",
-              !def.readonly && "hover:bg-accent dark:hover:bg-input/30",
+              !readOnly && "hover:bg-accent dark:hover:bg-input/30",
               "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
               errorClass,
+              readonlyClass,
+              readonlyPointerClass,
               def.disabled && "opacity-50 pointer-events-none",
-              def.readonly && "cursor-default opacity-100"
+              readOnly && "opacity-100"
             )}
             {...props}
             ref={ref}
@@ -86,7 +100,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
                   <Badge key={val} variant="secondary" className="mr-1">
                     {options.find((o: { value: string; label: string }) => o.value === val)
                       ?.label || val}
-                    {!def.readonly && (
+                    {!readOnly && (
                       <span
                         role="button"
                         tabIndex={0}
@@ -112,7 +126,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
                 <span className="text-muted-foreground">{def.placeholder || "Select..."}</span>
               )}
             </div>
-            {!def.readonly && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
+            {!readOnly && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
           </div>
         </PopoverAnchor>
         <PopoverContent

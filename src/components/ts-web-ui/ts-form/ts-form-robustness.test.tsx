@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -83,6 +83,11 @@ describe("TsForm - Regression & Robustness", () => {
     const nameInput = screen.getByLabelText(/Name/i)
     await user.click(nameInput)
     await user.type(nameInput, "Ali")
+
+    // Flush background update scheduled by setTimeout in an act() scope.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
 
     // Wait for the background update to occur
     await vi.waitFor(() => {

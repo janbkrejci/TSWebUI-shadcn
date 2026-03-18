@@ -129,6 +129,7 @@ export function WidgetDemoWrapper({
 
   // Watch form value changes
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/incompatible-library
     const subscription = form.watch((value) => {
       setCurrentValue(value.demoField)
       // Log change event

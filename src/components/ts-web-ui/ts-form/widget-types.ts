@@ -79,6 +79,8 @@ export interface TsFieldBase {
   required?: boolean
   /** Whether the field is hidden from the UI (but still present in DOM and data) */
   hidden?: boolean
+  /** Whether the field's label is hidden but its layout slot is preserved */
+  hideLabel?: boolean
   /** Whether the field is disabled for user interaction */
   disabled?: boolean
   /** Whether the field is read-only (visual state, not necessarily disabling interaction) */
@@ -93,6 +95,8 @@ export interface TsFieldBase {
    * This field serves as a fallback or for static validation states.
    */
   error?: string
+  /** Whether the field should be automatically focused on mount or tab change */
+  autofocus?: boolean
   /** Action emitted when Enter is pressed (e.g. 'focus:next', 'submit', 'click:save') */
   enterAction?: string
   /** Action on Escape: 'clear' clears the value, any other string emits form-key-action */
@@ -256,6 +260,24 @@ export interface TsDateTimeField extends TsFieldBase {
   clearButtonText?: string
 }
 
+/**
+ * Represents a pre-existing file (e.g. from a database) in the File widget.
+ */
+export interface TsFileDescriptor {
+  /** Unique identifier for the file */
+  id?: string | number
+  /** Filename for display and download */
+  name: string
+  /** Size in bytes */
+  size?: number
+  /** URL for downloading the file */
+  url?: string
+  /** MIME type */
+  type?: string
+  /** Any other custom metadata */
+  [key: string]: unknown
+}
+
 /** Definition for file uploaders. */
 export interface TsFileField extends TsFieldBase {
   type: "file"
@@ -308,10 +330,14 @@ export interface TsRelationshipField extends TsFieldBase {
   targetEntity?: string
   /** Single or multiple selection */
   mode?: "single" | "multiple"
+  /** Whether to use a dropdown (Popover) or a full Dialog for selection */
+  variant?: "dropdown" | "dialog"
   /** Field names to display in search results */
   displayFields?: string[]
   /** Field names to display inside the selected chip */
   chipDisplayFields?: string[]
+  /** Full column definitions for the search table (optional, overrides displayFields) */
+  columns?: TsTableColumnDef[]
   /** Field used as the stored value / primary key */
   valueField?: string
   /** Available records to select from (static or pre-fetched) */
@@ -327,6 +353,10 @@ export interface TsInfoboxField extends TsFieldBase {
   value?: ReactNode
   /** Visual variant of the box */
   variant?: TsInfoboxVariant
+  /** Name of the Lucide icon to display (overrides default variant icon) */
+  icon?: string
+  /** Whether the infobox can be closed by the user */
+  closable?: boolean
 }
 
 /** Definition for read-only markdown rendering. */
@@ -378,6 +408,7 @@ export interface TsFieldUpdate {
   label?: string
   required?: boolean
   hidden?: boolean
+  hideLabel?: boolean
   disabled?: boolean
   readonly?: boolean
   placeholder?: string
@@ -405,6 +436,7 @@ export interface TsFieldUpdate {
   selectAllOnFocus?: boolean
   enterAction?: string
   escapeAction?: string
+  autofocus?: boolean
   dateFormat?: string
   content?: string
   value?: unknown

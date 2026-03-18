@@ -10,7 +10,7 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 import { Button } from "@/components/ui/button"
 
-import { TsMarkdownField } from "../types"
+import { TsMarkdownField, TsWidgetProps } from "../types"
 
 // Proper types for Markdown components to satisfy AC 4 (Zero Any)
 interface TsMarkdownComponentProps {
@@ -19,10 +19,7 @@ interface TsMarkdownComponentProps {
   href?: string
 }
 
-export interface TsMarkdownWidgetProps {
-  def: TsMarkdownField
-  error?: string
-}
+export type TsMarkdownWidgetProps = TsWidgetProps<TsMarkdownField>
 
 function MarkdownCopyButton({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false)
@@ -46,10 +43,25 @@ function MarkdownCopyButton({ text }: { text: string }) {
 }
 
 export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetProps>(
-  ({ def, error, ...props }, ref) => {
+  (
+    {
+      field: _field,
+      name: _name,
+      error,
+      hint: _hint,
+      readonly: _readonly,
+      autoFocus: _autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": _ariaRequired,
+      def,
+      ...props
+    },
+    ref
+  ) => {
     return (
       <div
         className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2"
+        aria-label={ariaLabel || def.label}
         {...props}
         ref={ref}
         aria-invalid={!!error}

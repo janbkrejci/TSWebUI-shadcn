@@ -1,13 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Input } from "@/components/ui/input"
 
 import { cn } from "@/lib/utils"
 
-import { TsNumberField } from "../types"
+import { TsNumberField, TsWidgetProps } from "../types"
 import {
   formatNumericValue,
   getFieldClasses,
@@ -16,16 +15,24 @@ import {
   sanitizeId,
 } from "../utils"
 
-export interface TsNumberWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsNumberField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsNumberWidgetProps = TsWidgetProps<TsNumberField>
 
 export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
     const [displayValue, setDisplayValue] = React.useState<string>(() =>
       formatNumericValue(field.value as number | undefined, def.roundTo, def.locale)
@@ -33,7 +40,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     const [isFocused, setIsFocused] = React.useState(false)
     const isClearingRef = React.useRef(false)
 
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     React.useEffect(() => {
       if (!isFocused) {
@@ -47,7 +54,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
       setIsFocused(true)
       isClearingRef.current = false
 
-      if (def.readonly) return
+      if (readOnly) return
 
       // Store current selection range to prevent jumping
       const selectionStart = e.currentTarget.selectionStart
@@ -74,7 +81,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
 
     const handleBlur = () => {
       setIsFocused(false)
-      if (def.readonly) return
+      if (readOnly) return
 
       if (isClearingRef.current) {
         isClearingRef.current = false
@@ -87,7 +94,7 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (def.readonly) return
+      if (readOnly) return
       const val = e.target.value
       // Support numbers and basic math operators matching evaluator
       const clean = val.replace(/[^0-9 .,+*/^()-]/g, "")
@@ -154,12 +161,16 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         disabled={def.disabled}
-        readOnly={def.readonly}
-        tabIndex={def.readonly ? -1 : undefined}
+        readOnly={readOnly}
+        autoFocus={autoFocus}
+        tabIndex={readOnly ? -1 : undefined}
         aria-invalid={!!error}
+        aria-readonly={readOnly}
         aria-valuemin={def.min}
         aria-valuemax={def.max}
-        className={cn("text-right tabular-nums", errorClass, readonlyClass)}
+        aria-label={ariaLabel}
+        aria-required={ariaRequired}
+        className={cn("text-right tabular-nums", errorClass, readonlyClass, readonlyPointerClass)}
         {...props}
         ref={ref || field.ref}
       />

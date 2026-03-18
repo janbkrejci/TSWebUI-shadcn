@@ -2,24 +2,34 @@
 
 import * as React from "react"
 
-import { TsSeparatorField } from "../types"
+import { TsSeparatorField, TsWidgetProps } from "../types"
 
-export interface TsSeparatorWidgetProps {
-  def: TsSeparatorField
-  name?: string
-  error?: string
-}
+export type TsSeparatorWidgetProps = TsWidgetProps<TsSeparatorField>
 
 export const SeparatorWidget = React.forwardRef<HTMLDivElement, TsSeparatorWidgetProps>(
-  ({ def, ...props }, ref) => {
+  (
+    {
+      field: _field,
+      def,
+      name: _name,
+      error: _error,
+      hint: _hint,
+      readonly: _readonly,
+      autoFocus: _autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": _ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     return (
-      <div className="py-2" {...props} ref={ref}>
-        <div className="relative h-5 flex items-center">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+      <div className="py-2" aria-label={ariaLabel || def.label} {...props} ref={ref}>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <span className="w-full border-t border-border" />
           </div>
           {def.label && (
-            <div className="relative flex justify-center w-full text-xs uppercase">
+            <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground font-medium">
                 {def.label}
               </span>

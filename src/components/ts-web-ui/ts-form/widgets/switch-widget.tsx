@@ -1,43 +1,49 @@
 "use client"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { FormLabel } from "@/components/ui/form"
 import { Switch } from "@/components/ui/switch"
 
 import { cn } from "@/lib/utils"
 
-import { TsSwitchField } from "../types"
+import { TsSwitchField, TsWidgetProps } from "../types"
 import { getFieldClasses, sanitizeId } from "../utils"
 
-export interface TsSwitchWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsSwitchField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsSwitchWidgetProps = TsWidgetProps<TsSwitchField>
 
 export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
-    const { errorClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     return (
-      <div
-        className={cn(
-          "flex items-center space-x-2 min-h-10",
-          def.readonly && "pointer-events-none"
-        )}
-      >
+      <div className={cn("flex items-center space-x-2 min-h-9", readOnly && "pointer-events-none")}>
         <Switch
           id={`${safeId}-switch`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
           disabled={def.disabled}
+          autoFocus={autoFocus}
           aria-invalid={!!error}
-          className={cn(errorClass, def.readonly && "opacity-100 cursor-default")}
+          aria-label={ariaLabel || def.label}
+          aria-required={ariaRequired}
+          aria-readonly={readOnly}
+          className={cn(errorClass, readonlyPointerClass, readOnly && "opacity-100")}
           {...props}
           ref={ref || field.ref}
         />
@@ -46,10 +52,11 @@ export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetPr
           className={cn(
             "font-normal cursor-pointer",
             !!error && "text-destructive",
-            def.readonly && "cursor-default opacity-100"
+            readOnly && "cursor-default opacity-100"
           )}
         >
-          {def.required ? `${def.label} *` : def.label}
+          {def.label}
+          {def.required && " *"}
         </FormLabel>
       </div>
     )

@@ -33,9 +33,9 @@ import { SelectWidget } from "./widgets/select-widget"
 import { SeparatorWidget } from "./widgets/separator-widget"
 import { SliderWidget } from "./widgets/slider-widget"
 import { SwitchWidget } from "./widgets/switch-widget"
-import { TableWidget } from "./widgets/table-widget"
 import { TextWidget } from "./widgets/text-widget"
 import { TextareaWidget } from "./widgets/textarea-widget"
+import { TableWidget } from "./widgets/ts-table-widget"
 
 interface TsFormFieldProps {
   name: string
@@ -68,37 +68,50 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
         // External dynamic error (from form props or manual setError) has priority.
         // The fieldDef.error is a static fallback from the JSON definition itself.
         const errorMessage = fieldState.error?.message || fieldDef.error
-        const showExternalLabel = !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type)
+        const shouldShowLabel =
+          !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && !fieldDef.hideLabel
 
         return (
-          <FormItem className="flex flex-col" data-field={name}>
+          <FormItem className="space-y-0" data-field={name}>
             {/* 
-              Top-aligned grid rule: Only render the label slot if needed.
-              We still use min-h-6 to keep interactive elements aligned across the row 
-              if other fields in the same row have labels.
+              Top-aligned grid rule: We use a fixed-height label slot (min-h-14) 
+              to ensure all widgets in the same row start at the same vertical position
+              even if labels wrap up to 3 lines or are missing.
             */}
-            {showExternalLabel ? (
-              <div className="min-h-6 flex items-end">
-                <FormLabel className={cn("pb-1", errorMessage && "text-destructive")}>
+            {shouldShowLabel ? (
+              <div className="min-h-14 flex items-end">
+                <FormLabel className={cn("pb-1 leading-tight", errorMessage && "text-destructive")}>
                   {fieldDef.label}
                   {fieldDef.required ? " *" : ""}
                 </FormLabel>
               </div>
             ) : (
               // Empty but sized placeholder for alignment in complex grid layouts
-              <div className="min-h-6" aria-hidden="true" />
+              <div className="min-h-14" aria-hidden="true" />
             )}
 
             <FormControl>
-              {renderWidget(field, fieldDef, name, errorMessage || undefined, fieldDef.hint)}
+              {renderWidget(
+                field,
+                fieldDef,
+                name,
+                errorMessage || undefined,
+                fieldDef.hint,
+                fieldDef.readonly,
+                fieldDef.hideLabel ? fieldDef.label || name : fieldDef.label || name,
+                fieldDef.autofocus
+              )}
             </FormControl>
 
-            <div className="min-h-5 mt-1 space-y-1">
+            {/* Error/Hint slot with fixed minimum height to prevent row jumping */}
+            <div className="min-h-8 mt-1">
               {errorMessage ? (
-                <FormMessage>{errorMessage}</FormMessage>
+                <FormMessage className="text-xs leading-tight">{errorMessage}</FormMessage>
               ) : (
                 fieldDef.hint && (
-                  <FormDescription className="leading-tight">{fieldDef.hint}</FormDescription>
+                  <FormDescription className="text-xs leading-tight">
+                    {fieldDef.hint}
+                  </FormDescription>
                 )
               )}
             </div>
@@ -114,13 +127,19 @@ function renderWidget(
   def: TsFieldDef,
   name: string,
   error?: string | undefined,
-  hint?: string | undefined
+  hint?: string | undefined,
+  readOnly?: boolean,
+  ariaLabel?: string,
+  autoFocus?: boolean
 ) {
   const commonProps = {
     field,
     name,
     error,
     hint,
+    readOnly,
+    autoFocus,
+    "aria-label": ariaLabel,
     "aria-required": def.required,
   }
 
@@ -155,17 +174,17 @@ function renderWidget(
     case "file":
       return <FileWidget {...commonProps} def={def} />
     case "infobox":
-      return <InfoboxWidget def={def} />
+      return <InfoboxWidget {...commonProps} def={def} />
     case "markdown":
-      return <MarkdownWidget def={def} error={error} />
+      return <MarkdownWidget {...commonProps} def={def} />
     case "table":
-      return <TableWidget field={field} def={def} name={name} error={error} />
+      return <TableWidget {...commonProps} def={def} />
     case "button":
-      return <ButtonWidget def={def} name={name} />
+      return <ButtonWidget {...commonProps} def={def} />
     case "separator":
-      return <SeparatorWidget def={def} />
+      return <SeparatorWidget {...commonProps} def={def} />
     case "empty":
-      return <EmptyWidget def={def} error={error} />
+      return <EmptyWidget {...commonProps} def={def} />
     case "relationship":
       return <RelationshipWidget {...commonProps} def={def} />
     default: {

@@ -7,24 +7,32 @@ import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 
-import { TsButtonGroupField, TsFieldOptions } from "../types"
+import { TsButtonGroupField, TsFieldOptions, TsWidgetProps } from "../types"
 import { getButtonVariantClasses, getFieldClasses } from "../utils"
 
-export interface TsButtonGroupWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsButtonGroupField
-  error?: string
-  hint?: string
-  name: string
-}
+export type TsButtonGroupWidgetProps = TsWidgetProps<TsButtonGroupField>
 
 export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupWidgetProps>(
-  ({ field, def, error, hint: _hint, ...props }, ref) => {
-    const { readonlyPointerClass } = getFieldClasses(error, def.readonly)
+  (
+    {
+      field,
+      def,
+      name: _name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
+    const { readonlyPointerClass } = getFieldClasses(error, readOnly)
     const hasError = !!error
 
     if (def.variant === "process") {
-      return <ProcessButtonGroup field={field} def={def} />
+      return <ProcessButtonGroup field={field} def={def} readOnly={readOnly} />
     }
 
     return (
@@ -34,6 +42,9 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
           def.disabled && "opacity-50 pointer-events-none",
           readonlyPointerClass
         )}
+        aria-label={ariaLabel || def.label}
+        aria-required={ariaRequired}
+        aria-readonly={readOnly}
         {...props}
         ref={ref}
       >
@@ -73,6 +84,7 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
               type="button"
               variant={variant}
               disabled={def.disabled || isDisabled}
+              autoFocus={autoFocus && isFirst}
               className={cn(
                 !isFirst && "-ml-px",
                 isFirst && !isLast && "rounded-r-none",
@@ -80,10 +92,11 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
                 !isFirst && !isLast && "rounded-none",
                 isActive && "relative z-10",
                 hasError && "border-destructive text-destructive",
+                readOnly && "pointer-events-none opacity-100",
                 customClass
               )}
               onClick={() => {
-                if (!def.disabled && !def.readonly && !isDisabled) field.onChange(value)
+                if (!def.disabled && !readOnly && !isDisabled) field.onChange(value)
               }}
               aria-invalid={hasError}
             >
@@ -102,9 +115,11 @@ ButtonGroupWidget.displayName = "ButtonGroupWidget"
 function ProcessButtonGroup({
   field,
   def,
+  readOnly,
 }: {
   field: ControllerRenderProps<FieldValues, string>
   def: TsButtonGroupField
+  readOnly?: boolean
 }) {
   const options = (def.options || []).map((opt: TsFieldOptions | string) => {
     if (typeof opt === "string") {
@@ -166,7 +181,7 @@ function ProcessButtonGroup({
       {options.map((opt, index) => {
         const isActive = field.value === opt.value
         const clipPath = getClipPath()
-        const isInteractive = !def.disabled && !def.readonly
+        const isInteractive = !def.disabled && !readOnly
 
         return (
           <div
@@ -187,7 +202,7 @@ function ProcessButtonGroup({
                 "relative h-full px-10 text-sm font-medium transition-colors",
                 getBgClass(opt.variant, isActive),
                 (def.disabled || opt.disabled) && "opacity-50 cursor-not-allowed",
-                def.readonly && "pointer-events-none"
+                readOnly && "pointer-events-none opacity-100"
               )}
               style={{ clipPath }}
             >
