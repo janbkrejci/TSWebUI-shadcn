@@ -2,6 +2,8 @@
 _bmad
 .gemini
 .github
+.github/skills
+.agents
 
 # dependencies
 /node_modules
