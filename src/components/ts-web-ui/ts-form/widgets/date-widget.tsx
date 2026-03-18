@@ -1,11 +1,10 @@
 "use client"
 
-import { format, isValid as isValidDate, parse } from "date-fns"
+import { format, isValid as isValidDate } from "date-fns"
 import * as Locales from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -14,24 +13,32 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { cn } from "@/lib/utils"
 
-import { TsDateField } from "../types"
-import { getFieldClasses, handleFieldKeyDown, sanitizeId } from "../utils"
+import { TsDateField, TsWidgetProps } from "../types"
+import { getFieldClasses, handleFieldKeyDown, parseSmartDate, sanitizeId } from "../utils"
 
-export interface TsDateWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsDateField
-  error?: string
-  hint?: string
-  name: string
-}
+export type TsDateWidgetProps = TsWidgetProps<TsDateField>
 
 export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
-  ({ field, def, error, hint: _hint, name, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      error,
+      hint: _hint,
+      name,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
     const safeId = sanitizeId(name)
 
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     const dateFormat = def.dateFormat || "d.M.yyyy"
     const [inputValue, setInputValue] = React.useState(() => {
@@ -43,14 +50,12 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
     // Compute calendar date from inputValue first, then field.value as fallback
     const calendarDate = React.useMemo(() => {
       if (inputValue.trim()) {
-        try {
-          const parsed = parse(inputValue, dateFormat, new Date())
-          if (isValidDate(parsed)) return parsed
-        } catch {}
+        const parsed = parseSmartDate(inputValue)
+        if (parsed) return parsed
       }
       const dv = field.value ? new Date(field.value as string | number | Date) : undefined
       return dv && !isNaN(dv.getTime()) ? dv : undefined
-    }, [inputValue, dateFormat, field.value])
+    }, [inputValue, field.value])
 
     // Only sync input from field value when not focused
     React.useEffect(() => {
@@ -86,33 +91,23 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
         return
       }
 
-      let parsed = parse(trimmed, dateFormat, new Date())
-      // Fallback for compact formats like 01012025
-      if (!isValidDate(parsed)) {
-        const digits = trimmed.replace(/\D/g, "")
-        if (digits.length === 8) {
-          const d = parseInt(digits.substring(0, 2), 10)
-          const m = parseInt(digits.substring(2, 4), 10) - 1
-          const y = parseInt(digits.substring(4, 8), 10)
-          parsed = new Date(y, m, d)
-        }
-      }
+      const parsed = parseSmartDate(trimmed)
 
-      if (isValidDate(parsed)) {
+      if (parsed && isValidDate(parsed)) {
         field.onChange(parsed)
         setInputValue(format(parsed, dateFormat))
       }
     }
 
     return (
-      <Popover open={open} onOpenChange={def.readonly || def.disabled ? undefined : setOpen}>
+      <Popover open={open} onOpenChange={readOnly || def.disabled ? undefined : setOpen}>
         <div className="relative">
           <Input
             id={safeId}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onFocus={(e) => {
-              if (def.readonly) return
+              if (readOnly) return
               setIsFocused(true)
               if (def.selectAllOnFocus !== false) {
                 const el = e.currentTarget
@@ -122,7 +117,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             onClick={(e) => {
               if (
                 def.selectAllOnFocus !== false &&
-                !def.readonly &&
+                !readOnly &&
                 document.activeElement !== e.currentTarget
               ) {
                 e.currentTarget.select()
@@ -130,19 +125,9 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                let parsed = parse(inputValue, dateFormat, new Date())
-                // Fallback for compact formats like 01012025
-                if (!isValidDate(parsed)) {
-                  const digits = inputValue.replace(/\D/g, "")
-                  if (digits.length === 8) {
-                    const d = parseInt(digits.substring(0, 2), 10)
-                    const m = parseInt(digits.substring(2, 4), 10) - 1
-                    const y = parseInt(digits.substring(4, 8), 10)
-                    parsed = new Date(y, m, d)
-                  }
-                }
+                const parsed = parseSmartDate(inputValue)
 
-                if (isValidDate(parsed)) {
+                if (parsed && isValidDate(parsed)) {
                   field.onChange(parsed)
                   setInputValue(format(parsed, dateFormat))
 
@@ -172,10 +157,13 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             onBlur={handleInputBlur}
             placeholder={def.placeholder || dateFormat.toLowerCase()}
             disabled={def.disabled}
-            readOnly={def.readonly}
-            tabIndex={def.readonly ? -1 : undefined}
+            readOnly={readOnly}
+            autoFocus={autoFocus}
+            tabIndex={readOnly ? -1 : undefined}
             aria-invalid={!!error}
-            className={cn("pr-10 text-right", errorClass, readonlyClass)}
+            aria-label={ariaLabel}
+            aria-required={ariaRequired}
+            className={cn("pr-10 text-right", errorClass, readonlyClass, readonlyPointerClass)}
             {...props}
             ref={ref || field.ref}
           />
@@ -185,7 +173,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
               size="icon"
               className={cn(
                 "absolute right-0 top-0 h-full w-9 rounded-l-none text-muted-foreground hover:text-foreground",
-                (def.readonly || def.disabled) && "pointer-events-none"
+                (readOnly || def.disabled) && "pointer-events-none"
               )}
               disabled={def.disabled}
               type="button"

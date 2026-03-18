@@ -2,17 +2,27 @@
 
 import * as React from "react"
 
-import { TsEmptyField } from "../types"
+import { TsEmptyField, TsWidgetProps } from "../types"
 
-export interface TsEmptyWidgetProps {
-  def: TsEmptyField
-  name?: string
-  error?: string
-}
+export type TsEmptyWidgetProps = TsWidgetProps<TsEmptyField>
 
 export const EmptyWidget = React.forwardRef<HTMLDivElement, TsEmptyWidgetProps>(
-  ({ def: _def, error: _error, name: _name, ...props }, ref) => {
-    return <div className="min-h-10" {...props} ref={ref} />
+  (
+    {
+      field: _field,
+      def: _def,
+      name: _name,
+      error: _error,
+      hint: _hint,
+      readOnly: _readOnly,
+      autoFocus: _autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": _ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
+    return <div className="min-h-10" aria-label={ariaLabel} {...props} ref={ref} />
   }
 )
 EmptyWidget.displayName = "EmptyWidget"

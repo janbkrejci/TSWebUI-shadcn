@@ -1,24 +1,31 @@
 "use client"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Slider } from "@/components/ui/slider"
 
 import { cn } from "@/lib/utils"
 
-import { TsSliderField } from "../types"
+import { TsSliderField, TsWidgetProps } from "../types"
 
-export interface TsSliderWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsSliderField
-  error?: string
-  hint?: string
-  name: string
-}
+export type TsSliderWidgetProps = TsWidgetProps<TsSliderField>
 
 export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps>(
-  ({ field, def, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name: _name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus: _autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const [showTooltip, setShowTooltip] = React.useState(false)
     const [localValue, setLocalValue] = React.useState<number>(field.value ?? def.min ?? 0)
 
@@ -53,18 +60,22 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
           min={min}
           step={def.step || 1}
           onValueChange={(vals: number[]) => {
+            if (readOnly) return
             setLocalValue(vals[0])
             setShowTooltip(true)
           }}
           onValueCommit={(vals: number[]) => {
+            if (readOnly) return
             field.onChange(vals[0])
             setTimeout(() => setShowTooltip(false), 300)
           }}
           disabled={def.disabled}
           aria-invalid={!!error}
+          aria-label={ariaLabel || def.label}
+          aria-required={ariaRequired}
           className={cn(
             error && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive",
-            def.readonly && "pointer-events-none opacity-100"
+            readOnly && "pointer-events-none opacity-100"
           )}
         />
       </div>

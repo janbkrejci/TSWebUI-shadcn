@@ -1,26 +1,33 @@
 "use client"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { FormLabel } from "@/components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 import { cn } from "@/lib/utils"
 
-import { TsFieldOptions, TsRadioField } from "../types"
+import { TsFieldOptions, TsRadioField, TsWidgetProps } from "../types"
 import { sanitizeId } from "../utils"
 
-export interface TsRadioWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsRadioField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsRadioWidgetProps = TsWidgetProps<TsRadioField>
 
 export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
     const hasError = !!error
 
@@ -30,7 +37,10 @@ export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
         value={field.value}
         disabled={def.disabled}
         aria-invalid={hasError}
-        className={cn("flex flex-col gap-2", def.readonly && "opacity-100 pointer-events-none")}
+        aria-label={ariaLabel || def.label}
+        aria-required={ariaRequired}
+        aria-readonly={readOnly}
+        className={cn("flex flex-col gap-2", readOnly && "opacity-100 pointer-events-none")}
         {...props}
         ref={ref}
       >
@@ -44,14 +54,15 @@ export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
                 value={value}
                 id={itemId}
                 aria-invalid={hasError}
-                className={cn(def.readonly && "opacity-100")}
+                className={cn(readOnly && "opacity-100")}
+                autoFocus={autoFocus && value === field.value}
               />
               <FormLabel
                 htmlFor={itemId}
                 className={cn(
                   "font-normal cursor-pointer",
                   hasError && "text-destructive",
-                  def.readonly && "cursor-default opacity-100"
+                  readOnly && "cursor-default opacity-100"
                 )}
               >
                 {label}

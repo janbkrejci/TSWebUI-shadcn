@@ -112,6 +112,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     [columnDefinitions, enableSelection, onRowClick, rowActions, onAction]
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

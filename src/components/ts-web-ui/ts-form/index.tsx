@@ -25,6 +25,8 @@ export function TsForm({
   values,
   buttons = [],
   errors,
+  activeTab,
+  onTabChange,
   onAction,
   onFieldChange,
   readOnly = false,
@@ -48,8 +50,9 @@ export function TsForm({
   )
 
   // Track field changes and emit onFieldChange without triggering parent re-render
-  // Store previous values as deep object to match RHF structure
   const prevValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
+  // Track last seen prop values to only sync when props actually change
+  const lastPropValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
 
   // Track paths that have manual errors from props to allow efficient cleanup
   const prevErrorPathsRef = React.useRef<Set<string>>(new Set())
@@ -68,7 +71,7 @@ export function TsForm({
         const filteredData = filterExcludeFromSubmit(data as Record<string, unknown>, fields)
         onFieldChange?.(name, val, filteredData)
 
-        // Update ref to keep in sync with internal changes using deep set
+        // Update internal ref to keep in sync with internal changes
         setNestedValue(prevValuesRef.current, name, val)
       }
     })
@@ -79,33 +82,31 @@ export function TsForm({
   React.useEffect(() => {
     if (!values) return
 
-    let hasChanged = false
     const activeElement = document.activeElement as HTMLElement
-    // Find the field name by looking at the closest container with data-field attribute
     const activeFieldName = activeElement?.closest("[data-field]")?.getAttribute("data-field")
 
     Object.keys(fields).forEach((key) => {
       const path = key as FieldPath<Record<string, unknown>>
 
-      if (key === activeFieldName) return
-
       const propValue = getNestedValue(values as Record<string, unknown>, key)
-      const internalValue = getNestedValue(prevValuesRef.current, key)
+      const lastPropValue = getNestedValue(lastPropValuesRef.current, key)
 
-      if (propValue !== internalValue) {
-        hasChanged = true
-        form.setValue(path, propValue ?? null, {
-          shouldDirty: false,
-          shouldTouch: false,
-          shouldValidate: false,
-        })
-        setNestedValue(prevValuesRef.current, key, propValue)
+      // Only sync if the prop itself changed compared to last time we saw it
+      if (JSON.stringify(propValue) !== JSON.stringify(lastPropValue)) {
+        // Update both refs
+        setNestedValue(lastPropValuesRef.current, key, deepClone(propValue))
+        setNestedValue(prevValuesRef.current, key, deepClone(propValue))
+
+        // If this field is not currently being edited, sync it to RHF
+        if (key !== activeFieldName) {
+          form.setValue(path, propValue ?? null, {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false,
+          })
+        }
       }
     })
-
-    if (hasChanged) {
-      prevValuesRef.current = deepClone(values)
-    }
   }, [values, fields, form])
 
   // Handle external errors
@@ -382,7 +383,12 @@ export function TsForm({
     <>
       <Form {...form}>
         <form ref={formRef} onSubmit={(e) => e.preventDefault()} className={className}>
-          <TsFormLayout layout={layout} fields={mergedFields} />
+          <TsFormLayout
+            layout={layout}
+            fields={mergedFields}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+          />
 
           {buttons.length > 0 && !readOnly && (
             <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">

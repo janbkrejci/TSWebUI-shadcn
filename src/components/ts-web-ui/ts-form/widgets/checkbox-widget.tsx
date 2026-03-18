@@ -1,43 +1,49 @@
 "use client"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormLabel } from "@/components/ui/form"
 
 import { cn } from "@/lib/utils"
 
-import { TsCheckboxField } from "../types"
+import { TsCheckboxField, TsWidgetProps } from "../types"
 import { getFieldClasses, sanitizeId } from "../utils"
 
-export interface TsCheckboxWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsCheckboxField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsCheckboxWidgetProps = TsWidgetProps<TsCheckboxField>
 
 export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
-    const { errorClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     return (
-      <div
-        className={cn(
-          "flex items-center space-x-2 min-h-10",
-          def.readonly && "pointer-events-none"
-        )}
-      >
+      <div className={cn("flex items-center space-x-2 min-h-9", readOnly && "pointer-events-none")}>
         <Checkbox
           id={`${safeId}-checkbox`}
           checked={!!field.value}
           onCheckedChange={field.onChange}
           disabled={def.disabled}
+          autoFocus={autoFocus}
           aria-invalid={!!error}
-          className={cn(errorClass, def.readonly && "opacity-100 cursor-default")}
+          aria-label={ariaLabel || def.label}
+          aria-required={ariaRequired}
+          aria-readonly={readOnly}
+          className={cn(errorClass, readonlyPointerClass, readOnly && "opacity-100")}
           {...props}
           ref={ref || field.ref}
         />
@@ -46,7 +52,7 @@ export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidg
           className={cn(
             "font-normal cursor-pointer",
             !!error && "text-destructive",
-            def.readonly && "cursor-default opacity-100"
+            readOnly && "cursor-default opacity-100"
           )}
         >
           {def.label}

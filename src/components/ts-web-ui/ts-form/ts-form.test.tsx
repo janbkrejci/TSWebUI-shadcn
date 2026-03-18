@@ -353,3 +353,84 @@ describe("TsForm", () => {
     })
   })
 })
+
+describe("TsForm Tabs and Layout", () => {
+  const fields: Record<string, TsFieldDef> = {
+    firstName: { type: "text", label: "First Name", required: true },
+    lastName: { type: "text", label: "Last Name", required: true },
+  }
+
+  const tabLayout: TsLayout = {
+    tabs: [
+      { label: "Tab 1", rows: [[{ field: "firstName" }]] },
+      { label: "Tab 2", rows: [[{ field: "lastName" }]] },
+    ],
+  }
+
+  it("shows error dot on Tab 2 when lastName has error", async () => {
+    const errors: TsErrors = { lastName: "Required field" }
+    render(<TsForm layout={tabLayout} fields={fields} buttons={[]} errors={errors} />)
+
+    // Tab 1 should be active by default, Tab 2 should have error dot
+    const tab2 = screen.getByRole("tab", { name: /Tab 2/i })
+    expect(tab2).toBeInTheDocument()
+    expect(tab2).toHaveAttribute("aria-invalid", "true")
+
+    // The error dot is a span with bg-destructive class
+    const errorDot = tab2.querySelector(".bg-destructive")
+    expect(errorDot).toBeInTheDocument()
+    expect(errorDot).toHaveAttribute("aria-hidden", "true")
+    expect(errorDot).toHaveClass("animate-pulse")
+  })
+
+  it("applies destructive styling to active Tab when it has an error", async () => {
+    const errors: TsErrors = { firstName: "Required field" }
+    render(<TsForm layout={tabLayout} fields={fields} buttons={[]} errors={errors} />)
+
+    // Tab 1 is active and has error
+    const tab1 = screen.getByRole("tab", { name: /Tab 1/i })
+    expect(tab1).toHaveAttribute("data-state", "active")
+    expect(tab1).toHaveClass("data-[state=active]:bg-destructive/15")
+    expect(tab1).toHaveClass("data-[state=active]:text-destructive")
+  })
+
+  it("updates tab error indicators in real-time as validation changes", async () => {
+    const { rerender } = render(<TsForm layout={tabLayout} fields={fields} buttons={[]} />)
+
+    // Initially no errors
+    expect(
+      screen.queryByRole("tab", { name: /Tab 1/i })?.querySelector(".bg-destructive")
+    ).not.toBeInTheDocument()
+
+    // Simulate validation error after interaction (by rerendering with errors)
+    rerender(
+      <TsForm layout={tabLayout} fields={fields} buttons={[]} errors={{ firstName: "Error" }} />
+    )
+
+    expect(
+      screen.getByRole("tab", { name: /Tab 1/i }).querySelector(".bg-destructive")
+    ).toBeInTheDocument()
+  })
+
+  it("handles large number of tabs and fields without crash", () => {
+    const manyTabsLayout: TsLayout = {
+      tabs: Array.from({ length: 50 }, (_, i) => ({
+        label: `Tab ${i}`,
+        rows: [[{ field: `field${i}` }]],
+      })),
+    }
+
+    const manyFields: Record<string, TsFieldDef> = {}
+    Array.from({ length: 50 }, (_, i) => {
+      manyFields[`field${i}`] = { type: "text", label: `Field ${i}` }
+    })
+
+    const startTime = performance.now()
+    render(<TsForm layout={manyTabsLayout} fields={manyFields} buttons={[]} />)
+    const endTime = performance.now()
+
+    expect(screen.getByText("Tab 0")).toBeInTheDocument()
+    // Should render within a reasonable time (e.g., < 200ms for initial render of 50 tabs)
+    expect(endTime - startTime).toBeLessThan(500)
+  })
+})

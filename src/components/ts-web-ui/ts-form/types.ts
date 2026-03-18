@@ -1,3 +1,6 @@
+// ─── Widget Props ─────────────────────────────────────────────────────────────
+import { ControllerRenderProps, FieldValues } from "react-hook-form"
+
 import { TsButtonVariant, TsFieldDef } from "./widget-types"
 
 // Re-export commonly used types for easier imports
@@ -111,6 +114,30 @@ export interface TsButton {
   hidden?: boolean
 }
 
+/**
+ * Standardized props accepted by all widgets.
+ */
+export interface TsWidgetProps<T extends TsFieldDef = TsFieldDef> {
+  /** React Hook Form field object */
+  field: ControllerRenderProps<FieldValues, string>
+  /** Field definition */
+  def: T
+  /** Technical field name (path) */
+  name: string
+  /** Current validation error message */
+  error?: string
+  /** Hint text to display */
+  hint?: string
+  /** Whether the field is in read-only mode */
+  readOnly?: boolean
+  /** Whether the field should be automatically focused */
+  autoFocus?: boolean
+  /** Accessible label for the input (used when the visual label is hidden) */
+  "aria-label"?: string
+  /** Whether the field is required */
+  "aria-required"?: boolean
+}
+
 // ─── Main Form Props ──────────────────────────────────────────────────────────
 
 /**
@@ -134,6 +161,10 @@ export interface TsFormProps {
   buttons?: TsButton[]
   /** External validation errors from parent/backend */
   errors?: TsErrors
+  /** Currently active tab (string label or number index) */
+  activeTab?: string | number
+  /** Callback triggered when active tab changes */
+  onTabChange?: (tab: string | number) => void
   /** Callback triggered when any button action is executed */
   onAction?: (action: string, data: Record<string, unknown>) => void
   /** Callback triggered on every field change (user interaction) */

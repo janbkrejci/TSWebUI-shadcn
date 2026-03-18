@@ -6,27 +6,40 @@ import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 
-import { TsButtonField } from "../types"
+import { TsButtonField, TsWidgetProps } from "../types"
 import { getButtonVariantClasses } from "../utils"
 
-export interface TsButtonWidgetProps {
-  def: TsButtonField
-  name: string
-}
+export type TsButtonWidgetProps = TsWidgetProps<TsButtonField>
 
 export const ButtonWidget = React.forwardRef<HTMLButtonElement, TsButtonWidgetProps>(
-  ({ def, name, ...props }, ref) => {
+  (
+    {
+      field: _field,
+      def,
+      name,
+      error: _error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": _ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const { variant, className: customClass } = getButtonVariantClasses(def.variant)
 
     return (
       <Button
         variant={variant}
-        className={cn("w-full", customClass, def.readonly && "pointer-events-none opacity-100")}
+        className={cn("w-full", customClass, readOnly && "pointer-events-none opacity-100")}
+        aria-label={ariaLabel || def.label}
+        autoFocus={autoFocus}
         {...props}
         ref={ref}
         disabled={def.disabled}
         onClick={(e) => {
-          if (def.readonly || def.disabled) return
+          if (readOnly || def.disabled) return
           e.preventDefault()
           const event = new CustomEvent("form-field-action", {
             detail: { field: name, action: def.action },

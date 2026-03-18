@@ -1,30 +1,37 @@
 import { Eye, EyeOff } from "lucide-react"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { cn } from "@/lib/utils"
 
-import { TsTextField } from "../types"
+import { TsTextField, TsWidgetProps } from "../types"
 import { getFieldClasses, handleFieldKeyDown, sanitizeId } from "../utils"
 
-export interface TsTextWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsTextField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsTextWidgetProps = TsWidgetProps<TsTextField>
 
 export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
     const [showPassword, setShowPassword] = React.useState(false)
     const [internalValue, setInternalValue] = React.useState((field.value as string) ?? "")
-    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     // Sync internal value with external changes only when not focused or value changed significantly
     React.useEffect(() => {
@@ -54,6 +61,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
           ref={ref || field.ref}
           value={internalValue}
           onChange={handleChange}
+          autoFocus={autoFocus}
           onKeyDown={(e) =>
             handleFieldKeyDown(
               e,
@@ -68,11 +76,14 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
             )
           }
           disabled={def.disabled}
-          readOnly={def.readonly}
-          tabIndex={def.readonly ? -1 : undefined}
+          readOnly={readOnly}
+          tabIndex={readOnly ? -1 : undefined}
           aria-invalid={!!error}
+          aria-readonly={readOnly}
+          aria-label={ariaLabel}
+          aria-required={ariaRequired}
           onFocus={(e) => {
-            if (def.selectAllOnFocus !== false && !def.readonly) {
+            if (def.selectAllOnFocus !== false && !readOnly) {
               const el = e.currentTarget
               setTimeout(() => el.select(), 0)
             }
@@ -80,7 +91,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
           onClick={(e) => {
             if (
               def.selectAllOnFocus !== false &&
-              !def.readonly &&
+              !readOnly &&
               document.activeElement !== e.currentTarget
             ) {
               e.currentTarget.select()
@@ -88,7 +99,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
           }}
           className={cn(errorClass, readonlyClass, readonlyPointerClass, isPassword && "pr-10")}
         />
-        {isPassword && !def.readonly && !def.disabled && (
+        {isPassword && !readOnly && !def.disabled && (
           <Button
             type="button"
             variant="ghost"

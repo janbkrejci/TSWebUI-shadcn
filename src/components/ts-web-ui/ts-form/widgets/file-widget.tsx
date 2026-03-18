@@ -3,22 +3,30 @@
 import { CloudUpload, Download, FileText as FileTextIcon, Plus, X as XIcon } from "lucide-react"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
 
-import { TsFileField } from "../types"
+import { TsFileDescriptor, TsFileField, TsWidgetProps } from "../types"
+import { dispatchFormAction } from "../utils"
 
-export interface TsFileWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsFileField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsFileWidgetProps = TsWidgetProps<TsFileField>
 
 export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
-  ({ field, def, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": _ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const [isDragOver, setIsDragOver] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -47,43 +55,61 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
     const multiple = def.multiple
     const hasError = !!error
 
-    const files: File[] = React.useMemo(() => {
+    const files: (File | TsFileDescriptor)[] = React.useMemo(() => {
       if (!field.value) return []
-      if (Array.isArray(field.value))
-        return (field.value as File[]).filter((f) => f instanceof File)
-      if (field.value instanceof File) return [field.value]
-      return []
+      if (Array.isArray(field.value)) return field.value
+      return [field.value]
     }, [field.value])
 
+    const emitFilesChanged = React.useCallback(() => {
+      // Defer dispatch so react-hook-form can commit the new value first.
+      queueMicrotask(() => {
+        dispatchFormAction({ current: inputRef.current }, name, `file:change:${name}`)
+      })
+    }, [name])
+
     const handleFiles = (fileList: FileList) => {
+      if (readOnly) return
       const newFiles = Array.from(fileList)
       if (multiple) {
         field.onChange([...files, ...newFiles])
       } else {
         field.onChange(newFiles[0])
       }
+      emitFilesChanged()
     }
 
     const removeFile = (index: number) => {
+      if (readOnly) return
       if (multiple) {
         const updated = [...files]
         updated.splice(index, 1)
-        field.onChange(updated.length > 0 ? updated : undefined)
+        field.onChange(updated)
       } else {
         field.onChange(undefined)
       }
+      emitFilesChanged()
     }
 
-    const downloadFile = (file: File) => {
-      const url = URL.createObjectURL(file)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = file.name
-      a.click()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    const downloadFile = (file: File | TsFileDescriptor) => {
+      if (file instanceof File) {
+        const url = URL.createObjectURL(file)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = file.name
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+      } else if (file.url) {
+        const a = document.createElement("a")
+        a.href = file.url
+        a.download = file.name
+        a.target = "_blank"
+        a.click()
+      }
     }
 
-    const formatSize = (bytes: number) => {
+    const formatSize = (bytes?: number) => {
+      if (bytes === undefined) return ""
       if (bytes < 1024) return `${bytes} B`
       if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
       return `${(bytes / 1024 / 1024).toFixed(1)} MB`
@@ -92,7 +118,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
     const errorBorderClass = hasError
       ? "border-destructive"
       : "border-dashed border-muted-foreground/40"
-    const isInteractive = !def.disabled && !def.readonly
+    const isInteractive = !def.disabled && !readOnly
     const shouldShowDropZone = def.showDropZone !== false && isInteractive
 
     return (
@@ -104,14 +130,19 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
               errorBorderClass,
               isDragOver && "border-primary bg-primary/5"
             )}
+            autoFocus={autoFocus}
+            tabIndex={isInteractive ? 0 : -1}
             aria-invalid={hasError}
+            aria-label={ariaLabel || def.label}
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => {
+              if (readOnly) return
               e.preventDefault()
               setIsDragOver(true)
             }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={(e) => {
+              if (readOnly) return
               e.preventDefault()
               setIsDragOver(false)
               if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files)
@@ -148,9 +179,11 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
               >
                 <FileTextIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                 <span className="flex-1 truncate">{file.name}</span>
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {formatSize(file.size)}
-                </span>
+                {file.size && (
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {formatSize(file.size)}
+                  </span>
+                )}
                 <button
                   type="button"
                   className="shrink-0 text-muted-foreground hover:text-foreground"

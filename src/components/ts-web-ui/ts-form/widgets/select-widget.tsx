@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
 import {
   Select,
@@ -13,21 +12,29 @@ import {
 
 import { cn } from "@/lib/utils"
 
-import { TsFieldOptions, TsSelectField } from "../types"
+import { TsFieldOptions, TsSelectField, TsWidgetProps } from "../types"
 import { getFieldClasses, sanitizeId } from "../utils"
 
-export interface TsSelectWidgetProps {
-  field: ControllerRenderProps<FieldValues, string>
-  def: TsSelectField
-  name: string
-  error?: string
-  hint?: string
-}
+export type TsSelectWidgetProps = TsWidgetProps<TsSelectField>
 
 export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetProps>(
-  ({ field, def, name, error, hint: _hint, ...props }, ref) => {
+  (
+    {
+      field,
+      def,
+      name,
+      error,
+      hint: _hint,
+      readOnly,
+      autoFocus,
+      "aria-label": ariaLabel,
+      "aria-required": ariaRequired,
+      ...props
+    },
+    ref
+  ) => {
     const safeId = sanitizeId(name)
-    const { errorClass, readonlyClass } = getFieldClasses(error, def.readonly)
+    const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
     return (
       <Select onValueChange={field.onChange} value={field.value ?? ""} disabled={def.disabled}>
         <SelectTrigger
@@ -35,9 +42,14 @@ export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetPr
           className={cn(
             errorClass,
             readonlyClass,
-            def.readonly && "opacity-100 cursor-default pointer-events-none"
+            readonlyPointerClass,
+            readOnly && "opacity-100 pointer-events-none"
           )}
           aria-invalid={!!error}
+          aria-readonly={readOnly}
+          aria-label={ariaLabel}
+          aria-required={ariaRequired}
+          autoFocus={autoFocus}
           {...props}
           ref={ref || field.ref}
         >
