@@ -33,7 +33,8 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-03-14
+generated: 2026-03-15
+last_updated: 2026-03-18
 project: TSWebUI-shadcn
 project_key: NOKEY
 tracking_system: file-system
@@ -47,30 +48,31 @@ development_status:
   1-4-migrace-vyberovych-a-komplexnich-widgetu-na-bezvalidacni-rezim: done
   1-5-striktni-typescript-a-sjednocene-prefixovani: done
   1-6-sjednocene-callbacky-a-filtrace-excludefromsubmit: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
-  epic-2: backlog
-  2-1-refaktoring-mrizkoveho-systemu-pro-tailwind-v4: backlog
-  2-2-refaktoring-systemu-zalobek-pro-tailwind-v4: backlog
-  2-3-globalni-indikace-chyb-na-vsech-zalozkach: backlog
-  2-4-programove-ovladani-activetab: backlog
-  2-5-implementace-mrizkoveho-zarovnani: backlog
-  epic-2-retrospective: optional
+  epic-2: done
+  2-1-refaktoring-mrizkoveho-systemu-pro-tailwind-v4: done
+  2-2-refaktoring-systemu-zalobek-pro-tailwind-v4: done
+  2-3-globalni-indikace-chyb-na-vsech-zalozkach: done
+  2-4-programove-ovladani-activetab: done
+  2-5-implementace-mrizkoveho-zarovnani: done
+  epic-2-retrospective: done
 
-  epic-3: backlog
-  3-1-implementace-smart-parsing-pro-date-a-datetime: backlog
-  3-2-vylepsene-zaokrouhlovani-a-lokalizace-v-number-widgetu: backlog
-  3-3-tabulkovy-dropdown-v-relationship-pickeru: backlog
-  3-4-podpora-pre-existing-souboru-ve-file-widgetu: backlog
-  3-5-parametricke-ikony-a-zavirani-v-infoboxu: backlog
-  3-6-implementace-autofocus-a-automatickeho-vyberu-textu: backlog
-  3-7-rozsirene-zobrazeni-skryti-popisku-a-readonly-rezim-pole: backlog
-  3-8-rizeni-datoveho-exportu-pomoci-excludefromsubmit: backlog
-  3-9-refaktoring-a-modularizace-table-widgetu: backlog
-  epic-3-retrospective: optional
+  epic-3: done
+  3-0-stabilizace-widget-contract: done
+  3-1-implementace-smart-parsing-pro-date-a-datetime: done
+  3-2-vylepsene-zaokrouhlovani-a-lokalizace-v-number-widgetu: done
+  3-3-tabulkovy-dropdown-v-relationship-pickeru: done
+  3-4-podpora-pre-existing-souboru-ve-file-widgetu: done
+  3-5-parametricke-ikony-a-zavirani-v-infoboxu: done
+  3-6-implementace-autofocus-a-automatickeho-vyberu-textu: done
+  3-7-rozsirene-zobrazeni-skryti-popisku-a-readonly-rezim-pole: done
+  3-8-rizeni-datoveho-exportu-pomoci-excludefromsubmit: done
+  3-9-refaktoring-a-modularizace-table-widgetu: done
+  epic-3-retrospective: done
 
-  epic-4: backlog
-  4-1-prejmenovani-technickeho-klic-pole: backlog
+  epic-4: in-progress
+  4-1-prejmenovani-technickeho-klic-pole: ready-for-dev
   4-2-vkladani-sloupcu-na-specifickou-pozici: backlog
   4-3-validace-unikatnosti-nazvu-poli-v-realnem-case: backlog
   4-4-synchronizace-exportu-s-novym-typovym-systemem: backlog
