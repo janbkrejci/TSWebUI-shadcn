@@ -34,6 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-14
+last_updated: 2026-03-18
 project: TSWebUI-shadcn
 project_key: NOKEY
 tracking_system: file-system
@@ -69,8 +70,8 @@ development_status:
   3-9-refaktoring-a-modularizace-table-widgetu: backlog
   epic-3-retrospective: optional
 
-  epic-4: backlog
-  4-1-prejmenovani-technickeho-klic-pole: backlog
+  epic-4: in-progress
+  4-1-prejmenovani-technickeho-klic-pole: ready-for-dev
   4-2-vkladani-sloupcu-na-specifickou-pozici: backlog
   4-3-validace-unikatnosti-nazvu-poli-v-realnem-case: backlog
   4-4-synchronizace-exportu-s-novym-typovym-systemem: backlog
