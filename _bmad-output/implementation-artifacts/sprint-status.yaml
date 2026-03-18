@@ -72,7 +72,7 @@ development_status:
   epic-3-retrospective: done
 
   epic-4: in-progress
-  4-1-prejmenovani-technickeho-klic-pole: ready-for-dev
+  4-1-prejmenovani-technickeho-klic-pole: review
   4-2-vkladani-sloupcu-na-specifickou-pozici: backlog
   4-3-validace-unikatnosti-nazvu-poli-v-realnem-case: backlog
   4-4-synchronizace-exportu-s-novym-typovym-systemem: backlog

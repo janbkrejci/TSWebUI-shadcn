@@ -171,6 +171,7 @@ export interface FormEditorState {
     itemIndex: number
   ) => void
   removeField: (fieldName: string) => void
+  renameField: (oldName: string, newName: string) => boolean
   updateFieldConfig: (fieldName: string, config: TsFieldUpdate) => void
   moveField: (
     fromTab: number,
@@ -536,6 +537,67 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     if (selection.id === fieldName) {
       clearSelection()
     }
+  },
+
+  renameField: (oldName: string, newName: string) => {
+    const { form, saveToHistory, selection } = get()
+
+    const trimmedName = newName.trim()
+
+    if (!form.fields[oldName]) {
+      return false
+    }
+
+    if (!trimmedName) {
+      return false
+    }
+
+    if (oldName === trimmedName) {
+      return true
+    }
+
+    if (form.fields[trimmedName]) {
+      return false
+    }
+
+    saveToHistory()
+
+    const newFields = { ...form.fields }
+    newFields[trimmedName] = newFields[oldName]
+    delete newFields[oldName]
+
+    const renameFieldInItem = (item: EditorRowItem): EditorRowItem =>
+      item.field === oldName ? { ...item, field: trimmedName } : item
+
+    const nextSelection =
+      selection.type === "field" && selection.id === oldName
+        ? { ...selection, id: trimmedName }
+        : selection
+
+    if (form.mode === "single" && form.rows) {
+      const newRows = form.rows.map((row: EditorRow) => ({
+        ...row,
+        items: row.items.map(renameFieldInItem),
+      }))
+
+      set({ form: { ...form, rows: newRows, fields: newFields }, selection: nextSelection })
+      return true
+    }
+
+    if (form.tabs) {
+      const newTabs = form.tabs.map((tab: EditorTab) => ({
+        ...tab,
+        rows: tab.rows.map((row: EditorRow) => ({
+          ...row,
+          items: row.items.map(renameFieldInItem),
+        })),
+      }))
+
+      set({ form: { ...form, tabs: newTabs, fields: newFields }, selection: nextSelection })
+      return true
+    }
+
+    return false
   },
 
   updateFieldConfig: (fieldName: string, config: TsFieldUpdate) => {

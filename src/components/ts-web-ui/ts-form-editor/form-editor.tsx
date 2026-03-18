@@ -112,6 +112,7 @@ export function TsFormEditor() {
     updateColumnWidth,
     addField,
     removeField,
+    renameField,
     updateFieldConfig,
     moveField,
     addButton,
@@ -727,6 +728,7 @@ export function TsFormEditor() {
                     <FieldPropertiesPanel
                       fieldName={selection.id || "button"}
                       config={form.fields[selection.id || ""] || ({} as TsFieldDef)}
+                      onRename={(nextFieldName) => renameField(selection.id!, nextFieldName)}
                       onUpdate={(config) => updateFieldConfig(selection.id!, config)}
                       onDelete={() => removeField(selection.id!)}
                     />
@@ -1123,15 +1125,24 @@ function CanvasCell({
 function FieldPropertiesPanel({
   fieldName,
   config,
+  onRename,
   onUpdate,
   onDelete,
 }: {
   fieldName: string
   config: TsFieldDef
+  onRename: (nextFieldName: string) => boolean
   onUpdate: (config: TsFieldUpdate) => void
   onDelete: () => void
 }) {
   const { form, selection, updateButton, removeButton } = useFormEditorStore()
+  const [fieldNameDraft, setFieldNameDraft] = React.useState(fieldName)
+  const [renameError, setRenameError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    setFieldNameDraft(fieldName)
+    setRenameError(null)
+  }, [fieldName])
 
   // If a button is selected, show button properties
   if (selection.type === "button" && selection.itemIndex !== undefined) {
@@ -1309,6 +1320,25 @@ function FieldPropertiesPanel({
   } // Cast to TsFieldUpdate for reading optional properties that not every field type carries
   // (e.g. placeholder on checkbox). Type-specific properties are accessed via narrowed config below.
   const configProps = config as TsFieldUpdate
+
+  const commitFieldRename = () => {
+    const trimmedName = fieldNameDraft.trim()
+
+    if (trimmedName === fieldName) {
+      setRenameError(null)
+      return
+    }
+
+    const success = onRename(trimmedName)
+
+    if (!success) {
+      setRenameError("Field ID must be unique and non-empty.")
+      return
+    }
+
+    setRenameError(null)
+  }
+
   return (
     <div className="space-y-4">
       {/* Basic info */}
@@ -1323,7 +1353,30 @@ function FieldPropertiesPanel({
 
         <div className="space-y-2">
           <Label>Field ID</Label>
-          <Input value={fieldName} disabled className="font-mono text-sm" />
+          <Input
+            value={fieldNameDraft}
+            onChange={(e) => {
+              setFieldNameDraft(e.target.value)
+              if (renameError) {
+                setRenameError(null)
+              }
+            }}
+            onBlur={commitFieldRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                commitFieldRename()
+              }
+
+              if (e.key === "Escape") {
+                e.preventDefault()
+                setFieldNameDraft(fieldName)
+                setRenameError(null)
+              }
+            }}
+            className="font-mono text-sm"
+          />
+          {renameError ? <p className="text-xs text-destructive">{renameError}</p> : null}
         </div>
 
         <div className="space-y-2">
