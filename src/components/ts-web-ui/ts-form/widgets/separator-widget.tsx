@@ -14,7 +14,7 @@ export const SeparatorWidget = React.forwardRef<HTMLDivElement, TsSeparatorWidge
       name: _name,
       error: _error,
       hint: _hint,
-      readonly: _readonly,
+      readOnly: _readOnly,
       autoFocus: _autoFocus,
       "aria-label": ariaLabel,
       "aria-required": _ariaRequired,

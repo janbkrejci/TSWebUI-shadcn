@@ -49,7 +49,7 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
       name: _name,
       error,
       hint: _hint,
-      readonly: _readonly,
+      readOnly: _readOnly,
       autoFocus: _autoFocus,
       "aria-label": ariaLabel,
       "aria-required": _ariaRequired,

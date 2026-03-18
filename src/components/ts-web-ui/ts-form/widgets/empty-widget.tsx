@@ -14,7 +14,7 @@ export const EmptyWidget = React.forwardRef<HTMLDivElement, TsEmptyWidgetProps>(
       name: _name,
       error: _error,
       hint: _hint,
-      readonly: _readonly,
+      readOnly: _readOnly,
       autoFocus: _autoFocus,
       "aria-label": ariaLabel,
       "aria-required": _ariaRequired,
