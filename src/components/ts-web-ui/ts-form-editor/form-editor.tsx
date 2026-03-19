@@ -81,7 +81,7 @@ import {
   TsFieldUpdate,
   TsInfoboxVariant,
 } from "../ts-form/types"
-import { useFormEditorStore } from "./store"
+import { VALID_FIELD_KEY, useFormEditorStore } from "./store"
 import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./types"
 
 /**
@@ -108,10 +108,12 @@ export function TsFormEditor() {
     removeRow,
     reorderRows,
     addColumnToRow,
+    insertColumnAtPosition,
     removeColumnFromRow,
     updateColumnWidth,
     addField,
     removeField,
+    renameField,
     updateFieldConfig,
     moveField,
     addButton,
@@ -628,6 +630,9 @@ export function TsFormEditor() {
                             onSelect={setSelection}
                             onRemoveRow={() => removeRow(activeTabIndex, rowIndex)}
                             onAddColumn={() => addColumnToRow(activeTabIndex, rowIndex)}
+                            onInsertColumnAt={(itemIndex) =>
+                              insertColumnAtPosition(activeTabIndex, rowIndex, itemIndex)
+                            }
                             onRemoveColumn={(itemIndex) =>
                               removeColumnFromRow(activeTabIndex, rowIndex, itemIndex)
                             }
@@ -727,6 +732,7 @@ export function TsFormEditor() {
                     <FieldPropertiesPanel
                       fieldName={selection.id || "button"}
                       config={form.fields[selection.id || ""] || ({} as TsFieldDef)}
+                      onRename={(nextFieldName) => renameField(selection.id!, nextFieldName)}
                       onUpdate={(config) => updateFieldConfig(selection.id!, config)}
                       onDelete={() => removeField(selection.id!)}
                     />
@@ -883,6 +889,7 @@ function CanvasRow({
   onSelect,
   onRemoveRow,
   onAddColumn,
+  onInsertColumnAt,
   onRemoveColumn,
   onUpdateColumnWidth,
   fields,
@@ -900,6 +907,7 @@ function CanvasRow({
   }) => void
   onRemoveRow: () => void
   onAddColumn: () => void
+  onInsertColumnAt: (itemIndex: number) => void
   onRemoveColumn: (itemIndex: number) => void
   onUpdateColumnWidth: (itemIndex: number, width: string) => void
   fields: Record<string, TsFieldDef>
@@ -948,6 +956,7 @@ function CanvasRow({
             rowIndex={rowIndex}
             itemIndex={itemIndex}
             isSelected={selection.type === "field" && selection.id === item.field}
+            onInsertBefore={() => onInsertColumnAt(itemIndex)}
             onSelect={() => {
               if (item.field) {
                 onSelect({ type: "field", id: item.field, tabIndex, rowIndex, itemIndex })
@@ -995,6 +1004,7 @@ function CanvasRow({
 function CanvasCell({
   item,
   isSelected,
+  onInsertBefore,
   onSelect,
   onUpdateWidth,
   fieldConfig,
@@ -1006,6 +1016,7 @@ function CanvasCell({
 }: {
   item: EditorRowItem
   isSelected: boolean
+  onInsertBefore: () => void
   onSelect: () => void
   onUpdateWidth: (width: string) => void
   fieldConfig?: TsFieldDef
@@ -1048,7 +1059,7 @@ function CanvasCell({
     <div
       ref={setDroppableRef}
       className={cn(
-        "relative min-h-15 p-2 border rounded transition-all cursor-pointer",
+        "group relative min-h-15 p-2 border rounded transition-all cursor-pointer",
         isEmpty ? "border-dashed bg-muted/30 hover:bg-muted/50" : "bg-card hover:border-primary/50",
         isSelected && "ring-2 ring-primary border-primary",
         isOver && "bg-primary/10 border-primary border-solid scale-[1.02] shadow-sm",
@@ -1056,6 +1067,26 @@ function CanvasCell({
       )}
       onClick={onSelect}
     >
+      <div className="absolute top-1 left-1 z-20 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="h-5 w-5"
+              aria-label="Insert column before"
+              onClick={(e) => {
+                e.stopPropagation()
+                onInsertBefore()
+              }}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Insert column before</TooltipContent>
+        </Tooltip>
+      </div>
+
       <div
         ref={setDraggableRef}
         {...listeners}
@@ -1123,15 +1154,24 @@ function CanvasCell({
 function FieldPropertiesPanel({
   fieldName,
   config,
+  onRename,
   onUpdate,
   onDelete,
 }: {
   fieldName: string
   config: TsFieldDef
+  onRename: (nextFieldName: string) => boolean
   onUpdate: (config: TsFieldUpdate) => void
   onDelete: () => void
 }) {
   const { form, selection, updateButton, removeButton } = useFormEditorStore()
+  const [fieldNameDraft, setFieldNameDraft] = React.useState(fieldName)
+  const [renameError, setRenameError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    setFieldNameDraft(fieldName)
+    setRenameError(null)
+  }, [fieldName])
 
   // If a button is selected, show button properties
   if (selection.type === "button" && selection.itemIndex !== undefined) {
@@ -1309,6 +1349,50 @@ function FieldPropertiesPanel({
   } // Cast to TsFieldUpdate for reading optional properties that not every field type carries
   // (e.g. placeholder on checkbox). Type-specific properties are accessed via narrowed config below.
   const configProps = config as TsFieldUpdate
+
+  const validateFieldName = (value: string): string | null => {
+    const trimmedName = value.trim()
+
+    if (!trimmedName) {
+      return "Field ID must be non-empty."
+    }
+
+    if (!VALID_FIELD_KEY.test(trimmedName)) {
+      return "Field ID must start with a letter or underscore and use only letters, numbers, underscores or hyphens."
+    }
+
+    if (trimmedName !== fieldName && form.fields[trimmedName]) {
+      return "Field ID must be unique."
+    }
+
+    return null
+  }
+
+  const commitFieldRename = () => {
+    const trimmedName = fieldNameDraft.trim()
+
+    if (trimmedName === fieldName) {
+      setRenameError(null)
+      return
+    }
+
+    const validationError = validateFieldName(trimmedName)
+
+    if (validationError) {
+      setRenameError(validationError)
+      return
+    }
+
+    const success = onRename(trimmedName)
+
+    if (!success) {
+      setRenameError("Rename failed. Field ID must be unique and valid.")
+      return
+    }
+
+    setRenameError(null)
+  }
+
   return (
     <div className="space-y-4">
       {/* Basic info */}
@@ -1323,7 +1407,35 @@ function FieldPropertiesPanel({
 
         <div className="space-y-2">
           <Label>Field ID</Label>
-          <Input value={fieldName} disabled className="font-mono text-sm" />
+          <Input
+            aria-describedby={renameError ? "field-id-error" : undefined}
+            aria-invalid={!!renameError}
+            value={fieldNameDraft}
+            onChange={(e) => {
+              const nextValue = e.target.value
+              setFieldNameDraft(nextValue)
+              setRenameError(validateFieldName(nextValue))
+            }}
+            onBlur={commitFieldRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                commitFieldRename()
+              }
+
+              if (e.key === "Escape") {
+                e.preventDefault()
+                setFieldNameDraft(fieldName)
+                setRenameError(null)
+              }
+            }}
+            className="font-mono text-sm"
+          />
+          {renameError ? (
+            <p id="field-id-error" className="text-xs text-destructive" role="alert">
+              {renameError}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2">
@@ -1410,6 +1522,30 @@ function FieldPropertiesPanel({
           <Switch
             checked={config.hidden || false}
             onCheckedChange={(checked: boolean) => onUpdate({ hidden: checked })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label>Auto focus</Label>
+          <Switch
+            checked={configProps.autofocus || false}
+            onCheckedChange={(checked: boolean) => onUpdate({ autofocus: checked })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label>Hide label</Label>
+          <Switch
+            checked={configProps.hideLabel || false}
+            onCheckedChange={(checked: boolean) => onUpdate({ hideLabel: checked })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label>Exclude from submit</Label>
+          <Switch
+            checked={configProps.excludeFromSubmit || false}
+            onCheckedChange={(checked: boolean) => onUpdate({ excludeFromSubmit: checked })}
           />
         </div>
       </div>

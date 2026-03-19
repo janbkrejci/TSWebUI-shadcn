@@ -441,4 +441,5 @@ export interface TsFieldUpdate {
   content?: string
   value?: unknown
   variant?: TsButtonVariant | TsInfoboxVariant | "process"
+  excludeFromSubmit?: boolean
 }
