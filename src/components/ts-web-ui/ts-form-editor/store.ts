@@ -6,7 +6,7 @@
  */
 import { create } from "zustand"
 
-import { TsButton, TsFieldDef, TsFieldUpdate } from "../ts-form/types"
+import { TsButton, TsFieldDef, TsFieldUpdate, TsRowItem } from "../ts-form/types"
 import { EditorFormDefinition, EditorRow, EditorRowItem, EditorSelection, EditorTab } from "./types"
 
 // ============================================================================
@@ -15,6 +15,9 @@ import { EditorFormDefinition, EditorRow, EditorRowItem, EditorSelection, Editor
 
 /** Generates a unique ID */
 const generateId = (): string => Math.random().toString(36).substring(2, 11)
+
+// Field IDs are used as JSON keys and should stay integration-friendly.
+export const VALID_FIELD_KEY = /^[a-zA-Z_][a-zA-Z0-9_-]*$/
 
 /** Gets the default label for a field type */
 const getDefaultLabel = (type: TsFieldDef["type"]): string => {
@@ -133,6 +136,59 @@ const getInitialForm = (): EditorFormDefinition => ({
   ],
 })
 
+const mapEditorItemToTsRowItem = (item: EditorRowItem): TsRowItem | null => {
+  const isSeparator = item.type === "separator"
+
+  if (!item.field && !isSeparator) {
+    return null
+  }
+
+  const rowItem: TsRowItem = {
+    field: item.field,
+  }
+
+  if (item.width) {
+    rowItem.width = item.width
+  }
+
+  if (item.align) {
+    rowItem.align = item.align
+  }
+
+  if (isSeparator) {
+    rowItem.type = "separator"
+    if (item.label) {
+      rowItem.label = item.label
+    }
+  }
+
+  return rowItem
+}
+
+const mapTsRowItemToEditorItem = (
+  item: TsRowItem,
+  fields: Record<string, TsFieldDef>
+): EditorRowItem => {
+  const isSeparator = item.type === "separator"
+
+  const editorItem: EditorRowItem = {
+    id: generateId(),
+    field: item.field || "",
+    type: isSeparator ? "separator" : item.field ? fields[item.field]?.type || "empty" : "empty",
+    width: item.width || "1fr",
+  }
+
+  if (item.align) {
+    editorItem.align = item.align
+  }
+
+  if (item.label) {
+    editorItem.label = item.label
+  }
+
+  return editorItem
+}
+
 // ============================================================================
 // State interface
 // ============================================================================
@@ -160,6 +216,7 @@ export interface FormEditorState {
 
   // Columns (grid)
   addColumnToRow: (tabIndex: number, rowIndex: number) => void
+  insertColumnAtPosition: (tabIndex: number, rowIndex: number, itemIndex: number) => void
   removeColumnFromRow: (tabIndex: number, rowIndex: number, itemIndex: number) => void
   updateColumnWidth: (tabIndex: number, rowIndex: number, itemIndex: number, width: string) => void
 
@@ -406,6 +463,47 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     }
   },
 
+  insertColumnAtPosition: (tabIndex: number, rowIndex: number, itemIndex: number) => {
+    const { form, saveToHistory } = get()
+    saveToHistory()
+
+    const newItem: EditorRowItem = {
+      id: generateId(),
+      field: "",
+      type: "empty",
+      width: "1fr",
+    }
+
+    if (form.mode === "single" && form.rows) {
+      const newRows = [...form.rows]
+      const row = newRows[rowIndex]
+      const insertIndex = Math.max(0, Math.min(itemIndex, row.items.length))
+
+      newRows[rowIndex] = {
+        ...row,
+        items: [...row.items.slice(0, insertIndex), newItem, ...row.items.slice(insertIndex)],
+      }
+
+      set({ form: { ...form, rows: newRows } })
+      return
+    }
+
+    if (form.tabs) {
+      const newTabs = [...form.tabs]
+      const rows = [...newTabs[tabIndex].rows]
+      const row = rows[rowIndex]
+      const insertIndex = Math.max(0, Math.min(itemIndex, row.items.length))
+
+      rows[rowIndex] = {
+        ...row,
+        items: [...row.items.slice(0, insertIndex), newItem, ...row.items.slice(insertIndex)],
+      }
+
+      newTabs[tabIndex] = { ...newTabs[tabIndex], rows }
+      set({ form: { ...form, tabs: newTabs } })
+    }
+  },
+
   removeColumnFromRow: (tabIndex: number, rowIndex: number, itemIndex: number) => {
     const { form, saveToHistory } = get()
     saveToHistory()
@@ -552,11 +650,19 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       return false
     }
 
+    if (!VALID_FIELD_KEY.test(trimmedName)) {
+      return false
+    }
+
     if (oldName === trimmedName) {
       return true
     }
 
     if (form.fields[trimmedName]) {
+      return false
+    }
+
+    if (!form.rows && !form.tabs) {
       return false
     }
 
@@ -773,23 +879,15 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
           label: tab.label,
           rows: tab.rows.map((row: unknown[]) => ({
             id: generateId(),
-            items: (row as { field?: string; width?: string }[]).map((item) => ({
-              id: generateId(),
-              field: item.field || "",
-              type: item.field ? parsed.fields[item.field]?.type || "empty" : "empty",
-              width: item.width || "1fr",
-            })),
+            items: (row as TsRowItem[]).map((item) =>
+              mapTsRowItemToEditorItem(item, parsed.fields)
+            ),
           })),
         }))
       } else if (parsed.layout?.rows) {
         form.rows = parsed.layout.rows.map((row: unknown[]) => ({
           id: generateId(),
-          items: (row as { field?: string; width?: string }[]).map((item) => ({
-            id: generateId(),
-            field: item.field || "",
-            type: item.field ? parsed.fields[item.field]?.type || "empty" : "empty",
-            width: item.width || "1fr",
-          })),
+          items: (row as TsRowItem[]).map((item) => mapTsRowItemToEditorItem(item, parsed.fields)),
         }))
       } else {
         form.rows = [createEmptyRow()]
@@ -823,22 +921,12 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       output.layout.tabs = form.tabs.map((tab: EditorTab) => ({
         label: tab.label,
         rows: tab.rows.map((row: EditorRow) =>
-          row.items
-            .filter((item: EditorRowItem) => item.field)
-            .map((item: EditorRowItem) => ({
-              field: item.field,
-              width: item.width,
-            }))
+          row.items.map(mapEditorItemToTsRowItem).filter((item): item is TsRowItem => item !== null)
         ),
       }))
     } else if (form.rows) {
       output.layout.rows = form.rows.map((row: EditorRow) =>
-        row.items
-          .filter((item: EditorRowItem) => item.field)
-          .map((item: EditorRowItem) => ({
-            field: item.field,
-            width: item.width,
-          }))
+        row.items.map(mapEditorItemToTsRowItem).filter((item): item is TsRowItem => item !== null)
       )
     }
 

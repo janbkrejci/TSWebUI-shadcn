@@ -1,6 +1,6 @@
 # Story 4.1: Prejmenovani technickeho klice pole (Rename Field ID)
 
-Status: review
+Status: done
 
 ## Story
 
