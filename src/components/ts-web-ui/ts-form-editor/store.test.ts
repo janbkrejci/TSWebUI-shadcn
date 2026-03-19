@@ -373,6 +373,30 @@ describe("TsFormEditor Store - import/export sync", () => {
       readonly: true,
     })
 
+    // Add separator with align metadata
+    useFormEditorStore.setState((current) => ({
+      ...current,
+      form: {
+        ...current.form,
+        rows: [
+          {
+            ...current.form.rows![0],
+            items: [
+              { ...current.form.rows![0].items[0], align: "right" as const },
+              {
+                id: "sep-rt",
+                field: "",
+                type: "separator" as const,
+                label: "Divider",
+                align: "center" as const,
+                width: "1fr",
+              },
+            ],
+          },
+        ],
+      },
+    }))
+
     state().addButton()
     state().updateButton(0, {
       label: "Submit",

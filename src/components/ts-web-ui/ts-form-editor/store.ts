@@ -907,8 +907,8 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
     const output: {
       fields: Record<string, TsFieldDef>
       layout: {
-        tabs?: { label: string; rows: { field?: string; width?: string }[][] }[]
-        rows?: { field?: string; width?: string }[][]
+        tabs?: { label: string; rows: TsRowItem[][] }[]
+        rows?: TsRowItem[][]
       }
       buttons: TsButton[]
     } = {
