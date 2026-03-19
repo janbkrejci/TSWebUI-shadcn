@@ -77,7 +77,7 @@ development_status:
   4-3-validace-unikatnosti-nazvu-poli-v-realnem-case: done
   4-4-synchronizace-exportu-s-novym-typovym-systemem: done
   4-5-synchronizace-importu-s-novym-typovym-systemem: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   epic-5: backlog
   5-1-globalni-prop-readonly-pro-tsform: backlog

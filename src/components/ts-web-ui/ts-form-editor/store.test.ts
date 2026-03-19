@@ -453,4 +453,61 @@ describe("TsFormEditor Store - import/export sync", () => {
     expect(state().importJson(JSON.stringify(formWithoutButtons))).toBe(true)
     expect(state().form.buttons).toEqual([])
   })
+
+  it("round-trip preserves separator and align in tabs mode", () => {
+    const tabsForm = {
+      fields: {
+        city: { type: "text", label: "City" },
+      },
+      layout: {
+        tabs: [
+          {
+            label: "Location",
+            rows: [
+              [
+                { field: "city", align: "right" },
+                { field: "", type: "separator", label: "Divider", align: "center" },
+              ],
+            ],
+          },
+        ],
+      },
+      buttons: [],
+    }
+
+    expect(state().importJson(JSON.stringify(tabsForm))).toBe(true)
+    expect(state().form.mode).toBe("tabs")
+
+    const exported = JSON.parse(state().exportJson())
+    const row = exported.layout.tabs[0].rows[0]
+
+    expect(row).toHaveLength(2)
+    expect(row[0]).toMatchObject({ field: "city", align: "right" })
+    expect(row[1]).toMatchObject({
+      field: "",
+      type: "separator",
+      label: "Divider",
+      align: "center",
+    })
+  })
+
+  it("clears orphaned field references on import", () => {
+    const orphanedForm = {
+      fields: {
+        name: { type: "text", label: "Name" },
+      },
+      layout: {
+        rows: [[{ field: "name" }, { field: "nonExistent" }]],
+      },
+      buttons: [],
+    }
+
+    expect(state().importJson(JSON.stringify(orphanedForm))).toBe(true)
+
+    const items = state().form.rows?.[0].items ?? []
+    expect(items[0].field).toBe("name")
+    expect(items[0].type).toBe("text")
+    expect(items[1].field).toBe("")
+    expect(items[1].type).toBe("empty")
+  })
 })

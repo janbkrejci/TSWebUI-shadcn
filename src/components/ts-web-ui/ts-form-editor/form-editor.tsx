@@ -1067,13 +1067,14 @@ function CanvasCell({
       )}
       onClick={onSelect}
     >
-      <div className="absolute top-1 left-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-1 left-1 z-20 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="secondary"
               size="icon"
               className="h-5 w-5"
+              aria-label="Insert column before"
               onClick={(e) => {
                 e.stopPropagation()
                 onInsertBefore()

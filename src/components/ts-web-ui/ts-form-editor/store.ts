@@ -171,10 +171,12 @@ const mapTsRowItemToEditorItem = (
 ): EditorRowItem => {
   const isSeparator = item.type === "separator"
 
+  const fieldExists = !!(item.field && fields[item.field])
+
   const editorItem: EditorRowItem = {
     id: generateId(),
-    field: item.field || "",
-    type: isSeparator ? "separator" : item.field ? fields[item.field]?.type || "empty" : "empty",
+    field: isSeparator ? item.field || "" : fieldExists ? item.field : "",
+    type: isSeparator ? "separator" : fieldExists ? fields[item.field].type || "empty" : "empty",
     width: item.width || "1fr",
   }
 
