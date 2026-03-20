@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-15
-last_updated: 2026-03-20
+last_updated: 2026-03-19
 project: TSWebUI-shadcn
 project_key: NOKEY
 tracking_system: file-system
@@ -80,9 +80,9 @@ development_status:
   epic-4-retrospective: done
 
   epic-5: in-progress
-  5-1-globalni-prop-readonly-pro-tsform: backlog
-  5-2-state-integrity: backlog
-  5-3-standardy-pristupnosti-a-klavesnice: backlog
-  5-4-globalni-interakce-a-klavesove-action-poli: backlog
-  5-5-podpora-pro-stav-tlacitek-v-definici: backlog
+  5-1-globalni-prop-readonly-pro-tsform: ready-for-dev
+  5-2-state-integrity: ready-for-dev
+  5-3-standardy-pristupnosti-a-klavesnice: ready-for-dev
+  5-4-globalni-interakce-a-klavesove-action-poli: ready-for-dev
+  5-5-podpora-pro-stav-tlacitek-v-definici: ready-for-dev
   epic-5-retrospective: optional
