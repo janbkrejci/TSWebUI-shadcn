@@ -82,7 +82,13 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
               <div className="min-h-14 flex items-end">
                 <FormLabel className={cn("pb-1 leading-tight", errorMessage && "text-destructive")}>
                   {fieldDef.label}
-                  {fieldDef.required ? " *" : ""}
+                  {fieldDef.required && (
+                    <>
+                      {" "}
+                      <span aria-hidden="true">*</span>
+                      <span className="sr-only">(required)</span>
+                    </>
+                  )}
                 </FormLabel>
               </div>
             ) : (

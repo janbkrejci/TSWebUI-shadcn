@@ -116,6 +116,7 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
                   <span
                     className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-destructive animate-pulse"
                     aria-hidden="true"
+                    title="This tab contains validation errors"
                   />
                 )}
               </TabsTrigger>

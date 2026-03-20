@@ -225,6 +225,8 @@ export function TsForm({
 
     const handleKeyAction = (e: Event) => {
       if (!(e instanceof CustomEvent)) return
+      // In readOnly mode, keyboard actions are disabled (no button bar, no submit)
+      if (readOnly) return
 
       const detail = e.detail as {
         key: string
@@ -246,9 +248,14 @@ export function TsForm({
         setNestedValue(currentValues, field, value)
       }
 
+      // Resolve visible (non-hidden), enabled buttons for keyboard actions
+      const visibleButtons = buttons.filter((b) => !b.hidden)
+
       if (key === "Enter") {
         if (action === "submit") {
-          const submitBtn = buttons.find((b) => b.type === "submit") || buttons[0]
+          const submitBtn =
+            visibleButtons.find((b) => b.type === "submit" && !b.disabled) ||
+            visibleButtons.find((b) => !b.disabled)
           if (submitBtn) {
             if (submitBtn.confirmation) {
               setConfirmation({
@@ -302,7 +309,7 @@ export function TsForm({
       el.removeEventListener("form-field-action", handleFieldAction)
       el.removeEventListener("form-table-action", handleFieldAction)
     }
-  }, [form, buttons, executeAction])
+  }, [form, buttons, executeAction, readOnly])
 
   const handleButtonClick = React.useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, btn: TsButton) => {
@@ -366,7 +373,10 @@ export function TsForm({
                 handleButtonClick(e, btn as TsButton)
               }
             }}
-            disabled={!isConfirmBtn && form.formState.isSubmitting}
+            disabled={
+              (!isConfirmBtn && form.formState.isSubmitting) ||
+              (!isConfirmBtn && !!(btn as TsButton).disabled)
+            }
           >
             {!isConfirmBtn && form.formState.isSubmitting && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -390,19 +400,27 @@ export function TsForm({
             onTabChange={onTabChange}
           />
 
-          {buttons.length > 0 && !readOnly && (
-            <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">
-              <div className="flex flex-1 flex-row items-center justify-start gap-2">
-                {renderButtons(buttons.filter((b) => b.position === "left"))}
-              </div>
-              <div className="flex flex-1 flex-row items-center justify-center gap-2">
-                {renderButtons(buttons.filter((b) => b.position === "center"))}
-              </div>
-              <div className="flex flex-1 flex-row items-center justify-end gap-2">
-                {renderButtons(buttons.filter((b) => !b.position || b.position === "right"))}
-              </div>
-            </div>
-          )}
+          {buttons.length > 0 &&
+            !readOnly &&
+            (() => {
+              const visibleButtons = buttons.filter((b) => !b.hidden)
+              if (visibleButtons.length === 0) return null
+              return (
+                <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">
+                  <div className="flex flex-1 flex-row items-center justify-start gap-2">
+                    {renderButtons(visibleButtons.filter((b) => b.position === "left"))}
+                  </div>
+                  <div className="flex flex-1 flex-row items-center justify-center gap-2">
+                    {renderButtons(visibleButtons.filter((b) => b.position === "center"))}
+                  </div>
+                  <div className="flex flex-1 flex-row items-center justify-end gap-2">
+                    {renderButtons(
+                      visibleButtons.filter((b) => !b.position || b.position === "right")
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
         </form>
       </Form>
 

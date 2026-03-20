@@ -76,6 +76,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
               aria-readonly={readOnly}
               aria-controls={`popover-content-${safeId}`}
               autoFocus={autoFocus}
+              tabIndex={readOnly ? -1 : undefined}
               className={cn(
                 "w-full justify-between hover:bg-background dark:hover:bg-input/30 pr-8",
                 errorClass,

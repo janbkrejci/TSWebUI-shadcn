@@ -39,6 +39,7 @@ export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidg
           onCheckedChange={field.onChange}
           disabled={def.disabled}
           autoFocus={autoFocus}
+          tabIndex={readOnly ? -1 : undefined}
           aria-invalid={!!error}
           aria-label={ariaLabel || def.label}
           aria-required={ariaRequired}

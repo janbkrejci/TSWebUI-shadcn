@@ -49,6 +49,7 @@ export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetPr
           aria-readonly={readOnly}
           aria-label={ariaLabel}
           aria-required={ariaRequired}
+          tabIndex={readOnly ? -1 : undefined}
           autoFocus={autoFocus}
           {...props}
           ref={ref || field.ref}
