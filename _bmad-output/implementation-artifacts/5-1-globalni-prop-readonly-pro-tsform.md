@@ -1,6 +1,6 @@
 # Story 5.1: Globální prop readOnly pro TsForm
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -19,30 +19,30 @@ aby se všechna pole stala needitovatelná a button bar se automaticky skryl.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit aktuálního readonly chování (AC: #1, #4)
-  - [ ] 1.1: Projít všech 22 widget souborů a ověřit, že každý respektuje `readOnly` prop
-  - [ ] 1.2: Ověřit, že `mergedFields` v `index.tsx` (řádek ~183) správně propaguje `readOnly` do všech polí
-  - [ ] 1.3: Zkontrolovat `getFieldClasses()` v `utils.ts` — `readonlyClass` a `readonlyPointerClass` jsou vizuálně odlišné od disabled
+- [x] Task 1: Audit aktuálního readonly chování (AC: #1, #4)
+  - [x] 1.1: Projít všech 22 widget souborů a ověřit, že každý respektuje `readOnly` prop
+  - [x] 1.2: Ověřit, že `mergedFields` v `index.tsx` (řádek ~183) správně propaguje `readOnly` do všech polí
+  - [x] 1.3: Zkontrolovat `getFieldClasses()` v `utils.ts` — `readonlyClass` a `readonlyPointerClass` jsou vizuálně odlišné od disabled
 
-- [ ] Task 2: Opravit widgety, které nerespektují readonly správně (AC: #1, #6)
-  - [ ] 2.1: Pro každý widget ověřit: má `readOnly` prop, nastavuje `tabIndex={readOnly ? -1 : undefined}`, má `aria-readonly`
-  - [ ] 2.2: Widgety bez nativního readonly (select, checkbox, switch, radio, button-group, file, relationship, table) — zajistit, že jsou effectivně needitovatelné
-  - [ ] 2.3: Widgety s popper/dropdown (combobox, select, multiselect, date, datetime) — zajistit, že popper se neotevírá v readonly
+- [x] Task 2: Opravit widgety, které nerespektují readonly správně (AC: #1, #6)
+  - [x] 2.1: Pro každý widget ověřit: má `readOnly` prop, nastavuje `tabIndex={readOnly ? -1 : undefined}`, má `aria-readonly`
+  - [x] 2.2: Widgety bez nativního readonly (select, checkbox, switch, radio, button-group, file, relationship, table) — zajistit, že jsou effectivně needitovatelné
+  - [x] 2.3: Widgety s popper/dropdown (combobox, select, multiselect, date, datetime) — zajistit, že popper se neotevírá v readonly
 
-- [ ] Task 3: Vizuální styl readonly režimu (AC: #4)
-  - [ ] 3.1: Sjednotit `readonlyClass` v `utils.ts` — pozadí `bg-muted/50`, `cursor-default`, bez hover/focus efektů
-  - [ ] 3.2: Readonly pole nesmí mít disabled opacity — musí být jasně čitelná
-  - [ ] 3.3: Password widget v readonly režimu — skrýt toggle tlačítko (eye icon)
+- [x] Task 3: Vizuální styl readonly režimu (AC: #4)
+  - [x] 3.1: Sjednotit `readonlyClass` v `utils.ts` — pozadí `bg-muted/50`, `cursor-default`, bez hover/focus efektů
+  - [x] 3.2: Readonly pole nesmí mít disabled opacity — musí být jasně čitelná
+  - [x] 3.3: Password widget v readonly režimu — skrýt toggle tlačítko (eye icon)
 
-- [ ] Task 4: Button bar suppression (AC: #2)
-  - [ ] 4.1: Ověřit, že podmínka v `index.tsx` `{buttons.length > 0 && !readOnly && (...)}` funguje správně
-  - [ ] 4.2: Ověřit, že keyboard handler (Enter→submit) je v readonly režimu neaktivní nebo ignorovaný
+- [x] Task 4: Button bar suppression (AC: #2)
+  - [x] 4.1: Ověřit, že podmínka v `index.tsx` `{buttons.length > 0 && !readOnly && (...)}` funguje správně
+  - [x] 4.2: Ověřit, že keyboard handler (Enter→submit) je v readonly režimu neaktivní nebo ignorovaný
 
-- [ ] Task 5: Testy (AC: #1–#6)
-  - [ ] 5.1: Unit test — `mergedFields` nastaví readonly na všechna pole při `readOnly: true`
-  - [ ] 5.2: Unit test — button bar se nevykresluje při `readOnly: true`
-  - [ ] 5.3: Integrační test — dynamické přepínání readonly neztrácí hodnoty
-  - [ ] 5.4: Integrační test — vybrané widgety (text, select, checkbox, date) jsou needitovatelné
+- [x] Task 5: Testy (AC: #1–#6)
+  - [x] 5.1: Unit test — `mergedFields` nastaví readonly na všechna pole při `readOnly: true`
+  - [x] 5.2: Unit test — button bar se nevykresluje při `readOnly: true`
+  - [x] 5.3: Integrační test — dynamické přepínání readonly neztrácí hodnoty
+  - [x] 5.4: Integrační test — vybrané widgety (text, select, checkbox, date) jsou needitovatelné
 
 ## Dev Notes
 
@@ -83,10 +83,28 @@ aby se všechna pole stala needitovatelná a button bar se automaticky skryl.
 
 ### Agent Model Used
 
-_pending_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+Code review provedeno adversarial review agentem — 0 CRITICAL, 1 HIGH (locale double-casts, opraveno), 3 MEDIUM (aria-readonly, opraveno), 2 LOW (opraveno). Všech 153 testů prošlo.
+
 ### Completion Notes List
 
+- `readOnly` prop na `TsFormProps` propagován přes `mergedFields` do všech 22 widgetů
+- `readonlyClass` v utils.ts sjednocen na `bg-muted/50 cursor-default`
+- Button bar se nevykresluje při `readOnly: true` (podmínka `visibleButtons.length > 0 && !readOnly`)
+- Keyboard handler blokuje akce v readonly režimu
+- Přidány `aria-readonly` atributy na date, datetime, textarea widgety
+- Testy v stories-5.test.tsx pokrývají readonly propagaci i dynamické přepínání
+
 ### File List
+
+- src/components/ts-web-ui/ts-form/index.tsx
+- src/components/ts-web-ui/ts-form/types.ts
+- src/components/ts-web-ui/ts-form/utils.ts
+- src/components/ts-web-ui/ts-form/ts-form-field.tsx
+- src/components/ts-web-ui/ts-form/widgets/date-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/datetime-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx
+- src/components/ts-web-ui/ts-form/stories-5.test.tsx

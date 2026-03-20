@@ -1,6 +1,6 @@
 # Story 5.5: Podpora pro stav tlačítek (disabled/hidden) v definici
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,39 +20,39 @@ aby tlačítka v button baru dynamicky reagovala na stav aplikace bez úprav JSX
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit typového systému (AC: #7)
-  - [ ] 1.1: Ověřit, že `TsButton` v `types.ts` má `disabled?: boolean` a `hidden?: boolean`
-  - [ ] 1.2: Pokud chybí — doplnit do `TsButton` interface
-  - [ ] 1.3: Ověřit zpětnou kompatibilitu — formuláře bez disabled/hidden na tlačítkách musí fungovat beze změny
+- [x] Task 1: Audit typového systému (AC: #7)
+  - [x] 1.1: Ověřit, že `TsButton` v `types.ts` má `disabled?: boolean` a `hidden?: boolean`
+  - [x] 1.2: Pokud chybí — doplnit do `TsButton` interface
+  - [x] 1.3: Ověřit zpětnou kompatibilitu — formuláře bez disabled/hidden na tlačítkách musí fungovat beze změny
 
-- [ ] Task 2: Implementace hidden tlačítek (AC: #2, #4)
-  - [ ] 2.1: V `index.tsx` button rendering — filtrovat `buttons.filter(b => !b.hidden)` PŘED dělením do left/center/right skupin
-  - [ ] 2.2: Ověřit, že `renderButtons` funkce nedostane hidden tlačítka vůbec
-  - [ ] 2.3: Test — hidden tlačítko není v DOM (ne display:none, ale skutečně chybí v markup)
+- [x] Task 2: Implementace hidden tlačítek (AC: #2, #4)
+  - [x] 2.1: V `index.tsx` button rendering — filtrovat `buttons.filter(b => !b.hidden)` PŘED dělením do left/center/right skupin
+  - [x] 2.2: Ověřit, že `renderButtons` funkce nedostane hidden tlačítka vůbec
+  - [x] 2.3: Test — hidden tlačítko není v DOM (ne display:none, ale skutečně chybí v markup)
 
-- [ ] Task 3: Implementace disabled tlačítek (AC: #1, #5, #6)
-  - [ ] 3.1: V `renderButtons` v `index.tsx` — přidat `disabled` prop: `disabled={(!isConfirmBtn && form.formState.isSubmitting) || (btn as TsButton).disabled}`
-  - [ ] 3.2: Ověřit, že `isSubmitting` override má VŽDY přednost — pokud submitting, vše je disabled
-  - [ ] 3.3: Ověřit vizuální styl disabled tlačítka — Shadcn Button s `disabled` má opacity-50 a cursor-not-allowed
-  - [ ] 3.4: Test — disabled tlačítko není v tab chain
+- [x] Task 3: Implementace disabled tlačítek (AC: #1, #5, #6)
+  - [x] 3.1: V `renderButtons` v `index.tsx` — přidat `disabled` prop: `disabled={(!isConfirmBtn && form.formState.isSubmitting) || (btn as TsButton).disabled}`
+  - [x] 3.2: Ověřit, že `isSubmitting` override má VŽDY přednost — pokud submitting, vše je disabled
+  - [x] 3.3: Ověřit vizuální styl disabled tlačítka — Shadcn Button s `disabled` má opacity-50 a cursor-not-allowed
+  - [x] 3.4: Test — disabled tlačítko není v tab chain
 
-- [ ] Task 4: Keyboard scoping (AC: #5)
-  - [ ] 4.1: Ověřit, že Enter keyboard action (`handleKeyAction` v index.tsx) respektuje disabled stav submit buttonu
-  - [ ] 4.2: Pokud submit button je disabled, Enter NESMÍ vyvolat submit akci
-  - [ ] 4.3: Pokud všechny buttons jsou disabled (isSubmitting), keyboard submit je blokován
+- [x] Task 4: Keyboard scoping (AC: #5)
+  - [x] 4.1: Ověřit, že Enter keyboard action (`handleKeyAction` v index.tsx) respektuje disabled stav submit buttonu
+  - [x] 4.2: Pokud submit button je disabled, Enter NESMÍ vyvolat submit akci
+  - [x] 4.3: Pokud všechny buttons jsou disabled (isSubmitting), keyboard submit je blokován
 
-- [ ] Task 5: Editor synchronizace (AC: #7)
-  - [ ] 5.1: Ověřit, že TsFormEditor export (`exportJson`) zachovává `disabled`/`hidden` na buttons
-  - [ ] 5.2: Ověřit, že TsFormEditor import správně čte `disabled`/`hidden` z importovaného JSON
-  - [ ] 5.3: Pokud editor má button properties UI — přidat disabled/hidden toggle
+- [x] Task 5: Editor synchronizace (AC: #7)
+  - [x] 5.1: Ověřit, že TsFormEditor export (`exportJson`) zachovává `disabled`/`hidden` na buttons
+  - [x] 5.2: Ověřit, že TsFormEditor import správně čte `disabled`/`hidden` z importovaného JSON
+  - [x] 5.3: Pokud editor má button properties UI — přidat disabled/hidden toggle
 
-- [ ] Task 6: Testy (AC: #1–#7)
-  - [ ] 6.1: Unit test — hidden button není v DOM
-  - [ ] 6.2: Unit test — disabled button je v DOM ale neklikatelný
-  - [ ] 6.3: Unit test — isSubmitting disabluje všechna tlačítka
-  - [ ] 6.4: Integrační test — dynamická změna disabled/hidden se projeví okamžitě
-  - [ ] 6.5: Test — Enter keyboard nevolá akci pokud submit button je disabled
-  - [ ] 6.6: Test — kombinace disabled+hidden → hidden má přednost
+- [x] Task 6: Testy (AC: #1–#7)
+  - [x] 6.1: Unit test — hidden button není v DOM
+  - [x] 6.2: Unit test — disabled button je v DOM ale neklikatelný
+  - [x] 6.3: Unit test — isSubmitting disabluje všechna tlačítka
+  - [x] 6.4: Integrační test — dynamická změna disabled/hidden se projeví okamžitě
+  - [x] 6.5: Test — Enter keyboard nevolá akci pokud submit button je disabled
+  - [x] 6.6: Test — kombinace disabled+hidden → hidden má přednost
 
 ## Dev Notes
 
@@ -100,10 +100,26 @@ aby tlačítka v button baru dynamicky reagovala na stav aplikace bez úprav JSX
 
 ### Agent Model Used
 
-_pending_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+Adversarial review ověřil `TsButton` typový systém, `visibleButtons` filtraci, `renderButtons` disabled logiku, keyboard guard pro disabled submit button a editor export/import synchronizaci.
+
 ### Completion Notes List
 
+- `TsButton` interface v types.ts má `disabled?: boolean` a `hidden?: boolean`
+- `visibleButtons = buttons.filter(b => !b.hidden)` v index.tsx filtruje před pozicí groupingem
+- `renderButtons` přidává `disabled` prop: `isSubmitting || btn.disabled`
+- Keyboard Enter respektuje disabled stav submit buttonu (guard v `handleKeyAction`)
+- TsFormEditor exportJson/importJson zachovává disabled/hidden atributy na buttons
+- Store testy v store.test.ts pokrývají export buttons s disabled/hidden
+- Testy v stories-5.test.tsx pokrývají hidden/disabled rendering i keyboard guard
+
 ### File List
+
+- src/components/ts-web-ui/ts-form/types.ts
+- src/components/ts-web-ui/ts-form/index.tsx
+- src/components/ts-web-ui/ts-form-editor/store.ts
+- src/components/ts-web-ui/ts-form-editor/store.test.ts
+- src/components/ts-web-ui/ts-form/stories-5.test.tsx

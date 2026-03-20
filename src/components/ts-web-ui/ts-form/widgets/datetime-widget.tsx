@@ -1,7 +1,6 @@
 "use client"
 
 import { format, isValid as isValidDate } from "date-fns"
-import * as Locales from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 
 import * as React from "react"
@@ -14,7 +13,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsDateTimeField, TsWidgetProps } from "../types"
-import { getFieldClasses, handleFieldKeyDown, parseSmartDateTime, sanitizeId } from "../utils"
+import {
+  getDateLocale,
+  getFieldClasses,
+  handleFieldKeyDown,
+  parseSmartDateTime,
+  sanitizeId,
+} from "../utils"
 
 export type TsDateTimeWidgetProps = TsWidgetProps<TsDateTimeField>
 
@@ -62,14 +67,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
     }, [field.value, dateFormat, open, isFocused])
 
     // Get date-fns locale object from string
-    const dateLocale = React.useMemo(() => {
-      if (!def.locale) return undefined
-      const localeKey = def.locale.replace("-", "") as keyof typeof Locales
-      const localeObj = Locales[localeKey]
-      if (localeObj) return localeObj as unknown as Locales.Locale
-      const genericKey = def.locale.split("-")[0] as keyof typeof Locales
-      return (Locales[genericKey] as unknown as Locales.Locale) || undefined
-    }, [def.locale])
+    const dateLocale = React.useMemo(() => getDateLocale(def.locale), [def.locale])
 
     const getValidDate = () => {
       const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
@@ -183,6 +181,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
             autoFocus={autoFocus}
             tabIndex={readOnly ? -1 : undefined}
             aria-invalid={!!error}
+            aria-readonly={readOnly}
             aria-label={ariaLabel}
             aria-required={ariaRequired}
             className={cn("pr-10 text-right", errorClass, readonlyClass, readonlyPointerClass)}
@@ -254,6 +253,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
                 onChange={handleTimeChange}
                 className="h-8 text-sm text-right"
                 disabled={readOnly || def.disabled}
+                aria-label="Time"
               />
             </div>
             <Button

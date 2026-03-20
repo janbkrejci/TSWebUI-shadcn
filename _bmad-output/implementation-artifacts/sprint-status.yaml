@@ -79,10 +79,10 @@ development_status:
   4-5-synchronizace-importu-s-novym-typovym-systemem: done
   epic-4-retrospective: done
 
-  epic-5: in-progress
-  5-1-globalni-prop-readonly-pro-tsform: ready-for-dev
-  5-2-state-integrity: ready-for-dev
-  5-3-standardy-pristupnosti-a-klavesnice: ready-for-dev
-  5-4-globalni-interakce-a-klavesove-action-poli: ready-for-dev
-  5-5-podpora-pro-stav-tlacitek-v-definici: ready-for-dev
+  epic-5: done
+  5-1-globalni-prop-readonly-pro-tsform: done
+  5-2-state-integrity: done
+  5-3-standardy-pristupnosti-a-klavesnice: done
+  5-4-globalni-interakce-a-klavesove-action-poli: done
+  5-5-podpora-pro-stav-tlacitek-v-definici: done
   epic-5-retrospective: optional

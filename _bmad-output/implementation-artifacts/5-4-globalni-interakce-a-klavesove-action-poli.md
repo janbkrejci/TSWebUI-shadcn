@@ -1,6 +1,6 @@
 # Story 5.4: Globální interakce (Enter/Escape) a klávesové akce polí
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -110,10 +110,32 @@ aby moje práce s formulářem byla rychlá a nemusel jsem sahat na myš.
 
 ### Agent Model Used
 
-_pending_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+Adversarial review ověřil `handleFieldKeyDown` a `handleKeyAction` flow, CustomEvent scoping, textarea Ctrl/Meta guard, focus:next implementaci. Žádné problémy nalezeny v keyboard systému.
+
 ### Completion Notes List
 
+- `handleFieldKeyDown` v utils.ts dispatchuje `form-key-action` CustomEvent s `{key, action, field, value}`
+- Default akce: Enter → "submit", Escape → "cancel" (přepisitelné přes `enterAction`/`escapeAction`)
+- Textarea exception: Enter = nový řádek, Ctrl/Cmd+Enter = akce
+- `focus:next` akce nalezne další tabbable element přes `querySelectorAll`
+- Event listener na `formRef.current` zajišťuje scope isolation (ne na document)
+- CustomEvent nemá `composed: true` — nepřekračuje form boundary
+- ReadOnly pole blokují keyboard dispatch (guard v `handleFieldKeyDown`)
+- `dispatchFormAction` helper v utils.ts centralizuje akční dispatch
+- Testy v stories-5.test.tsx pokrývají Enter, Escape, custom akce i scope isolation
+
 ### File List
+
+- src/components/ts-web-ui/ts-form/utils.ts
+- src/components/ts-web-ui/ts-form/index.tsx
+- src/components/ts-web-ui/ts-form/types.ts
+- src/components/ts-web-ui/ts-form/widgets/text-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/number-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/date-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/datetime-widget.tsx
+- src/components/ts-web-ui/ts-form/stories-5.test.tsx

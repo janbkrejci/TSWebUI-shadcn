@@ -1,3 +1,6 @@
+import { Locale } from "date-fns"
+import * as Locales from "date-fns/locale"
+
 import React from "react"
 
 import { TsFieldDef } from "./types"
@@ -6,6 +9,21 @@ import { TsFieldDef } from "./types"
  * Default values for widgets to avoid magic numbers.
  */
 export const DEFAULT_TEXTAREA_ROWS = 3
+
+/**
+ * Resolves a locale string (e.g. 'cs-CZ', 'cs') to a date-fns Locale object.
+ * Returns undefined if no matching locale is found.
+ */
+export function getDateLocale(localeStr?: string): Locale | undefined {
+  if (!localeStr) return undefined
+  const localesMap = Locales as Record<string, Locale>
+  // Try exact match (e.g. 'cs-CZ' -> 'csCZ')
+  const exactKey = localeStr.replace("-", "")
+  if (localesMap[exactKey]) return localesMap[exactKey]
+  // Try generic part (e.g. 'cs')
+  const genericKey = localeStr.split("-")[0]
+  return localesMap[genericKey] || undefined
+}
 
 /**
  * Filters out fields marked with excludeFromSubmit: true from the data object.
@@ -87,7 +105,7 @@ export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = readonly
-    ? "border-transparent bg-muted/30 focus-visible:ring-0 focus-visible:border-transparent"
+    ? "border-transparent bg-muted/50 focus-visible:ring-0 focus-visible:border-transparent"
     : ""
   const readonlyPointerClass = readonly ? "cursor-default" : ""
   return { errorClass, readonlyClass, readonlyPointerClass }
@@ -297,35 +315,35 @@ export function handleFieldKeyDown(
     const isTextarea = (e.currentTarget as HTMLElement).tagName === "TEXTAREA"
     if (isTextarea && !e.ctrlKey && !e.metaKey) return
 
-    // Vždy zabránit nativnímu submitu formuláře v běžných inputech
+    // Always prevent native form submit in regular inputs
     e.preventDefault()
     e.stopPropagation()
 
-    if (enterAction) {
-      const event = new CustomEvent("form-key-action", {
-        detail: {
-          key: "Enter",
-          action: enterAction,
-          field: name,
-          value: commitValue, // Pass current value to avoid race conditions
-        },
-        bubbles: true,
-      })
-      ;(e.currentTarget as HTMLElement).dispatchEvent(event)
-    }
+    // Dispatch with explicit action or default "submit"
+    const action = enterAction || "submit"
+    const event = new CustomEvent("form-key-action", {
+      detail: {
+        key: "Enter",
+        action,
+        field: name,
+        value: commitValue,
+      },
+      bubbles: true,
+    })
+    ;(e.currentTarget as HTMLElement).dispatchEvent(event)
   } else if (e.key === "Escape") {
     e.preventDefault()
     e.stopPropagation()
     if (!escapeAction || escapeAction === "clear") {
       onClear?.()
     }
-    if (escapeAction) {
-      const event = new CustomEvent("form-key-action", {
-        detail: { key: "Escape", action: escapeAction, field: name },
-        bubbles: true,
-      })
-      ;(e.currentTarget as HTMLElement).dispatchEvent(event)
-    }
+    // Dispatch with explicit action or default "cancel"
+    const action = escapeAction || "cancel"
+    const event = new CustomEvent("form-key-action", {
+      detail: { key: "Escape", action, field: name },
+      bubbles: true,
+    })
+    ;(e.currentTarget as HTMLElement).dispatchEvent(event)
   }
 }
 

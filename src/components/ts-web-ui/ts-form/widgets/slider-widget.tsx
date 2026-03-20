@@ -73,6 +73,7 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
           aria-invalid={!!error}
           aria-label={ariaLabel || def.label}
           aria-required={ariaRequired}
+          aria-readonly={readOnly}
           className={cn(
             error && "**:[[role=slider]]:border-destructive **:[[role=slider]]:bg-destructive",
             readOnly && "pointer-events-none opacity-100"

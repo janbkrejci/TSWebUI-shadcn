@@ -40,6 +40,7 @@ export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
         aria-label={ariaLabel || def.label}
         aria-required={ariaRequired}
         aria-readonly={readOnly}
+        tabIndex={readOnly ? -1 : undefined}
         className={cn("flex flex-col gap-2", readOnly && "opacity-100 pointer-events-none")}
         {...props}
         ref={ref}

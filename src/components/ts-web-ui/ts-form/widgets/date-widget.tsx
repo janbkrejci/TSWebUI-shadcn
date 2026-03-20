@@ -1,7 +1,6 @@
 "use client"
 
 import { format, isValid as isValidDate } from "date-fns"
-import * as Locales from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 
 import * as React from "react"
@@ -14,7 +13,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 import { TsDateField, TsWidgetProps } from "../types"
-import { getFieldClasses, handleFieldKeyDown, parseSmartDate, sanitizeId } from "../utils"
+import {
+  getDateLocale,
+  getFieldClasses,
+  handleFieldKeyDown,
+  parseSmartDate,
+  sanitizeId,
+} from "../utils"
 
 export type TsDateWidgetProps = TsWidgetProps<TsDateField>
 
@@ -72,16 +77,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
     }, [field.value, dateFormat, open, isFocused])
 
     // Get date-fns locale object from string
-    const dateLocale = React.useMemo(() => {
-      if (!def.locale) return undefined
-      // Try exact match (e.g. 'cs-CZ' -> 'csCZ')
-      const localeKey = def.locale.replace("-", "") as keyof typeof Locales
-      const localeObj = Locales[localeKey]
-      if (localeObj) return localeObj as unknown as Locales.Locale
-      // Try generic part (e.g. 'cs')
-      const genericKey = def.locale.split("-")[0] as keyof typeof Locales
-      return (Locales[genericKey] as unknown as Locales.Locale) || undefined
-    }, [def.locale])
+    const dateLocale = React.useMemo(() => getDateLocale(def.locale), [def.locale])
 
     const handleInputBlur = () => {
       setIsFocused(false)
@@ -161,6 +157,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             autoFocus={autoFocus}
             tabIndex={readOnly ? -1 : undefined}
             aria-invalid={!!error}
+            aria-readonly={readOnly}
             aria-label={ariaLabel}
             aria-required={ariaRequired}
             className={cn("pr-10 text-right", errorClass, readonlyClass, readonlyPointerClass)}

@@ -45,6 +45,7 @@ export const TextareaWidget = React.forwardRef<HTMLTextAreaElement, TsTextareaWi
         autoFocus={autoFocus}
         tabIndex={readOnly ? -1 : undefined}
         aria-invalid={!!error}
+        aria-readonly={readOnly}
         aria-label={ariaLabel}
         aria-required={ariaRequired}
         onFocus={(e) => {

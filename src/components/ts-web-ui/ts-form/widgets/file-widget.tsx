@@ -164,6 +164,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
           accept={accept}
           multiple={multiple}
           className="hidden"
+          aria-label={ariaLabel || def.label || "File upload"}
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files)
             e.target.value = ""

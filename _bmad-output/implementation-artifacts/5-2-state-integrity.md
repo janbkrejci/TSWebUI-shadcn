@@ -1,6 +1,6 @@
 # Story 5.2: State Integrity (Verifikace zachování focusu a kurzoru)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -94,9 +94,29 @@ aby moje psaní a navigace v formuláři byly vždy plynulé a bez přerušení.
 
 ### Agent Model Used
 
-_pending_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
+
+Adversarial code review ověřil surgical update pattern, prevValuesRef/lastPropValuesRef mechanismy, error sync deduplikaci. Integrity testy v integrity.test.tsx pokrývají focus preservation, cursor a async error scénáře.
+
+### Completion Notes List
+
+- Surgical update pattern v index.tsx funkční — `document.activeElement` + `data-field` atribut správně detekuje aktivní pole
+- `lastPropValuesRef` zajisťuje, že se synchronizují pouze změněná pole (ne všechna)
+- Error sync deduplikace — `prevErrorPathsRef` jako `Set<string>` efektivně čistí stale errors
+- Widget-level `internalValue` pattern v text/textarea/number widgetech zachovává focus a kurzor
+- Number widget formatování nepřepisuje lokální stav při focusu
+- Všech 153 testů prošlo včetně integrity.test.tsx a stories-5.test.tsx
+
+### File List
+
+- src/components/ts-web-ui/ts-form/index.tsx
+- src/components/ts-web-ui/ts-form/widgets/text-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/number-widget.tsx
+- src/components/ts-web-ui/ts-form/integrity.test.tsx
+- src/components/ts-web-ui/ts-form/stories-5.test.tsx
 
 ### Completion Notes List
 

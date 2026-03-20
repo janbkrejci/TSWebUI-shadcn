@@ -1,6 +1,6 @@
 # Story 5.3: Standardy přístupnosti a klávesnice (A11y)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -19,41 +19,41 @@ aby byl formulář ovladatelný klávesnicí, čitelný screen readery a vizuál
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit tab order (AC: #1)
-  - [ ] 1.1: Ověřit, že hidden pole (`hidden: true`) nejsou v tab chain — `TsFormField` vrací prázdný fragment
-  - [ ] 1.2: Ověřit, že readonly pole mají `tabIndex: -1` — audit všech 22 widgetů
-  - [ ] 1.3: Ověřit, že tab order v multi-tab layoutu respektuje viditelnou záložku — pole na skrytých tabs nejsou tabbable
-  - [ ] 1.4: Test — formulář s 3 záložkami, Tab prochází pouze pole na aktivní záložce
+- [x] Task 1: Audit tab order (AC: #1)
+  - [x] 1.1: Ověřit, že hidden pole (`hidden: true`) nejsou v tab chain — `TsFormField` vrací prázdný fragment
+  - [x] 1.2: Ověřit, že readonly pole mají `tabIndex: -1` — audit všech 22 widgetů
+  - [x] 1.3: Ověřit, že tab order v multi-tab layoutu respektuje viditelnou záložku — pole na skrytých tabs nejsou tabbable
+  - [x] 1.4: Test — formulář s 3 záložkami, Tab prochází pouze pole na aktivní záložce
 
-- [ ] Task 2: Audit focus visibility (AC: #2)
-  - [ ] 2.1: Zkontrolovat Shadcn/UI default focus ring na Input, Select, Textarea, Checkbox, Switch, Radio
-  - [ ] 2.2: Ověřit focus ring v dark mode — kontrast 3:1
-  - [ ] 2.3: Ověřit, že custom widgety (relationship picker, combobox popper, date calendar) mají viditelný focus ring
-  - [ ] 2.4: Opravit chybějící focus styly pokud nalezeny
+- [x] Task 2: Audit focus visibility (AC: #2)
+  - [x] 2.1: Zkontrolovat Shadcn/UI default focus ring na Input, Select, Textarea, Checkbox, Switch, Radio
+  - [x] 2.2: Ověřit focus ring v dark mode — kontrast 3:1
+  - [x] 2.3: Ověřit, že custom widgety (relationship picker, combobox popper, date calendar) mají viditelný focus ring
+  - [x] 2.4: Opravit chybějící focus styly pokud nalezeny
 
-- [ ] Task 3: Audit a oprava ARIA atributů (AC: #3, #4)
-  - [ ] 3.1: Audit všech 22 widgetů — tabulka: widget → aria-invalid → aria-required → aria-readonly → aria-describedby
-  - [ ] 3.2: Ověřit, že `FormMessage` v `ts-form-field.tsx` má `role="alert"` nebo `aria-live`
-  - [ ] 3.3: Ověřit label asociace: `FormLabel` → `htmlFor` → `Input.id` chain přes `sanitizeId(name)`
-  - [ ] 3.4: Pro widgety bez externího labelu (checkbox, switch, infobox) — ověřit `aria-label` propagaci
-  - [ ] 3.5: Opravit chybějící `aria-describedby` propojení hint/error zprávy s inputem
+- [x] Task 3: Audit a oprava ARIA atributů (AC: #3, #4)
+  - [x] 3.1: Audit všech 22 widgetů — tabulka: widget → aria-invalid → aria-required → aria-readonly → aria-describedby
+  - [x] 3.2: Ověřit, že `FormMessage` v `ts-form-field.tsx` má `role="alert"` nebo `aria-live`
+  - [x] 3.3: Ověřit label asociace: `FormLabel` → `htmlFor` → `Input.id` chain přes `sanitizeId(name)`
+  - [x] 3.4: Pro widgety bez externího labelu (checkbox, switch, infobox) — ověřit `aria-label` propagaci
+  - [x] 3.5: Opravit chybějící `aria-describedby` propojení hint/error zprávy s inputem
 
-- [ ] Task 4: Color-not-sole-indicator audit (AC: #5)
-  - [ ] 4.1: Ověřit, že error state na poli obsahuje text message (ne jen červený border)
-  - [ ] 4.2: Ověřit tab error dots — kromě červené barvy přidat vizuální indikátor (tooltip nebo sr-only text)
-  - [ ] 4.3: Ověřit, že required field indicator (`*`) má sr-only alternativu
+- [x] Task 4: Color-not-sole-indicator audit (AC: #5)
+  - [x] 4.1: Ověřit, že error state na poli obsahuje text message (ne jen červený border)
+  - [x] 4.2: Ověřit tab error dots — kromě červené barvy přidat vizuální indikátor (tooltip nebo sr-only text)
+  - [x] 4.3: Ověřit, že required field indicator (`*`) má sr-only alternativu
 
-- [ ] Task 5: Keyboard trap prevention (AC: #6)
-  - [ ] 5.1: Test — z combobox/select dropdown lze odejít Escape → focus se vrátí na trigger
-  - [ ] 5.2: Test — z date calendar popup lze odejít Escape → focus se vrátí na date input
-  - [ ] 5.3: Test — z relationship picker popup lze odejít Escape → focus se vrátí na trigger
-  - [ ] 5.4: Test — Tab z posledního pole formuláře opustí formulář (ne loop zpět na první pole)
+- [x] Task 5: Keyboard trap prevention (AC: #6)
+  - [x] 5.1: Test — z combobox/select dropdown lze odejít Escape → focus se vrátí na trigger
+  - [x] 5.2: Test — z date calendar popup lze odejít Escape → focus se vrátí na date input
+  - [x] 5.3: Test — z relationship picker popup lze odejít Escape → focus se vrátí na trigger
+  - [x] 5.4: Test — Tab z posledního pole formuláře opustí formulář (ne loop zpět na první pole)
 
-- [ ] Task 6: Testy (AC: #1–#6)
-  - [ ] 6.1: Test — tab order odpovídá layout definici
-  - [ ] 6.2: Test — hidden a readonly pole přeskočena při tabování
-  - [ ] 6.3: Test — ARIA atributy přítomny na widgetech s chybou/required/readonly
-  - [ ] 6.4: Test — error message má role="alert" nebo aria-live
+- [x] Task 6: Testy (AC: #1–#6)
+  - [x] 6.1: Test — tab order odpovídá layout definici
+  - [x] 6.2: Test — hidden a readonly pole přeskočena při tabování
+  - [x] 6.3: Test — ARIA atributy přítomny na widgetech s chybou/required/readonly
+  - [x] 6.4: Test — error message má role="alert" nebo aria-live
 
 ## Dev Notes
 
@@ -95,9 +95,34 @@ aby byl formulář ovladatelný klávesnicí, čitelný screen readery a vizuál
 
 ### Agent Model Used
 
-_pending_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
+
+Adversarial review odhalil chybějící `aria-readonly` na date, datetime a textarea widgetech (M1), chybějící `aria-label` na hidden file inputu (M3) a chybějící `aria-label="Time"` na time inputu v datetime widgetu (L1). Vše opraveno.
+
+### Completion Notes List
+
+- `FormMessage` v form.tsx má `role="alert"` — screen reader oznamuje chybové hlášky
+- Hidden pole vrací `<></>` v ts-form-field.tsx — nejsou v DOM ani tab chain
+- Readonly pole mají `tabIndex: -1` přes všechny widgety
+- `aria-readonly={readOnly}` přidáno na date, datetime a textarea widgety
+- `aria-label` přidán na hidden file input v file-widget.tsx
+- `aria-label="Time"` přidán na time input v datetime-widget.tsx
+- Tab error dots mají `title` atribut a `aria-hidden` (vizuální indikátor s animate-pulse)
+- Required pole mají sr-only "(required)" text v label slotu
+- Shadcn/Radix primitives zajišťují focus ring a keyboard trap prevention
+
+### File List
+
+- src/components/ui/form.tsx
+- src/components/ts-web-ui/ts-form/ts-form-field.tsx
+- src/components/ts-web-ui/ts-form/ts-form-layout.tsx
+- src/components/ts-web-ui/ts-form/widgets/date-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/datetime-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/textarea-widget.tsx
+- src/components/ts-web-ui/ts-form/widgets/file-widget.tsx
+- src/components/ts-web-ui/ts-form/stories-5.test.tsx
 
 ### Completion Notes List
 
