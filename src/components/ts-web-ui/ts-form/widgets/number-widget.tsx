@@ -53,7 +53,8 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     React.useEffect(() => {
       // If we are not focused, we should potentially sync the display value with the form state
       if (!isFocused) {
-        const currentFieldValue = field.value as number | undefined
+        const currentFieldValue =
+          field.value === null ? undefined : (field.value as number | undefined)
 
         // Has the value in the form state changed since the last render?
         const hasFormValueChanged =
@@ -61,10 +62,6 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
 
         if (hasFormValueChanged) {
           // If it changed, was it because of our own commit or an external change?
-          // During blur, currentFieldValue is often stale (matches previousFieldValueRef)
-          // so hasFormValueChanged is false, preventing the revert bug.
-          // When RHF finally updates, currentFieldValue matches lastCommittedValueRef,
-          // so isExternalChange is false, also preventing the revert.
           const isExternalChange =
             JSON.stringify(currentFieldValue) !== JSON.stringify(lastCommittedValueRef.current)
 
@@ -80,7 +77,6 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
         }
       }
     }, [field.value, isFocused, def.roundTo, def.locale])
-
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true)
       isClearingRef.current = false

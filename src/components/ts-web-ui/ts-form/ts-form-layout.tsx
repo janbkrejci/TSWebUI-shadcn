@@ -153,96 +153,96 @@ export function TsFormLayout({
   }
 
   return null
-}
 
-function renderRows(
-  rows: TsRow[],
-  fields: Record<string, TsFieldDef>,
-  externalErrors?: Record<string, unknown>
-) {
-  const alignmentClasses = {
-    left: "justify-start text-left",
-    center: "justify-center text-center",
-    right: "justify-end text-right",
-  }
+  function renderRows(
+    rows: TsRow[],
+    fields: Record<string, TsFieldDef>,
+    extErrs?: Record<string, unknown>
+  ) {
+    const alignmentClasses = {
+      left: "justify-start text-left",
+      center: "justify-center text-center",
+      right: "justify-end text-right",
+    }
 
-  return rows.map((row, rowIndex) => {
-    // Filter out hidden fields before calculating columns and rendering
-    const visibleItems = row.filter((item) => {
-      if (!item.field) return true // empty or separator
-      const fieldDef = fields[item.field]
-      return !fieldDef?.hidden
-    })
+    return rows.map((row, rowIndex) => {
+      // Filter out hidden fields before calculating columns and rendering
+      const visibleItems = row.filter((item) => {
+        if (!item.field) return true // empty or separator
+        const fieldDef = fields[item.field]
+        return !fieldDef?.hidden
+      })
 
-    if (visibleItems.length === 0) return null
+      if (visibleItems.length === 0) return null
 
-    // Calculate grid template columns based on widths of visible items
-    const gridTemplateColumns = visibleItems.map((item) => item.width || "1fr").join(" ")
+      // Calculate grid template columns based on widths of visible items
+      const gridTemplateColumns = visibleItems.map((item) => item.width || "1fr").join(" ")
 
-    return (
-      <div
-        key={rowIndex}
-        className="grid gap-4 items-start [grid-template-columns:var(--grid-cols)]"
-        style={{ "--grid-cols": gridTemplateColumns } as React.CSSProperties}
-      >
-        {visibleItems.map((item, colIndex) => {
-          const alignmentClass = item.align ? alignmentClasses[item.align] : ""
+      return (
+        <div
+          key={rowIndex}
+          className="grid gap-4 items-start [grid-template-columns:var(--grid-cols)]"
+          style={{ "--grid-cols": gridTemplateColumns } as React.CSSProperties}
+        >
+          {visibleItems.map((item, colIndex) => {
+            const alignmentClass = item.align ? alignmentClasses[item.align] : ""
 
-          if (item.type === "empty") {
-            return <div key={colIndex} />
-          }
+            if (item.type === "empty") {
+              return <div key={colIndex} />
+            }
 
-          if (item.type === "separator") {
+            if (item.type === "separator") {
+              return (
+                <div
+                  key={colIndex}
+                  className={cn("min-w-0 py-2", item.align && "flex flex-col", alignmentClass)}
+                >
+                  <div className="w-full">
+                    {item.label && (
+                      <h4
+                        className={cn(
+                          "text-sm font-medium text-muted-foreground mb-2",
+                          item.align && alignmentClass.split(" ").pop()
+                        )}
+                      >
+                        {item.label}
+                      </h4>
+                    )}
+                    <Separator />
+                  </div>
+                </div>
+              )
+            }
+
+            const fieldDef = fields[item.field]
+            if (!fieldDef) {
+              return (
+                <div key={colIndex} className="text-destructive text-sm">
+                  Field &apos;{item.field}&apos; not found
+                </div>
+              )
+            }
+
+            // Extract error for this specific field from external errors prop
+            const fieldError = getNestedValue(extErrs as Record<string, unknown>, item.field)
+
             return (
               <div
-                key={colIndex}
-                className={cn("min-w-0 py-2", item.align && "flex flex-col", alignmentClass)}
+                key={item.field}
+                className={cn("min-w-0", item.align && "flex w-full", alignmentClass)}
               >
-                <div className="w-full">
-                  {item.label && (
-                    <h4
-                      className={cn(
-                        "text-sm font-medium text-muted-foreground mb-2",
-                        item.align && alignmentClass.split(" ").pop()
-                      )}
-                    >
-                      {item.label}
-                    </h4>
-                  )}
-                  <Separator />
+                <div className={cn(item.align ? "w-fit" : "w-full")}>
+                  <TsFormField
+                    name={item.field}
+                    fieldDef={fieldDef}
+                    externalError={typeof fieldError === "string" ? fieldError : undefined}
+                  />
                 </div>
               </div>
             )
-          }
-
-          const fieldDef = fields[item.field]
-          if (!fieldDef) {
-            return (
-              <div key={colIndex} className="text-destructive text-sm">
-                Field &apos;{item.field}&apos; not found
-              </div>
-            )
-          }
-
-          // Extract error for this specific field from external errors prop
-          const fieldError = getNestedValue(externalErrors as Record<string, unknown>, item.field)
-
-          return (
-            <div
-              key={item.field}
-              className={cn("min-w-0", item.align && "flex w-full", alignmentClass)}
-            >
-              <div className={cn(item.align ? "w-fit" : "w-full")}>
-                <TsFormField
-                  name={item.field}
-                  fieldDef={fieldDef}
-                  externalError={typeof fieldError === "string" ? fieldError : undefined}
-                />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    )
-  })
+          })}
+        </div>
+      )
+    })
+  }
 }

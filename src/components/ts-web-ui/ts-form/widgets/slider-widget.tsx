@@ -36,7 +36,8 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
     )
 
     React.useEffect(() => {
-      const currentFieldValue = field.value as number | undefined
+      const currentFieldValue =
+        field.value === null ? undefined : (field.value as number | undefined)
       const hasFormValueChanged =
         JSON.stringify(currentFieldValue) !== JSON.stringify(previousFieldValueRef.current)
 
