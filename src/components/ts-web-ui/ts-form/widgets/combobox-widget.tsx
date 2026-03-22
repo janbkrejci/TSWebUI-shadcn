@@ -4,7 +4,6 @@ import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -14,6 +13,8 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -57,7 +58,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
 
     return (
       <Popover
-        open={open}
+        open={readOnly ? false : open}
         onOpenChange={(v) => {
           if (!readOnly && !def.disabled) setOpen(v)
         }}

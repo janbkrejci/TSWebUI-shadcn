@@ -36,7 +36,9 @@ export const CheckboxWidget = React.forwardRef<HTMLButtonElement, TsCheckboxWidg
         <Checkbox
           id={`${safeId}-checkbox`}
           checked={!!field.value}
-          onCheckedChange={field.onChange}
+          onCheckedChange={(checked) => {
+            if (!readOnly) field.onChange(checked)
+          }}
           disabled={def.disabled}
           autoFocus={autoFocus}
           tabIndex={readOnly ? -1 : undefined}

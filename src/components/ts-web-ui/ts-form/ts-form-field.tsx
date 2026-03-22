@@ -40,6 +40,7 @@ import { TableWidget } from "./widgets/ts-table-widget"
 interface TsFormFieldProps {
   name: string
   fieldDef: TsFieldDef
+  externalError?: string
 }
 
 /**
@@ -55,7 +56,7 @@ const WIDGETS_WITHOUT_EXTERNAL_LABEL: Set<TsFieldDef["type"]> = new Set([
   "markdown",
 ])
 
-export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
+export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps) {
   const form = useFormContext()
 
   return (
@@ -67,7 +68,7 @@ export function TsFormField({ name, fieldDef }: TsFormFieldProps) {
 
         // External dynamic error (from form props or manual setError) has priority.
         // The fieldDef.error is a static fallback from the JSON definition itself.
-        const errorMessage = fieldState.error?.message || fieldDef.error
+        const errorMessage = fieldState.error?.message || externalError || fieldDef.error
         const shouldShowLabel =
           !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && !fieldDef.hideLabel
 

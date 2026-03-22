@@ -105,9 +105,9 @@ export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = readonly
-    ? "border-transparent bg-muted/50 focus-visible:ring-0 focus-visible:border-transparent"
+    ? "focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
     : ""
-  const readonlyPointerClass = readonly ? "cursor-default" : ""
+  const readonlyPointerClass = readonly ? "cursor-default select-none" : ""
   return { errorClass, readonlyClass, readonlyPointerClass }
 }
 
@@ -584,15 +584,18 @@ export function getButtonVariantClasses(variant?: string): {
   if (!variant) return { variant: shadcnVariant, className }
 
   if (variant === "primary") {
-    className = "bg-blue-600 text-white hover:bg-blue-700 border-none"
+    className = "bg-[oklch(0.5_0.2_250)] text-white! hover:bg-[oklch(0.4_0.2_250)] border-none"
   } else if (variant === "success") {
-    className = "bg-green-600 text-white hover:bg-green-700 border-none"
+    className =
+      "bg-[oklch(0.627_0.194_149.214)] text-white! hover:bg-[oklch(0.527_0.194_149.214)] border-none"
   } else if (variant === "warning") {
-    className = "bg-amber-500 text-white hover:bg-amber-600 border-none"
+    className =
+      "bg-[oklch(0.769_0.188_70.08)] text-white! hover:bg-[oklch(0.669_0.188_70.08)] border-none"
   } else if (variant === "info") {
-    className = "bg-blue-600 text-white hover:bg-blue-700 border-none"
+    className = "bg-blue-600 text-white! hover:bg-blue-700 border-none"
   } else if (variant === "danger" || variant === "destructive") {
     shadcnVariant = "destructive"
+    className = "text-white!"
   } else if (["default", "outline", "secondary", "ghost", "link"].includes(variant)) {
     shadcnVariant = variant as typeof shadcnVariant
   }

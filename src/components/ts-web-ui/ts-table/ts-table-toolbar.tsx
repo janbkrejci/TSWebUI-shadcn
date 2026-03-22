@@ -6,7 +6,6 @@ import * as XLSX from "xlsx"
 
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -16,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 interface TsTableToolbarProps<TData> {
   table: Table<TData>

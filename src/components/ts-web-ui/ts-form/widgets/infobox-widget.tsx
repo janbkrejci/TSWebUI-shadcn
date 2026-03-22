@@ -5,7 +5,8 @@ import { AlertTriangle, CheckCircle2, Info, X, icons } from "lucide-react"
 import * as React from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { TsInfoboxField, TsWidgetProps } from "../types"
 

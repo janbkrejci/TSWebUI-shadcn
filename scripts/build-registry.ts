@@ -9,6 +9,18 @@ const COMPONENTS_BASE_PATH = path.join(process.cwd(), "src", "components", "ts-w
  */
 const REGISTRY_COMPONENTS = [
   {
+    name: "ts-web-ui/ui/alert-dialog",
+    dependencies: ["@radix-ui/react-alert-dialog", "lucide-react"],
+    registryDependencies: ["ts-web-ui/ui/button"],
+    files: ["ui/alert-dialog.tsx"],
+  },
+  {
+    name: "ts-web-ui/ui/button",
+    dependencies: ["@radix-ui/react-slot", "class-variance-authority"],
+    registryDependencies: [],
+    files: ["ui/button.tsx"],
+  },
+  {
     name: "ts-web-ui/ts-logo",
     dependencies: ["lucide-react"],
     registryDependencies: [],
@@ -23,13 +35,13 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/mode-toggle",
     dependencies: ["lucide-react", "next-themes"],
-    registryDependencies: ["button", "dropdown-menu"],
+    registryDependencies: ["ts-web-ui/ui/button", "dropdown-menu"],
     files: ["mode-toggle/index.tsx"],
   },
   {
     name: "ts-web-ui/ts-sidebar",
     dependencies: ["lucide-react"],
-    registryDependencies: ["button", "tooltip", "ts-web-ui/ts-logo"],
+    registryDependencies: ["ts-web-ui/ui/button", "tooltip", "ts-web-ui/ts-logo"],
     files: ["ts-sidebar/index.tsx"],
   },
   {
@@ -41,13 +53,21 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-window",
     dependencies: ["lucide-react", "react-rnd"],
-    registryDependencies: ["button"],
+    registryDependencies: ["ts-web-ui/ui/button"],
     files: ["ts-window/index.tsx"],
   },
   {
     name: "ts-web-ui/ts-table",
     dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "date-fns"],
-    registryDependencies: ["button", "checkbox", "dropdown-menu", "input", "select", "table"],
+    registryDependencies: [
+      "ts-web-ui/ui/button",
+      "checkbox",
+      "dropdown-menu",
+      "input",
+      "select",
+      "table",
+      "badge",
+    ],
     files: [
       "ts-table/index.tsx",
       "ts-table/columns.tsx",
@@ -59,22 +79,32 @@ const REGISTRY_COMPONENTS = [
   },
   {
     name: "ts-web-ui/ts-form",
-    dependencies: ["react-hook-form", "lucide-react", "date-fns", "react-markdown", "remark-gfm"],
+    dependencies: [
+      "react-hook-form",
+      "lucide-react",
+      "date-fns",
+      "react-markdown",
+      "remark-gfm",
+      "react-syntax-highlighter",
+    ],
     registryDependencies: [
-      "alert-dialog",
-      "button",
+      "ts-web-ui/ui/alert-dialog",
+      "ts-web-ui/ui/button",
       "form",
       "alert",
       "badge",
       "calendar",
       "checkbox",
       "command",
+      "dialog",
       "input",
       "popover",
       "radio-group",
       "select",
+      "separator",
       "slider",
       "switch",
+      "tabs",
       "textarea",
       "toggle-group",
       "ts-web-ui/ts-table",
@@ -83,7 +113,9 @@ const REGISTRY_COMPONENTS = [
       "ts-form/index.tsx",
       "ts-form/ts-form-field.tsx",
       "ts-form/ts-form-layout.tsx",
+      "ts-form/ts-form-confirmation-dialog.tsx",
       "ts-form/types.ts",
+      "ts-form/widget-types.ts",
       "ts-form/utils.ts",
       ...fs
         .readdirSync(path.join(COMPONENTS_BASE_PATH, "ts-form", "widgets"))
@@ -104,7 +136,7 @@ const REGISTRY_COMPONENTS = [
 ]
 
 async function buildRegistry() {
-  const BASE_URL = "https://janbkrejci.github.io/TSWebUI-shadcn/registry"
+  const BASE_URL = process.env.REGISTRY_URL || "http://localhost:3001/registry"
 
   if (!fs.existsSync(REGISTRY_PATH)) {
     fs.mkdirSync(REGISTRY_PATH, { recursive: true })
@@ -116,7 +148,7 @@ async function buildRegistry() {
       type: "registry:block",
       dependencies: component.dependencies,
       registryDependencies: component.registryDependencies.map((dep) => {
-        // If it's one of our components, convert to full URL so shadcn CLI can find it
+        // If it's one of our components, use an absolute URL so shadcn CLI can find it
         if (dep.startsWith("ts-web-ui/")) {
           const componentFileName = dep.split("/").pop()
           return `${BASE_URL}/${componentFileName}.json`
@@ -129,11 +161,20 @@ async function buildRegistry() {
 
         // Adjust imports to point to the target location in the user's project
         const processedContent = content
+          .replace(
+            /@\/components\/ts-web-ui\/ui\/alert-dialog/g,
+            "@/components/ts-web-ui/ui/alert-dialog"
+          )
+          .replace(/@\/components\/ts-web-ui\/ui\/button/g, "@/components/ts-web-ui/ui/button")
+          .replace(/@\/components\/ui\/alert-dialog/g, "@/components/ts-web-ui/ui/alert-dialog")
+          .replace(/@\/components\/ui\/button/g, "@/components/ts-web-ui/ui/button")
           .replace(/@\/components\/ui\//g, "@/components/ui/")
           .replace(/\.\.\/client-only/g, "@/components/ts-web-ui/client-only")
           .replace(/\.\.\/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table") // Handle widget depth
           .replace(/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table")
           .replace(/\.\.\/ts-form/g, "@/components/ts-web-ui/ts-form")
+          .replace(/\.\.\/ts-logo/g, "@/components/ts-web-ui/ts-logo")
+          .replace(/\.\.\/theme-provider/g, "@/components/ts-web-ui/theme-provider")
           .replace(/\.\.\/ts-sidebar/g, "@/components/ts-web-ui/ts-sidebar")
           .replace(/\.\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
           .replace(/\.\.\/ts-window/g, "@/components/ts-web-ui/ts-window")
@@ -160,7 +201,7 @@ async function buildRegistry() {
   const index = REGISTRY_COMPONENTS.map((c) => ({
     name: c.name,
     type: "registry:block",
-    href: `https://janbkrejci.github.io/TSWebUI-shadcn/registry/${c.name.split("/").pop()}.json`,
+    href: `${BASE_URL}/${c.name.split("/").pop()}.json`,
   }))
   fs.writeFileSync(path.join(REGISTRY_PATH, "index.json"), JSON.stringify(index, null, 2))
 }

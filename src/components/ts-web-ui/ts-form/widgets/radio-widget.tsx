@@ -33,7 +33,9 @@ export const RadioWidget = React.forwardRef<HTMLDivElement, TsRadioWidgetProps>(
 
     return (
       <RadioGroup
-        onValueChange={field.onChange}
+        onValueChange={(value) => {
+          if (!readOnly) field.onChange(value)
+        }}
         value={field.value}
         disabled={def.disabled}
         aria-invalid={hasError}

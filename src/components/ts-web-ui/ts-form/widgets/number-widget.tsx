@@ -39,14 +39,45 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     )
     const [isFocused, setIsFocused] = React.useState(false)
     const isClearingRef = React.useRef(false)
+    // Track what we last sent to field.onChange to avoid syncing back stale values during blur
+    const lastCommittedValueRef = React.useRef<number | undefined>(
+      field.value as number | undefined
+    )
+    // Track previous field.value to detect when it changes from outside
+    const previousFieldValueRef = React.useRef<number | undefined>(
+      field.value as number | undefined
+    )
 
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     React.useEffect(() => {
+      // If we are not focused, we should potentially sync the display value with the form state
       if (!isFocused) {
-        setDisplayValue(
-          formatNumericValue(field.value as number | undefined, def.roundTo, def.locale)
-        )
+        const currentFieldValue = field.value as number | undefined
+
+        // Has the value in the form state changed since the last render?
+        const hasFormValueChanged =
+          JSON.stringify(currentFieldValue) !== JSON.stringify(previousFieldValueRef.current)
+
+        if (hasFormValueChanged) {
+          // If it changed, was it because of our own commit or an external change?
+          // During blur, currentFieldValue is often stale (matches previousFieldValueRef)
+          // so hasFormValueChanged is false, preventing the revert bug.
+          // When RHF finally updates, currentFieldValue matches lastCommittedValueRef,
+          // so isExternalChange is false, also preventing the revert.
+          const isExternalChange =
+            JSON.stringify(currentFieldValue) !== JSON.stringify(lastCommittedValueRef.current)
+
+          if (isExternalChange) {
+            // It's an external change, so we must update our display
+            setDisplayValue(formatNumericValue(currentFieldValue, def.roundTo, def.locale))
+          }
+
+          // Update our track of the "current" form value
+          previousFieldValueRef.current = currentFieldValue
+          // Also update lastCommittedValueRef because now this IS the value we are synced with
+          lastCommittedValueRef.current = currentFieldValue
+        }
       }
     }, [field.value, isFocused, def.roundTo, def.locale])
 
@@ -80,17 +111,26 @@ export const NumberWidget = React.forwardRef<HTMLInputElement, TsNumberWidgetPro
     }
 
     const handleBlur = () => {
-      setIsFocused(false)
-      if (readOnly) return
+      if (readOnly) {
+        setIsFocused(false)
+        return
+      }
 
       if (isClearingRef.current) {
         isClearingRef.current = false
+        setIsFocused(false)
         return
       }
+
       const num = parseNumericValue(displayValue)
+
+      // Update committed ref BEFORE triggering field.onChange to help useEffect logic
+      lastCommittedValueRef.current = num
+
       field.onChange(num)
       field.onBlur()
       setDisplayValue(formatNumericValue(num, def.roundTo, def.locale))
+      setIsFocused(false)
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

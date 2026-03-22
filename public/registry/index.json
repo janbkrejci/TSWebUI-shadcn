@@ -1,47 +1,57 @@
 [
   {
+    "name": "ts-web-ui/ui/alert-dialog",
+    "type": "registry:block",
+    "href": "http://localhost:3001/registry/alert-dialog.json"
+  },
+  {
+    "name": "ts-web-ui/ui/button",
+    "type": "registry:block",
+    "href": "http://localhost:3001/registry/button.json"
+  },
+  {
     "name": "ts-web-ui/ts-logo",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json"
+    "href": "http://localhost:3001/registry/ts-logo.json"
   },
   {
     "name": "ts-web-ui/theme-provider",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json"
+    "href": "http://localhost:3001/registry/theme-provider.json"
   },
   {
     "name": "ts-web-ui/mode-toggle",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json"
+    "href": "http://localhost:3001/registry/mode-toggle.json"
   },
   {
     "name": "ts-web-ui/ts-sidebar",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json"
+    "href": "http://localhost:3001/registry/ts-sidebar.json"
   },
   {
     "name": "ts-web-ui/ts-topbar",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json"
+    "href": "http://localhost:3001/registry/ts-topbar.json"
   },
   {
     "name": "ts-web-ui/ts-window",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json"
+    "href": "http://localhost:3001/registry/ts-window.json"
   },
   {
     "name": "ts-web-ui/ts-table",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json"
+    "href": "http://localhost:3001/registry/ts-table.json"
   },
   {
     "name": "ts-web-ui/ts-form",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json"
+    "href": "http://localhost:3001/registry/ts-form.json"
   },
   {
     "name": "ts-web-ui/integrated-layout",
     "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/integrated-layout.json"
+    "href": "http://localhost:3001/registry/integrated-layout.json"
   }
 ]

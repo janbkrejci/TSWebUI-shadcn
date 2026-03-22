@@ -5,10 +5,11 @@ import { CalendarIcon } from "lucide-react"
 
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -97,7 +98,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
 
     return (
       <Popover open={open} onOpenChange={readOnly || def.disabled ? undefined : setOpen}>
-        <div className="relative">
+        <div className={cn("relative", readOnly && "pointer-events-none")}>
           <Input
             id={safeId}
             value={inputValue}

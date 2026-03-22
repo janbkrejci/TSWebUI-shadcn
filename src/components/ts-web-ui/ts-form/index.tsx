@@ -5,8 +5,9 @@ import { Loader2 } from "lucide-react"
 import * as React from "react"
 import { type FieldPath, useForm } from "react-hook-form"
 
-import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { TsFormConfirmationDialog } from "./ts-form-confirmation-dialog"
 import { TsFormLayout } from "./ts-form-layout"
@@ -49,65 +50,113 @@ export function TsForm({
     [onAction, fields]
   )
 
+  // Track the values prop we've already initialized with to avoid loops
+  const initializedValuesRef = React.useRef<string | null>(null)
+  // Track the values we've emitted to the parent via onFieldChange to avoid loops
+  const lastEmittedValuesRef = React.useRef<string | null>(null)
   // Track field changes and emit onFieldChange without triggering parent re-render
   const prevValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
-  // Track last seen prop values to only sync when props actually change
-  const lastPropValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
 
   // Track paths that have manual errors from props to allow efficient cleanup
   const prevErrorPathsRef = React.useRef<Set<string>>(new Set())
 
+  // Handle onFieldChange
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/incompatible-library
-    const subscription = form.watch((data, { name }) => {
-      // name is undefined if the whole form is reset or changed, we only care about field-level changes
+    const el = formRef.current
+    if (!el) return
+
+    // 1. Handle onBlur for input-like fields (text, number, textarea)
+    const handleFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement
+      const name = target.closest("[data-field]")?.getAttribute("data-field")
+
       if (name) {
-        // Prototype pollution protection for incoming field names
-        if (name === "__proto__" || name === "constructor" || name === "prototype") {
-          return
+        const fieldDef = fields[name]
+        const isInputLike = ["text", "number", "textarea", "password"].includes(fieldDef?.type)
+
+        if (isInputLike) {
+          const currentValues = form.getValues()
+          const val = getNestedValue(currentValues as Record<string, unknown>, name)
+          const prevVal = getNestedValue(prevValuesRef.current, name)
+
+          if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
+            const filteredData = filterExcludeFromSubmit(
+              currentValues as Record<string, unknown>,
+              fields
+            )
+            setNestedValue(prevValuesRef.current, name, deepClone(val))
+            lastEmittedValuesRef.current = JSON.stringify(filteredData)
+            onFieldChange?.(name, val, filteredData)
+          }
         }
+      }
+    }
 
-        const val = getNestedValue(data as Record<string, unknown>, name)
-        const filteredData = filterExcludeFromSubmit(data as Record<string, unknown>, fields)
-        onFieldChange?.(name, val, filteredData)
+    // 2. Handle immediate change for choice-like fields (radio, checkbox, select, etc.)
+    const subscription = form.watch((data, { name }) => {
+      if (name) {
+        const fieldDef = fields[name]
+        const isChoiceLike = ![
+          "text",
+          "number",
+          "textarea",
+          "password",
+          "markdown",
+          "infobox",
+        ].includes(fieldDef?.type)
 
-        // Update internal ref to keep in sync with internal changes
-        setNestedValue(prevValuesRef.current, name, val)
+        if (isChoiceLike) {
+          const val = getNestedValue(data as Record<string, unknown>, name)
+          const prevVal = getNestedValue(prevValuesRef.current, name)
+
+          if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
+            const filteredData = filterExcludeFromSubmit(data as Record<string, unknown>, fields)
+            setNestedValue(prevValuesRef.current, name, deepClone(val))
+            lastEmittedValuesRef.current = JSON.stringify(filteredData)
+            onFieldChange?.(name, val, filteredData)
+          }
+        }
       }
     })
-    return () => subscription.unsubscribe()
+
+    el.addEventListener("focusout", handleFocusOut)
+    return () => {
+      el.removeEventListener("focusout", handleFocusOut)
+      subscription.unsubscribe()
+    }
   }, [onFieldChange, form, fields])
 
-  // Update form values when props change surgically to preserve focus and avoid race conditions
+  // Sync with props ONLY for initial load, late arrival, or explicit external change.
+  // We use initializedValuesRef to distinguish between initial mount and subsequent prop updates.
   React.useEffect(() => {
-    if (!values) return
+    // Treat null/undefined values as empty object for consistent comparison
+    const normalizedValues = values || {}
+    const valuesJson = JSON.stringify(normalizedValues)
 
-    const activeElement = document.activeElement as HTMLElement
-    const activeFieldName = activeElement?.closest("[data-field]")?.getAttribute("data-field")
-
-    Object.keys(fields).forEach((key) => {
-      const path = key as FieldPath<Record<string, unknown>>
-
-      const propValue = getNestedValue(values as Record<string, unknown>, key)
-      const lastPropValue = getNestedValue(lastPropValuesRef.current, key)
-
-      // Only sync if the prop itself changed compared to last time we saw it
-      if (JSON.stringify(propValue) !== JSON.stringify(lastPropValue)) {
-        // Update both refs
-        setNestedValue(lastPropValuesRef.current, key, deepClone(propValue))
-        setNestedValue(prevValuesRef.current, key, deepClone(propValue))
-
-        // If this field is not currently being edited, sync it to RHF
-        if (key !== activeFieldName) {
-          form.setValue(path, propValue ?? null, {
-            shouldDirty: false,
-            shouldTouch: false,
-            shouldValidate: false,
-          })
-        }
+    // If we haven't initialized yet (initial mount or late arrival)
+    if (initializedValuesRef.current === null) {
+      if (Object.keys(normalizedValues).length > 0) {
+        form.reset(normalizedValues)
+        prevValuesRef.current = deepClone(normalizedValues)
+        initializedValuesRef.current = valuesJson
       }
-    })
-  }, [values, fields, form])
+    } else {
+      // Subsequent prop changes: Only reset if:
+      // 1. The values prop actually changed compared to our last initialization
+      // 2. The values prop is DIFFERENT from what we just emitted via onFieldChange (lastEmittedValuesRef)
+      const currentValuesJson = JSON.stringify(prevValuesRef.current)
+
+      if (
+        valuesJson !== initializedValuesRef.current &&
+        valuesJson !== currentValuesJson &&
+        valuesJson !== lastEmittedValuesRef.current
+      ) {
+        form.reset(normalizedValues)
+        prevValuesRef.current = deepClone(normalizedValues)
+        initializedValuesRef.current = valuesJson
+      }
+    }
+  }, [values, form])
 
   // Handle external errors
   React.useEffect(() => {
@@ -348,6 +397,8 @@ export function TsForm({
     (btnConfig: { action: string; confirm?: boolean }) => {
       if (btnConfig.confirm && confirmation.pendingAction && confirmation.pendingData) {
         executeAction(confirmation.pendingAction, confirmation.pendingData)
+      } else if (!btnConfig.confirm) {
+        // Cancel button in confirmation dialog - just close, don't execute anything
       }
       setConfirmation((prev) => ({ ...prev, isOpen: false }))
     },
@@ -355,10 +406,9 @@ export function TsForm({
   )
 
   const renderButtons = React.useCallback(
-    (btns: (TsButton | TsConfirmation["buttons"][0])[]) => {
+    (btns: (TsButton | TsConfirmation["buttons"][0])[], isConfirmation = false) => {
       return btns.map((btn, idx) => {
         const { variant, className: customClass } = getButtonVariantClasses(btn.variant)
-        const isConfirmBtn = "confirm" in btn
 
         return (
           <Button
@@ -367,18 +417,19 @@ export function TsForm({
             variant={variant}
             className={customClass}
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-              if (isConfirmBtn) {
+              if (isConfirmation) {
+                // All buttons in confirmation dialog go through handleConfirmationAction
                 handleConfirmationAction(btn as TsConfirmation["buttons"][0])
               } else {
                 handleButtonClick(e, btn as TsButton)
               }
             }}
             disabled={
-              (!isConfirmBtn && form.formState.isSubmitting) ||
-              (!isConfirmBtn && !!(btn as TsButton).disabled)
+              (!isConfirmation && form.formState.isSubmitting) ||
+              (!isConfirmation && !!(btn as TsButton).disabled)
             }
           >
-            {!isConfirmBtn && form.formState.isSubmitting && (
+            {!isConfirmation && form.formState.isSubmitting && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             {btn.label}
@@ -398,6 +449,7 @@ export function TsForm({
             fields={mergedFields}
             activeTab={activeTab}
             onTabChange={onTabChange}
+            externalErrors={errors}
           />
 
           {buttons.length > 0 &&
@@ -428,7 +480,7 @@ export function TsForm({
         isOpen={confirmation.isOpen}
         onOpenChange={(open) => setConfirmation((prev) => ({ ...prev, isOpen: open }))}
         config={confirmation.config}
-        renderButtons={renderButtons}
+        renderButtons={(btns) => renderButtons(btns, true)}
       />
     </>
   )

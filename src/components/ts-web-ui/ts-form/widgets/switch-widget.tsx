@@ -36,7 +36,9 @@ export const SwitchWidget = React.forwardRef<HTMLButtonElement, TsSwitchWidgetPr
         <Switch
           id={`${safeId}-switch`}
           checked={!!field.value}
-          onCheckedChange={field.onChange}
+          onCheckedChange={(checked) => {
+            if (!readOnly) field.onChange(checked)
+          }}
           disabled={def.disabled}
           autoFocus={autoFocus}
           tabIndex={readOnly ? -1 : undefined}

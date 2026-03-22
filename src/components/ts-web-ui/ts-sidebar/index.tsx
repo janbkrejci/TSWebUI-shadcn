@@ -9,8 +9,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -396,7 +397,12 @@ export function SidebarContent({
   children: React.ReactNode
 }) {
   return (
-    <div className={cn("flex-1 overflow-y-auto overflow-x-hidden scrollbar-hidden", className)}>
+    <div
+      className={cn(
+        "flex-1 overflow-y-auto overflow-x-hidden [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:display-none",
+        className
+      )}
+    >
       <div className="py-2">{children}</div>
     </div>
   )

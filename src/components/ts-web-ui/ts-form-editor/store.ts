@@ -61,11 +61,11 @@ const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
     case "password":
       return { type, label }
     case "textarea":
-      return { type, label, rows: 3 }
+      return { type, label }
     case "number":
-      return { type, label, step: 1 }
+      return { type, label }
     case "slider":
-      return { type, label, min: 0, max: 100, step: 1 }
+      return { type, label }
     case "select":
       return { type, label, options: defaultOptions }
     case "multiselect":
@@ -87,13 +87,13 @@ const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
     case "file":
       return { type, label }
     case "infobox":
-      return { type, label, content: "Information text", variant: "default" }
+      return { type, label, content: "Information text" }
     case "markdown":
       return { type, label, content: "**Markdown** content" }
     case "separator":
       return { type, label: "Section" }
     case "button":
-      return { type, label: "Button", variant: "default" }
+      return { type, label: "Button" }
     case "table":
       return { type, label }
     case "relationship":
@@ -147,7 +147,8 @@ const mapEditorItemToTsRowItem = (item: EditorRowItem): TsRowItem | null => {
     field: item.field,
   }
 
-  if (item.width) {
+  // Only export width if it's NOT the default 1fr
+  if (item.width && item.width !== "1fr") {
     rowItem.width = item.width
   }
 
@@ -260,6 +261,99 @@ export interface FormEditorState {
   undo: () => void
   redo: () => void
   saveToHistory: () => void
+}
+
+/** Removes default or empty values from field definition for cleaner export */
+const cleanFieldDefinition = (field: TsFieldDef): TsFieldDef => {
+  const cleaned = { ...field } as Record<string, unknown>
+
+  // Properties to remove if they match these defaults
+  const defaults: Record<string, unknown> = {
+    required: false,
+    hidden: false,
+    disabled: false,
+    readonly: false,
+    hideLabel: false,
+    selectAllOnFocus: false,
+    excludeFromSubmit: false,
+    autofocus: false,
+    step: 1,
+    roundTo: undefined,
+    min: undefined,
+    max: undefined,
+    rows: 3,
+    variant: "default",
+    placeholder: "",
+    hint: "",
+    error: "",
+  }
+
+  // Adjust defaults based on type if needed
+  if (field.type === "slider") {
+    defaults.min = 0
+    defaults.max = 100
+  }
+
+  Object.keys(cleaned).forEach((key) => {
+    const value = cleaned[key]
+
+    // Remove if matches default
+    if (value === defaults[key]) {
+      delete cleaned[key]
+      return
+    }
+
+    // Remove if null or undefined
+    if (value === null || value === undefined) {
+      delete cleaned[key]
+      return
+    }
+
+    // Remove empty arrays or objects
+    if (Array.isArray(value) && value.length === 0) {
+      delete cleaned[key]
+      return
+    }
+
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      !Array.isArray(value) &&
+      Object.keys(value).length === 0
+    ) {
+      // Special case: don't delete empty objects if they are required by some types
+      // But for our schema, they are usually optional
+      delete cleaned[key]
+    }
+  })
+
+  return cleaned as unknown as TsFieldDef
+}
+
+/** Removes default values from button definition for cleaner export */
+const cleanButtonDefinition = (button: TsButton): TsButton => {
+  const cleaned = { ...button } as Record<string, unknown>
+
+  const defaults: Record<string, unknown> = {
+    variant: "default",
+    disabled: false,
+    hidden: false,
+    position: "right",
+    type: "button",
+  }
+
+  Object.keys(cleaned).forEach((key) => {
+    if (cleaned[key] === defaults[key]) {
+      delete cleaned[key]
+    }
+    if (cleaned[key] === null || cleaned[key] === undefined || cleaned[key] === "") {
+      if (key !== "action" && key !== "label") {
+        delete cleaned[key]
+      }
+    }
+  })
+
+  return cleaned as unknown as TsButton
 }
 
 // ============================================================================
@@ -905,6 +999,12 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
   exportJson: (): string => {
     const { form } = get()
 
+    // Clean field definitions
+    const cleanedFields: Record<string, TsFieldDef> = {}
+    Object.keys(form.fields).forEach((key) => {
+      cleanedFields[key] = cleanFieldDefinition(form.fields[key])
+    })
+
     // Convert to TsForm format
     const output: {
       fields: Record<string, TsFieldDef>
@@ -914,9 +1014,9 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
       }
       buttons: TsButton[]
     } = {
-      fields: form.fields,
+      fields: cleanedFields,
       layout: {},
-      buttons: form.buttons,
+      buttons: form.buttons.map(cleanButtonDefinition),
     }
 
     if (form.mode === "tabs" && form.tabs) {

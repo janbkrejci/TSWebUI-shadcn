@@ -32,11 +32,11 @@ export interface TsRowItem {
   /** CSS grid width (e.g. '1fr', '200px', '50%') */
   width?: string
   /** Special layout type override */
-  type?: "empty" | "separator"
+  type?: "empty" | "separator" | (string & {})
   /** Label for 'separator' type */
   label?: string
   /** Horizontal alignment of the widget within its grid cell */
-  align?: "left" | "center" | "right"
+  align?: "left" | "center" | "right" | (string & {})
 }
 
 /**
@@ -86,7 +86,7 @@ export interface TsConfirmation {
     /** Whether this button triggers the 'confirm' action of the parent button */
     confirm?: boolean
     /** Visual position within the footer */
-    position?: "left" | "center" | "right"
+    position?: "left" | "center" | "right" | (string & {})
   }[]
 }
 
@@ -101,11 +101,11 @@ export interface TsButton {
   /** Visual style variant from Shadcn/UI (e.g. 'default', 'outline', 'destructive') */
   variant?: TsButtonVariant
   /** HTML button type. 'submit' triggers form submission and internal validation check. */
-  type?: "submit" | "button" | "reset"
+  type?: "submit" | "button" | "reset" | (string & {})
   /** Lucide icon name (optional) */
   icon?: string
   /** Position in the bottom button bar */
-  position?: "left" | "center" | "right"
+  position?: "left" | "center" | "right" | (string & {})
   /** Optional confirmation dialog config before executing the action */
   confirmation?: TsConfirmation
   /** Whether the button is disabled */

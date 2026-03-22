@@ -36,7 +36,14 @@ export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetPr
     const safeId = sanitizeId(name)
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
     return (
-      <Select onValueChange={field.onChange} value={field.value ?? ""} disabled={def.disabled}>
+      <Select
+        onValueChange={(value) => {
+          if (!readOnly) field.onChange(value)
+        }}
+        value={field.value ?? ""}
+        disabled={def.disabled}
+        open={readOnly ? false : undefined}
+      >
         <SelectTrigger
           id={`${safeId}-select`}
           className={cn(

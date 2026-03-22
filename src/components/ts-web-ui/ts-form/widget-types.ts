@@ -45,11 +45,18 @@ export type TsButtonVariant =
   | "danger"
   | "success"
   | "warning"
+  | (string & {})
 
 /**
  * Visual variants for the Infobox widget.
  */
-export type TsInfoboxVariant = "default" | "information" | "warning" | "success" | "destructive"
+export type TsInfoboxVariant =
+  | "default"
+  | "information"
+  | "warning"
+  | "success"
+  | "destructive"
+  | (string & {})
 
 // ─── Options ──────────────────────────────────────────────────────────────────
 
@@ -396,6 +403,7 @@ export type TsFieldDef =
   | TsRelationshipField
   | TsInfoboxField
   | TsMarkdownField
+  | (Record<string, unknown> & { type: string })
 
 // ─── Utility type for partial updates ──────────────────────────────────────────
 

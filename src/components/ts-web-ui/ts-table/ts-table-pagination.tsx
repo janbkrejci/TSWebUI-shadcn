@@ -3,7 +3,6 @@
 import { Table } from "@tanstack/react-table"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -11,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 interface TsTablePaginationProps<TData> {
   table: Table<TData>

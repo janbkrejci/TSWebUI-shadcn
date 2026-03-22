@@ -17,11 +17,18 @@ interface TsFormLayoutProps {
   fields: Record<string, TsFieldDef>
   activeTab?: string | number
   onTabChange?: (tab: string | number) => void
+  externalErrors?: Record<string, unknown>
 }
 
-export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormLayoutProps) {
+export function TsFormLayout({
+  layout,
+  fields,
+  activeTab,
+  onTabChange,
+  externalErrors,
+}: TsFormLayoutProps) {
   const {
-    formState: { errors },
+    formState: { errors: rhfErrors },
   } = useFormContext()
 
   // Internal state for uncontrolled mode (when activeTab prop is not provided)
@@ -36,16 +43,20 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
     }
   }, [layout.tabs, internalActiveTabIndex])
 
-  // Helper to check if a field has any error (from RHF state or static definition)
+  // Helper to check if a field has any error (from RHF state, external props, or static definition)
   const hasFieldAnyError = React.useCallback(
     (fieldKey: string) => {
       const fieldDef = fields[fieldKey]
       if (!fieldDef || fieldDef.hidden) return false
-      const hasRhfError = !!getNestedValue(errors as Record<string, unknown>, fieldKey)
-      return hasRhfError || !!fieldDef.error
+      const hasRhfError = !!getNestedValue(rhfErrors as Record<string, unknown>, fieldKey)
+      const hasExternalError = !!getNestedValue(externalErrors as Record<string, unknown>, fieldKey)
+      return hasRhfError || hasExternalError || !!fieldDef.error
     },
-    [errors, fields]
+    [rhfErrors, externalErrors, fields]
   )
+
+  // Memoize errors to avoid complex expressions in dependencies
+  const rhfErrorsJson = JSON.stringify(rhfErrors)
 
   // Pre-calculate which tabs have errors
   const tabErrors = React.useMemo(() => {
@@ -53,7 +64,7 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
     return layout.tabs.map((tab) => {
       return tab.rows.some((row) => row.some((item) => item.field && hasFieldAnyError(item.field)))
     })
-  }, [layout.tabs, hasFieldAnyError])
+  }, [layout.tabs, hasFieldAnyError, rhfErrorsJson, externalErrors])
 
   if (layout.tabs && layout.tabs.length > 0) {
     // Determine which tab index to show (prop has priority, fallback to internal state)
@@ -96,7 +107,7 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
 
     return (
       <Tabs value={currentTabValue} onValueChange={handleValueChange} className="w-full">
-        <TabsList className="bg-muted/50 w-full justify-start overflow-x-auto scrollbar-hidden">
+        <TabsList className="bg-muted/50 w-full justify-start overflow-x-auto [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:display-none">
           {layout.tabs.map((tab, index) => {
             const hasError = tabErrors[index]
 
@@ -106,7 +117,7 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
                 value={String(index)}
                 aria-invalid={hasError ? "true" : undefined}
                 className={cn(
-                  "relative flex-none px-4 py-2 transition-colors",
+                  "relative flex-none px-4 transition-colors",
                   hasError &&
                     "data-[state=active]:bg-destructive/15 data-[state=active]:text-destructive data-[state=active]:border-destructive/30"
                 )}
@@ -124,8 +135,13 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
           })}
         </TabsList>
         {layout.tabs.map((tab, index) => (
-          <TabsContent key={index} value={String(index)} className="space-y-4 pt-4">
-            {renderRows(tab.rows, fields)}
+          <TabsContent
+            key={index}
+            value={String(index)}
+            forceMount
+            className="space-y-4 pt-4 data-[state=inactive]:hidden"
+          >
+            {renderRows(tab.rows, fields, externalErrors)}
           </TabsContent>
         ))}
       </Tabs>
@@ -133,13 +149,17 @@ export function TsFormLayout({ layout, fields, activeTab, onTabChange }: TsFormL
   }
 
   if (layout.rows) {
-    return <div className="space-y-4">{renderRows(layout.rows, fields)}</div>
+    return <div className="space-y-4">{renderRows(layout.rows, fields, externalErrors)}</div>
   }
 
   return null
 }
 
-function renderRows(rows: TsRow[], fields: Record<string, TsFieldDef>) {
+function renderRows(
+  rows: TsRow[],
+  fields: Record<string, TsFieldDef>,
+  externalErrors?: Record<string, unknown>
+) {
   const alignmentClasses = {
     left: "justify-start text-left",
     center: "justify-center text-center",
@@ -204,13 +224,20 @@ function renderRows(rows: TsRow[], fields: Record<string, TsFieldDef>) {
             )
           }
 
+          // Extract error for this specific field from external errors prop
+          const fieldError = getNestedValue(externalErrors as Record<string, unknown>, item.field)
+
           return (
             <div
               key={item.field}
               className={cn("min-w-0", item.align && "flex w-full", alignmentClass)}
             >
               <div className={cn(item.align ? "w-fit" : "w-full")}>
-                <TsFormField name={item.field} fieldDef={fieldDef} />
+                <TsFormField
+                  name={item.field}
+                  fieldDef={fieldDef}
+                  externalError={typeof fieldError === "string" ? fieldError : undefined}
+                />
               </div>
             </div>
           )

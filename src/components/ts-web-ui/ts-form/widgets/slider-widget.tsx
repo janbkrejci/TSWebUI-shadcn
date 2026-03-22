@@ -28,9 +28,29 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
   ) => {
     const [showTooltip, setShowTooltip] = React.useState(false)
     const [localValue, setLocalValue] = React.useState<number>(field.value ?? def.min ?? 0)
+    const lastCommittedValueRef = React.useRef<number | undefined>(
+      field.value as number | undefined
+    )
+    const previousFieldValueRef = React.useRef<number | undefined>(
+      field.value as number | undefined
+    )
 
     React.useEffect(() => {
-      setLocalValue(field.value ?? def.min ?? 0)
+      const currentFieldValue = field.value as number | undefined
+      const hasFormValueChanged =
+        JSON.stringify(currentFieldValue) !== JSON.stringify(previousFieldValueRef.current)
+
+      if (hasFormValueChanged) {
+        const isExternalChange =
+          JSON.stringify(currentFieldValue) !== JSON.stringify(lastCommittedValueRef.current)
+
+        if (isExternalChange) {
+          setLocalValue(currentFieldValue ?? def.min ?? 0)
+        }
+
+        previousFieldValueRef.current = currentFieldValue
+        lastCommittedValueRef.current = currentFieldValue
+      }
     }, [field.value, def.min])
 
     const min = def.min ?? 0
@@ -66,7 +86,9 @@ export const SliderWidget = React.forwardRef<HTMLDivElement, TsSliderWidgetProps
           }}
           onValueCommit={(vals: number[]) => {
             if (readOnly) return
-            field.onChange(vals[0])
+            const val = vals[0]
+            lastCommittedValueRef.current = val
+            field.onChange(val)
             setTimeout(() => setShowTooltip(false), 300)
           }}
           disabled={def.disabled}
