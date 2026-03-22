@@ -182,7 +182,7 @@ const mapTsRowItemToEditorItem = (
   }
 
   if (item.align) {
-    editorItem.align = item.align
+    editorItem.align = item.align as "left" | "center" | "right"
   }
 
   if (item.label) {

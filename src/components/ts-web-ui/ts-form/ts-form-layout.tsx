@@ -115,6 +115,7 @@ export function TsFormLayout({
               <TabsTrigger
                 key={index}
                 value={String(index)}
+                tabIndex={-1}
                 aria-invalid={hasError ? "true" : undefined}
                 className={cn(
                   "relative flex-none px-4 transition-colors",
@@ -185,7 +186,9 @@ export function TsFormLayout({
           style={{ "--grid-cols": gridTemplateColumns } as React.CSSProperties}
         >
           {visibleItems.map((item, colIndex) => {
-            const alignmentClass = item.align ? alignmentClasses[item.align] : ""
+            const alignmentClass = item.align
+              ? (alignmentClasses[item.align as keyof typeof alignmentClasses] ?? "")
+              : ""
 
             if (item.type === "empty") {
               return <div key={colIndex} />

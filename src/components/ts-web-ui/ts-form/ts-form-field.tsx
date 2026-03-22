@@ -68,7 +68,9 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
 
         // External dynamic error (from form props or manual setError) has priority.
         // The fieldDef.error is a static fallback from the JSON definition itself.
-        const errorMessage = fieldState.error?.message || externalError || fieldDef.error
+        const errorMessage = (fieldState.error?.message || externalError || fieldDef.error) as
+          | string
+          | undefined
         const shouldShowLabel =
           !WIDGETS_WITHOUT_EXTERNAL_LABEL.has(fieldDef.type) && !fieldDef.hideLabel
 
@@ -82,8 +84,8 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
             {shouldShowLabel ? (
               <div className="min-h-14 flex items-end">
                 <FormLabel className={cn("pb-1 leading-tight", errorMessage && "text-destructive")}>
-                  {fieldDef.label}
-                  {fieldDef.required && (
+                  {fieldDef.label as string}
+                  {!!fieldDef.required && (
                     <>
                       {" "}
                       <span aria-hidden="true">*</span>
@@ -103,10 +105,10 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
                 fieldDef,
                 name,
                 errorMessage || undefined,
-                fieldDef.hint,
-                fieldDef.readonly,
-                fieldDef.hideLabel ? fieldDef.label || name : fieldDef.label || name,
-                fieldDef.autofocus
+                fieldDef.hint as string | undefined,
+                fieldDef.readonly as boolean | undefined,
+                (fieldDef.hideLabel ? fieldDef.label || name : fieldDef.label || name) as string,
+                fieldDef.autofocus as boolean | undefined
               )}
             </FormControl>
 
@@ -115,9 +117,9 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
               {errorMessage ? (
                 <FormMessage className="text-xs leading-tight">{errorMessage}</FormMessage>
               ) : (
-                fieldDef.hint && (
+                !!fieldDef.hint && (
                   <FormDescription className="text-xs leading-tight">
-                    {fieldDef.hint}
+                    {fieldDef.hint as string}
                   </FormDescription>
                 )
               )}
@@ -147,55 +149,60 @@ function renderWidget(
     readOnly,
     autoFocus,
     "aria-label": ariaLabel,
-    "aria-required": def.required,
+    "aria-required": def.required as boolean | undefined,
   }
 
-  switch (def.type) {
+  // Cast to Exclude to remove the catch-all Record<string, unknown> variant
+  // so that the switch statement can properly narrow the discriminated union.
+  type KnownFieldDef = Exclude<TsFieldDef, Record<string, unknown> & { type: string }>
+  const knownDef = def as KnownFieldDef
+
+  switch (knownDef.type) {
     case "text":
     case "password":
-      return <TextWidget {...commonProps} def={def} />
+      return <TextWidget {...commonProps} def={knownDef} />
     case "textarea":
-      return <TextareaWidget {...commonProps} def={def} />
+      return <TextareaWidget {...commonProps} def={knownDef} />
     case "number":
-      return <NumberWidget {...commonProps} def={def} />
+      return <NumberWidget {...commonProps} def={knownDef} />
     case "slider":
-      return <SliderWidget {...commonProps} def={def} />
+      return <SliderWidget {...commonProps} def={knownDef} />
     case "select":
-      return <SelectWidget {...commonProps} def={def} />
+      return <SelectWidget {...commonProps} def={knownDef} />
     case "combobox":
-      return <ComboboxWidget {...commonProps} def={def} />
+      return <ComboboxWidget {...commonProps} def={knownDef} />
     case "multiselect":
-      return <MultiSelectWidget {...commonProps} def={def} />
+      return <MultiSelectWidget {...commonProps} def={knownDef} />
     case "checkbox":
-      return <CheckboxWidget {...commonProps} def={def} />
+      return <CheckboxWidget {...commonProps} def={knownDef} />
     case "switch":
-      return <SwitchWidget {...commonProps} def={def} />
+      return <SwitchWidget {...commonProps} def={knownDef} />
     case "radio":
-      return <RadioWidget {...commonProps} def={def} />
+      return <RadioWidget {...commonProps} def={knownDef} />
     case "button-group":
-      return <ButtonGroupWidget {...commonProps} def={def} />
+      return <ButtonGroupWidget {...commonProps} def={knownDef} />
     case "date":
-      return <DateWidget {...commonProps} def={def} />
+      return <DateWidget {...commonProps} def={knownDef} />
     case "datetime":
-      return <DateTimeWidget {...commonProps} def={def} />
+      return <DateTimeWidget {...commonProps} def={knownDef} />
     case "file":
-      return <FileWidget {...commonProps} def={def} />
+      return <FileWidget {...commonProps} def={knownDef} />
     case "infobox":
-      return <InfoboxWidget {...commonProps} def={def} />
+      return <InfoboxWidget {...commonProps} def={knownDef} />
     case "markdown":
-      return <MarkdownWidget {...commonProps} def={def} />
+      return <MarkdownWidget {...commonProps} def={knownDef} />
     case "table":
-      return <TableWidget {...commonProps} def={def} />
+      return <TableWidget {...commonProps} def={knownDef} />
     case "button":
-      return <ButtonWidget {...commonProps} def={def} />
+      return <ButtonWidget {...commonProps} def={knownDef} />
     case "separator":
-      return <SeparatorWidget {...commonProps} def={def} />
+      return <SeparatorWidget {...commonProps} def={knownDef} />
     case "empty":
-      return <EmptyWidget {...commonProps} def={def} />
+      return <EmptyWidget {...commonProps} def={knownDef} />
     case "relationship":
-      return <RelationshipWidget {...commonProps} def={def} />
+      return <RelationshipWidget {...commonProps} def={knownDef} />
     default: {
-      const _exhaustive: never = def
+      const _exhaustive: never = knownDef
       return (
         <div className="p-2 border border-destructive/50 text-destructive text-sm rounded bg-destructive/10">
           Unsupported widget: {(_exhaustive as { type: string }).type}

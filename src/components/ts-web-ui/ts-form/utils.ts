@@ -26,6 +26,27 @@ export function getDateLocale(localeStr?: string): Locale | undefined {
 }
 
 /**
+ * Converts null values to undefined in form output data.
+ * Needed because NumberWidget uses null internally (RHF treats undefined as "use defaultValue")
+ * but the external API should expose undefined for empty fields.
+ */
+export function normalizeFormOutput(data: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (value === null) {
+      result[key] = undefined
+    } else if (Array.isArray(value)) {
+      result[key] = value
+    } else if (value && typeof value === "object") {
+      result[key] = normalizeFormOutput(value as Record<string, unknown>)
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+/**
  * Filters out fields marked with excludeFromSubmit: true from the data object.
  * Handles nested paths and array indices by deleting from the end of each array
  * to preserve correct remaining indices.

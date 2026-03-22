@@ -17,6 +17,7 @@ import {
   filterExcludeFromSubmit,
   getButtonVariantClasses,
   getNestedValue,
+  normalizeFormOutput,
   setNestedValue,
 } from "./utils"
 
@@ -44,7 +45,7 @@ export function TsForm({
   // Central submission logic - pass action explicitly
   const executeAction = React.useCallback(
     (action: string, data: Record<string, unknown>) => {
-      const filteredData = filterExcludeFromSubmit(data, fields)
+      const filteredData = normalizeFormOutput(filterExcludeFromSubmit(data, fields))
       onAction?.(action, filteredData)
     },
     [onAction, fields]
@@ -80,13 +81,12 @@ export function TsForm({
           const prevVal = getNestedValue(prevValuesRef.current, name)
 
           if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
-            const filteredData = filterExcludeFromSubmit(
-              currentValues as Record<string, unknown>,
-              fields
+            const filteredData = normalizeFormOutput(
+              filterExcludeFromSubmit(currentValues as Record<string, unknown>, fields)
             )
             setNestedValue(prevValuesRef.current, name, deepClone(val))
             lastEmittedValuesRef.current = JSON.stringify(filteredData)
-            onFieldChange?.(name, val, filteredData)
+            onFieldChange?.(name, val === null ? undefined : val, filteredData)
           }
         }
       }
@@ -110,10 +110,12 @@ export function TsForm({
           const prevVal = getNestedValue(prevValuesRef.current, name)
 
           if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
-            const filteredData = filterExcludeFromSubmit(data as Record<string, unknown>, fields)
+            const filteredData = normalizeFormOutput(
+              filterExcludeFromSubmit(data as Record<string, unknown>, fields)
+            )
             setNestedValue(prevValuesRef.current, name, deepClone(val))
             lastEmittedValuesRef.current = JSON.stringify(filteredData)
-            onFieldChange?.(name, val, filteredData)
+            onFieldChange?.(name, val === null ? undefined : val, filteredData)
           }
         }
       }

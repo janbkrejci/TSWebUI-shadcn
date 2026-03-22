@@ -1103,7 +1103,7 @@ function CanvasCell({
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <span className="font-medium text-sm truncate">
-                {fieldConfig?.label || item.field}
+                {(fieldConfig?.label as string) || item.field}
               </span>
               {showRemove && (
                 <Button
@@ -1441,20 +1441,26 @@ function FieldPropertiesPanel({
 
         <div className="space-y-2">
           <Label>Label</Label>
-          <Input value={config.label || ""} onChange={(e) => onUpdate({ label: e.target.value })} />
+          <Input
+            value={(config.label as string) || ""}
+            onChange={(e) => onUpdate({ label: e.target.value })}
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Placeholder</Label>
           <Input
-            value={configProps.placeholder || ""}
+            value={(configProps.placeholder as string) || ""}
             onChange={(e) => onUpdate({ placeholder: e.target.value })}
           />
         </div>
 
         <div className="space-y-2">
           <Label>Hint</Label>
-          <Input value={config.hint || ""} onChange={(e) => onUpdate({ hint: e.target.value })} />
+          <Input
+            value={(config.hint as string) || ""}
+            onChange={(e) => onUpdate({ hint: e.target.value })}
+          />
         </div>
       </div>
 
@@ -1467,7 +1473,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Required</Label>
           <Switch
-            checked={config.required || false}
+            checked={!!config.required}
             onCheckedChange={(checked: boolean) => onUpdate({ required: checked })}
           />
         </div>
@@ -1475,7 +1481,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Disabled</Label>
           <Switch
-            checked={config.disabled || false}
+            checked={!!config.disabled}
             onCheckedChange={(checked: boolean) => onUpdate({ disabled: checked })}
           />
         </div>
@@ -1483,7 +1489,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Read-only</Label>
           <Switch
-            checked={config.readonly || false}
+            checked={!!config.readonly}
             onCheckedChange={(checked: boolean) => onUpdate({ readonly: checked })}
           />
         </div>
@@ -1493,7 +1499,7 @@ function FieldPropertiesPanel({
             <div className="flex items-center justify-between">
               <Label>Select all on focus</Label>
               <Switch
-                checked={configProps.selectAllOnFocus || false}
+                checked={!!configProps.selectAllOnFocus}
                 onCheckedChange={(checked: boolean) => onUpdate({ selectAllOnFocus: checked })}
               />
             </div>
@@ -1501,7 +1507,7 @@ function FieldPropertiesPanel({
             <div className="space-y-2">
               <Label>Enter Action</Label>
               <Input
-                value={configProps.enterAction || ""}
+                value={(configProps.enterAction as string) || ""}
                 onChange={(e) => onUpdate({ enterAction: e.target.value })}
                 placeholder="e.g. submit, focus:next"
               />
@@ -1510,7 +1516,7 @@ function FieldPropertiesPanel({
             <div className="space-y-2">
               <Label>Escape Action</Label>
               <Input
-                value={configProps.escapeAction || ""}
+                value={(configProps.escapeAction as string) || ""}
                 onChange={(e) => onUpdate({ escapeAction: e.target.value })}
                 placeholder="e.g. clear, cancel"
               />
@@ -1521,7 +1527,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Hidden</Label>
           <Switch
-            checked={config.hidden || false}
+            checked={!!config.hidden}
             onCheckedChange={(checked: boolean) => onUpdate({ hidden: checked })}
           />
         </div>
@@ -1529,7 +1535,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Auto focus</Label>
           <Switch
-            checked={configProps.autofocus || false}
+            checked={!!configProps.autofocus}
             onCheckedChange={(checked: boolean) => onUpdate({ autofocus: checked })}
           />
         </div>
@@ -1537,7 +1543,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Hide label</Label>
           <Switch
-            checked={configProps.hideLabel || false}
+            checked={!!configProps.hideLabel}
             onCheckedChange={(checked: boolean) => onUpdate({ hideLabel: checked })}
           />
         </div>
@@ -1545,7 +1551,7 @@ function FieldPropertiesPanel({
         <div className="flex items-center justify-between">
           <Label>Exclude from submit</Label>
           <Switch
-            checked={configProps.excludeFromSubmit || false}
+            checked={!!configProps.excludeFromSubmit}
             onCheckedChange={(checked: boolean) => onUpdate({ excludeFromSubmit: checked })}
           />
         </div>
@@ -1562,7 +1568,7 @@ function FieldPropertiesPanel({
                 <Label className="text-xs">Min</Label>
                 <Input
                   type="number"
-                  value={config.min ?? ""}
+                  value={(config.min as number) ?? ""}
                   onChange={(e) =>
                     onUpdate({ min: e.target.value ? Number(e.target.value) : undefined })
                   }
@@ -1572,7 +1578,7 @@ function FieldPropertiesPanel({
                 <Label className="text-xs">Max</Label>
                 <Input
                   type="number"
-                  value={config.max ?? ""}
+                  value={(config.max as number) ?? ""}
                   onChange={(e) =>
                     onUpdate({ max: e.target.value ? Number(e.target.value) : undefined })
                   }
@@ -1582,7 +1588,7 @@ function FieldPropertiesPanel({
                 <Label className="text-xs">Step</Label>
                 <Input
                   type="number"
-                  value={config.step ?? ""}
+                  value={(config.step as number) ?? ""}
                   onChange={(e) =>
                     onUpdate({ step: e.target.value ? Number(e.target.value) : undefined })
                   }
@@ -1594,7 +1600,7 @@ function FieldPropertiesPanel({
                 <Label className="text-xs">Round to (decimals)</Label>
                 <Input
                   type="number"
-                  value={config.roundTo ?? ""}
+                  value={(config.roundTo as number) ?? ""}
                   onChange={(e) =>
                     onUpdate({ roundTo: e.target.value ? Number(e.target.value) : undefined })
                   }
@@ -1613,7 +1619,7 @@ function FieldPropertiesPanel({
             <Input
               type="number"
               min={1}
-              value={config.rows || 3}
+              value={(config.rows as number) || 3}
               onChange={(e) => onUpdate({ rows: Number(e.target.value) })}
             />
           </div>
@@ -1634,7 +1640,7 @@ function FieldPropertiesPanel({
                 <div className="flex items-center gap-2">
                   <Label className="text-xs">Allow Custom</Label>
                   <Switch
-                    checked={config.allowCustom || false}
+                    checked={!!config.allowCustom}
                     onCheckedChange={(checked) => onUpdate({ allowCustom: checked })}
                   />
                 </div>
@@ -1655,7 +1661,7 @@ function FieldPropertiesPanel({
               <div className="space-y-2">
                 <Label className="text-xs">Not Found Message</Label>
                 <Input
-                  value={config.notFoundMessage || ""}
+                  value={(config.notFoundMessage as string) || ""}
                   onChange={(e) => onUpdate({ notFoundMessage: e.target.value })}
                   placeholder="Not found."
                 />
@@ -1665,7 +1671,7 @@ function FieldPropertiesPanel({
             <div className="space-y-2">
               <Label className="text-xs">Options (JSON)</Label>
               <Textarea
-                value={JSON.stringify(config.options || [], null, 2)}
+                value={JSON.stringify((config.options as unknown[]) || [], null, 2)}
                 onChange={(e) => {
                   try {
                     const options = JSON.parse(e.target.value)
@@ -1694,7 +1700,7 @@ function FieldPropertiesPanel({
             <div className="space-y-2">
               <Label className="text-xs">Date Format</Label>
               <Input
-                value={config.dateFormat || ""}
+                value={(config.dateFormat as string) || ""}
                 onChange={(e) => onUpdate({ dateFormat: e.target.value })}
                 placeholder={config.type === "date" ? "d.M.yyyy" : "d.M.yyyy HH:mm"}
               />
@@ -1714,7 +1720,7 @@ function FieldPropertiesPanel({
             <div className="space-y-2">
               <Label className="text-xs">Accept (mime types)</Label>
               <Input
-                value={config.accept || ""}
+                value={(config.accept as string) || ""}
                 onChange={(e) => onUpdate({ accept: e.target.value })}
                 placeholder="e.g. .pdf,image/*"
               />
@@ -1722,7 +1728,7 @@ function FieldPropertiesPanel({
             <div className="space-y-2">
               <Label className="text-xs">Inner Label</Label>
               <Input
-                value={config.innerLabel || ""}
+                value={(config.innerLabel as string) || ""}
                 onChange={(e) => onUpdate({ innerLabel: e.target.value })}
                 placeholder="Drop files here..."
               />
@@ -1730,7 +1736,7 @@ function FieldPropertiesPanel({
             <div className="flex items-center justify-between">
               <Label className="text-xs">Allow Multiple</Label>
               <Switch
-                checked={config.multiple || false}
+                checked={!!config.multiple}
                 onCheckedChange={(checked) => onUpdate({ multiple: checked })}
               />
             </div>
@@ -1744,7 +1750,7 @@ function FieldPropertiesPanel({
           <div className="space-y-2">
             <Label>Content</Label>
             <Textarea
-              value={(config.value as string) || config.content || ""}
+              value={(config.value as string) || (config.content as string) || ""}
               onChange={(e) => onUpdate({ content: e.target.value })}
               rows={5}
             />
@@ -1756,7 +1762,7 @@ function FieldPropertiesPanel({
         <div className="space-y-2">
           <Label>Variant</Label>
           <Select
-            value={config.variant || "default"}
+            value={(config.variant as string) || "default"}
             onValueChange={(v) => onUpdate({ variant: v as TsInfoboxVariant })}
           >
             <SelectTrigger>
@@ -1777,7 +1783,7 @@ function FieldPropertiesPanel({
         <div className="space-y-2">
           <Label>Visual Style</Label>
           <Select
-            value={config.variant || ""}
+            value={(config.variant as string) || ""}
             onValueChange={(v) =>
               onUpdate({ variant: (v.trim() || undefined) as "process" | undefined })
             }
@@ -1799,7 +1805,7 @@ function FieldPropertiesPanel({
           <div className="space-y-2">
             <Label>Action Name</Label>
             <Input
-              value={config.action || ""}
+              value={(config.action as string) || ""}
               onChange={(e) => onUpdate({ action: e.target.value })}
               placeholder="e.g. click:save"
             />
@@ -1834,7 +1840,7 @@ function FieldPropertiesPanel({
           <div className="space-y-2">
             <Label className="text-xs">Target Entity</Label>
             <Input
-              value={config.targetEntity || ""}
+              value={(config.targetEntity as string) || ""}
               onChange={(e) => onUpdate({ targetEntity: e.target.value })}
               placeholder="e.g. users"
             />
@@ -1842,7 +1848,7 @@ function FieldPropertiesPanel({
           <div className="space-y-2">
             <Label className="text-xs">Selection Mode</Label>
             <Select
-              value={config.mode || "single"}
+              value={(config.mode as string) || "single"}
               onValueChange={(v) => onUpdate({ mode: v as "single" | "multiple" })}
             >
               <SelectTrigger>
@@ -1857,14 +1863,14 @@ function FieldPropertiesPanel({
           <div className="space-y-2">
             <Label className="text-xs">Value Field (ID)</Label>
             <Input
-              value={config.valueField || "id"}
+              value={(config.valueField as string) || "id"}
               onChange={(e) => onUpdate({ valueField: e.target.value })}
             />
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Display Fields (JSON Array)</Label>
             <Input
-              value={JSON.stringify(config.displayFields || ["name"])}
+              value={JSON.stringify((config.displayFields as string[]) || ["name"])}
               onChange={(e) => {
                 try {
                   onUpdate({ displayFields: JSON.parse(e.target.value) })
@@ -1877,7 +1883,7 @@ function FieldPropertiesPanel({
           <div className="space-y-2">
             <Label className="text-xs">Mock Options (JSON)</Label>
             <Textarea
-              value={JSON.stringify(config.options || [], null, 2)}
+              value={JSON.stringify((config.options as unknown[]) || [], null, 2)}
               onChange={(e) => {
                 try {
                   onUpdate({ options: JSON.parse(e.target.value) })
@@ -1899,14 +1905,14 @@ function FieldPropertiesPanel({
           <div className="flex items-center justify-between">
             <Label className="text-xs">Show Create Button</Label>
             <Switch
-              checked={config.showCreateButton || false}
+              checked={!!config.showCreateButton}
               onCheckedChange={(checked) => onUpdate({ showCreateButton: checked })}
             />
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Columns (JSON)</Label>
             <Textarea
-              value={JSON.stringify(config.columns || [], null, 2)}
+              value={JSON.stringify((config.columns as unknown[]) || [], null, 2)}
               onChange={(e) => {
                 try {
                   const columns = JSON.parse(e.target.value)
