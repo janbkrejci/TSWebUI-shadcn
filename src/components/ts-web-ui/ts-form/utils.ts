@@ -38,7 +38,11 @@ export function normalizeFormOutput(data: Record<string, unknown>): Record<strin
     } else if (Array.isArray(value)) {
       result[key] = value
     } else if (value && typeof value === "object") {
-      result[key] = normalizeFormOutput(value as Record<string, unknown>)
+      if (value instanceof File || value instanceof Blob) {
+        result[key] = value
+      } else {
+        result[key] = normalizeFormOutput(value as Record<string, unknown>)
+      }
     } else {
       result[key] = value
     }
@@ -126,7 +130,7 @@ export function getFieldClasses(error?: string, readonly?: boolean) {
   const hasError = !!error
   const errorClass = hasError ? "border-destructive focus-visible:ring-destructive" : ""
   const readonlyClass = readonly
-    ? "focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+    ? "focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none border-transparent bg-muted/50"
     : ""
   const readonlyPointerClass = readonly ? "cursor-default select-none" : ""
   return { errorClass, readonlyClass, readonlyPointerClass }

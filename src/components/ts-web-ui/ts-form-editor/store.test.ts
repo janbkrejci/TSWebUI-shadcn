@@ -337,7 +337,6 @@ describe("TsFormEditor Store - import/export sync", () => {
       label: "Save",
       action: "save",
       disabled: true,
-      hidden: false,
     })
   })
 
