@@ -57,6 +57,10 @@ export function TsForm({
   const lastEmittedValuesRef = React.useRef<string | null>(null)
   // Track field changes and emit onFieldChange without triggering parent re-render
   const prevValuesRef = React.useRef<Record<string, unknown>>(values ? deepClone(values) : {})
+  // Track the last values received from the parent for surgical update comparisons
+  const prevExternalValuesRef = React.useRef<Record<string, unknown>>(
+    values ? deepClone(values) : {}
+  )
 
   // Track paths that have manual errors from props to allow efficient cleanup
   const prevErrorPathsRef = React.useRef<Set<string>>(new Set())
@@ -66,7 +70,7 @@ export function TsForm({
     const el = formRef.current
     if (!el) return
 
-    // 1. Handle onBlur for input-like fields (text, number, textarea)
+    // 1. Handle onBlur for input-like text fields (text, number, textarea, password)
     const handleFocusOut = (e: FocusEvent) => {
       const target = e.target as HTMLElement
       const name = target.closest("[data-field]")?.getAttribute("data-field")
@@ -128,8 +132,9 @@ export function TsForm({
     }
   }, [onFieldChange, form, fields])
 
-  // Sync with props ONLY for initial load, late arrival, or explicit external change.
-  // We use initializedValuesRef to distinguish between initial mount and subsequent prop updates.
+  // Sync with props for initial load and subsequent external changes.
+  // Uses surgical per-field updates (form.setValue) to preserve any user-typed values
+  // in fields whose external value did not change.
   React.useEffect(() => {
     // Treat null/undefined values as empty object for consistent comparison
     const normalizedValues = values || {}
@@ -140,25 +145,36 @@ export function TsForm({
       if (Object.keys(normalizedValues).length > 0) {
         form.reset(normalizedValues)
         prevValuesRef.current = deepClone(normalizedValues)
+        prevExternalValuesRef.current = deepClone(normalizedValues)
         initializedValuesRef.current = valuesJson
       }
-    } else {
-      // Subsequent prop changes: Only reset if:
-      // 1. The values prop actually changed compared to our last initialization
-      // 2. The values prop is DIFFERENT from what we just emitted via onFieldChange (lastEmittedValuesRef)
-      const currentValuesJson = JSON.stringify(prevValuesRef.current)
+      return
+    }
 
-      if (
-        valuesJson !== initializedValuesRef.current &&
-        valuesJson !== currentValuesJson &&
-        valuesJson !== lastEmittedValuesRef.current
-      ) {
-        form.reset(normalizedValues)
-        prevValuesRef.current = deepClone(normalizedValues)
-        initializedValuesRef.current = valuesJson
+    // Skip if external values haven't changed since last update
+    const prevExternalJson = JSON.stringify(prevExternalValuesRef.current)
+    if (valuesJson === prevExternalJson) return
+
+    // Skip if this is just an echo of what we recently emitted via onFieldChange
+    if (valuesJson === lastEmittedValuesRef.current) {
+      prevExternalValuesRef.current = deepClone(normalizedValues)
+      return
+    }
+
+    // Surgical update: only update fields whose external value actually changed.
+    // This preserves user-typed content in fields that weren't changed externally.
+    const fieldPaths = Object.keys(fields)
+    for (const path of fieldPaths) {
+      const prevVal = getNestedValue(prevExternalValuesRef.current, path)
+      const newVal = getNestedValue(normalizedValues, path)
+      if (JSON.stringify(prevVal) !== JSON.stringify(newVal)) {
+        form.setValue(path as FieldPath<Record<string, unknown>>, newVal, { shouldDirty: false })
       }
     }
-  }, [values, form])
+
+    prevExternalValuesRef.current = deepClone(normalizedValues)
+    initializedValuesRef.current = valuesJson
+  }, [values, form, fields])
 
   // Handle external errors
   React.useEffect(() => {

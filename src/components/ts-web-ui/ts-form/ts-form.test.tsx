@@ -49,9 +49,12 @@ describe("TsForm", () => {
     render(<TsForm layout={layout} fields={fields} buttons={[]} onFieldChange={onFieldChange} />)
 
     await user.type(screen.getByLabelText(/First Name/i), "Jane")
+    // onFieldChange fires on blur for text fields
+    await user.tab()
 
-    // The event happens for each character typed
-    expect(onFieldChange).toHaveBeenCalledWith("firstName", "Jane", expect.any(Object))
+    await vi.waitFor(() => {
+      expect(onFieldChange).toHaveBeenCalledWith("firstName", "Jane", expect.any(Object))
+    })
   })
 
   it("shows external validation errors via props", async () => {
@@ -239,7 +242,12 @@ describe("TsForm", () => {
     render(<TsForm layout={nestedLayout} fields={nestedFields} onFieldChange={onFieldChange} />)
 
     await user.type(screen.getByLabelText(/Item Name/i), "A")
-    expect(onFieldChange).toHaveBeenCalledWith("items.0.name", "A", expect.any(Object))
+    // onFieldChange fires on blur for text fields
+    await user.tab()
+
+    await vi.waitFor(() => {
+      expect(onFieldChange).toHaveBeenCalledWith("items.0.name", "A", expect.any(Object))
+    })
   })
 
   it("handles deep error objects in errors prop", async () => {

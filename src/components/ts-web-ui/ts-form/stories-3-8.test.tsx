@@ -89,6 +89,8 @@ describe("Story 3.8: Řízení datového exportu pomocí excludeFromSubmit", () 
 
     const input = screen.getByLabelText("Excluded")
     fireEvent.change(input, { target: { value: "secret" } })
+    // onFieldChange fires on focusout for text fields
+    fireEvent.focusOut(input)
 
     // onFieldChange(fieldName, value, allFilteredData)
     await waitFor(() => {

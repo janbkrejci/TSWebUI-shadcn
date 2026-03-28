@@ -59,8 +59,8 @@ describe("Story 3.0: Stabilizace Widget Contractu", () => {
     const input = screen.getByLabelText("Readonly Field")
     expect(input.hasAttribute("readonly")).toBe(true)
     // Check for readonly classes from getFieldClasses
-    expect(input.className).toContain("border-transparent")
-    expect(input.className).toContain("bg-muted/50")
+    expect(input.className).toContain("cursor-default")
+    expect(input.className).toContain("select-none")
   })
 
   it("should support global readOnly prop on TsForm", () => {

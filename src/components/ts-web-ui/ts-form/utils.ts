@@ -38,7 +38,11 @@ export function normalizeFormOutput(data: Record<string, unknown>): Record<strin
     } else if (Array.isArray(value)) {
       result[key] = value
     } else if (value && typeof value === "object") {
-      result[key] = normalizeFormOutput(value as Record<string, unknown>)
+      if (value instanceof File || value instanceof Blob) {
+        result[key] = value
+      } else {
+        result[key] = normalizeFormOutput(value as Record<string, unknown>)
+      }
     } else {
       result[key] = value
     }
