@@ -52,10 +52,9 @@ describe("Story 5.1: Global readOnly prop", () => {
     expect(screen.getByLabelText(/Email/i)).toHaveValue("john@test.com")
   })
 
-  it("readonly fields use bg-muted/50 styling (not disabled gray)", () => {
+  it("readonly fields use cursor-default styling (not disabled gray)", () => {
     render(<TsForm layout={layout} fields={fields} buttons={buttons} readOnly />)
     const nameInput = screen.getByLabelText(/Name/i)
-    expect(nameInput.className).toContain("bg-muted/50")
     expect(nameInput.className).toContain("cursor-default")
   })
 

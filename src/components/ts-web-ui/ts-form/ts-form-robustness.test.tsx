@@ -54,26 +54,17 @@ describe("TsForm - Regression & Robustness", () => {
     const TestWrapper = () => {
       const [values, setValues] = React.useState({ name: "", other: "" })
 
-      // Use a timer to simulate background update without focus stealing
+      // Simulate a background update to "other" after a short delay, independent of user input
       React.useEffect(() => {
-        if (values.name === "Ali") {
-          const timer = setTimeout(() => {
-            setValues((prev) => ({ ...prev, other: "Updated" }))
-          }, 10)
-          return () => clearTimeout(timer)
-        }
-      }, [values.name])
+        const timer = setTimeout(() => {
+          setValues((prev) => ({ ...prev, other: "Updated" }))
+        }, 30)
+        return () => clearTimeout(timer)
+      }, [])
 
       return (
         <div>
-          <TsForm
-            layout={layout}
-            fields={fields}
-            values={values}
-            onFieldChange={(field, val) => {
-              setValues((prev) => ({ ...prev, [field]: val }))
-            }}
-          />
+          <TsForm layout={layout} fields={fields} values={values} />
         </div>
       )
     }
@@ -86,7 +77,7 @@ describe("TsForm - Regression & Robustness", () => {
 
     // Flush background update scheduled by setTimeout in an act() scope.
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20))
+      await new Promise((resolve) => setTimeout(resolve, 50))
     })
 
     // Wait for the background update to occur

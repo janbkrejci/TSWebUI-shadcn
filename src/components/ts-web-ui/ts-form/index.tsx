@@ -70,8 +70,7 @@ export function TsForm({
     const el = formRef.current
     if (!el) return
 
-    // 1. Handle onBlur for input-like fields as a safety-net fallback
-    //    (catches changes that may not fire a React input event, e.g. browser auto-fill or paste)
+    // 1. Handle onBlur for input-like text fields (text, number, textarea, password)
     const handleFocusOut = (e: FocusEvent) => {
       const target = e.target as HTMLElement
       const name = target.closest("[data-field]")?.getAttribute("data-field")
@@ -97,19 +96,31 @@ export function TsForm({
       }
     }
 
-    // 2. Fire onFieldChange on every change for all field types
+    // 2. Handle immediate change for choice-like fields (radio, checkbox, select, etc.)
     const subscription = form.watch((data, { name }) => {
       if (name) {
-        const val = getNestedValue(data as Record<string, unknown>, name)
-        const prevVal = getNestedValue(prevValuesRef.current, name)
+        const fieldDef = fields[name]
+        const isChoiceLike = ![
+          "text",
+          "number",
+          "textarea",
+          "password",
+          "markdown",
+          "infobox",
+        ].includes(fieldDef?.type)
 
-        if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
-          const filteredData = normalizeFormOutput(
-            filterExcludeFromSubmit(data as Record<string, unknown>, fields)
-          )
-          setNestedValue(prevValuesRef.current, name, deepClone(val))
-          lastEmittedValuesRef.current = JSON.stringify(filteredData)
-          onFieldChange?.(name, val === null ? undefined : val, filteredData)
+        if (isChoiceLike) {
+          const val = getNestedValue(data as Record<string, unknown>, name)
+          const prevVal = getNestedValue(prevValuesRef.current, name)
+
+          if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
+            const filteredData = normalizeFormOutput(
+              filterExcludeFromSubmit(data as Record<string, unknown>, fields)
+            )
+            setNestedValue(prevValuesRef.current, name, deepClone(val))
+            lastEmittedValuesRef.current = JSON.stringify(filteredData)
+            onFieldChange?.(name, val === null ? undefined : val, filteredData)
+          }
         }
       }
     })
