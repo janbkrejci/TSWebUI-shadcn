@@ -55,16 +55,15 @@ export function TsFormLayout({
     [rhfErrors, externalErrors, fields]
   )
 
-  // Memoize errors to avoid complex expressions in dependencies
-  const rhfErrorsJson = JSON.stringify(rhfErrors)
-
-  // Pre-calculate which tabs have errors
+  // Pre-calculate which tabs have errors.
+  // hasFieldAnyError already depends on rhfErrors, externalErrors and fields,
+  // so its identity changes when any of those change – no extra deps needed.
   const tabErrors = React.useMemo(() => {
     if (!layout.tabs) return []
     return layout.tabs.map((tab) => {
       return tab.rows.some((row) => row.some((item) => item.field && hasFieldAnyError(item.field)))
     })
-  }, [layout.tabs, hasFieldAnyError, rhfErrorsJson, externalErrors])
+  }, [layout.tabs, hasFieldAnyError])
 
   if (layout.tabs && layout.tabs.length > 0) {
     // Determine which tab index to show (prop has priority, fallback to internal state)
