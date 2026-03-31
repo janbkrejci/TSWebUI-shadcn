@@ -6,7 +6,7 @@
     "next-themes"
   ],
   "registryDependencies": [
-    "./button.json",
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json",
     "dropdown-menu"
   ],
   "files": [

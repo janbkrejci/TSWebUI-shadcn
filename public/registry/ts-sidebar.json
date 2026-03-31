@@ -5,9 +5,9 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "./button.json",
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json",
     "tooltip",
-    "./ts-logo.json"
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json"
   ],
   "files": [
     {
