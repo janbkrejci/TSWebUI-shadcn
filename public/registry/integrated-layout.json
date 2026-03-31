@@ -5,9 +5,9 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "http://localhost:3001/registry/ts-sidebar.json",
-    "http://localhost:3001/registry/ts-topbar.json",
-    "http://localhost:3001/registry/theme-provider.json"
+    "./ts-sidebar.json",
+    "./ts-topbar.json",
+    "./theme-provider.json"
   ],
   "files": [
     {

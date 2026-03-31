@@ -6,7 +6,7 @@
     "next-themes"
   ],
   "registryDependencies": [
-    "http://localhost:3001/registry/button.json",
+    "./button.json",
     "dropdown-menu"
   ],
   "files": [

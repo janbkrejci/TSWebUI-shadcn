@@ -6,7 +6,7 @@
     "react-rnd"
   ],
   "registryDependencies": [
-    "http://localhost:3001/registry/button.json"
+    "./button.json"
   ],
   "files": [
     {

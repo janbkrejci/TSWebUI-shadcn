@@ -8,7 +8,7 @@
     "date-fns"
   ],
   "registryDependencies": [
-    "http://localhost:3001/registry/button.json",
+    "./button.json",
     "checkbox",
     "dropdown-menu",
     "input",

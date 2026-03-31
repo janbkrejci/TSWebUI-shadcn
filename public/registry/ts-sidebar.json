@@ -5,9 +5,9 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "http://localhost:3001/registry/button.json",
+    "./button.json",
     "tooltip",
-    "http://localhost:3001/registry/ts-logo.json"
+    "./ts-logo.json"
   ],
   "files": [
     {

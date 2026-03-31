@@ -10,8 +10,8 @@
     "react-syntax-highlighter"
   ],
   "registryDependencies": [
-    "http://localhost:3001/registry/alert-dialog.json",
-    "http://localhost:3001/registry/button.json",
+    "./alert-dialog.json",
+    "./button.json",
     "form",
     "alert",
     "badge",
@@ -29,7 +29,7 @@
     "tabs",
     "textarea",
     "toggle-group",
-    "http://localhost:3001/registry/ts-table.json"
+    "./ts-table.json"
   ],
   "files": [
     {
