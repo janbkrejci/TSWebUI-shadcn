@@ -136,8 +136,6 @@ const REGISTRY_COMPONENTS = [
 ]
 
 async function buildRegistry() {
-  const BASE_URL = process.env.REGISTRY_URL || "http://localhost:3001/registry"
-
   if (!fs.existsSync(REGISTRY_PATH)) {
     fs.mkdirSync(REGISTRY_PATH, { recursive: true })
   }
@@ -148,10 +146,11 @@ async function buildRegistry() {
       type: "registry:block",
       dependencies: component.dependencies,
       registryDependencies: component.registryDependencies.map((dep) => {
-        // If it's one of our components, use an absolute URL so shadcn CLI can find it
+        // If it's one of our components, use a relative URL so it works
+        // both locally (any port) and from GitHub Pages deployment
         if (dep.startsWith("ts-web-ui/")) {
           const componentFileName = dep.split("/").pop()
-          return `${BASE_URL}/${componentFileName}.json`
+          return `./${componentFileName}.json`
         }
         return dep
       }),
@@ -198,10 +197,11 @@ async function buildRegistry() {
   }
 
   // Generate main registry index
+  // Use relative paths so the index works from any host (localhost or GitHub Pages)
   const index = REGISTRY_COMPONENTS.map((c) => ({
     name: c.name,
     type: "registry:block",
-    href: `${BASE_URL}/${c.name.split("/").pop()}.json`,
+    href: `./${c.name.split("/").pop()}.json`,
   }))
   fs.writeFileSync(path.join(REGISTRY_PATH, "index.json"), JSON.stringify(index, null, 2))
 }
