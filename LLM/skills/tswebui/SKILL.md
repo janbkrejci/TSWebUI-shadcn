@@ -25,18 +25,35 @@ A comprehensive UI component library built on **Next.js 16 + React 19 + Shadcn/U
 
 ### Required Stack
 
-- Next.js 16+ (App Router)
-- React 19+
-- Tailwind CSS v4 (CSS-first config)
-- Shadcn/UI initialized (`npx shadcn@latest init`)
+The consuming project must have:
 
-### Installation via Shadcn Registry
+- **Next.js 16+** (App Router with `"use client"` support)
+- **React 19+**
+- **Tailwind CSS v4** (CSS-first config)
+- **Shadcn/UI initialized** — if not yet set up, run:
+  ```bash
+  npx shadcn@latest init
+  ```
+  This creates `components.json`, `src/lib/utils.ts` (with the `cn()` helper using `clsx` + `tailwind-merge`), and the `@/` path alias in `tsconfig.json`. All TSWebUI components depend on these.
 
-All TSWebUI components are published in an online Shadcn registry. Install any component with a single command — all dependencies (npm packages **and** other Shadcn/TSWebUI components) are resolved and installed automatically.
+### How to Install a Component
 
-**Registry base URL:** `https://janbkrejci.github.io/TSWebUI-shadcn/registry/`
+All TSWebUI components are published in an **online Shadcn registry**. Install any component with a single command:
 
-#### Available Components
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/<component>.json
+```
+
+This command:
+
+1. Downloads the component source files into `src/components/ts-web-ui/<component>/`
+2. Installs all required **npm dependencies** (e.g. `react-hook-form`, `@tanstack/react-table`)
+3. Installs all required **Shadcn UI primitives** (e.g. `input`, `checkbox`, `select`)
+4. Installs all required **other TSWebUI components** (transitive dependencies)
+
+No manual npm installs or file copying needed — one command does everything.
+
+### Available Components
 
 | Component                 | Install Command                                                                                     |
 | ------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -50,16 +67,90 @@ All TSWebUI components are published in an online Shadcn registry. Install any c
 | **TsTable**               | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json`          |
 | **TsForm**                | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json`           |
 
-> **Note:** Each registry entry declares its dependencies. For example, installing `ts-form` automatically installs `ts-table`, `button`, `alert-dialog`, and 15+ Shadcn primitives. Installing `integrated-layout` automatically installs `ts-sidebar`, `ts-topbar`, and `theme-provider`.
+### Dependency Graph
+
+You don't need to install transitive dependencies manually. For reference, here's what each component pulls in:
+
+- **TsForm** → `ts-table`, `button`, `alert-dialog` + 15 Shadcn primitives (`form`, `input`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `popover`, `calendar`, `command`, `dialog`, `separator`, `tabs`, `textarea`, `toggle-group`) + npm: `react-hook-form`, `lucide-react`, `date-fns`, `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
+- **TsTable** → `button` + Shadcn `checkbox`, `dropdown-menu`, `input`, `select`, `table`, `badge` + npm: `@tanstack/react-table`, `lucide-react`, `xlsx`, `date-fns`
+- **TsLayout** (integrated) → `ts-sidebar`, `ts-topbar`, `theme-provider` (and their transitive deps)
+- **TsSidebar** → `button`, `ts-logo` + Shadcn `tooltip`
+- **TsTopbar** → `ts-logo`
+- **TsWindow** → `button` + npm: `react-rnd`, `lucide-react`
+- **ModeToggle** → `button` + Shadcn `dropdown-menu` + npm: `next-themes`, `lucide-react`
+- **ThemeProvider** → npm: `next-themes`
+- **TsLogo** → npm: `lucide-react`
+
+### Where Files Are Installed
+
+After running the install command, files appear at:
+
+```
+src/
+├── components/
+│   ├── ui/                          # Shadcn primitives (input, checkbox, etc.)
+│   └── ts-web-ui/                   # TSWebUI components
+│       ├── ui/                      # TSWebUI overrides (button, alert-dialog)
+│       ├── ts-form/                 # TsForm + all widgets
+│       │   ├── index.tsx
+│       │   ├── types.ts
+│       │   ├── widget-types.ts
+│       │   ├── utils.ts
+│       │   ├── ts-form-field.tsx
+│       │   ├── ts-form-layout.tsx
+│       │   ├── ts-form-confirmation-dialog.tsx
+│       │   └── widgets/             # 20+ field type widgets
+│       ├── ts-table/                # TsTable + sub-components
+│       ├── ts-window/               # TsWindow + WindowProvider
+│       ├── ts-layout/               # TsLayout (integrated shell)
+│       ├── ts-sidebar/              # Sidebar system
+│       ├── ts-topbar/               # TopBar
+│       ├── ts-logo/                 # Logo component
+│       ├── theme-provider/          # ThemeProvider
+│       └── mode-toggle/             # ModeToggle
+└── lib/
+    └── utils.ts                     # cn() utility (created by shadcn init)
+```
 
 ### Import Convention
 
-All imports use the `@/` path alias (configured in `tsconfig.json`):
+All imports use the `@/` path alias (configured in `tsconfig.json` by `shadcn init`):
 
 ```ts
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
 import { TsForm } from "@/components/ts-web-ui/ts-form"
+import { TsLayout } from "@/components/ts-web-ui/ts-layout"
+import { Logo } from "@/components/ts-web-ui/ts-logo"
 import { TsTable } from "@/components/ts-web-ui/ts-table"
-import { TsWindow } from "@/components/ts-web-ui/ts-window"
+import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
+import {
+  TsWindow,
+  WindowOutlet,
+  WindowProvider,
+  useWindowManager,
+} from "@/components/ts-web-ui/ts-window"
+```
+
+### Quick Start Example
+
+To add a complete application shell with forms and theme switching to a fresh Next.js project:
+
+```bash
+# 1. Initialize shadcn (if not done yet)
+npx shadcn@latest init
+
+# 2. Install the integrated layout (includes sidebar, topbar, theme provider)
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/integrated-layout.json
+
+# 3. Install the form system (includes table and all field widgets)
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json
+
+# 4. Install the theme toggle button
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json
+
+# 5. Install the window system (if needed)
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json
 ```
 
 ---
