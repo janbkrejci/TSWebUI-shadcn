@@ -28,23 +28,29 @@ A comprehensive UI component library built on **Next.js 16 + React 19 + Shadcn/U
 - Next.js 16+ (App Router)
 - React 19+
 - Tailwind CSS v4 (CSS-first config)
-- Shadcn/UI primitives
+- Shadcn/UI initialized (`npx shadcn@latest init`)
 
-### Core Utility
+### Installation via Shadcn Registry
 
-All components use `cn()` for conditional class merging:
+All TSWebUI components are published in an online Shadcn registry. Install any component with a single command — all dependencies (npm packages **and** other Shadcn/TSWebUI components) are resolved and installed automatically.
 
-```ts
-// src/lib/utils.ts
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+**Registry base URL:** `https://janbkrejci.github.io/TSWebUI-shadcn/registry/`
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-```
+#### Available Components
 
-Install: `pnpm add clsx tailwind-merge`
+| Component                 | Install Command                                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| **ThemeProvider**         | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json`    |
+| **ModeToggle**            | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json`       |
+| **TsLogo**                | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json`           |
+| **TsTopbar**              | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json`         |
+| **TsSidebar**             | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json`        |
+| **TsLayout** (integrated) | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/integrated-layout.json` |
+| **TsWindow**              | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json`         |
+| **TsTable**               | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json`          |
+| **TsForm**                | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json`           |
+
+> **Note:** Each registry entry declares its dependencies. For example, installing `ts-form` automatically installs `ts-table`, `button`, `alert-dialog`, and 15+ Shadcn primitives. Installing `integrated-layout` automatically installs `ts-sidebar`, `ts-topbar`, and `theme-provider`.
 
 ### Import Convention
 
@@ -61,7 +67,14 @@ import { TsWindow } from "@/components/ts-web-ui/ts-window"
 ## ThemeProvider
 
 **Location:** `src/components/ts-web-ui/theme-provider/index.tsx`
-**Dependencies:** `pnpm add next-themes`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json
+```
+
+Auto-installed dependencies: `next-themes`
 
 Wraps `next-themes` to eliminate hydration mismatch errors. Renders a placeholder `<div>` until the client is mounted.
 
@@ -116,8 +129,14 @@ Use in components: `bg-background`, `text-foreground`, `bg-primary`, `text-muted
 ## ModeToggle
 
 **Location:** `src/components/ts-web-ui/mode-toggle/index.tsx`
-**Dependencies:** `pnpm add next-themes lucide-react`
-**Required Shadcn components:** `dropdown-menu`, `button`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json
+```
+
+Auto-installed dependencies: `next-themes`, `lucide-react`, TSWebUI `button`, Shadcn `dropdown-menu`
 
 A dropdown button that switches between Light / Dark / System themes.
 
@@ -144,7 +163,14 @@ None. This component is self-contained. It uses `useTheme()` from `next-themes` 
 ## TsLayout
 
 **Location:** `src/components/ts-web-ui/ts-layout/index.tsx`
-**Dependencies:** `pnpm add lucide-react`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/integrated-layout.json
+```
+
+Auto-installed dependencies: `lucide-react`, `ts-sidebar`, `ts-topbar`, `theme-provider` (and their transitive dependencies: `ts-logo`, `button`, Shadcn `tooltip`)
 
 An integrated application shell that combines TopBar + Sidebar + main content area into a single component.
 
@@ -229,7 +255,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 ## TopBar
 
 **Location:** `src/components/ts-web-ui/ts-topbar/index.tsx`
-**Dependencies:** `pnpm add lucide-react`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json
+```
+
+Auto-installed dependencies: `lucide-react`, `ts-logo`
+
+> **Tip:** If you plan to use the full layout, install `integrated-layout` instead — it includes TopBar, Sidebar, and ThemeProvider.
 
 A sticky top bar with three content slots (left, center, right). Auto-detects `SidebarProvider` and shows a hamburger trigger.
 
@@ -289,8 +324,16 @@ import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
 ## Sidebar
 
 **Location:** `src/components/ts-web-ui/ts-sidebar/index.tsx`
-**Dependencies:** `pnpm add lucide-react`
-**Required Shadcn components:** `tooltip`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json
+```
+
+Auto-installed dependencies: `lucide-react`, TSWebUI `button`, `ts-logo`, Shadcn `tooltip`
+
+> **Tip:** If you plan to use the full layout, install `integrated-layout` instead — it includes TopBar, Sidebar, and ThemeProvider.
 
 A fully-featured collapsible sidebar with data-driven navigation, mobile responsiveness, and localStorage persistence.
 
@@ -359,7 +402,14 @@ const {
 ## TsWindow
 
 **Location:** `src/components/ts-web-ui/ts-window/index.tsx`
-**Dependencies:** `pnpm add react-rnd lucide-react`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json
+```
+
+Auto-installed dependencies: `react-rnd`, `lucide-react`, TSWebUI `button`
 
 A draggable, resizable window system with minimize/maximize/restore, Z-index management, and an imperative API.
 
@@ -501,8 +551,18 @@ export default function Page() {
 ## TsForm
 
 **Location:** `src/components/ts-web-ui/ts-form/index.tsx`
-**Dependencies:** `pnpm add react-hook-form lucide-react date-fns react-markdown remark-gfm react-day-picker`
-**Required Shadcn components:** `form`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `popover`, `calendar`, `command`, `separator`, `tabs`, `label`, `alert-dialog`, `badge`, `scroll-area`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json
+```
+
+Auto-installed dependencies:
+
+- **npm:** `react-hook-form`, `lucide-react`, `date-fns`, `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
+- **TSWebUI:** `button`, `alert-dialog`, `ts-table`
+- **Shadcn:** `form`, `alert`, `badge`, `calendar`, `checkbox`, `command`, `dialog`, `input`, `popover`, `radio-group`, `select`, `separator`, `slider`, `switch`, `tabs`, `textarea`, `toggle-group`
 
 A fully JSON-driven form engine that generates complete forms from data definitions — including layout, validation, field types, buttons, and confirmation dialogs.
 
@@ -1145,8 +1205,18 @@ export default function MyPage() {
 ## TsTable
 
 **Location:** `src/components/ts-web-ui/ts-table/index.tsx`
-**Dependencies:** `pnpm add @tanstack/react-table lucide-react xlsx date-fns`
-**Required Shadcn components:** `table`, `input`, `checkbox`, `select`, `dropdown-menu`, `button`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json
+```
+
+Auto-installed dependencies:
+
+- **npm:** `@tanstack/react-table`, `lucide-react`, `xlsx`, `date-fns`
+- **TSWebUI:** `button`
+- **Shadcn:** `checkbox`, `dropdown-menu`, `input`, `select`, `table`, `badge`
 
 An advanced data grid built on TanStack Table v8 with sorting, filtering, pagination, column visibility, row selection, Excel import/export, and row actions.
 
@@ -1327,6 +1397,16 @@ interface MyDataType {
 ## Logo Component
 
 **Location:** `src/components/ts-web-ui/ts-logo/index.tsx`
+
+**Install:**
+
+```bash
+npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json
+```
+
+Auto-installed dependencies: `lucide-react`
+
+> **Note:** Logo is automatically installed as a dependency of `ts-topbar`, `ts-sidebar`, and `integrated-layout`.
 
 Used with TopBar and Sidebar.
 
