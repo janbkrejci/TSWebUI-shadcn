@@ -4,6 +4,7 @@ _bmad
 .github
 .github/skills
 .agents
+.pi
 
 # dependencies
 /node_modules

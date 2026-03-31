@@ -1,0 +1,1349 @@
+---
+name: tswebui
+description: Comprehensive guide for installing and using TSWebUI-shadcn components in Next.js projects. Covers ThemeProvider, ModeToggle, TsLayout, TsTopbar, TsSidebar, TsWindow, TsForm (JSON-driven forms with 20+ field types), and TsTable (advanced data grid). Use when building admin dashboards, form-heavy apps, or any UI requiring draggable windows, data tables, or dynamic forms.
+---
+
+# TSWebUI-shadcn Component Library
+
+A comprehensive UI component library built on **Next.js 16 + React 19 + Shadcn/UI + Tailwind CSS v4**. All components are client components (`"use client"`).
+
+## Table of Contents
+
+- [Prerequisites & Installation](#prerequisites--installation)
+- [ThemeProvider](#themeprovider)
+- [ModeToggle](#modetoggle)
+- [TsLayout](#tslayout)
+- [TopBar](#topbar)
+- [Sidebar](#sidebar)
+- [TsWindow](#tswindow)
+- [TsForm](#tsform)
+- [TsTable](#tstable)
+
+---
+
+## Prerequisites & Installation
+
+### Required Stack
+
+- Next.js 16+ (App Router)
+- React 19+
+- Tailwind CSS v4 (CSS-first config)
+- Shadcn/UI primitives
+
+### Core Utility
+
+All components use `cn()` for conditional class merging:
+
+```ts
+// src/lib/utils.ts
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+```
+
+Install: `pnpm add clsx tailwind-merge`
+
+### Import Convention
+
+All imports use the `@/` path alias (configured in `tsconfig.json`):
+
+```ts
+import { TsForm } from "@/components/ts-web-ui/ts-form"
+import { TsTable } from "@/components/ts-web-ui/ts-table"
+import { TsWindow } from "@/components/ts-web-ui/ts-window"
+```
+
+---
+
+## ThemeProvider
+
+**Location:** `src/components/ts-web-ui/theme-provider/index.tsx`
+**Dependencies:** `pnpm add next-themes`
+
+Wraps `next-themes` to eliminate hydration mismatch errors. Renders a placeholder `<div>` until the client is mounted.
+
+### Usage
+
+Place in your root `layout.tsx`:
+
+```tsx
+import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+### Behavior
+
+- `attribute="class"` — adds `.dark` / `.light` class to `<html>`
+- `defaultTheme="system"` — respects OS preference
+- `enableSystem` — allows system theme detection
+- `disableTransitionOnChange` — prevents flash on theme switch
+- Until mounted, renders `<div className="min-h-screen bg-background" />` to avoid hydration errors
+
+### Theme CSS Variables
+
+Define in `globals.css`:
+
+```css
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  /* ... more semantic colors ... */
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  /* ... dark variants ... */
+}
+```
+
+Use in components: `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, etc.
+
+---
+
+## ModeToggle
+
+**Location:** `src/components/ts-web-ui/mode-toggle/index.tsx`
+**Dependencies:** `pnpm add next-themes lucide-react`
+**Required Shadcn components:** `dropdown-menu`, `button`
+
+A dropdown button that switches between Light / Dark / System themes.
+
+### Usage
+
+```tsx
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+
+;<ModeToggle />
+```
+
+### Props
+
+None. This component is self-contained. It uses `useTheme()` from `next-themes` internally.
+
+### Features
+
+- Sun icon in light mode, Moon icon in dark mode (animated rotation/scale)
+- Dropdown with three options: Light, Dark, System
+- Checkmark indicator on the currently active theme
+
+---
+
+## TsLayout
+
+**Location:** `src/components/ts-web-ui/ts-layout/index.tsx`
+**Dependencies:** `pnpm add lucide-react`
+
+An integrated application shell that combines TopBar + Sidebar + main content area into a single component.
+
+### Props
+
+| Prop           | Type                        | Default     | Description                                                                                     |
+| -------------- | --------------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `children`     | `ReactNode`                 | —           | Main content area                                                                               |
+| `navigation`   | `NavSection[] \| NavItem[]` | `undefined` | Sidebar navigation data                                                                         |
+| `logo`         | `ReactNode`                 | `undefined` | Logo element for sidebar and topbar                                                             |
+| `topBarLeft`   | `ReactNode`                 | `undefined` | Content for the left side of the topbar                                                         |
+| `topBarCenter` | `ReactNode`                 | `undefined` | Content for the center of the topbar                                                            |
+| `topBarRight`  | `ReactNode`                 | `undefined` | Content for the right side of the topbar                                                        |
+| `contained`    | `boolean`                   | `false`     | If `true`, uses absolute positioning to fit inside a bounded container instead of full viewport |
+
+### Navigation Data Types
+
+```ts
+interface NavItem {
+  name: string // Unique identifier
+  href: string // URL path
+  label: string // Display text
+  icon: LucideIcon | ReactNode // Icon component or element
+  exact?: boolean // If true, match href exactly (not prefix)
+}
+
+interface NavSection {
+  title: string // Section heading
+  items: NavItem[] // Items in this section
+}
+```
+
+### Full Application Layout Example
+
+```tsx
+"use client"
+
+import { Home, Settings, Users } from "lucide-react"
+
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
+import { TsLayout } from "@/components/ts-web-ui/ts-layout"
+import { Logo } from "@/components/ts-web-ui/ts-logo"
+import { TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
+
+const NAVIGATION = [
+  {
+    title: "Application",
+    items: [
+      { name: "dashboard", label: "Dashboard", href: "/", icon: Home, exact: true },
+      { name: "users", label: "Users", href: "/users", icon: Users },
+      { name: "settings", label: "Settings", href: "/settings", icon: Settings },
+    ],
+  },
+]
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider>
+          <TsLayout
+            navigation={NAVIGATION}
+            logo={<Logo text="My App" href="/" />}
+            topBarRight={
+              <TopBarGroup>
+                <ModeToggle />
+              </TopBarGroup>
+            }
+          >
+            {children}
+          </TsLayout>
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+---
+
+## TopBar
+
+**Location:** `src/components/ts-web-ui/ts-topbar/index.tsx`
+**Dependencies:** `pnpm add lucide-react`
+
+A sticky top bar with three content slots (left, center, right). Auto-detects `SidebarProvider` and shows a hamburger trigger.
+
+### Props
+
+| Prop            | Type        | Default     | Description                                         |
+| --------------- | ----------- | ----------- | --------------------------------------------------- |
+| `leftContent`   | `ReactNode` | `undefined` | Content on the left side                            |
+| `centerContent` | `ReactNode` | `undefined` | Content in the center (flex-1)                      |
+| `rightContent`  | `ReactNode` | `undefined` | Content on the right side                           |
+| `height`        | `number`    | `56`        | Height in pixels                                    |
+| `bordered`      | `boolean`   | `true`      | Show bottom border                                  |
+| `showTrigger`   | `boolean`   | `true`      | Auto-show sidebar trigger if inside SidebarProvider |
+| `className`     | `string`    | `undefined` | Additional CSS classes                              |
+
+### Exported Sub-components
+
+| Component     | Description                                                           |
+| ------------- | --------------------------------------------------------------------- |
+| `TopBarGroup` | Flexbox wrapper (`flex items-center gap-2`) for grouping topbar items |
+| `Logo`        | Re-exported from `ts-logo` — renders text/icon with optional link     |
+
+### TopBarProvider (Optional)
+
+Provides topbar height to child components via context:
+
+```tsx
+import { TopBarProvider, useTopBar } from "@/components/ts-web-ui/ts-topbar"
+
+;<TopBarProvider height={56}>
+  {/* children can call useTopBar() to get { height } */}
+</TopBarProvider>
+```
+
+### Standalone Usage
+
+```tsx
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+import { Logo } from "@/components/ts-web-ui/ts-logo"
+import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
+
+;<TopBar
+  leftContent={<Logo text="My App" href="/" />}
+  centerContent={<Input placeholder="Search..." />}
+  rightContent={
+    <TopBarGroup>
+      <ModeToggle />
+    </TopBarGroup>
+  }
+  height={56}
+  bordered
+/>
+```
+
+---
+
+## Sidebar
+
+**Location:** `src/components/ts-web-ui/ts-sidebar/index.tsx`
+**Dependencies:** `pnpm add lucide-react`
+**Required Shadcn components:** `tooltip`
+
+A fully-featured collapsible sidebar with data-driven navigation, mobile responsiveness, and localStorage persistence.
+
+### System Components
+
+| Component                | Description                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| `SidebarProvider`        | Context provider — wraps the entire layout                    |
+| `Sidebar`                | The sidebar element itself                                    |
+| `SidebarContent`         | Scrollable content area                                       |
+| `SidebarHeader`          | Header with logo and close button                             |
+| `SidebarSection`         | Grouped navigation section with title                         |
+| `SidebarItem`            | Single navigation item with icon                              |
+| `SidebarFooter`          | Bottom section with border                                    |
+| `SidebarInset`           | Main content area that adjusts margins based on sidebar state |
+| `SidebarTrigger`         | Hamburger toggle button                                       |
+| `SidebarCollapseTrigger` | Circular collapse/expand button on sidebar edge               |
+
+### SidebarProvider Props
+
+| Prop               | Type      | Default   | Description                                              |
+| ------------------ | --------- | --------- | -------------------------------------------------------- |
+| `defaultOpen`      | `boolean` | `true`    | Initial open state                                       |
+| `mobileBreakpoint` | `number`  | `768`     | Pixel width below which mobile behavior activates        |
+| `topBarHeight`     | `number`  | `56`      | Height of the topbar in pixels (for offset calculations) |
+| `width`            | `string`  | `"16rem"` | Sidebar width when expanded                              |
+| `collapsedWidth`   | `string`  | `"4rem"`  | Sidebar width when collapsed (icons only)                |
+
+### Sidebar Props
+
+| Prop         | Type                        | Default     | Description                                 |
+| ------------ | --------------------------- | ----------- | ------------------------------------------- |
+| `navigation` | `NavSection[] \| NavItem[]` | `undefined` | Data-driven navigation (auto-renders items) |
+| `logo`       | `ReactNode`                 | `undefined` | Logo element for the sidebar header         |
+| `className`  | `string`                    | `undefined` | Additional CSS classes                      |
+
+### useSidebar() Hook
+
+Returns the sidebar context:
+
+```ts
+const {
+  isOpen, // boolean — sidebar visibility
+  toggle, // () => void — toggle open/closed
+  open, // () => void — force open
+  close, // () => void — force close
+  isCollapsed, // boolean — collapsed to icon-only mode
+  toggleCollapsed, // () => void — toggle collapsed state
+  isMobile, // boolean — mobile viewport detected
+  topBarHeight, // number — topbar height in px
+  width, // string — expanded width
+  collapsedWidth, // string — collapsed width
+} = useSidebar()
+```
+
+### Features
+
+- **Responsive**: Auto-closes on mobile, overlay mode with backdrop
+- **Collapsible**: Icon-only mode with tooltips on desktop
+- **Persistent**: Saves open/collapsed state to localStorage
+- **Active detection**: Highlights current route using `usePathname()`
+- **Data-driven**: Pass `navigation` prop for auto-rendered nav items with Lucide icons
+
+---
+
+## TsWindow
+
+**Location:** `src/components/ts-web-ui/ts-window/index.tsx`
+**Dependencies:** `pnpm add react-rnd lucide-react`
+
+A draggable, resizable window system with minimize/maximize/restore, Z-index management, and an imperative API.
+
+### Architecture
+
+Three components work together:
+
+1. **`WindowProvider`** — React context providing the window manager
+2. **`WindowOutlet`** — Renders all open windows (place inside a relative-positioned container)
+3. **`useWindowManager()`** — Hook to interact with the window system
+
+### TsWindowProps
+
+| Prop            | Type               | Default    | Description                       |
+| --------------- | ------------------ | ---------- | --------------------------------- |
+| `id`            | `string \| number` | —          | Unique window identifier          |
+| `title`         | `string`           | `"Window"` | Title displayed in the header bar |
+| `defaultWidth`  | `number`           | `400`      | Initial width in pixels           |
+| `defaultHeight` | `number`           | `300`      | Initial height in pixels          |
+| `defaultTop`    | `number`           | `100`      | Initial Y position in pixels      |
+| `defaultLeft`   | `number`           | `100`      | Initial X position in pixels      |
+| `minWidth`      | `number`           | `200`      | Minimum allowed width             |
+| `minHeight`     | `number`           | `100`      | Minimum allowed height            |
+| `children`      | `ReactNode`        | —          | Window content                    |
+
+### useWindowManager() Hook
+
+| Method/Property  | Signature                                                                          | Description                                                     |
+| ---------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `openWindow`     | `(content: ReactNode, options?: Partial<TsWindowProps> & { id?: string }) => void` | Opens a new window. If `id` already exists, brings it to front. |
+| `closeWindow`    | `(id: string) => void`                                                             | Closes the window with the given ID                             |
+| `getWindow`      | `(id: string) => TsWindowRef \| null`                                              | Returns the imperative handle for a window                      |
+| `windows`        | `WindowItem[]`                                                                     | Array of currently open window objects                          |
+| `isInteracting`  | `boolean`                                                                          | Whether any window is being dragged/resized                     |
+| `setInteracting` | `(interacting: boolean) => void`                                                   | Set the interaction state                                       |
+
+### TsWindowRef (Imperative API)
+
+Retrieved via `getWindow(id)` or React `ref`:
+
+| Method             | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `minimize()`       | Minimizes the window to a small title-only bar    |
+| `maximize()`       | Maximizes the window to fill its parent container |
+| `restore()`        | Restores from minimized or maximized state        |
+| `close()`          | Closes the window (removes from DOM)              |
+| `centerOnScreen()` | Centers the window within its parent container    |
+| `fitToContent()`   | Adjusts height to match content scroll height     |
+| `bringToFront()`   | Increments Z-index to place above other windows   |
+
+### Window Features
+
+- **macOS-style traffic lights**: Red (close), Yellow (minimize), Green (maximize/restore)
+- **Double-click titlebar**: Toggles maximize/restore
+- **Center button**: Target icon in titlebar centers window
+- **Fit-to-content button**: Adjusts height to content
+- **Drag containment**: Window header always stays within parent bounds
+- **Resize containment**: Window cannot be resized outside parent
+- **Z-index management**: Global counter ensures focused window is always on top
+- **Auto-fit on mount**: Window adjusts height to content on initial render
+- **ResizeObserver**: Adapts when parent container resizes
+
+### Complete Usage Example
+
+```tsx
+"use client"
+
+import { Button } from "@/components/ui/button"
+
+import { WindowOutlet, WindowProvider, useWindowManager } from "@/components/ts-web-ui/ts-window"
+
+function WindowContent({ id }: { id: string }) {
+  const { getWindow } = useWindowManager()
+
+  return (
+    <div className="space-y-4">
+      <p>
+        Content for window <strong>{id}</strong>
+      </p>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => getWindow(id)?.centerOnScreen()}>
+          Center
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => getWindow(id)?.minimize()}>
+          Minimize
+        </Button>
+        <Button size="sm" variant="destructive" onClick={() => getWindow(id)?.close()}>
+          Close
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function MyApp() {
+  const { openWindow } = useWindowManager()
+
+  const handleOpen = () => {
+    const id = `win-${Math.random().toString(36).substring(7)}`
+    openWindow(<WindowContent id={id} />, {
+      id,
+      title: "My Window",
+      defaultWidth: 400,
+      defaultHeight: 300,
+      defaultLeft: 150,
+      defaultTop: 100,
+    })
+  }
+
+  return (
+    <div className="h-screen flex flex-col">
+      <div className="p-4">
+        <Button onClick={handleOpen}>Open Window</Button>
+      </div>
+      <div className="flex-1 relative overflow-hidden">
+        <WindowOutlet />
+      </div>
+    </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <WindowProvider>
+      <MyApp />
+    </WindowProvider>
+  )
+}
+```
+
+### WindowOutlet Props
+
+| Prop        | Type     | Default     | Description                                                                           |
+| ----------- | -------- | ----------- | ------------------------------------------------------------------------------------- |
+| `className` | `string` | `undefined` | Additional CSS classes (default includes `absolute inset-0 pointer-events-none z-50`) |
+
+---
+
+## TsForm
+
+**Location:** `src/components/ts-web-ui/ts-form/index.tsx`
+**Dependencies:** `pnpm add react-hook-form lucide-react date-fns react-markdown remark-gfm react-day-picker`
+**Required Shadcn components:** `form`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `popover`, `calendar`, `command`, `separator`, `tabs`, `label`, `alert-dialog`, `badge`, `scroll-area`
+
+A fully JSON-driven form engine that generates complete forms from data definitions — including layout, validation, field types, buttons, and confirmation dialogs.
+
+### TsFormProps
+
+| Prop            | Type                                                                    | Default     | Description                                                                                                     |
+| --------------- | ----------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
+| `layout`        | `TsLayout`                                                              | —           | **Required.** Layout structure defining rows and/or tabs                                                        |
+| `fields`        | `Record<string, TsFieldDef>`                                            | —           | **Required.** Dictionary of field definitions keyed by field name                                               |
+| `values`        | `Record<string, unknown>`                                               | `{}`        | Initial/current form values                                                                                     |
+| `buttons`       | `TsButton[]`                                                            | `[]`        | Action buttons rendered at the bottom of the form                                                               |
+| `errors`        | `TsErrors`                                                              | `undefined` | External validation errors (from server/parent)                                                                 |
+| `activeTab`     | `string \| number`                                                      | `undefined` | Controlled active tab (label string or 0-based index)                                                           |
+| `onTabChange`   | `(tab: string \| number) => void`                                       | `undefined` | Callback when user switches tabs                                                                                |
+| `onAction`      | `(action: string, data: Record<string, unknown>) => void`               | `undefined` | **Primary callback.** Fires for all button actions (submit, delete, custom, etc.)                               |
+| `onFieldChange` | `(name: string, value: unknown, data: Record<string, unknown>) => void` | `undefined` | Fires when a field value changes. For text/number/textarea/password: on blur. For everything else: immediately. |
+| `readOnly`      | `boolean`                                                               | `false`     | Sets all fields to read-only and hides the button bar                                                           |
+| `className`     | `string`                                                                | `undefined` | Additional CSS classes for the form element                                                                     |
+| `locale`        | `string`                                                                | `undefined` | Global locale for date/number widgets (e.g. `"cs-CZ"`, `"en-US"`)                                               |
+
+### Layout System
+
+#### TsLayout
+
+```ts
+interface TsLayout {
+  tabs?: TsTab[] // Multi-tab form (takes priority over rows)
+  rows?: TsRow[] // Single-page form
+}
+```
+
+#### TsTab
+
+```ts
+interface TsTab {
+  label: string // Tab display name
+  rows: TsRow[] // Rows within this tab
+}
+```
+
+#### TsRow
+
+An array of `TsRowItem`:
+
+```ts
+type TsRow = TsRowItem[]
+
+interface TsRowItem {
+  field: string // Key from the fields dictionary
+  width?: string // CSS grid width: "1fr", "200px", "50%", etc. (default: "1fr")
+  type?: "empty" | "separator" // Special layout types (overrides field lookup)
+  label?: string // Label for separator type
+  align?: "left" | "center" | "right" // Horizontal alignment within grid cell
+}
+```
+
+#### Layout Example
+
+```ts
+const layout: TsLayout = {
+  tabs: [
+    {
+      label: "General",
+      rows: [
+        [
+          { field: "firstName", width: "1fr" },
+          { field: "lastName", width: "1fr" },
+        ],
+        [
+          { field: "email", width: "2fr" },
+          { field: "age", width: "100px" },
+        ],
+        [{ type: "separator", label: "Additional Info", field: "sep1" }],
+        [{ field: "bio" }],
+      ],
+    },
+    {
+      label: "Settings",
+      rows: [[{ field: "role" }, { field: "active" }]],
+    },
+  ],
+}
+```
+
+### Field Types Reference
+
+All field types share these **base properties**:
+
+| Property            | Type          | Default     | Description                                                             |
+| ------------------- | ------------- | ----------- | ----------------------------------------------------------------------- |
+| `type`              | `TsFieldType` | —           | **Required.** Discriminator for the field type                          |
+| `label`             | `string`      | `undefined` | Label text above the field                                              |
+| `required`          | `boolean`     | `false`     | Visual indicator and validation check                                   |
+| `hidden`            | `boolean`     | `false`     | Hidden from UI but present in data                                      |
+| `hideLabel`         | `boolean`     | `false`     | Hides label but preserves layout slot                                   |
+| `disabled`          | `boolean`     | `false`     | Disables user interaction                                               |
+| `readonly`          | `boolean`     | `false`     | Read-only visual state                                                  |
+| `hint`              | `string`      | `undefined` | Help text below the field                                               |
+| `error`             | `string`      | `undefined` | Static error message (prefer `errors` prop for dynamic validation)      |
+| `excludeFromSubmit` | `boolean`     | `false`     | Exclude value from submitted data                                       |
+| `autofocus`         | `boolean`     | `false`     | Auto-focus on mount or tab change                                       |
+| `enterAction`       | `string`      | `undefined` | Action on Enter key: `"submit"`, `"focus:next"`, or custom action       |
+| `escapeAction`      | `string`      | `undefined` | Action on Escape key: `"clear"` clears value, other strings emit action |
+
+#### Text / Password
+
+```ts
+{ type: "text", label: "Name", placeholder: "John", selectAllOnFocus: true }
+{ type: "password", label: "Password", placeholder: "••••••" }
+```
+
+| Property           | Type      | Description              |
+| ------------------ | --------- | ------------------------ |
+| `placeholder`      | `string`  | Placeholder text         |
+| `selectAllOnFocus` | `boolean` | Select all text on focus |
+
+#### Textarea
+
+```ts
+{ type: "textarea", label: "Bio", rows: 4, placeholder: "Tell us about yourself" }
+```
+
+| Property           | Type      | Default | Description                  |
+| ------------------ | --------- | ------- | ---------------------------- |
+| `placeholder`      | `string`  | —       | Placeholder text             |
+| `rows`             | `number`  | `3`     | Number of visible text lines |
+| `selectAllOnFocus` | `boolean` | —       | Select all text on focus     |
+
+#### Number
+
+```ts
+{ type: "number", label: "Age", min: 0, max: 150, step: 1, roundTo: 0, locale: "en-US" }
+```
+
+| Property           | Type      | Description                                   |
+| ------------------ | --------- | --------------------------------------------- |
+| `placeholder`      | `string`  | Placeholder text                              |
+| `min`              | `number`  | Minimum value                                 |
+| `max`              | `number`  | Maximum value                                 |
+| `step`             | `number`  | Step increment                                |
+| `roundTo`          | `number`  | Decimal places for rounding/display           |
+| `locale`           | `string`  | Locale for number formatting (e.g. `"cs-CZ"`) |
+| `selectAllOnFocus` | `boolean` | Select all text on focus                      |
+
+#### Slider
+
+```ts
+{ type: "slider", label: "Volume", min: 0, max: 100, step: 1 }
+```
+
+| Property | Type     | Description    |
+| -------- | -------- | -------------- |
+| `min`    | `number` | Minimum value  |
+| `max`    | `number` | Maximum value  |
+| `step`   | `number` | Step increment |
+
+#### Select
+
+```ts
+{
+  type: "select",
+  label: "Role",
+  placeholder: "Choose a role",
+  options: [
+    { value: "admin", label: "Administrator" },
+    { value: "user", label: "User" },
+  ]
+}
+```
+
+| Property      | Type                           | Description                         |
+| ------------- | ------------------------------ | ----------------------------------- |
+| `placeholder` | `string`                       | Placeholder when no option selected |
+| `options`     | `TsFieldOptions[] \| string[]` | Available options                   |
+
+#### Multiselect
+
+```ts
+{
+  type: "multiselect",
+  label: "Skills",
+  placeholder: "Select skills...",
+  options: ["JavaScript", "TypeScript", "React"],
+  notFoundMessage: "No skills match."
+}
+```
+
+| Property          | Type                           | Description                        |
+| ----------------- | ------------------------------ | ---------------------------------- |
+| `placeholder`     | `string`                       | Placeholder text                   |
+| `options`         | `TsFieldOptions[] \| string[]` | Available options                  |
+| `notFoundMessage` | `string`                       | Message when search has no results |
+
+#### Combobox
+
+```ts
+{
+  type: "combobox",
+  label: "Country",
+  options: [{ value: "us", label: "United States" }],
+  allowCustom: true,
+  clearable: true,
+  selectAllOnFocus: true
+}
+```
+
+| Property           | Type                           | Description                        |
+| ------------------ | ------------------------------ | ---------------------------------- |
+| `placeholder`      | `string`                       | Placeholder text                   |
+| `options`          | `TsFieldOptions[] \| string[]` | Available options                  |
+| `allowCustom`      | `boolean`                      | Allow custom values not in options |
+| `clearable`        | `boolean`                      | Show a clear button                |
+| `selectAllOnFocus` | `boolean`                      | Select all text on focus           |
+| `notFoundMessage`  | `string`                       | Message when no options match      |
+
+#### Radio
+
+```ts
+{
+  type: "radio",
+  label: "Gender",
+  options: [
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+  ]
+}
+```
+
+| Property  | Type                           | Description       |
+| --------- | ------------------------------ | ----------------- |
+| `options` | `TsFieldOptions[] \| string[]` | Available options |
+
+#### Checkbox
+
+```ts
+{ type: "checkbox", label: "I agree to the terms" }
+```
+
+Boolean value. No additional properties beyond base.
+
+#### Switch
+
+```ts
+{ type: "switch", label: "Active Account" }
+```
+
+Boolean toggle. No additional properties beyond base.
+
+#### Button Group
+
+```ts
+{
+  type: "button-group",
+  label: "Status",
+  options: [
+    { value: "draft", label: "Draft", variant: "outline" },
+    { value: "published", label: "Published", variant: "default" },
+  ],
+  variant: "process"  // Optional: renders as chevron process stepper
+}
+```
+
+| Property  | Type                           | Description                                                     |
+| --------- | ------------------------------ | --------------------------------------------------------------- |
+| `options` | `TsFieldOptions[] \| string[]` | Available options (each can have `variant`)                     |
+| `variant` | `"process"`                    | Optional: renders as a horizontal process stepper with chevrons |
+
+#### Date
+
+```ts
+{
+  type: "date",
+  label: "Birth Date",
+  dateFormat: "d.M.yyyy",
+  locale: "cs-CZ",
+  showTodayButton: true,
+  showClearButton: true,
+  todayButtonText: "Today",
+  clearButtonText: "Clear"
+}
+```
+
+| Property           | Type      | Default      | Description                          |
+| ------------------ | --------- | ------------ | ------------------------------------ |
+| `placeholder`      | `string`  | —            | Placeholder for text input           |
+| `dateFormat`       | `string`  | `"d.M.yyyy"` | date-fns format string               |
+| `locale`           | `string`  | —            | Locale for calendar (e.g. `"cs-CZ"`) |
+| `selectAllOnFocus` | `boolean` | —            | Select text on focus                 |
+| `showTodayButton`  | `boolean` | —            | Show "Today" button in popup         |
+| `showClearButton`  | `boolean` | —            | Show "Clear" button in popup         |
+| `todayButtonText`  | `string`  | —            | Custom label for Today button        |
+| `clearButtonText`  | `string`  | —            | Custom label for Clear button        |
+
+#### DateTime
+
+Same properties as Date, but with time component. Default format: `"d.M.yyyy HH:mm"`.
+
+```ts
+{ type: "datetime", label: "Event Start", dateFormat: "d.M.yyyy HH:mm" }
+```
+
+#### File
+
+```ts
+{
+  type: "file",
+  label: "Attachments",
+  accept: ".pdf,.doc,image/*",
+  multiple: true,
+  innerLabel: "Drop files here",
+  showDropZone: true,
+  addFileLabel: "Add file"
+}
+```
+
+| Property       | Type      | Default | Description                              |
+| -------------- | --------- | ------- | ---------------------------------------- |
+| `accept`       | `string`  | —       | Accepted file types (MIME or extensions) |
+| `multiple`     | `boolean` | —       | Allow multiple file selection            |
+| `innerLabel`   | `string`  | —       | Label inside the drop zone               |
+| `showDropZone` | `boolean` | `true`  | Show drag-and-drop area                  |
+| `addFileLabel` | `string`  | —       | Label for the "Add file" link            |
+
+File value format: `Array<File | TsFileDescriptor>` where:
+
+```ts
+interface TsFileDescriptor {
+  id?: string | number
+  name: string
+  size?: number
+  url?: string
+  type?: string
+}
+```
+
+#### Button (In-Form)
+
+```ts
+{ type: "button", label: "Generate Report", action: "generate", variant: "outline" }
+```
+
+| Property  | Type              | Description                  |
+| --------- | ----------------- | ---------------------------- |
+| `action`  | `string`          | Action name emitted on click |
+| `variant` | `TsButtonVariant` | Visual variant               |
+
+#### Separator
+
+```ts
+{ type: "separator", label: "Section Title" }
+```
+
+Used via layout `type: "separator"` in row items. Renders a horizontal rule with optional label.
+
+#### Empty
+
+```ts
+{
+  type: "empty"
+}
+```
+
+Used via layout `type: "empty"`. Creates an invisible placeholder in the grid.
+
+#### Table (Nested)
+
+```ts
+{
+  type: "table",
+  label: "Line Items",
+  columns: [
+    { key: "product", title: "Product", type: "text" },
+    { key: "qty", title: "Qty", type: "number", align: "right" },
+    { key: "price", title: "Price", type: "number", align: "right" },
+  ],
+  showCreateButton: true
+}
+```
+
+| Property           | Type                 | Description                                 |
+| ------------------ | -------------------- | ------------------------------------------- |
+| `columns`          | `TsTableColumnDef[]` | Column definitions (same format as TsTable) |
+| `showCreateButton` | `boolean`            | Show "Add row" button                       |
+
+Value: `Array<Record<string, unknown>>` — array of row objects.
+
+#### Relationship
+
+```ts
+{
+  type: "relationship",
+  label: "Assigned User",
+  targetEntity: "User",
+  mode: "single",            // or "multiple"
+  variant: "dropdown",       // or "dialog"
+  displayFields: ["name", "email"],
+  chipDisplayFields: ["name"],
+  valueField: "id",
+  options: [
+    { id: 1, name: "John", email: "john@example.com" },
+    { id: 2, name: "Jane", email: "jane@example.com" },
+  ]
+}
+```
+
+| Property            | Type                        | Default      | Description                                       |
+| ------------------- | --------------------------- | ------------ | ------------------------------------------------- |
+| `placeholder`       | `string`                    | —            | Placeholder text                                  |
+| `targetEntity`      | `string`                    | —            | Entity name for labels                            |
+| `mode`              | `"single" \| "multiple"`    | `"single"`   | Selection mode                                    |
+| `variant`           | `"dropdown" \| "dialog"`    | `"dropdown"` | UI variant (popover or modal)                     |
+| `displayFields`     | `string[]`                  | —            | Fields shown in search results                    |
+| `chipDisplayFields` | `string[]`                  | —            | Fields shown in selected chip                     |
+| `columns`           | `TsTableColumnDef[]`        | —            | Full column definitions (overrides displayFields) |
+| `valueField`        | `string`                    | —            | Primary key field for stored value                |
+| `options`           | `Record<string, unknown>[]` | —            | Available records to select from                  |
+
+#### Infobox
+
+```ts
+{
+  type: "infobox",
+  label: "Notice",
+  content: "This form is read-only.",
+  variant: "warning",  // "default" | "information" | "warning" | "success" | "destructive"
+  icon: "AlertTriangle",
+  closable: true
+}
+```
+
+| Property   | Type               | Description                                  |
+| ---------- | ------------------ | -------------------------------------------- |
+| `content`  | `string`           | Static text content                          |
+| `value`    | `ReactNode`        | Dynamic content                              |
+| `variant`  | `TsInfoboxVariant` | Visual style                                 |
+| `icon`     | `string`           | Lucide icon name (overrides variant default) |
+| `closable` | `boolean`          | Allow user to dismiss                        |
+
+#### Markdown
+
+```ts
+{
+  type: "markdown",
+  content: "### Title\n\n**Bold** text with [links](https://example.com)"
+}
+```
+
+| Property  | Type     | Description                             |
+| --------- | -------- | --------------------------------------- |
+| `content` | `string` | Static markdown content                 |
+| `value`   | `string` | Dynamic markdown content from form data |
+
+### Buttons Configuration
+
+```ts
+interface TsButton {
+  action: string // Technical action name
+  label: string // Display text
+  variant?: TsButtonVariant // "default" | "primary" | "secondary" | "destructive" | "outline" | "ghost" | "link" | "danger" | "success" | "warning"
+  type?: "submit" | "button" | "reset" // HTML button type (default: "submit")
+  icon?: string // Lucide icon name
+  position?: "left" | "center" | "right" // Position in button bar (default: "right")
+  disabled?: boolean // Disable the button
+  hidden?: boolean // Hide the button
+  confirmation?: TsConfirmation // Optional confirmation dialog
+}
+```
+
+#### Button Bar Positioning
+
+Buttons are placed in a three-column flex layout:
+
+- `position: "left"` — left-aligned
+- `position: "center"` — centered
+- `position: "right"` (default) — right-aligned
+
+#### Confirmation Dialogs
+
+```ts
+{
+  action: "delete",
+  label: "Delete",
+  variant: "destructive",
+  type: "button",
+  confirmation: {
+    title: "Are you sure?",
+    text: "This action cannot be undone.",
+    buttons: [
+      { action: "cancel", label: "Cancel" },
+      { action: "confirm", label: "Delete", variant: "destructive", confirm: true },
+    ]
+  }
+}
+```
+
+When `confirm: true` is set on a confirmation button, clicking it executes the parent button's action. Otherwise, the dialog simply closes.
+
+### TsErrors (External Validation)
+
+Pass errors as a nested object matching the field structure:
+
+```ts
+const errors = {
+  email: "Email is required",
+  "address.city": "City is required", // Dot-notation for nested fields
+}
+```
+
+Errors can also be nested objects:
+
+```ts
+const errors = {
+  email: "Invalid email",
+  address: {
+    city: "Required",
+    zip: "Invalid format",
+  },
+}
+```
+
+### Keyboard Actions
+
+Fields with `enterAction` / `escapeAction` emit `form-key-action` custom DOM events:
+
+- `enterAction: "submit"` — triggers the first submit button
+- `enterAction: "focus:next"` — focuses the next focusable input
+- `enterAction: "myAction"` — emits action `"myAction"` via `onAction`
+- `escapeAction: "clear"` — clears the field value
+- `escapeAction: "cancel"` — emits action `"cancel"` via `onAction`
+
+### Options Format
+
+Options can be either strings or objects:
+
+```ts
+// Simple strings (value = label)
+options: ["Admin", "User", "Guest"]
+
+// Object form (full control)
+options: [
+  { value: "admin", label: "Administrator", disabled: false },
+  { value: "user", label: "Standard User" },
+]
+```
+
+### Complete Form Example
+
+```tsx
+"use client"
+
+import { TsForm } from "@/components/ts-web-ui/ts-form"
+import { TsFormProps } from "@/components/ts-web-ui/ts-form/types"
+
+const formDef = {
+  layout: {
+    tabs: [
+      {
+        label: "Personal",
+        rows: [
+          [
+            { field: "name", width: "1fr" },
+            { field: "email", width: "1fr" },
+          ],
+          [
+            { field: "age", width: "100px" },
+            { field: "role", width: "1fr" },
+          ],
+          [{ type: "separator", label: "Additional", field: "sep" }],
+          [{ field: "bio" }],
+        ],
+      },
+      {
+        label: "Settings",
+        rows: [[{ field: "active" }, { field: "notifications" }]],
+      },
+    ],
+  },
+  fields: {
+    name: { type: "text", label: "Name", required: true, placeholder: "John Doe" },
+    email: { type: "text", label: "Email", required: true },
+    age: { type: "number", label: "Age", min: 18, max: 120 },
+    role: {
+      type: "select",
+      label: "Role",
+      options: [
+        { value: "admin", label: "Admin" },
+        { value: "user", label: "User" },
+      ],
+    },
+    bio: { type: "textarea", label: "Biography", rows: 3 },
+    active: { type: "switch", label: "Active" },
+    notifications: { type: "checkbox", label: "Enable notifications" },
+  },
+  buttons: [
+    { action: "cancel", label: "Cancel", variant: "outline", type: "button", position: "left" },
+    { action: "save", label: "Save", variant: "default", type: "submit" },
+  ],
+}
+
+export default function MyPage() {
+  const [errors, setErrors] = React.useState({})
+
+  const handleAction = (action: string, data: Record<string, unknown>) => {
+    if (action === "save") {
+      // Validate
+      const newErrors: Record<string, string> = {}
+      if (!data.name) newErrors.name = "Name is required"
+      if (!data.email) newErrors.email = "Email is required"
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
+        return
+      }
+
+      setErrors({})
+      console.log("Saved:", data)
+    } else if (action === "cancel") {
+      console.log("Cancelled")
+    }
+  }
+
+  return (
+    <TsForm
+      layout={formDef.layout}
+      fields={formDef.fields}
+      buttons={formDef.buttons}
+      values={{ name: "John", active: true }}
+      errors={errors}
+      onAction={handleAction}
+      onFieldChange={(field, value, allData) => {
+        console.log(`Field ${field} changed to:`, value)
+      }}
+    />
+  )
+}
+```
+
+---
+
+## TsTable
+
+**Location:** `src/components/ts-web-ui/ts-table/index.tsx`
+**Dependencies:** `pnpm add @tanstack/react-table lucide-react xlsx date-fns`
+**Required Shadcn components:** `table`, `input`, `checkbox`, `select`, `dropdown-menu`, `button`
+
+An advanced data grid built on TanStack Table v8 with sorting, filtering, pagination, column visibility, row selection, Excel import/export, and row actions.
+
+### TsTableProps
+
+| Prop                  | Type                      | Default                | Description                                                    |
+| --------------------- | ------------------------- | ---------------------- | -------------------------------------------------------------- |
+| `data`                | `TData[]`                 | —                      | **Required.** Array of data objects to display                 |
+| `columnDefinitions`   | `TsTableColumnDef[]`      | —                      | **Required.** Column configuration array                       |
+| `title`               | `string`                  | `undefined`            | Title displayed in the toolbar                                 |
+| `showCreateButton`    | `boolean`                 | `true`                 | Show "New record" button                                       |
+| `showImportButton`    | `boolean`                 | `true`                 | Show "Import" button (Excel/CSV)                               |
+| `showExportButton`    | `boolean`                 | `true`                 | Show "Export" button (Excel)                                   |
+| `showColumnSelector`  | `boolean`                 | `true`                 | Show column visibility toggle                                  |
+| `enableSelection`     | `boolean`                 | `true`                 | Show row selection checkboxes                                  |
+| `pageSize`            | `number`                  | `10`                   | Default number of rows per page                                |
+| `pageSizeOptions`     | `number[]`                | `[5, 10, 20, 50, 100]` | Available page size options                                    |
+| `singleItemActions`   | `string`                  | `undefined`            | Row actions in `"action/Label,action/Label"` format            |
+| `predefinedFilters`   | `Record<string, unknown>` | `undefined`            | Initial column filters (key = column key, value = filter text) |
+| `getRowId`            | `(row: TData) => string`  | `undefined`            | Custom row ID function                                         |
+| `initialRowSelection` | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs                                           |
+
+### Event Callbacks
+
+| Callback            | Signature                                  | Description                                                                                            |
+| ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `onRowClick`        | `(row: TData, columnKey?: string) => void` | Fires when a row or clickable cell is clicked. `columnKey` is provided only for `isClickable` columns. |
+| `onCreateClick`     | `() => void`                               | Fires when "New record" button is clicked                                                              |
+| `onAction`          | `(action: string, row: TData) => void`     | Fires when a row action is triggered from the dropdown menu                                            |
+| `onDataChange`      | `(data: TData[]) => void`                  | Fires when data changes (after import)                                                                 |
+| `onSelectionChange` | `(selectedRows: TData[]) => void`          | Fires when row selection changes                                                                       |
+
+### TsTableColumnDef
+
+| Property      | Type                                        | Default  | Description                                                                   |
+| ------------- | ------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `key`         | `string`                                    | —        | **Required.** Data key for the column (matches object property name)          |
+| `title`       | `string`                                    | —        | **Required.** Header label                                                    |
+| `type`        | `"text" \| "number" \| "date" \| "boolean"` | `"text"` | Data type (affects rendering and filtering)                                   |
+| `sortable`    | `boolean`                                   | `true`   | Enable sorting for this column                                                |
+| `filterable`  | `boolean`                                   | `true`   | Enable filtering for this column                                              |
+| `visible`     | `boolean`                                   | `true`   | Initial column visibility (can be toggled by user)                            |
+| `width`       | `number \| string`                          | `200`    | Column width in pixels                                                        |
+| `align`       | `"left" \| "center" \| "right"`             | `"left"` | Content alignment                                                             |
+| `canBeCopied` | `boolean`                                   | `false`  | Show copy-to-clipboard functionality                                          |
+| `isClickable` | `boolean`                                   | `false`  | Make cell text clickable (styled as link, passes `columnKey` to `onRowClick`) |
+
+### Column Type Rendering
+
+| Type        | Rendering                              | Filter Behavior                             |
+| ----------- | -------------------------------------- | ------------------------------------------- |
+| `"text"`    | Plain text                             | Text substring match                        |
+| `"number"`  | Locale-formatted with 2 decimal places | Supports `>10`, `<5`, `10..20` range syntax |
+| `"date"`    | Locale-formatted date                  | Date-aware filtering                        |
+| `"boolean"` | Disabled checkbox                      | Boolean filter                              |
+
+### Row Actions
+
+Define row-level dropdown actions via `singleItemActions` string:
+
+```tsx
+<TsTable
+  data={data}
+  columnDefinitions={columns}
+  singleItemActions="edit/Edit,delete/Delete,details/View Details"
+  onAction={(action, row) => {
+    switch (action) {
+      case "edit":
+        console.log("Edit", row)
+        break
+      case "delete":
+        console.log("Delete", row)
+        break
+      case "details":
+        console.log("Details", row)
+        break
+    }
+  }}
+/>
+```
+
+The actions column appears as a `⋮` (vertical dots) menu on each row.
+
+### Features
+
+- **Global search**: Full-text search across all visible columns
+- **Column sorting**: Click column headers to sort (asc/desc toggle with indicators)
+- **Column visibility**: Toggle columns via "Columns" dropdown
+- **Pagination**: Configurable page size with first/prev/next/last navigation
+- **Row selection**: Checkbox-based selection with "select all" header checkbox
+- **Excel export**: Downloads filtered data as `.xlsx` file
+- **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json` to append rows
+- **Number range filters**: Use `>100`, `<50`, `10..20` syntax in column filters
+- **Selected count**: Shows "X of Y rows selected" in footer
+
+### Complete Usage Example
+
+```tsx
+"use client"
+
+import { TsTable } from "@/components/ts-web-ui/ts-table"
+import { TsTableColumnDef } from "@/components/ts-web-ui/ts-table/columns"
+
+interface User {
+  [key: string]: unknown
+  id: number
+  name: string
+  email: string
+  role: string
+  active: boolean
+  salary: number
+  joinDate: string
+}
+
+const columns: TsTableColumnDef[] = [
+  { key: "id", title: "ID", type: "number", visible: false },
+  { key: "name", title: "Name", type: "text", isClickable: true },
+  { key: "email", title: "Email", type: "text", canBeCopied: true },
+  { key: "role", title: "Role", type: "text" },
+  { key: "salary", title: "Salary", type: "number", align: "right" },
+  { key: "joinDate", title: "Joined", type: "date", align: "right" },
+  { key: "active", title: "Active", type: "boolean", align: "center" },
+]
+
+const data: User[] = [
+  {
+    id: 1,
+    name: "Alice",
+    email: "alice@example.com",
+    role: "Admin",
+    active: true,
+    salary: 95000,
+    joinDate: "2021-03-15",
+  },
+  {
+    id: 2,
+    name: "Bob",
+    email: "bob@example.com",
+    role: "User",
+    active: false,
+    salary: 72000,
+    joinDate: "2022-07-22",
+  },
+]
+
+export default function UsersPage() {
+  return (
+    <TsTable
+      data={data}
+      columnDefinitions={columns}
+      title="User Management"
+      singleItemActions="edit/Edit,delete/Delete"
+      pageSize={10}
+      onRowClick={(row, col) => console.log("Clicked:", row.name, col)}
+      onCreateClick={() => console.log("Create new user")}
+      onAction={(action, row) => console.log(action, row)}
+      onSelectionChange={(rows) => console.log("Selected:", rows.length)}
+    />
+  )
+}
+```
+
+### Data Type Requirements
+
+Data objects **must** extend `Record<string, unknown>`:
+
+```ts
+interface MyDataType {
+  [key: string]: unknown // Required by TsTable generic constraint
+  id: number
+  name: string
+  // ... other fields
+}
+```
+
+---
+
+## Logo Component
+
+**Location:** `src/components/ts-web-ui/ts-logo/index.tsx`
+
+Used with TopBar and Sidebar.
+
+### Props
+
+| Prop        | Type        | Description                              |
+| ----------- | ----------- | ---------------------------------------- |
+| `text`      | `string`    | Logo text                                |
+| `icon`      | `ReactNode` | Logo icon element                        |
+| `href`      | `string`    | If provided, logo becomes a Next.js Link |
+| `className` | `string`    | Additional CSS classes                   |
+| `children`  | `ReactNode` | Custom content                           |
+
+```tsx
+import { Hexagon } from "lucide-react"
+
+import { Logo } from "@/components/ts-web-ui/ts-logo"
+
+;<Logo text="My App" href="/" icon={<Hexagon className="h-6 w-6" />} />
+```
