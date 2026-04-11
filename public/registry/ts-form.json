@@ -10,8 +10,8 @@
     "react-syntax-highlighter"
   ],
   "registryDependencies": [
-    "./alert-dialog.json",
-    "./button.json",
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/alert-dialog.json",
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json",
     "form",
     "alert",
     "badge",
@@ -29,7 +29,7 @@
     "tabs",
     "textarea",
     "toggle-group",
-    "./ts-table.json"
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json"
   ],
   "files": [
     {

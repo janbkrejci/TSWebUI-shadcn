@@ -5,6 +5,14 @@ const REGISTRY_PATH = path.join(process.cwd(), "public", "registry")
 const COMPONENTS_BASE_PATH = path.join(process.cwd(), "src", "components", "ts-web-ui")
 
 /**
+ * Base URL for the registry.
+ * Override with REGISTRY_BASE_URL env var for local dev:
+ *   REGISTRY_BASE_URL=http://localhost:3000/registry pnpm build:registry
+ */
+const REGISTRY_BASE_URL =
+  process.env.REGISTRY_BASE_URL ?? "https://janbkrejci.github.io/TSWebUI-shadcn/registry"
+
+/**
  * Definition of components and their dependencies
  */
 const REGISTRY_COMPONENTS = [
@@ -146,11 +154,15 @@ async function buildRegistry() {
       type: "registry:block",
       dependencies: component.dependencies,
       registryDependencies: component.registryDependencies.map((dep) => {
-        // If it's one of our components, use a relative URL so it works
-        // both locally (any port) and from GitHub Pages deployment
+        // Custom ts-web-ui components must use absolute URLs.
+        // The shadcn CLI does NOT resolve relative paths against the remote
+        // registry URL — it treats "./foo.json" as a local file on the user's
+        // machine, which causes an ENOENT error.
+        // Standard shadcn components (button, tooltip, …) are kept as plain
+        // names so the CLI resolves them from the default shadcn registry.
         if (dep.startsWith("ts-web-ui/")) {
           const componentFileName = dep.split("/").pop()
-          return `./${componentFileName}.json`
+          return `${REGISTRY_BASE_URL}/${componentFileName}.json`
         }
         return dep
       }),
@@ -196,12 +208,11 @@ async function buildRegistry() {
     console.log(`✅ Generated registry for ${component.name}`)
   }
 
-  // Generate main registry index
-  // Use relative paths so the index works from any host (localhost or GitHub Pages)
+  // Generate main registry index with absolute URLs
   const index = REGISTRY_COMPONENTS.map((c) => ({
     name: c.name,
     type: "registry:block",
-    href: `./${c.name.split("/").pop()}.json`,
+    href: `${REGISTRY_BASE_URL}/${c.name.split("/").pop()}.json`,
   }))
   fs.writeFileSync(path.join(REGISTRY_PATH, "index.json"), JSON.stringify(index, null, 2))
 }
