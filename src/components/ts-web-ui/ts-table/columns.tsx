@@ -5,7 +5,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Check, ClipboardCopy, MoreVertical } f
 
 import * as React from "react"
 
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
 
 import { Button } from "@/components/ts-web-ui/ui/button"
 
@@ -33,14 +33,14 @@ function CopyButton({ value }: { value: string }) {
 
   return (
     <button
-      className="inline-flex items-center justify-center h-5 w-5 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
+      className="inline-flex items-center justify-center h-6 w-6 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
       onClick={handleCopy}
       aria-label="Copy to clipboard"
     >
       {copied ? (
-        <Check className="h-3 w-3 text-green-500" />
+        <Check className="h-4 w-4 text-green-500" />
       ) : (
-        <ClipboardCopy className="h-3 w-3 text-muted-foreground" />
+        <ClipboardCopy className="h-4 w-4 text-foreground" />
       )}
     </button>
   )
@@ -53,10 +53,13 @@ export interface TsTableColumnDef {
   sortable?: boolean
   filterable?: boolean
   visible?: boolean
+  unshowable?: boolean
   width?: number | string
   align?: "left" | "center" | "right"
   canBeCopied?: boolean
   isClickable?: boolean
+  locale?: string
+  decimalPlaces?: number
 }
 
 export interface TsTableRowAction {
@@ -75,29 +78,22 @@ export function generateColumns<TData>(
 ): ColumnDef<TData>[] {
   const cols: ColumnDef<TData>[] = []
 
-  // 1. Selection column
+  // 1. Selection column — header checkbox rendered in filter row by TsTableView
   if (enableSelection) {
     cols.push({
       id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-          className="translate-y-[2px]"
-        />
-      ),
+      header: () => null,
       cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className="translate-y-[2px]"
-        />
+        <div className="flex justify-center">
+          <input
+            type="checkbox"
+            checked={row.getIsSelected()}
+            onChange={(e) => row.toggleSelected(e.target.checked)}
+            aria-label="Select row"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            className="h-4 w-4 accent-primary cursor-pointer"
+          />
+        </div>
       ),
       enableSorting: false,
       enableHiding: false,
@@ -141,13 +137,17 @@ export function generateColumns<TData>(
 
   // 3. Data columns
   columnDefinitions.forEach((def) => {
+    const locale = def.locale || "cs-CZ"
+    const decimalPlaces = def.decimalPlaces ?? 2
+
     cols.push({
       accessorKey: def.key,
       header: ({ column }) => {
+        const isSorted = column.getIsSorted()
         return (
           <div
             className={cn(
-              "flex items-center space-x-2",
+              "flex items-center gap-1",
               def.align === "center" && "justify-center",
               def.align === "right" && "justify-end"
             )}
@@ -155,23 +155,28 @@ export function generateColumns<TData>(
             <Button
               variant="ghost"
               size="sm"
-              className="-ml-3 h-8 data-[state=open]:bg-accent"
-              onClick={() =>
-                enableSorting &&
-                def.sortable !== false &&
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
+              className="h-8 data-[state=open]:bg-accent px-1"
+              onClick={() => {
+                if (!enableSorting || def.sortable === false) return
+                if (isSorted === "asc") {
+                  column.toggleSorting(true) // desc
+                } else if (isSorted === "desc") {
+                  column.clearSorting() // no sort
+                } else {
+                  column.toggleSorting(false) // asc
+                }
+              }}
               disabled={!enableSorting || def.sortable === false}
             >
               <span>{def.title}</span>
               {enableSorting &&
                 def.sortable !== false &&
-                (column.getIsSorted() === "desc" ? (
-                  <ArrowDown className="ml-2 h-4 w-4" />
-                ) : column.getIsSorted() === "asc" ? (
-                  <ArrowUp className="ml-2 h-4 w-4" />
+                (isSorted === "desc" ? (
+                  <ArrowDown className="ml-1 h-4 w-4" />
+                ) : isSorted === "asc" ? (
+                  <ArrowUp className="ml-1 h-4 w-4" />
                 ) : (
-                  <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+                  <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />
                 ))}
             </Button>
           </div>
@@ -183,12 +188,15 @@ export function generateColumns<TData>(
         let formattedValue: React.ReactNode = String(value ?? "")
 
         if (def.type === "number" && typeof value === "number") {
-          formattedValue = value.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+          formattedValue = value.toLocaleString(locale, {
+            minimumFractionDigits: decimalPlaces,
+            maximumFractionDigits: decimalPlaces,
           })
         } else if (def.type === "date" && value) {
-          formattedValue = new Date(value as string).toLocaleDateString("en-US")
+          const d = new Date(value as string)
+          if (!isNaN(d.getTime())) {
+            formattedValue = new Intl.DateTimeFormat(locale).format(d)
+          }
         } else if (def.type === "boolean") {
           formattedValue = (
             <div
@@ -198,7 +206,12 @@ export function generateColumns<TData>(
                 def.align === "right" && "justify-end"
               )}
             >
-              <Checkbox checked={!!value} disabled className="opacity-70 cursor-default" />
+              <Switch
+                checked={!!value}
+                aria-readonly="true"
+                tabIndex={-1}
+                className="pointer-events-none"
+              />
             </div>
           )
         }

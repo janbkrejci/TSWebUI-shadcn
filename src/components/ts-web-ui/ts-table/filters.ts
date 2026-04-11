@@ -23,29 +23,28 @@ export function matchTextPattern(text: string, pattern: string): boolean {
   }
 }
 
-// Helper for parsing number range/operator
-function parseNumberRange(filterValue: string) {
-  const value = filterValue.trim()
+// ---- Number Filter (matches reference implementation) ----
 
-  // Range 10..20
-  if (value.includes("..")) {
-    const parts = value.split("..")
+function parseNumberRange(filterValue: string): { min: number | null; max: number | null } | null {
+  const trimmed = filterValue.trim()
+  if (!trimmed) return null
+
+  // Range with ".." separator: "10..20", "..20", "10.."
+  if (trimmed.includes("..")) {
+    const parts = trimmed.split("..")
+    const minStr = parts[0]?.trim()
+    const maxStr = parts[1]?.trim()
     return {
-      min: parts[0] ? parseFloat(parts[0]) : null,
-      max: parts[1] ? parseFloat(parts[1]) : null,
+      min: minStr ? (isNaN(parseFloat(minStr)) ? null : parseFloat(minStr)) : null,
+      max: maxStr ? (isNaN(parseFloat(maxStr)) ? null : parseFloat(maxStr)) : null,
     }
   }
-  // Greater/less than
-  if (value.startsWith(">=")) return { min: parseFloat(value.substring(2)), max: null }
-  if (value.startsWith("<=")) return { min: null, max: parseFloat(value.substring(2)) }
-  if (value.startsWith(">")) return { min: parseFloat(value.substring(1)) + 0.000001, max: null } // hack for strict
-  if (value.startsWith("<")) return { min: null, max: parseFloat(value.substring(1)) - 0.000001 }
 
-  // Equality (or partial match for text, but we are in numbers here)
-  // If it's a valid number, do we treat it as exact match or startsWith?
-  // Original code does fallback to text match if it's not a range.
-  const floatVal = parseFloat(value)
-  if (!isNaN(floatVal)) return { exact: floatVal }
+  // Single number — exact match (text startsWith)
+  const parsed = parseFloat(trimmed)
+  if (!isNaN(parsed)) {
+    return { min: parsed, max: parsed }
+  }
 
   return null
 }
@@ -56,28 +55,85 @@ export const numberFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
 
   const range = parseNumberRange(String(filterValue))
   if (!range) {
-    // Fallback to string match (original behavior)
-    return String(cellValue).includes(String(filterValue))
+    // Fallback to text matching
+    return matchTextPattern(String(cellValue), String(filterValue))
   }
 
-  if (range.exact !== undefined) {
-    // Original code for exact match also does text match fallback,
-    // but if we want precise numbers:
-    return cellValue === range.exact || String(cellValue).startsWith(String(filterValue))
+  if (range.min !== null && range.max !== null && range.min === range.max) {
+    // Exact number — match if cell equals or cell string starts with filter
+    return cellValue === range.min || String(cellValue).startsWith(String(filterValue).trim())
   }
 
   if (range.min !== null && cellValue < range.min) return false
   if (range.max !== null && cellValue > range.max) return false
-
   return true
 }
 
-// Helper for parsing data
-// Original code normalizes to "local midnight"
-function parseDate(input: string): Date | null {
-  const d = new Date(input)
-  if (isNaN(d.getTime())) return null
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+// ---- Date Filter (matches reference implementation: flexible date parsing) ----
+
+function parseFlexibleDate(dateStr: string): Date | null {
+  if (!dateStr) return null
+  const s = dateStr.trim()
+
+  // DD.MM.YYYY (Czech format)
+  const m1 = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (m1) {
+    const d = new Date(Number(m1[3]), Number(m1[2]) - 1, Number(m1[1]))
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // DD.MM.YY
+  const m2 = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/)
+  if (m2) {
+    const yr = Number(m2[3])
+    const fullYear = yr < 50 ? 2000 + yr : 1900 + yr
+    const d = new Date(fullYear, Number(m2[2]) - 1, Number(m2[1]))
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // ISO YYYY-MM-DD (parse as local, not UTC)
+  const m3 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+  if (m3) {
+    const d = new Date(Number(m3[1]), Number(m3[2]) - 1, Number(m3[3]))
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // Year only YYYY
+  const m4 = s.match(/^(\d{4})$/)
+  if (m4) {
+    return new Date(Number(m4[1]), 0, 1)
+  }
+
+  // Month.Year DD.MM or MM.YYYY
+  const m5 = s.match(/^(\d{1,2})\.(\d{4})$/)
+  if (m5) {
+    return new Date(Number(m5[2]), Number(m5[1]) - 1, 1)
+  }
+
+  return null
+}
+
+function setEndOfPeriod(date: Date, input: string): Date {
+  const s = input.trim()
+  const d = new Date(date)
+
+  // If only year was entered, end of year
+  if (/^\d{4}$/.test(s)) {
+    d.setMonth(11, 31)
+    d.setHours(23, 59, 59, 999)
+    return d
+  }
+
+  // If month.year, end of month
+  if (/^\d{1,2}\.\d{4}$/.test(s)) {
+    d.setMonth(d.getMonth() + 1, 0) // last day of month
+    d.setHours(23, 59, 59, 999)
+    return d
+  }
+
+  // Otherwise end of day
+  d.setHours(23, 59, 59, 999)
+  return d
 }
 
 export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
@@ -92,46 +148,34 @@ export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
     cellDate.getDate()
   )
 
-  // Try parsing filterValue as range
   const val = String(filterValue).trim()
+  if (!val) return true
 
+  // Range with ".."
   if (val.includes("..")) {
-    const [start, end] = val.split("..")
-    const min = start ? parseDate(start) : null
-    const max = end ? parseDate(end) : null
+    const [startStr, endStr] = val.split("..")
+    const min = startStr?.trim() ? parseFlexibleDate(startStr.trim()) : null
+    const max = endStr?.trim() ? parseFlexibleDate(endStr.trim()) : null
+    const maxEnd = max && endStr?.trim() ? setEndOfPeriod(max, endStr.trim()) : null
 
     if (min && normalizedCellDate < min) return false
-    if (max && normalizedCellDate > max) return false
+    if (maxEnd && normalizedCellDate > maxEnd) return false
     return true
   }
 
-  if (val.startsWith(">=")) {
-    const min = parseDate(val.substring(2))
-    return min ? normalizedCellDate >= min : true
-  }
-  if (val.startsWith("<=")) {
-    const max = parseDate(val.substring(2))
-    return max ? normalizedCellDate <= max : true
-  }
-  if (val.startsWith(">")) {
-    const min = parseDate(val.substring(1))
-    return min ? normalizedCellDate > min : true
-  }
-  if (val.startsWith("<")) {
-    const max = parseDate(val.substring(1))
-    return max ? normalizedCellDate < max : true
+  // Single date/period
+  const parsed = parseFlexibleDate(val)
+  if (parsed) {
+    const end = setEndOfPeriod(new Date(parsed), val)
+    return normalizedCellDate >= parsed && normalizedCellDate <= end
   }
 
-  // Equality date
-  const exactDate = parseDate(val)
-  if (exactDate) {
-    return normalizedCellDate.getTime() === exactDate.getTime()
-  }
-
-  // Fallback: Text search in formatted date (en-US)
-  const formatted = new Intl.DateTimeFormat("en-US").format(normalizedCellDate)
-  return formatted.includes(val)
+  // Fallback: text match on formatted date (cs-CZ)
+  const formatted = new Intl.DateTimeFormat("cs-CZ").format(normalizedCellDate)
+  return matchTextPattern(formatted, val)
 }
+
+// ---- Boolean Filter ----
 
 export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)
@@ -141,6 +185,8 @@ export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => 
   if (val === "false") return cellValue === false
   return true // 'all' or empty
 }
+
+// ---- Text Filter ----
 
 export const textFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)

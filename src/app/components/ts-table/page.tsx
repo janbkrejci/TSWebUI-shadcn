@@ -3,6 +3,8 @@
 import * as React from "react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
   Table,
   TableBody,
@@ -13,8 +15,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { TsTable } from "@/components/ts-web-ui/ts-table"
-import { TsTableColumnDef } from "@/components/ts-web-ui/ts-table/columns"
+import { TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 interface TableItem {
@@ -166,7 +167,7 @@ const tableData: TableItem[] = [
 ]
 
 const columnDefinitions: TsTableColumnDef[] = [
-  { key: "id", title: "ID", type: "number", visible: false, align: "right" },
+  { key: "id", title: "ID", type: "number", visible: false, align: "right", unshowable: true },
   {
     key: "name",
     title: "Name",
@@ -188,6 +189,8 @@ const columnDefinitions: TsTableColumnDef[] = [
     sortable: true,
     visible: true,
     align: "right",
+    locale: "cs-CZ",
+    decimalPlaces: 2,
   },
   {
     key: "contractDate",
@@ -196,33 +199,74 @@ const columnDefinitions: TsTableColumnDef[] = [
     sortable: true,
     visible: true,
     align: "right",
+    locale: "cs-CZ",
   },
   { key: "approved", title: "Approved", type: "boolean", visible: true, align: "center" },
 ]
 
+function ToggleControl({
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  label: string
+  checked: boolean
+  onCheckedChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Switch checked={checked} onCheckedChange={onCheckedChange} id={`toggle-${label}`} />
+      <Label htmlFor={`toggle-${label}`} className="text-sm cursor-pointer">
+        {label}
+      </Label>
+    </div>
+  )
+}
+
 export default function TsTablePage() {
   const [lastAction, setLastAction] = React.useState<string | null>(null)
 
-  const handleRowClick = (row: unknown, columnKey?: string) => {
+  // Feature toggles
+  const [enableSelection, setEnableSelection] = React.useState(true)
+  const [enableSorting, setEnableSorting] = React.useState(true)
+  const [enableFiltering, setEnableFiltering] = React.useState(true)
+  const [enablePagination, setEnablePagination] = React.useState(true)
+  const [enableRowMenu, setEnableRowMenu] = React.useState(true)
+  const [enableClickableRows, setEnableClickableRows] = React.useState(true)
+  const [enableClickableColumns, setEnableClickableColumns] = React.useState(true)
+  const [enableColumnResizing, setEnableColumnResizing] = React.useState(true)
+  const [enableColumnReordering, setEnableColumnReordering] = React.useState(true)
+  const [showCreateButton, setShowCreateButton] = React.useState(true)
+  const [showImportButton, setShowImportButton] = React.useState(true)
+  const [showExportButton, setShowExportButton] = React.useState(true)
+  const [showColumnSelector, setShowColumnSelector] = React.useState(true)
+  const [showBulkActions, setShowBulkActions] = React.useState(true)
+
+  const handleRowClick = React.useCallback((row: Record<string, unknown>, columnKey?: string) => {
     const item = row as TableItem
-    setLastAction(`Clicked on row ID: ${item.id}${columnKey ? `, column: ${columnKey}` : ""}`)
-  }
+    setLastAction(`Clicked row ID: ${item.id}${columnKey ? `, column: ${columnKey}` : ""}`)
+  }, [])
 
-  const handleCreate = () => {
-    setLastAction("Clicked on 'New record'")
-  }
+  const handleCreate = React.useCallback(() => {
+    setLastAction("Clicked 'New record'")
+  }, [])
 
-  const handleAction = (action: string, row: unknown) => {
+  const handleAction = React.useCallback((action: string, row: Record<string, unknown>) => {
     const item = row as TableItem
     setLastAction(`Action: ${action} for ${item.name}`)
-  }
+  }, [])
+
+  const handleBulkAction = React.useCallback((action: string, rows: Record<string, unknown>[]) => {
+    setLastAction(`Bulk action: ${action} on ${rows.length} rows`)
+  }, [])
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">TS Table</h1>
+        <h1 className="text-3xl font-bold tracking-tight">TsTable</h1>
         <p className="text-muted-foreground mt-2">
-          Feature-rich data grid with advanced filtering, sorting, and export capabilities.
+          Feature-rich data grid with sorting, filtering, column management, selection, bulk
+          actions, import/export, and locale-aware formatting.
         </p>
       </div>
 
@@ -235,12 +279,99 @@ export default function TsTablePage() {
         </TabsList>
 
         <TabsContent value="preview" className="space-y-4 pt-4">
+          {/* Interactive Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Feature Toggles</CardTitle>
+              <CardDescription>
+                Toggle individual features on/off to see how TsTable adapts.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <ToggleControl
+                  label="Selection"
+                  checked={enableSelection}
+                  onCheckedChange={setEnableSelection}
+                />
+                <ToggleControl
+                  label="Sorting"
+                  checked={enableSorting}
+                  onCheckedChange={setEnableSorting}
+                />
+                <ToggleControl
+                  label="Filtering"
+                  checked={enableFiltering}
+                  onCheckedChange={setEnableFiltering}
+                />
+                <ToggleControl
+                  label="Pagination"
+                  checked={enablePagination}
+                  onCheckedChange={setEnablePagination}
+                />
+                <ToggleControl
+                  label="Row Menu"
+                  checked={enableRowMenu}
+                  onCheckedChange={setEnableRowMenu}
+                />
+                <ToggleControl
+                  label="Clickable Rows"
+                  checked={enableClickableRows}
+                  onCheckedChange={setEnableClickableRows}
+                />
+                <ToggleControl
+                  label="Clickable Columns"
+                  checked={enableClickableColumns}
+                  onCheckedChange={setEnableClickableColumns}
+                />
+                <ToggleControl
+                  label="Column Resizing"
+                  checked={enableColumnResizing}
+                  onCheckedChange={setEnableColumnResizing}
+                />
+                <ToggleControl
+                  label="Column Reordering"
+                  checked={enableColumnReordering}
+                  onCheckedChange={setEnableColumnReordering}
+                />
+                <ToggleControl
+                  label="Create Button"
+                  checked={showCreateButton}
+                  onCheckedChange={setShowCreateButton}
+                />
+                <ToggleControl
+                  label="Import Button"
+                  checked={showImportButton}
+                  onCheckedChange={setShowImportButton}
+                />
+                <ToggleControl
+                  label="Export Button"
+                  checked={showExportButton}
+                  onCheckedChange={setShowExportButton}
+                />
+                <ToggleControl
+                  label="Column Selector"
+                  checked={showColumnSelector}
+                  onCheckedChange={setShowColumnSelector}
+                />
+                <ToggleControl
+                  label="Bulk Actions"
+                  checked={showBulkActions}
+                  onCheckedChange={setShowBulkActions}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Table Preview */}
           <Card>
             <CardHeader>
               <CardTitle>Interactive Demo</CardTitle>
               <CardDescription>
-                Try sorting, filtering (use &gt;10 or 10..20 for numbers), column selection, and
-                exports.
+                Try sorting (click header: asc → desc → clear), filtering (use
+                &quot;10000..200000&quot; for number ranges, &quot;2020..2023&quot; for date
+                ranges), column selection (with search), resizing, reordering, and exports. ID
+                column is unshowable. Name and Company columns are clickable.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -248,10 +379,29 @@ export default function TsTablePage() {
                 data={tableData}
                 columnDefinitions={columnDefinitions}
                 title="Client Management"
+                enableSelection={enableSelection}
+                enableSorting={enableSorting}
+                enableFiltering={enableFiltering}
+                enablePagination={enablePagination}
+                enableRowMenu={enableRowMenu}
+                enableClickableRows={enableClickableRows}
+                enableClickableColumns={enableClickableColumns}
+                enableColumnResizing={enableColumnResizing}
+                enableColumnReordering={enableColumnReordering}
+                showCreateButton={showCreateButton}
+                showImportButton={showImportButton}
+                showExportButton={showExportButton}
+                showColumnSelector={showColumnSelector}
                 onRowClick={handleRowClick}
                 onCreateClick={handleCreate}
                 onAction={handleAction}
                 singleItemActions="edit/Edit,delete/Delete,details/Details"
+                multipleItemsActions={
+                  showBulkActions ? "delete/Delete Selected,export/Export Selected" : undefined
+                }
+                onBulkAction={handleBulkAction}
+                getRowId={(row) => String(row.id)}
+                pageSize={5}
               />
               {lastAction && (
                 <div className="mt-4 p-3 bg-muted border rounded-md text-sm font-mono text-primary animate-in fade-in">
@@ -265,29 +415,62 @@ export default function TsTablePage() {
         <TabsContent value="code" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Basic Configuration</CardTitle>
+              <CardTitle>Full Configuration Example</CardTitle>
+              <CardDescription>
+                Shows all available props and column definition options.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <CodeBlock
                 code={`"use client"
 
-import { TsTable } from "@/components/ts-web-ui/ts-table"
+import { TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 
-const columns = [
-  { key: 'name', title: 'Name', type: 'text', sortable: true },
-  { key: 'email', title: 'E-mail', type: 'text', canBeCopied: true },
-  { key: 'turnover', title: 'Turnover', type: 'number', align: 'right' },
-  { key: 'approved', title: 'Approved', type: 'boolean', align: 'center' }
+const columns: TsTableColumnDef[] = [
+  { key: "id", title: "ID", type: "number", visible: false, unshowable: true },
+  { key: "name", title: "Name", type: "text", sortable: true, isClickable: true },
+  { key: "email", title: "E-mail", type: "text", canBeCopied: true },
+  { key: "turnover", title: "Turnover", type: "number", align: "right",
+    locale: "cs-CZ", decimalPlaces: 2 },
+  { key: "contractDate", title: "Contract", type: "date", locale: "cs-CZ" },
+  { key: "approved", title: "Approved", type: "boolean", align: "center" },
 ]
 
 export default function MyPage() {
   return (
-    <TsTable 
-      data={data} 
-      columnDefinitions={columns} 
-      title="User List"
+    <TsTable
+      data={data}
+      columnDefinitions={columns}
+      title="User Management"
+      // Feature toggles (all default to true except noted)
+      enableSelection={true}
+      enableSorting={true}
+      enableFiltering={true}
+      enablePagination={true}
+      enableRowMenu={true}
+      enableClickableRows={true}
+      enableClickableColumns={false}  // default: false
+      enableColumnResizing={true}
+      enableColumnReordering={true}
+      // Toolbar buttons
+      showCreateButton={true}
+      showImportButton={true}
+      showExportButton={true}
+      showColumnSelector={true}
+      // Actions
       singleItemActions="edit/Edit,delete/Delete"
+      multipleItemsActions="delete/Delete Selected"
+      onRowClick={(row, colKey) => console.log("clicked", row, colKey)}
       onAction={(action, row) => console.log(action, row)}
+      onBulkAction={(action, rows) => console.log(action, rows)}
+      onCreateClick={() => console.log("create")}
+      // Pagination
+      pageSize={10}
+      pageSizeOptions={[5, 10, 20, 50]}
+      // Advanced
+      unhideableColumns={["name"]}
+      predefinedFilters={{ city: "Prague" }}
+      getRowId={(row) => String(row.id)}
     />
   )
 }`}
@@ -299,118 +482,289 @@ export default function MyPage() {
         <TabsContent value="install" className="pt-4">
           <InstallTab
             componentName="ts-table"
-            dependencies={["@tanstack/react-table", "lucide-react", "xlsx", "date-fns"]}
+            dependencies={["@tanstack/react-table", "lucide-react", "xlsx"]}
           />
         </TabsContent>
 
         <TabsContent value="documentation" className="pt-4">
           <div className="space-y-8 pb-8">
+            {/* Component Props */}
             <Card>
               <CardHeader>
                 <CardTitle>Component Properties</CardTitle>
+                <CardDescription>All available props on the TsTable component.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[200px]">Prop</TableHead>
-                      <TableHead className="w-[150px]">Type</TableHead>
+                      <TableHead className="w-[220px]">Prop</TableHead>
+                      <TableHead className="w-[200px]">Type</TableHead>
+                      <TableHead className="w-[80px]">Default</TableHead>
                       <TableHead>Description</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs">data</TableCell>
-                      <TableCell className="text-xs italic">unknown[]</TableCell>
-                      <TableCell>Array of objects to display in the table.</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs">columnDefinitions</TableCell>
-                      <TableCell className="text-xs italic">TsTableColumnDef[]</TableCell>
-                      <TableCell>Configuration for each column (see below).</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs">title</TableCell>
-                      <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell>Title displayed in the toolbar.</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs">singleItemActions</TableCell>
-                      <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell>
-                        Comma-separated actions in &quot;action/Label&quot; format.
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs">predefinedFilters</TableCell>
-                      <TableCell className="text-xs italic">
-                        Record&lt;string, unknown&gt;
-                      </TableCell>
-                      <TableCell>Initial filters that cannot be cleared by the user.</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs">showCreateButton</TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>
-                        Whether to show the &quot;Create&quot; button (default: true).
-                      </TableCell>
-                    </TableRow>
+                    {[
+                      ["data", "TData[]", "required", "Array of row objects to display."],
+                      [
+                        "columnDefinitions",
+                        "TsTableColumnDef[]",
+                        "required",
+                        "Column configuration (see below).",
+                      ],
+                      ["title", "string", "—", "Title shown in the toolbar."],
+                      ["enableSelection", "boolean", "true", "Show row selection checkboxes."],
+                      [
+                        "enableSorting",
+                        "boolean",
+                        "true",
+                        "Allow column sorting (3-state: asc → desc → clear).",
+                      ],
+                      ["enableFiltering", "boolean", "true", "Show filter row below headers."],
+                      ["enablePagination", "boolean", "true", "Show pagination controls."],
+                      ["enableRowMenu", "boolean", "true", "Show the ⋮ row action menu."],
+                      ["enableClickableRows", "boolean", "true", "Rows emit onRowClick on click."],
+                      [
+                        "enableClickableColumns",
+                        "boolean",
+                        "false",
+                        "Columns marked isClickable emit columnKey in onRowClick.",
+                      ],
+                      [
+                        "enableColumnResizing",
+                        "boolean",
+                        "true",
+                        "Allow dragging column borders to resize.",
+                      ],
+                      [
+                        "enableColumnReordering",
+                        "boolean",
+                        "true",
+                        "Show ◂▸ reorder arrows on header hover.",
+                      ],
+                      ["showCreateButton", "boolean", "true", "Show the + New button in toolbar."],
+                      ["showImportButton", "boolean", "true", "Show the Import button (CSV/XLSX)."],
+                      [
+                        "showExportButton",
+                        "boolean",
+                        "true",
+                        "Show the Export button (CSV/XLSX/JSON).",
+                      ],
+                      [
+                        "showColumnSelector",
+                        "boolean",
+                        "true",
+                        "Show column visibility toggle dropdown.",
+                      ],
+                      [
+                        "singleItemActions",
+                        "string",
+                        "—",
+                        'Comma-separated "action/Label" pairs for row menu.',
+                      ],
+                      [
+                        "multipleItemsActions",
+                        "string",
+                        "—",
+                        'Comma-separated "action/Label" for bulk actions.',
+                      ],
+                      [
+                        "unhideableColumns",
+                        "string[]",
+                        "[]",
+                        "Column keys that cannot be hidden via selector.",
+                      ],
+                      [
+                        "predefinedFilters",
+                        "Record<string, unknown>",
+                        "—",
+                        "Filters pre-set and locked (user cannot clear).",
+                      ],
+                      ["pageSize", "number", "10", "Initial number of rows per page."],
+                      [
+                        "pageSizeOptions",
+                        "number[]",
+                        "[5,10,20,50,100]",
+                        "Available page size choices.",
+                      ],
+                      [
+                        "getRowId",
+                        "(row) => string",
+                        "—",
+                        "Custom row ID function for stable selection.",
+                      ],
+                      [
+                        "onRowClick",
+                        "(row, colKey?) => void",
+                        "—",
+                        "Callback when a row (or clickable column) is clicked.",
+                      ],
+                      ["onCreateClick", "() => void", "—", "Callback for the + New button."],
+                      ["onAction", "(action, row) => void", "—", "Callback for row menu actions."],
+                      [
+                        "onBulkAction",
+                        "(action, rows) => void",
+                        "—",
+                        "Callback for bulk actions on selected rows.",
+                      ],
+                      [
+                        "onDataChange",
+                        "(data) => void",
+                        "—",
+                        "Called when data changes (e.g. after import).",
+                      ],
+                      [
+                        "onSelectionChange",
+                        "(rows) => void",
+                        "—",
+                        "Called when row selection changes.",
+                      ],
+                    ].map(([prop, type, def, desc]) => (
+                      <TableRow key={prop}>
+                        <TableCell className="font-mono text-xs">{prop}</TableCell>
+                        <TableCell className="text-xs italic">{type}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{def}</TableCell>
+                        <TableCell className="text-sm">{desc}</TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
 
+            {/* Column Definition */}
             <Card>
               <CardHeader>
-                <CardTitle>Column Definition</CardTitle>
+                <CardTitle>Column Definition (TsTableColumnDef)</CardTitle>
+                <CardDescription>
+                  Each column is configured via an object in the columnDefinitions array.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[200px]">Property</TableHead>
-                      <TableHead className="w-[150px]">Type</TableHead>
+                      <TableHead className="w-[160px]">Property</TableHead>
+                      <TableHead className="w-[200px]">Type</TableHead>
+                      <TableHead className="w-[80px]">Default</TableHead>
                       <TableHead>Description</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    {[
+                      ["key", "string", "required", "Data property name for this column."],
+                      ["title", "string", "required", "Header label displayed to the user."],
+                      [
+                        "type",
+                        '"text" | "number" | "date" | "boolean"',
+                        '"text"',
+                        "Determines formatting, filter behavior, and cell renderer.",
+                      ],
+                      [
+                        "sortable",
+                        "boolean",
+                        "true",
+                        "Whether the column can be sorted (3-state toggle).",
+                      ],
+                      ["filterable", "boolean", "true", "Whether the column shows a filter input."],
+                      [
+                        "visible",
+                        "boolean",
+                        "true",
+                        "Initial visibility (user can toggle via selector).",
+                      ],
+                      [
+                        "unshowable",
+                        "boolean",
+                        "false",
+                        "Column is always hidden and does not appear in column selector.",
+                      ],
+                      ["align", '"left" | "center" | "right"', '"left"', "Cell content alignment."],
+                      [
+                        "canBeCopied",
+                        "boolean",
+                        "false",
+                        "Shows a copy-to-clipboard icon on hover.",
+                      ],
+                      [
+                        "isClickable",
+                        "boolean",
+                        "false",
+                        "Cell acts as a link (requires enableClickableColumns).",
+                      ],
+                      ["locale", "string", '"cs-CZ"', "Locale for number/date formatting (Intl)."],
+                      [
+                        "decimalPlaces",
+                        "number",
+                        "2",
+                        "Decimal places for number type formatting.",
+                      ],
+                      ["width", "number | string", "auto", "Initial column width."],
+                    ].map(([prop, type, def, desc]) => (
+                      <TableRow key={prop}>
+                        <TableCell className="font-mono text-xs font-semibold">{prop}</TableCell>
+                        <TableCell className="text-xs italic">{type}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{def}</TableCell>
+                        <TableCell className="text-sm">{desc}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Filtering Guide */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Filtering Syntax</CardTitle>
+                <CardDescription>
+                  Filter inputs support flexible syntax depending on column type.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">key</TableCell>
-                      <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell>Data key for the column.</TableCell>
+                      <TableHead className="w-[100px]">Type</TableHead>
+                      <TableHead className="w-[200px]">Example</TableHead>
+                      <TableHead>Behavior</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-semibold">Text</TableCell>
+                      <TableCell className="font-mono text-xs">prag</TableCell>
+                      <TableCell>Case-insensitive substring match.</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">title</TableCell>
-                      <TableCell className="text-xs italic">string</TableCell>
-                      <TableCell>Label shown in the header.</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">type</TableCell>
-                      <TableCell className="text-xs italic">
-                        &quot;text&quot; | &quot;number&quot; | &quot;date&quot; |
-                        &quot;boolean&quot;
+                      <TableCell className="font-semibold">Number</TableCell>
+                      <TableCell className="font-mono text-xs">125000</TableCell>
+                      <TableCell>
+                        Exact match or startsWith fallback (e.g. &quot;12&quot; matches 125000).
                       </TableCell>
-                      <TableCell>Determines formatting and filter behavior.</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">sortable</TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Enables sorting for this column.</TableCell>
+                      <TableCell className="font-semibold">Number range</TableCell>
+                      <TableCell className="font-mono text-xs">100000..200000</TableCell>
+                      <TableCell>Matches values between 100,000 and 200,000 inclusive.</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">filterable</TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Enables the filter input in the header.</TableCell>
+                      <TableCell className="font-semibold">Date</TableCell>
+                      <TableCell className="font-mono text-xs">15.03.2022</TableCell>
+                      <TableCell>
+                        Flexible parsing: DD.MM.YYYY, DD.MM.YY, YYYY-MM-DD, YYYY, MM.YYYY.
+                      </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">isClickable</TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>If true, cell click returns columnKey in onRowClick.</TableCell>
+                      <TableCell className="font-semibold">Date range</TableCell>
+                      <TableCell className="font-mono text-xs">2020..2023</TableCell>
+                      <TableCell>Matches dates from Jan 1, 2020 through Dec 31, 2023.</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-mono text-xs font-semibold">canBeCopied</TableCell>
-                      <TableCell className="text-xs italic">boolean</TableCell>
-                      <TableCell>Adds a copy-to-clipboard button to cells.</TableCell>
+                      <TableCell className="font-semibold">Boolean</TableCell>
+                      <TableCell className="text-xs italic">dropdown</TableCell>
+                      <TableCell>Select from All / Yes / No dropdown.</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

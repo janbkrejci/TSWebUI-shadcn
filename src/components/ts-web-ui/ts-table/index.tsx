@@ -4,6 +4,7 @@ import {
   ColumnFiltersState,
   ColumnOrderState,
   ColumnSizingState,
+  RowSelectionState,
   SortingState,
   VisibilityState,
   getCoreRowModel,
@@ -19,6 +20,8 @@ import { TsTableColumnDef, TsTableRowAction, generateColumns } from "./columns"
 import { TsTablePagination } from "./ts-table-pagination"
 import { TsTableToolbar } from "./ts-table-toolbar"
 import { TsTableView } from "./ts-table-view"
+
+export type { TsTableColumnDef } from "./columns"
 
 export interface TsTableProps<TData extends Record<string, unknown> = Record<string, unknown>> {
   data: TData[]
@@ -96,13 +99,16 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     return Object.entries(predefinedFilters).map(([id, value]) => ({ id, value: String(value) }))
   })
 
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
-    columnDefinitions.reduce((acc, col) => {
-      if (col.visible === false) acc[col.key] = false
-      return acc
-    }, {} as VisibilityState)
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
+    const vis: VisibilityState = {}
+    columnDefinitions.forEach((col) => {
+      if (col.visible === false || col.unshowable) vis[col.key] = false
+    })
+    return vis
+  })
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
+    initialRowSelection || {}
   )
-  const [rowSelection, setRowSelection] = React.useState(initialRowSelection || {})
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([])
@@ -122,11 +128,6 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     }
   }, [initialRowSelection])
 
-  // Propagate local data changes back up
-  React.useEffect(() => {
-    onDataChange?.(data)
-  }, [data, onDataChange])
-
   // Parse row actions
   const rowActions = React.useMemo<TsTableRowAction[]>(() => {
     if (!singleItemActions) return []
@@ -145,19 +146,11 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     })
   }, [multipleItemsActions])
 
-  // Compute filtered data based on selectionViewMode
-  const viewFilteredData = React.useMemo(() => {
-    if (selectionViewMode === "all") return data
-    const getIdFn = getRowId || ((row: TData, index: number) => String(index))
-    if (selectionViewMode === "selected") {
-      return data.filter((row, index) => rowSelection[getIdFn(row, index)])
-    }
-    // "unselected"
-    return data.filter((row, index) => !rowSelection[getIdFn(row, index)])
-  }, [data, selectionViewMode, rowSelection, getRowId])
-
   // Determine effective row actions based on enableRowMenu
-  const effectiveRowActions = enableRowMenu ? rowActions : []
+  const effectiveRowActions = React.useMemo(
+    () => (enableRowMenu ? rowActions : []),
+    [enableRowMenu, rowActions]
+  )
 
   // Determine click handlers based on enable flags
   const effectiveRowClick = enableClickableRows || enableClickableColumns ? onRowClick : undefined
@@ -185,9 +178,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     ]
   )
 
-   
   const table = useReactTable({
-    data: viewFilteredData,
+    data,
     columns,
     state: {
       sorting,
@@ -240,9 +232,25 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     [predefinedFilters]
   )
 
-  const handleImport = (newData: TData[]) => {
-    setData((prev) => [...prev, ...newData])
-  }
+  const handleImport = React.useCallback(
+    (newData: TData[]) => {
+      setData((prev) => {
+        const updated = [...prev, ...newData]
+        // Use setTimeout to avoid state update during render
+        if (onDataChange) {
+          setTimeout(() => onDataChange(updated), 0)
+        }
+        return updated
+      })
+    },
+    [onDataChange]
+  )
+
+  // Unshowable columns — filter from column definitions for selector
+  const showableColumnDefinitions = React.useMemo(
+    () => columnDefinitions.filter((col) => !col.unshowable),
+    [columnDefinitions]
+  )
 
   return (
     <div className="w-full space-y-4">
@@ -260,7 +268,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onUnselectAll={() => setRowSelection({})}
         onCreateClick={onCreateClick}
         onImportClick={handleImport}
-        columnDefinitions={columnDefinitions}
+        columnDefinitions={showableColumnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
       />
       <TsTableView
