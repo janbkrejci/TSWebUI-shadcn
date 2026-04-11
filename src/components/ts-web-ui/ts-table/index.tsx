@@ -2,6 +2,8 @@
 
 import {
   ColumnFiltersState,
+  ColumnOrderState,
+  ColumnSizingState,
   SortingState,
   VisibilityState,
   getCoreRowModel,
@@ -27,6 +29,15 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   showExportButton?: boolean
   showColumnSelector?: boolean
   enableSelection?: boolean
+  enableSorting?: boolean
+  enableFiltering?: boolean
+  enablePagination?: boolean
+  enableRowMenu?: boolean
+  enableClickableRows?: boolean
+  enableClickableColumns?: boolean
+  enableColumnResizing?: boolean
+  enableColumnReordering?: boolean
+  unhideableColumns?: string[]
   onRowClick?: (row: TData, columnKey?: string) => void
   onCreateClick?: () => void
   onAction?: (action: string, row: TData) => void
@@ -35,6 +46,9 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   pageSize?: number
   pageSizeOptions?: number[]
   singleItemActions?: string // "action/Label,..."
+  multipleItemsActions?: string // "action/Label,..."
+  onBulkAction?: (action: string, rows: TData[]) => void
+  columnsRequiredForImport?: string[]
   predefinedFilters?: Record<string, unknown>
   getRowId?: (row: TData) => string
   initialRowSelection?: Record<string, boolean>
@@ -49,6 +63,15 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   showExportButton = true,
   showColumnSelector = true,
   enableSelection = true,
+  enableSorting = true,
+  enableFiltering = true,
+  enablePagination = true,
+  enableRowMenu = true,
+  enableClickableRows = true,
+  enableClickableColumns = false,
+  enableColumnResizing = true,
+  enableColumnReordering = true,
+  unhideableColumns = [],
   onRowClick,
   onCreateClick,
   onAction,
@@ -57,6 +80,9 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   pageSize = 10,
   pageSizeOptions = [5, 10, 20, 50, 100],
   singleItemActions,
+  multipleItemsActions,
+  onBulkAction,
+  columnsRequiredForImport,
   predefinedFilters,
   getRowId,
   initialRowSelection,
@@ -78,6 +104,11 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   )
   const [rowSelection, setRowSelection] = React.useState(initialRowSelection || {})
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([])
+  const [selectionViewMode, setSelectionViewMode] = React.useState<
+    "all" | "selected" | "unselected"
+  >("all")
 
   // Update data if initialData changes
   React.useEffect(() => {
@@ -105,16 +136,58 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     })
   }, [singleItemActions])
 
+  // Parse bulk actions
+  const bulkActions = React.useMemo<TsTableRowAction[]>(() => {
+    if (!multipleItemsActions) return []
+    return multipleItemsActions.split(",").map((s) => {
+      const parts = s.split("/")
+      return { action: parts[0].trim(), label: parts[1]?.trim() || parts[0].trim() }
+    })
+  }, [multipleItemsActions])
+
+  // Compute filtered data based on selectionViewMode
+  const viewFilteredData = React.useMemo(() => {
+    if (selectionViewMode === "all") return data
+    const getIdFn = getRowId || ((row: TData, index: number) => String(index))
+    if (selectionViewMode === "selected") {
+      return data.filter((row, index) => rowSelection[getIdFn(row, index)])
+    }
+    // "unselected"
+    return data.filter((row, index) => !rowSelection[getIdFn(row, index)])
+  }, [data, selectionViewMode, rowSelection, getRowId])
+
+  // Determine effective row actions based on enableRowMenu
+  const effectiveRowActions = enableRowMenu ? rowActions : []
+
+  // Determine click handlers based on enable flags
+  const effectiveRowClick = enableClickableRows || enableClickableColumns ? onRowClick : undefined
+
   // Generate columns definition
   const columns = React.useMemo(
     () =>
-      generateColumns<TData>(columnDefinitions, enableSelection, onRowClick, rowActions, onAction),
-    [columnDefinitions, enableSelection, onRowClick, rowActions, onAction]
+      generateColumns<TData>(
+        columnDefinitions,
+        enableSelection,
+        effectiveRowClick,
+        effectiveRowActions,
+        onAction,
+        enableSorting,
+        enableClickableColumns
+      ),
+    [
+      columnDefinitions,
+      enableSelection,
+      effectiveRowClick,
+      effectiveRowActions,
+      onAction,
+      enableSorting,
+      enableClickableColumns,
+    ]
   )
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
-    data,
+    data: viewFilteredData,
     columns,
     state: {
       sorting,
@@ -122,20 +195,27 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       columnVisibility,
       rowSelection,
       globalFilter,
+      columnSizing,
+      columnOrder,
     },
+    columnResizeMode: enableColumnResizing ? "onChange" : undefined,
+    enableSorting,
+    enableColumnFilters: enableFiltering,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnSizingChange: setColumnSizing,
+    onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
+    getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getRowId,
     initialState: {
       pagination: {
-        pageSize: pageSize,
+        pageSize: enablePagination ? pageSize : 999999,
       },
     },
   })
@@ -146,6 +226,19 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
     onSelectionChange(selectedRows)
   }, [rowSelection, table, onSelectionChange])
+
+  // Get selected rows for toolbar
+  const selectedRows = React.useMemo(
+    () => table.getFilteredSelectedRowModel().rows.map((row) => row.original),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rowSelection, table]
+  )
+
+  // Track predefined filter keys for persistence
+  const predefinedFilterKeys = React.useMemo(
+    () => (predefinedFilters ? Object.keys(predefinedFilters) : []),
+    [predefinedFilters]
+  )
 
   const handleImport = (newData: TData[]) => {
     setData((prev) => [...prev, ...newData])
@@ -160,11 +253,28 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         showImportButton={showImportButton}
         showExportButton={showExportButton}
         showColumnSelector={showColumnSelector}
+        unhideableColumns={unhideableColumns}
+        bulkActions={bulkActions}
+        selectedRows={selectedRows}
+        onBulkAction={onBulkAction}
+        onUnselectAll={() => setRowSelection({})}
         onCreateClick={onCreateClick}
         onImportClick={handleImport}
+        columnDefinitions={columnDefinitions}
+        columnsRequiredForImport={columnsRequiredForImport}
       />
-      <TsTableView table={table} onRowClick={onRowClick ? (row) => onRowClick(row) : undefined} />
-      <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} />
+      <TsTableView
+        table={table}
+        enableFiltering={enableFiltering}
+        enableColumnResizing={enableColumnResizing}
+        enableColumnReordering={enableColumnReordering}
+        selectionViewMode={selectionViewMode}
+        onSelectionViewModeChange={setSelectionViewMode}
+        hasSelectedRows={Object.keys(rowSelection).length > 0}
+        predefinedFilterKeys={predefinedFilterKeys}
+        onRowClick={enableClickableRows && onRowClick ? (row) => onRowClick(row) : undefined}
+      />
+      {enablePagination && <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
     </div>
   )
 }

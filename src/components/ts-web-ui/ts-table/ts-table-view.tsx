@@ -1,6 +1,7 @@
 "use client"
 
 import { Table as TanStackTable, flexRender } from "@tanstack/react-table"
+import { Check, ChevronLeft, ChevronRight, Filter, X as XIcon } from "lucide-react"
 
 import * as React from "react"
 
@@ -23,12 +24,115 @@ import {
 
 import { cn } from "@/lib/utils"
 
+const FILTER_DEBOUNCE_DELAY = 500
+
+function DebouncedFilterInput({
+  value: externalValue,
+  onChange,
+  ...props
+}: {
+  value: string
+  onChange: (value: string) => void
+} & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
+  const [localValue, setLocalValue] = React.useState(externalValue)
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>(null)
+
+  // Sync from external if changed programmatically
+  React.useEffect(() => {
+    setLocalValue(externalValue)
+  }, [externalValue])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setLocalValue(newValue)
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => onChange(newValue), FILTER_DEBOUNCE_DELAY)
+  }
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
+  return (
+    <Input
+      {...props}
+      value={localValue}
+      onChange={handleChange}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          e.preventDefault()
+          setLocalValue("")
+          if (timeoutRef.current) clearTimeout(timeoutRef.current)
+          onChange("")
+        }
+      }}
+    />
+  )
+}
+
+export type SelectionViewMode = "all" | "selected" | "unselected"
+
 interface TsTableViewProps<TData> {
   table: TanStackTable<TData>
+  enableFiltering?: boolean
+  enableColumnResizing?: boolean
+  enableColumnReordering?: boolean
+  selectionViewMode?: SelectionViewMode
+  onSelectionViewModeChange?: (mode: SelectionViewMode) => void
+  hasSelectedRows?: boolean
+  predefinedFilterKeys?: string[]
   onRowClick?: (row: TData) => void
 }
 
-export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData>) {
+export function TsTableView<TData>({
+  table,
+  enableFiltering = true,
+  enableColumnResizing = true,
+  enableColumnReordering = true,
+  selectionViewMode = "all",
+  onSelectionViewModeChange,
+  hasSelectedRows = false,
+  predefinedFilterKeys = [],
+  onRowClick,
+}: TsTableViewProps<TData>) {
+  const cycleSelectionView = React.useCallback(() => {
+    const modes: SelectionViewMode[] = ["all", "selected", "unselected"]
+    const currentIdx = modes.indexOf(selectionViewMode)
+    const nextIdx = (currentIdx + 1) % modes.length
+    onSelectionViewModeChange?.(modes[nextIdx])
+  }, [selectionViewMode, onSelectionViewModeChange])
+
+  const handleMoveColumn = React.useCallback(
+    (columnId: string, direction: "left" | "right") => {
+      const currentOrder = table.getState().columnOrder
+      const visibleColumnIds =
+        currentOrder.length > 0
+          ? currentOrder.filter((id) => table.getColumn(id)?.getIsVisible())
+          : table.getVisibleLeafColumns().map((c) => c.id)
+
+      const idx = visibleColumnIds.indexOf(columnId)
+      if (idx < 0) return
+
+      const swapIdx = direction === "left" ? idx - 1 : idx + 1
+      if (swapIdx < 0 || swapIdx >= visibleColumnIds.length) return
+
+      // Build full order including hidden columns
+      const allColumnIds =
+        currentOrder.length > 0 ? [...currentOrder] : table.getAllLeafColumns().map((c) => c.id)
+
+      const fromAllIdx = allColumnIds.indexOf(columnId)
+      const toAllIdx = allColumnIds.indexOf(visibleColumnIds[swapIdx])
+      if (fromAllIdx < 0 || toAllIdx < 0) return
+
+      allColumnIds.splice(fromAllIdx, 1)
+      allColumnIds.splice(toAllIdx, 0, columnId)
+      table.setColumnOrder(allColumnIds)
+    },
+    [table]
+  )
+
   return (
     <div className="rounded-md border bg-card overflow-hidden">
       <Table>
@@ -40,61 +144,150 @@ export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData
                 return (
                   <TableHead
                     key={header.id}
-                    className="align-top py-2 px-4 font-bold text-muted-foreground"
-                    style={{ width: header.getSize() }}
+                    className="align-top py-2 px-4 font-bold text-muted-foreground relative group/header"
+                    style={{
+                      width: header.getSize(),
+                      minWidth: enableColumnResizing ? 50 : undefined,
+                    }}
                   >
                     <div className="flex flex-col gap-2">
-                      {/* Header Title & Sort Button */}
+                      {/* Header Title & Sort Button + Reorder Buttons */}
                       <div className="h-8 flex items-center">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                        {/* Selection View Toggle (funnel) for select column */}
+                        {header.column.id === "select" && hasSelectedRows && (
+                          <button
+                            className="p-0.5 hover:bg-accent rounded-sm mr-1 shrink-0 relative"
+                            onClick={cycleSelectionView}
+                            aria-label="Toggle selection view"
+                            title={
+                              selectionViewMode === "all"
+                                ? "Show all rows"
+                                : selectionViewMode === "selected"
+                                  ? "Showing selected only"
+                                  : "Showing unselected only"
+                            }
+                          >
+                            <Filter
+                              className={cn(
+                                "h-3.5 w-3.5",
+                                selectionViewMode !== "all"
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
+                              )}
+                            />
+                            {selectionViewMode === "selected" && (
+                              <Check className="h-2 w-2 absolute -bottom-0.5 -right-0.5 text-primary" />
+                            )}
+                            {selectionViewMode === "unselected" && (
+                              <XIcon className="h-2 w-2 absolute -bottom-0.5 -right-0.5 text-destructive" />
+                            )}
+                          </button>
+                        )}
+                        {enableColumnReordering &&
+                          header.column.id !== "select" &&
+                          header.column.id !== "actions" && (
+                            <button
+                              className="opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm mr-0.5 shrink-0"
+                              onClick={() => handleMoveColumn(header.column.id, "left")}
+                              disabled={
+                                header.index <=
+                                (table.getVisibleLeafColumns()[0]?.id === "select" ? 1 : 0)
+                              }
+                              aria-label="Move column left"
+                            >
+                              <ChevronLeft className="h-3 w-3" />
+                            </button>
+                          )}
+                        <div className="flex-1 min-w-0">
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </div>
+                        {enableColumnReordering &&
+                          header.column.id !== "select" &&
+                          header.column.id !== "actions" && (
+                            <button
+                              className="opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm ml-0.5 shrink-0"
+                              onClick={() => handleMoveColumn(header.column.id, "right")}
+                              disabled={
+                                header.index >=
+                                table.getVisibleLeafColumns().length -
+                                  1 -
+                                  (table.getVisibleLeafColumns().findLast((c) => c.id === "actions")
+                                    ? 1
+                                    : 0)
+                              }
+                              aria-label="Move column right"
+                            >
+                              <ChevronRight className="h-3 w-3" />
+                            </button>
+                          )}
                       </div>
 
                       {/* Filter Input */}
-                      {header.column.getCanFilter() ? (
+                      {enableFiltering && header.column.getCanFilter() ? (
                         <div className="pb-2">
-                          {meta?.type === "boolean" ? (
-                            <Select
-                              value={(header.column.getFilterValue() ?? "all") as string}
-                              onValueChange={(val: string) =>
-                                header.column.setFilterValue(val === "all" ? "" : val)
-                              }
-                            >
-                              <SelectTrigger className="h-8 text-xs bg-background w-full">
-                                <SelectValue placeholder="All" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="true">Yes</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Input
-                              placeholder={
-                                meta?.type === "number"
-                                  ? ">10, 10..20"
-                                  : meta?.type === "date"
-                                    ? ">2023-01-01"
-                                    : "Filter..."
-                              }
-                              value={(header.column.getFilterValue() ?? "") as string}
-                              onChange={(event) => header.column.setFilterValue(event.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Escape") {
-                                  e.preventDefault()
-                                  header.column.setFilterValue("")
+                          {(() => {
+                            const isPredefined = predefinedFilterKeys.includes(header.column.id)
+                            if (meta?.type === "boolean") {
+                              return (
+                                <Select
+                                  value={(header.column.getFilterValue() ?? "all") as string}
+                                  onValueChange={(val: string) =>
+                                    header.column.setFilterValue(val === "all" ? "" : val)
+                                  }
+                                  disabled={isPredefined}
+                                >
+                                  <SelectTrigger className="h-8 text-xs bg-background w-full">
+                                    <SelectValue placeholder="All" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    <SelectItem value="true">Yes</SelectItem>
+                                    <SelectItem value="false">No</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )
+                            }
+                            return (
+                              <DebouncedFilterInput
+                                placeholder={
+                                  meta?.type === "number"
+                                    ? ">10, 10..20"
+                                    : meta?.type === "date"
+                                      ? ">2023-01-01"
+                                      : "Filter... (* ? wildcards)"
                                 }
-                              }}
-                              className="h-8 text-xs bg-background"
-                            />
-                          )}
+                                value={(header.column.getFilterValue() ?? "") as string}
+                                onChange={(value) => header.column.setFilterValue(value)}
+                                readOnly={isPredefined}
+                                className={cn(
+                                  "h-8 text-xs bg-background",
+                                  isPredefined && "opacity-60 cursor-not-allowed"
+                                )}
+                              />
+                            )
+                          })()}
                         </div>
-                      ) : (
+                      ) : enableFiltering ? (
                         <div className="h-0 pb-2" />
-                      )}
+                      ) : null}
                     </div>
+
+                    {/* Column Resize Handle */}
+                    {enableColumnResizing && header.column.getCanResize() && (
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        onDoubleClick={() => header.column.resetSize()}
+                        className={cn(
+                          "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none",
+                          "opacity-0 group-hover/header:opacity-100 transition-opacity",
+                          "hover:bg-primary/50",
+                          header.column.getIsResizing() && "opacity-100 bg-primary"
+                        )}
+                      />
+                    )}
                   </TableHead>
                 )
               })}
@@ -108,7 +301,7 @@ export function TsTableView<TData>({ table, onRowClick }: TsTableViewProps<TData
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
                 className={cn(
-                  "hover:bg-muted/50 transition-colors cursor-default",
+                  "group/row hover:bg-muted/50 transition-colors cursor-default",
                   onRowClick && "cursor-pointer"
                 )}
                 onClick={() => onRowClick?.(row.original)}

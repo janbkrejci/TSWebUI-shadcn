@@ -1,5 +1,28 @@
 import { FilterFn } from "@tanstack/react-table"
 
+/**
+ * Match text with wildcard support: * (any chars), ? (single char).
+ * Falls back to case-insensitive substring match if no wildcards present.
+ */
+export function matchTextPattern(text: string, pattern: string): boolean {
+  const lowText = text.toLowerCase()
+  const lowPattern = pattern.toLowerCase()
+
+  // If no wildcards, use simple substring match
+  if (!lowPattern.includes("*") && !lowPattern.includes("?")) {
+    return lowText.includes(lowPattern)
+  }
+
+  // Convert wildcard pattern to regex: * → .*, ? → .
+  const escaped = lowPattern.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+  const regexStr = "^" + escaped.replace(/\*/g, ".*").replace(/\?/g, ".") + "$"
+  try {
+    return new RegExp(regexStr).test(lowText)
+  } catch {
+    return lowText.includes(lowPattern)
+  }
+}
+
 // Helper for parsing number range/operator
 function parseNumberRange(filterValue: string) {
   const value = filterValue.trim()
@@ -117,4 +140,10 @@ export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => 
   if (val === "true") return cellValue === true
   if (val === "false") return cellValue === false
   return true // 'all' or empty
+}
+
+export const textFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
+  const cellValue = row.getValue(columnId)
+  if (cellValue == null) return false
+  return matchTextPattern(String(cellValue), String(filterValue))
 }

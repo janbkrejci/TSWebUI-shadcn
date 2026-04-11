@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreVertical } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ClipboardCopy, MoreVertical } from "lucide-react"
 
 import * as React from "react"
 
@@ -18,7 +18,33 @@ import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
-import { booleanFilter, dateFilter, numberFilter } from "./filters"
+import { booleanFilter, dateFilter, numberFilter, textFilter } from "./filters"
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = React.useState(false)
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  return (
+    <button
+      className="inline-flex items-center justify-center h-5 w-5 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
+      onClick={handleCopy}
+      aria-label="Copy to clipboard"
+    >
+      {copied ? (
+        <Check className="h-3 w-3 text-green-500" />
+      ) : (
+        <ClipboardCopy className="h-3 w-3 text-muted-foreground" />
+      )}
+    </button>
+  )
+}
 
 export interface TsTableColumnDef {
   key: string
@@ -43,7 +69,9 @@ export function generateColumns<TData>(
   enableSelection: boolean,
   onRowClick?: (row: TData, columnKey?: string) => void,
   rowActions?: TsTableRowAction[],
-  onAction?: (action: string, row: TData) => void
+  onAction?: (action: string, row: TData) => void,
+  enableSorting: boolean = true,
+  enableClickableColumns: boolean = false
 ): ColumnDef<TData>[] {
   const cols: ColumnDef<TData>[] = []
 
@@ -129,12 +157,15 @@ export function generateColumns<TData>(
               size="sm"
               className="-ml-3 h-8 data-[state=open]:bg-accent"
               onClick={() =>
-                def.sortable !== false && column.toggleSorting(column.getIsSorted() === "asc")
+                enableSorting &&
+                def.sortable !== false &&
+                column.toggleSorting(column.getIsSorted() === "asc")
               }
-              disabled={def.sortable === false}
+              disabled={!enableSorting || def.sortable === false}
             >
               <span>{def.title}</span>
-              {def.sortable !== false &&
+              {enableSorting &&
+                def.sortable !== false &&
                 (column.getIsSorted() === "desc" ? (
                   <ArrowDown className="ml-2 h-4 w-4" />
                 ) : column.getIsSorted() === "asc" ? (
@@ -175,18 +206,23 @@ export function generateColumns<TData>(
         return (
           <div
             className={cn(
-              "truncate",
-              def.align === "center" && "text-center",
-              def.align === "right" && "text-right",
-              def.isClickable && "text-primary hover:underline cursor-pointer font-medium"
+              "flex items-center gap-1",
+              def.align === "center" && "justify-center",
+              def.align === "right" && "justify-end",
+              enableClickableColumns &&
+                def.isClickable &&
+                "text-primary hover:underline cursor-pointer font-medium"
             )}
-            onClick={() => def.isClickable && onRowClick?.(row.original, def.key)}
+            onClick={() =>
+              enableClickableColumns && def.isClickable && onRowClick?.(row.original, def.key)
+            }
           >
-            {formattedValue}
+            <span className="truncate">{formattedValue}</span>
+            {def.canBeCopied && value != null && <CopyButton value={String(value)} />}
           </div>
         )
       },
-      enableSorting: def.sortable ?? true,
+      enableSorting: enableSorting && (def.sortable ?? true),
       enableColumnFilter: def.filterable ?? true,
       size: typeof def.width === "number" ? def.width : 200,
       filterFn: (row, id, value, addMeta) => {
@@ -196,7 +232,8 @@ export function generateColumns<TData>(
         if (def.type === "date") return dateFilter(row as any, id, value, addMeta)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (def.type === "boolean") return booleanFilter(row as any, id, value, addMeta)
-        return true // default text filter handled by table
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return textFilter(row as any, id, value, addMeta)
       },
       meta: {
         type: def.type,
