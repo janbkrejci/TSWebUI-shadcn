@@ -1,10 +1,18 @@
 "use client"
 
 import { Table as TanStackTable, flexRender } from "@tanstack/react-table"
-import { Check, ChevronLeft, ChevronRight, Filter, X as XIcon } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Filter, MoreVertical, X as XIcon } from "lucide-react"
 
 import * as React from "react"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -22,7 +30,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import { Button } from "@/components/ts-web-ui/ui/button"
+
 import { cn } from "@/lib/utils"
+
+import { TsTableRowAction } from "./columns"
 
 const FILTER_DEBOUNCE_DELAY = 500
 
@@ -84,6 +96,10 @@ interface TsTableViewProps<TData> {
   hasSelectedRows?: boolean
   predefinedFilterKeys?: string[]
   onRowClick?: (row: TData) => void
+  bulkActions?: TsTableRowAction[]
+  selectedRowCount?: number
+  onBulkAction?: (action: string) => void
+  onUnselectAll?: () => void
 }
 
 export function TsTableView<TData>({
@@ -96,6 +112,10 @@ export function TsTableView<TData>({
   hasSelectedRows = false,
   predefinedFilterKeys = [],
   onRowClick,
+  bulkActions = [],
+  selectedRowCount = 0,
+  onBulkAction,
+  onUnselectAll,
 }: TsTableViewProps<TData>) {
   const cycleSelectionView = React.useCallback(() => {
     const modes: SelectionViewMode[] = ["all", "selected", "unselected"]
@@ -133,18 +153,27 @@ export function TsTableView<TData>({
     [table]
   )
 
-  // Get column order for checking move boundaries
+  // Get visible data columns for checking move boundaries (#5: react to column order)
+  const columnOrderState = table.getState().columnOrder
+  const columnVisibilityState = table.getState().columnVisibility
   const visibleDataColumns = React.useMemo(() => {
     return table.getVisibleLeafColumns().filter((c) => c.id !== "select" && c.id !== "actions")
-  }, [table])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, columnOrderState, columnVisibilityState])
 
   return (
     <div className="rounded-md border bg-card overflow-x-auto">
-      <Table style={{ minWidth: "100%" }}>
+      <Table
+        style={{
+          minWidth: "100%",
+          width: table.getCenterTotalSize(),
+          tableLayout: "fixed",
+        }}
+      >
         <TableHeader className="bg-muted/50">
           {table.getHeaderGroups().map((headerGroup) => (
             <React.Fragment key={headerGroup.id}>
-              {/* Row 1: Header labels + reorder buttons */}
+              {/* Row 1: Header labels + reorder buttons + select-all */}
               <TableRow>
                 {headerGroup.headers.map((header) => {
                   const isDataColumn =
@@ -153,58 +182,188 @@ export function TsTableView<TData>({
                   const isLastData =
                     isDataColumn &&
                     visibleDataColumns[visibleDataColumns.length - 1]?.id === header.column.id
+                  const meta = header.column.columnDef.meta as
+                    | { type?: string; align?: string }
+                    | undefined
+                  const colAlign = (isDataColumn && meta?.align) || "left"
 
                   return (
                     <TableHead
                       key={header.id}
-                      className="py-2 px-3 font-bold text-muted-foreground relative group/header"
-                      style={{
-                        width: header.getSize(),
-                        minWidth: enableColumnResizing ? 50 : undefined,
-                      }}
+                      className={cn(
+                        "py-2 px-3 font-bold text-muted-foreground relative group/header",
+                        !isDataColumn && "w-[40px] min-w-[40px] max-w-[40px]"
+                      )}
+                      style={
+                        isDataColumn
+                          ? {
+                              width: header.getSize(),
+                              minWidth: enableColumnResizing ? 50 : undefined,
+                            }
+                          : { width: 40 }
+                      }
                     >
-                      <div className="h-8 flex items-center gap-0.5">
-                        {isDataColumn && enableColumnReordering && (
-                          <button
-                            className={cn(
-                              "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm shrink-0",
-                              isFirstData && "invisible"
-                            )}
-                            onClick={() => handleMoveColumn(header.column.id, "left")}
-                            disabled={isFirstData}
-                            aria-label="Move column left"
-                          >
-                            <ChevronLeft className="h-3 w-3" />
-                          </button>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
+                      {/* Select-all checkbox + selection filter in row 1 (#4) */}
+                      {header.column.id === "select" ? (
+                        <div className="h-8 flex items-center justify-center gap-1">
+                          <input
+                            type="checkbox"
+                            checked={table.getIsAllPageRowsSelected()}
+                            ref={(el) => {
+                              if (el) {
+                                el.indeterminate =
+                                  table.getIsSomePageRowsSelected() &&
+                                  !table.getIsAllPageRowsSelected()
+                              }
+                            }}
+                            onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
+                            aria-label="Select all"
+                            className="h-4 w-4 accent-primary cursor-pointer"
+                          />
                         </div>
-                        {isDataColumn && enableColumnReordering && (
-                          <button
-                            className={cn(
-                              "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm shrink-0",
-                              isLastData && "invisible"
-                            )}
-                            onClick={() => handleMoveColumn(header.column.id, "right")}
-                            disabled={isLastData}
-                            aria-label="Move column right"
-                          >
-                            <ChevronRight className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
+                      ) : header.column.id === "actions" ? (
+                        // Bulk actions menu (#11)
+                        selectedRowCount > 0 && bulkActions.length > 0 ? (
+                          <div className="flex justify-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-7 w-7 p-0">
+                                  <span className="sr-only">Bulk actions</span>
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>
+                                  {`Selected: ${selectedRowCount}`}
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => onUnselectAll?.()}>
+                                  Unselect all
+                                </DropdownMenuItem>
+                                {bulkActions.map((action, idx) => (
+                                  <DropdownMenuItem
+                                    key={idx}
+                                    onClick={() => onBulkAction?.(action.action)}
+                                  >
+                                    {action.label}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ) : (
+                          <div />
+                        )
+                      ) : (
+                        /* Data columns: alignment-aware layout (#6) */
+                        <div className="h-8 flex items-center gap-0.5">
+                          {/* Arrows on left for right-aligned columns */}
+                          {enableColumnReordering && colAlign === "right" && (
+                            <div className="flex items-center shrink-0">
+                              <button
+                                className={cn(
+                                  "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
+                                  isFirstData && "invisible"
+                                )}
+                                onClick={() => handleMoveColumn(header.column.id, "left")}
+                                disabled={isFirstData}
+                                aria-label="Move column left"
+                              >
+                                <ChevronLeft className="h-3 w-3" />
+                              </button>
+                              <button
+                                className={cn(
+                                  "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
+                                  isLastData && "invisible"
+                                )}
+                                onClick={() => handleMoveColumn(header.column.id, "right")}
+                                disabled={isLastData}
+                                aria-label="Move column right"
+                              >
+                                <ChevronRight className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                          {/* Left arrow for center-aligned columns */}
+                          {enableColumnReordering && colAlign === "center" && (
+                            <button
+                              className={cn(
+                                "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm shrink-0",
+                                isFirstData && "invisible"
+                              )}
+                              onClick={() => handleMoveColumn(header.column.id, "left")}
+                              disabled={isFirstData}
+                              aria-label="Move column left"
+                            >
+                              <ChevronLeft className="h-3 w-3" />
+                            </button>
+                          )}
 
-                      {/* Column Resize Handle */}
+                          {/* Content area */}
+                          <div
+                            className={cn(
+                              "flex-1 min-w-0",
+                              colAlign === "center" && "flex justify-center",
+                              colAlign === "right" && "flex justify-end"
+                            )}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </div>
+
+                          {/* Both arrows on right for left-aligned columns */}
+                          {enableColumnReordering && colAlign === "left" && (
+                            <div className="flex items-center shrink-0">
+                              <button
+                                className={cn(
+                                  "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
+                                  isFirstData && "invisible"
+                                )}
+                                onClick={() => handleMoveColumn(header.column.id, "left")}
+                                disabled={isFirstData}
+                                aria-label="Move column left"
+                              >
+                                <ChevronLeft className="h-3 w-3" />
+                              </button>
+                              <button
+                                className={cn(
+                                  "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
+                                  isLastData && "invisible"
+                                )}
+                                onClick={() => handleMoveColumn(header.column.id, "right")}
+                                disabled={isLastData}
+                                aria-label="Move column right"
+                              >
+                                <ChevronRight className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                          {/* Right arrow for center-aligned columns */}
+                          {enableColumnReordering && colAlign === "center" && (
+                            <button
+                              className={cn(
+                                "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm shrink-0",
+                                isLastData && "invisible"
+                              )}
+                              onClick={() => handleMoveColumn(header.column.id, "right")}
+                              disabled={isLastData}
+                              aria-label="Move column right"
+                            >
+                              <ChevronRight className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Column Resize Handle (#3: wider hit area + z-index) */}
                       {enableColumnResizing && header.column.getCanResize() && (
                         <div
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}
                           onDoubleClick={() => header.column.resetSize()}
                           className={cn(
-                            "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none",
+                            "absolute -right-1 top-0 h-full w-2 cursor-col-resize select-none touch-none z-10",
                             "opacity-0 group-hover/header:opacity-100 transition-opacity",
                             "hover:bg-primary/50",
                             header.column.getIsResizing() && "opacity-100 bg-primary"
@@ -216,7 +375,7 @@ export function TsTableView<TData>({
                 })}
               </TableRow>
 
-              {/* Row 2: Filter inputs + select-all checkbox */}
+              {/* Row 2: Filter inputs + bulk actions menu */}
               {enableFiltering && (
                 <TableRow className="bg-muted/30">
                   {headerGroup.headers.map((header) => {
@@ -224,26 +383,12 @@ export function TsTableView<TData>({
 
                     return (
                       <TableHead key={`filter-${header.id}`} className="py-1.5 px-3">
-                        {/* Select-all checkbox in filter row */}
                         {header.column.id === "select" ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <input
-                              type="checkbox"
-                              checked={table.getIsAllPageRowsSelected()}
-                              ref={(el) => {
-                                if (el) {
-                                  el.indeterminate =
-                                    table.getIsSomePageRowsSelected() &&
-                                    !table.getIsAllPageRowsSelected()
-                                }
-                              }}
-                              onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-                              aria-label="Select all"
-                              className="h-4 w-4 accent-primary cursor-pointer"
-                            />
+                          // Empty in filter row (checkbox moved to row 1)
+                          <div className="flex justify-center">
                             {hasSelectedRows && (
                               <button
-                                className="p-0.5 hover:bg-accent rounded-sm shrink-0 relative"
+                                className="hover:bg-accent rounded-sm shrink-0 relative"
                                 onClick={cycleSelectionView}
                                 aria-label="Toggle selection view"
                                 title={
@@ -272,7 +417,6 @@ export function TsTableView<TData>({
                             )}
                           </div>
                         ) : header.column.id === "actions" ? (
-                          // Empty cell for actions column in filter row
                           <div />
                         ) : header.column.getCanFilter() ? (
                           (() => {
@@ -336,7 +480,6 @@ export function TsTableView<TData>({
               displayRows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
                   className={cn(
                     "group/row hover:bg-muted/50 transition-colors cursor-default",
                     onRowClick && "cursor-pointer"

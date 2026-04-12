@@ -370,8 +370,10 @@ export default function TsTablePage() {
               <CardDescription>
                 Try sorting (click header: asc → desc → clear), filtering (use
                 &quot;10000..200000&quot; for number ranges, &quot;2020..2023&quot; for date
-                ranges), column selection (with search), resizing, reordering, and exports. ID
-                column is unshowable. Name and Company columns are clickable.
+                ranges), column selector (with search, filter icons, and clear-all-filters),
+                resizing, reordering, and exports. ID column is unshowable (dimmed in selector).
+                Name and Company columns are clickable. Select rows to see the bulk actions menu in
+                the filter row.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -432,7 +434,8 @@ const columns: TsTableColumnDef[] = [
   { key: "email", title: "E-mail", type: "text", canBeCopied: true },
   { key: "turnover", title: "Turnover", type: "number", align: "right",
     locale: "cs-CZ", decimalPlaces: 2 },
-  { key: "contractDate", title: "Contract", type: "date", locale: "cs-CZ" },
+  { key: "contractDate", title: "Contract", type: "date", align: "right",
+    locale: "cs-CZ" },
   { key: "approved", title: "Approved", type: "boolean", align: "center" },
 ]
 
@@ -457,13 +460,16 @@ export default function MyPage() {
       showImportButton={true}
       showExportButton={true}
       showColumnSelector={true}
-      // Actions
+      // Actions (comma-separated "action/Label" pairs)
       singleItemActions="edit/Edit,delete/Delete"
       multipleItemsActions="delete/Delete Selected"
+      // Event handlers
       onRowClick={(row, colKey) => console.log("clicked", row, colKey)}
       onAction={(action, row) => console.log(action, row)}
       onBulkAction={(action, rows) => console.log(action, rows)}
       onCreateClick={() => console.log("create")}
+      onDataChange={(data) => console.log("data changed", data)}
+      onSelectionChange={(rows) => console.log("selection", rows)}
       // Pagination
       pageSize={10}
       pageSizeOptions={[5, 10, 20, 50]}
@@ -471,6 +477,8 @@ export default function MyPage() {
       unhideableColumns={["name"]}
       predefinedFilters={{ city: "Prague" }}
       getRowId={(row) => String(row.id)}
+      initialRowSelection={{ "1": true }}
+      columnsRequiredForImport={["name", "email"]}
     />
   )
 }`}
@@ -620,6 +628,18 @@ export default function MyPage() {
                         "—",
                         "Called when row selection changes.",
                       ],
+                      [
+                        "columnsRequiredForImport",
+                        "string[]",
+                        "—",
+                        "Column keys required in import file. Defaults to all column keys.",
+                      ],
+                      [
+                        "initialRowSelection",
+                        "Record<string, boolean>",
+                        "—",
+                        "Pre-selected rows (requires getRowId).",
+                      ],
                     ].map(([prop, type, def, desc]) => (
                       <TableRow key={prop}>
                         <TableCell className="font-mono text-xs">{prop}</TableCell>
@@ -678,7 +698,7 @@ export default function MyPage() {
                         "unshowable",
                         "boolean",
                         "false",
-                        "Column is always hidden and does not appear in column selector.",
+                        "Column is always hidden and appears dimmed/uncheckable in column selector.",
                       ],
                       ["align", '"left" | "center" | "right"', '"left"', "Cell content alignment."],
                       [

@@ -97,6 +97,7 @@ export function generateColumns<TData>(
       ),
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
       size: 40,
     })
   }
@@ -106,6 +107,7 @@ export function generateColumns<TData>(
     cols.push({
       id: "actions",
       enableHiding: false,
+      enableResizing: false,
       size: 40,
       cell: ({ row }) => {
         return (
@@ -144,42 +146,38 @@ export function generateColumns<TData>(
       accessorKey: def.key,
       header: ({ column }) => {
         const isSorted = column.getIsSorted()
+        const isRight = def.align === "right"
+        const sortIcon =
+          enableSorting &&
+          def.sortable !== false &&
+          (isSorted === "desc" ? (
+            <ArrowDown className={cn("h-4 w-4", isRight ? "mr-1" : "ml-1")} />
+          ) : isSorted === "asc" ? (
+            <ArrowUp className={cn("h-4 w-4", isRight ? "mr-1" : "ml-1")} />
+          ) : (
+            <ArrowUpDown className={cn("h-4 w-4 opacity-50", isRight ? "mr-1" : "ml-1")} />
+          ))
         return (
-          <div
-            className={cn(
-              "flex items-center gap-1",
-              def.align === "center" && "justify-center",
-              def.align === "right" && "justify-end"
-            )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 data-[state=open]:bg-accent px-1"
+            onClick={() => {
+              if (!enableSorting || def.sortable === false) return
+              if (isSorted === "asc") {
+                column.toggleSorting(true) // desc
+              } else if (isSorted === "desc") {
+                column.clearSorting() // no sort
+              } else {
+                column.toggleSorting(false) // asc
+              }
+            }}
+            disabled={!enableSorting || def.sortable === false}
           >
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 data-[state=open]:bg-accent px-1"
-              onClick={() => {
-                if (!enableSorting || def.sortable === false) return
-                if (isSorted === "asc") {
-                  column.toggleSorting(true) // desc
-                } else if (isSorted === "desc") {
-                  column.clearSorting() // no sort
-                } else {
-                  column.toggleSorting(false) // asc
-                }
-              }}
-              disabled={!enableSorting || def.sortable === false}
-            >
-              <span>{def.title}</span>
-              {enableSorting &&
-                def.sortable !== false &&
-                (isSorted === "desc" ? (
-                  <ArrowDown className="ml-1 h-4 w-4" />
-                ) : isSorted === "asc" ? (
-                  <ArrowUp className="ml-1 h-4 w-4" />
-                ) : (
-                  <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />
-                ))}
-            </Button>
-          </div>
+            {isRight && sortIcon}
+            <span>{def.title}</span>
+            {!isRight && sortIcon}
+          </Button>
         )
       },
       cell: ({ row }) => {
@@ -226,9 +224,12 @@ export function generateColumns<TData>(
                 def.isClickable &&
                 "text-primary hover:underline cursor-pointer font-medium"
             )}
-            onClick={() =>
-              enableClickableColumns && def.isClickable && onRowClick?.(row.original, def.key)
-            }
+            onClick={(e) => {
+              if (enableClickableColumns && def.isClickable) {
+                e.stopPropagation()
+                onRowClick?.(row.original, def.key)
+              }
+            }}
           >
             <span className="truncate">{formattedValue}</span>
             {def.canBeCopied && value != null && <CopyButton value={String(value)} />}
@@ -250,6 +251,7 @@ export function generateColumns<TData>(
       },
       meta: {
         type: def.type,
+        align: def.align,
       },
     })
   })

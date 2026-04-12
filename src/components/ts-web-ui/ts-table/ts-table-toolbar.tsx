@@ -1,7 +1,7 @@
 "use client"
 
 import { Table } from "@tanstack/react-table"
-import { Download, Plus, Search, Settings2, Upload } from "lucide-react"
+import { Download, Filter, Plus, Search, Settings2, Upload, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
 
@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input"
 
 import { Button } from "@/components/ts-web-ui/ui/button"
 
+import { cn } from "@/lib/utils"
+
 import { TsTableColumnDef, TsTableRowAction } from "./columns"
 
 interface TsTableToolbarProps<TData> {
@@ -29,6 +31,7 @@ interface TsTableToolbarProps<TData> {
   showExportButton?: boolean
   showColumnSelector?: boolean
   unhideableColumns?: string[]
+  unshowableColumns?: string[]
   bulkActions?: TsTableRowAction[]
   selectedRows?: TData[]
   onBulkAction?: (action: string, rows: TData[]) => void
@@ -37,6 +40,7 @@ interface TsTableToolbarProps<TData> {
   onImportClick?: (data: TData[]) => void
   columnDefinitions?: TsTableColumnDef[]
   columnsRequiredForImport?: string[]
+  predefinedFilterKeys?: string[]
   title?: string
 }
 
@@ -47,6 +51,7 @@ export function TsTableToolbar<TData>({
   showExportButton = true,
   showColumnSelector = true,
   unhideableColumns = [],
+  unshowableColumns = [],
   bulkActions: _bulkActions = [],
   selectedRows = [],
   onBulkAction: _onBulkAction,
@@ -55,6 +60,7 @@ export function TsTableToolbar<TData>({
   onImportClick,
   columnDefinitions = [],
   columnsRequiredForImport,
+  predefinedFilterKeys = [],
   title,
 }: TsTableToolbarProps<TData>) {
   const [columnSearch, setColumnSearch] = React.useState("")
@@ -109,16 +115,15 @@ export function TsTableToolbar<TData>({
     e.target.value = ""
   }
 
-  // Get columns in the order they are displayed
+  // Get columns in the order they are displayed (#1: react to column order/visibility changes)
+  const columnOrderState = table.getState().columnOrder
+  const columnVisibilityState = table.getState().columnVisibility
   const orderedColumns = React.useMemo(() => {
-    // Use visible leaf columns order, but include hidden ones too
     const visibleOrder = table.getVisibleLeafColumns().map((c) => c.id)
-    const allCols = table
-      .getAllLeafColumns()
-      .filter((c) => c.getCanHide() && c.id !== "select" && c.id !== "actions")
+    const allCols = table.getAllLeafColumns().filter((c) => c.id !== "select" && c.id !== "actions")
 
     // Sort: visible ones first in display order, then hidden ones
-    return allCols.sort((a, b) => {
+    return [...allCols].sort((a, b) => {
       const aIdx = visibleOrder.indexOf(a.id)
       const bIdx = visibleOrder.indexOf(b.id)
       if (aIdx >= 0 && bIdx >= 0) return aIdx - bIdx
@@ -126,7 +131,28 @@ export function TsTableToolbar<TData>({
       if (bIdx >= 0) return 1
       return 0
     })
-  }, [table])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, columnOrderState, columnVisibilityState])
+
+  // Check for active column filters (#9)
+  const columnFiltersState = table.getState().columnFilters
+  const activeFilterIds = React.useMemo(() => {
+    return new Set(
+      columnFiltersState.filter((f) => f.value !== "" && f.value != null).map((f) => f.id)
+    )
+  }, [columnFiltersState])
+  const hasActiveUserFilters = React.useMemo(() => {
+    return columnFiltersState.some(
+      (f) => f.value !== "" && f.value != null && !predefinedFilterKeys.includes(f.id)
+    )
+  }, [columnFiltersState, predefinedFilterKeys])
+
+  const handleClearAllFilters = React.useCallback(() => {
+    const predefinedOnly = table
+      .getState()
+      .columnFilters.filter((f) => predefinedFilterKeys.includes(f.id))
+    table.setColumnFilters(predefinedOnly)
+  }, [table, predefinedFilterKeys])
 
   return (
     <div className="flex items-center justify-between py-4 gap-2">
@@ -165,18 +191,31 @@ export function TsTableToolbar<TData>({
             <DropdownMenuContent align="end" className="w-[220px]">
               <DropdownMenuLabel>View columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {/* Clear all filters (#9) */}
+              {hasActiveUserFilters && (
+                <>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleClearAllFilters}
+                  >
+                    <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                    Clear all filters
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <div className="px-2 pb-1.5">
                 <Input
                   placeholder="Search columns..."
                   value={columnSearch}
                   onChange={(e) => setColumnSearch(e.target.value)}
                   onKeyDown={(e) => {
+                    // Stop ALL key events from reaching the dropdown (#2: prevents typeahead focus stealing)
+                    e.stopPropagation()
                     if (e.key === "Escape") {
                       e.preventDefault()
-                      e.stopPropagation()
                       setColumnSearch("")
                     }
-                    // Prevent dropdown from closing on Enter
                     if (e.key === "Enter") e.preventDefault()
                   }}
                   className="h-7 text-xs"
@@ -193,20 +232,25 @@ export function TsTableToolbar<TData>({
                   })
                   .map((column) => {
                     const isUnhideable = unhideableColumns.includes(column.id)
+                    const isUnshowable = unshowableColumns.includes(column.id)
                     const header = column.columnDef.header
                     const label = typeof header === "string" ? header : column.id
+                    const hasFilter = activeFilterIds.has(column.id)
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}
-                        className="capitalize"
+                        className={cn("capitalize", isUnshowable && "opacity-50")}
                         checked={column.getIsVisible()}
-                        disabled={isUnhideable}
+                        disabled={isUnhideable || isUnshowable}
                         onCheckedChange={(value) => {
-                          if (!isUnhideable) column.toggleVisibility(!!value)
+                          if (!isUnhideable && !isUnshowable) column.toggleVisibility(!!value)
                         }}
                         onSelect={(e) => e.preventDefault()}
                       >
-                        {label}
+                        <span className="flex items-center gap-1">
+                          {label}
+                          {hasFilter && <Filter className="h-3 w-3 text-primary shrink-0" />}
+                        </span>
                       </DropdownMenuCheckboxItem>
                     )
                   })}

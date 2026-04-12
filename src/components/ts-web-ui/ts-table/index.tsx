@@ -246,9 +246,9 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     [onDataChange]
   )
 
-  // Unshowable columns — filter from column definitions for selector
-  const showableColumnDefinitions = React.useMemo(
-    () => columnDefinitions.filter((col) => !col.unshowable),
+  // Unshowable column keys for selector (#8: pass to toolbar for dimmed display)
+  const unshowableColumnKeys = React.useMemo(
+    () => columnDefinitions.filter((col) => col.unshowable).map((col) => col.key),
     [columnDefinitions]
   )
 
@@ -262,14 +262,16 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         showExportButton={showExportButton}
         showColumnSelector={showColumnSelector}
         unhideableColumns={unhideableColumns}
+        unshowableColumns={unshowableColumnKeys}
         bulkActions={bulkActions}
         selectedRows={selectedRows}
         onBulkAction={onBulkAction}
         onUnselectAll={() => setRowSelection({})}
         onCreateClick={onCreateClick}
         onImportClick={handleImport}
-        columnDefinitions={showableColumnDefinitions}
+        columnDefinitions={columnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
+        predefinedFilterKeys={predefinedFilterKeys}
       />
       <TsTableView
         table={table}
@@ -281,6 +283,10 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         hasSelectedRows={Object.keys(rowSelection).length > 0}
         predefinedFilterKeys={predefinedFilterKeys}
         onRowClick={enableClickableRows && onRowClick ? (row) => onRowClick(row) : undefined}
+        bulkActions={bulkActions}
+        selectedRowCount={selectedRows.length}
+        onBulkAction={onBulkAction ? (action) => onBulkAction(action, selectedRows) : undefined}
+        onUnselectAll={() => setRowSelection({})}
       />
       {enablePagination && <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
     </div>
