@@ -1309,26 +1309,37 @@ Auto-installed dependencies:
 - **TSWebUI:** `button`
 - **Shadcn:** `checkbox`, `dropdown-menu`, `input`, `select`, `table`, `badge`
 
-An advanced data grid built on TanStack Table v8 with sorting, filtering, pagination, column visibility, row selection, Excel import/export, and row actions.
+An advanced data grid built on TanStack Table v8 with sorting, filtering, pagination, column visibility/reordering/resizing, row selection with bulk actions, Excel import/export, clickable columns, and row actions.
 
 ### TsTableProps
 
-| Prop                  | Type                      | Default                | Description                                                    |
-| --------------------- | ------------------------- | ---------------------- | -------------------------------------------------------------- |
-| `data`                | `TData[]`                 | —                      | **Required.** Array of data objects to display                 |
-| `columnDefinitions`   | `TsTableColumnDef[]`      | —                      | **Required.** Column configuration array                       |
-| `title`               | `string`                  | `undefined`            | Title displayed in the toolbar                                 |
-| `showCreateButton`    | `boolean`                 | `true`                 | Show "New record" button                                       |
-| `showImportButton`    | `boolean`                 | `true`                 | Show "Import" button (Excel/CSV)                               |
-| `showExportButton`    | `boolean`                 | `true`                 | Show "Export" button (Excel)                                   |
-| `showColumnSelector`  | `boolean`                 | `true`                 | Show column visibility toggle                                  |
-| `enableSelection`     | `boolean`                 | `true`                 | Show row selection checkboxes                                  |
-| `pageSize`            | `number`                  | `10`                   | Default number of rows per page                                |
-| `pageSizeOptions`     | `number[]`                | `[5, 10, 20, 50, 100]` | Available page size options                                    |
-| `singleItemActions`   | `string`                  | `undefined`            | Row actions in `"action/Label,action/Label"` format            |
-| `predefinedFilters`   | `Record<string, unknown>` | `undefined`            | Initial column filters (key = column key, value = filter text) |
-| `getRowId`            | `(row: TData) => string`  | `undefined`            | Custom row ID function                                         |
-| `initialRowSelection` | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs                                           |
+| Prop                       | Type                      | Default                | Description                                                                                             |
+| -------------------------- | ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `data`                     | `TData[]`                 | —                      | **Required.** Array of data objects to display                                                          |
+| `columnDefinitions`        | `TsTableColumnDef[]`      | —                      | **Required.** Column configuration array                                                                |
+| `title`                    | `string`                  | `undefined`            | Title displayed in the toolbar                                                                          |
+| `showCreateButton`         | `boolean`                 | `true`                 | Show "New record" button                                                                                |
+| `showImportButton`         | `boolean`                 | `true`                 | Show "Import" button (Excel/CSV)                                                                        |
+| `showExportButton`         | `boolean`                 | `true`                 | Show "Export" button (Excel)                                                                            |
+| `showColumnSelector`       | `boolean`                 | `true`                 | Show column visibility toggle dropdown                                                                  |
+| `enableSelection`          | `boolean`                 | `true`                 | Show row selection checkboxes                                                                           |
+| `enableSorting`            | `boolean`                 | `true`                 | Enable column header sorting                                                                            |
+| `enableFiltering`          | `boolean`                 | `true`                 | Show filter row below headers                                                                           |
+| `enablePagination`         | `boolean`                 | `true`                 | Show pagination controls                                                                                |
+| `enableRowMenu`            | `boolean`                 | `true`                 | Show per-row action dropdown (requires `singleItemActions`)                                             |
+| `enableClickableRows`      | `boolean`                 | `true`                 | Make entire rows clickable (fires `onRowClick`)                                                         |
+| `enableClickableColumns`   | `boolean`                 | `false`                | Enable per-column clickable cells (columns with `isClickable: true` fire `onRowClick` with `columnKey`) |
+| `enableColumnResizing`     | `boolean`                 | `true`                 | Allow drag-resizing columns. Resize handles appear as subtle vertical lines between headers             |
+| `enableColumnReordering`   | `boolean`                 | `true`                 | Show left/right arrows on hover to reorder data columns                                                 |
+| `unhideableColumns`        | `string[]`                | `[]`                   | Column keys that cannot be hidden via column selector (shown but with disabled toggle)                  |
+| `pageSize`                 | `number`                  | `10`                   | Default number of rows per page                                                                         |
+| `pageSizeOptions`          | `number[]`                | `[5, 10, 20, 50, 100]` | Available page size options                                                                             |
+| `singleItemActions`        | `string`                  | `undefined`            | Row actions in `"action/Label,action/Label"` format                                                     |
+| `multipleItemsActions`     | `string`                  | `undefined`            | Bulk actions in `"action/Label,action/Label"` format (shown in header when rows selected)               |
+| `predefinedFilters`        | `Record<string, unknown>` | `undefined`            | Pre-set column filters (key = column key, value = filter text). These are read-only for user            |
+| `columnsRequiredForImport` | `string[]`                | `undefined`            | Column keys that must be present in imported files                                                      |
+| `getRowId`                 | `(row: TData) => string`  | `undefined`            | Custom row ID function for stable selection                                                             |
+| `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
 
 ### Event Callbacks
 
@@ -1336,72 +1347,115 @@ An advanced data grid built on TanStack Table v8 with sorting, filtering, pagina
 | ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | `onRowClick`        | `(row: TData, columnKey?: string) => void` | Fires when a row or clickable cell is clicked. `columnKey` is provided only for `isClickable` columns. |
 | `onCreateClick`     | `() => void`                               | Fires when "New record" button is clicked                                                              |
-| `onAction`          | `(action: string, row: TData) => void`     | Fires when a row action is triggered from the dropdown menu                                            |
+| `onAction`          | `(action: string, row: TData) => void`     | Fires when a single-row action is triggered from the dropdown menu                                     |
+| `onBulkAction`      | `(action: string, rows: TData[]) => void`  | Fires when a bulk action is triggered (receives all currently selected rows)                           |
 | `onDataChange`      | `(data: TData[]) => void`                  | Fires when data changes (after import)                                                                 |
 | `onSelectionChange` | `(selectedRows: TData[]) => void`          | Fires when row selection changes                                                                       |
 
 ### TsTableColumnDef
 
-| Property      | Type                                        | Default  | Description                                                                   |
-| ------------- | ------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
-| `key`         | `string`                                    | —        | **Required.** Data key for the column (matches object property name)          |
-| `title`       | `string`                                    | —        | **Required.** Header label                                                    |
-| `type`        | `"text" \| "number" \| "date" \| "boolean"` | `"text"` | Data type (affects rendering and filtering)                                   |
-| `sortable`    | `boolean`                                   | `true`   | Enable sorting for this column                                                |
-| `filterable`  | `boolean`                                   | `true`   | Enable filtering for this column                                              |
-| `visible`     | `boolean`                                   | `true`   | Initial column visibility (can be toggled by user)                            |
-| `width`       | `number \| string`                          | `200`    | Column width in pixels                                                        |
-| `align`       | `"left" \| "center" \| "right"`             | `"left"` | Content alignment                                                             |
-| `canBeCopied` | `boolean`                                   | `false`  | Show copy-to-clipboard functionality                                          |
-| `isClickable` | `boolean`                                   | `false`  | Make cell text clickable (styled as link, passes `columnKey` to `onRowClick`) |
+| Property        | Type                                        | Default   | Description                                                                                                                   |
+| --------------- | ------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `key`           | `string`                                    | —         | **Required.** Data key for the column (matches object property name)                                                          |
+| `title`         | `string`                                    | —         | **Required.** Header label                                                                                                    |
+| `type`          | `"text" \| "number" \| "date" \| "boolean"` | `"text"`  | Data type (affects rendering and filtering)                                                                                   |
+| `sortable`      | `boolean`                                   | `true`    | Enable sorting for this column                                                                                                |
+| `filterable`    | `boolean`                                   | `true`    | Enable filtering for this column                                                                                              |
+| `visible`       | `boolean`                                   | `true`    | Initial column visibility (user can toggle via column selector)                                                               |
+| `unshowable`    | `boolean`                                   | `false`   | Column is never shown in the table. Appears dimmed in column selector, not toggleable                                         |
+| `width`         | `number \| string`                          | `200`     | Column width in pixels                                                                                                        |
+| `align`         | `"left" \| "center" \| "right"`             | `"left"`  | Content alignment (affects header label, sort icon position, and reorder arrows)                                              |
+| `canBeCopied`   | `boolean`                                   | `false`   | Show copy-to-clipboard icon on row hover                                                                                      |
+| `isClickable`   | `boolean`                                   | `false`   | Make cell text clickable (styled as link, passes `columnKey` to `onRowClick`). Requires `enableClickableColumns` on the table |
+| `locale`        | `string`                                    | `"cs-CZ"` | Locale for number and date formatting                                                                                         |
+| `decimalPlaces` | `number`                                    | `2`       | Decimal places for number-type columns                                                                                        |
 
 ### Column Type Rendering
 
-| Type        | Rendering                              | Filter Behavior                             |
-| ----------- | -------------------------------------- | ------------------------------------------- |
-| `"text"`    | Plain text                             | Text substring match                        |
-| `"number"`  | Locale-formatted with 2 decimal places | Supports `>10`, `<5`, `10..20` range syntax |
-| `"date"`    | Locale-formatted date                  | Date-aware filtering                        |
-| `"boolean"` | Disabled checkbox                      | Boolean filter                              |
+| Type        | Rendering                                         | Filter Input                 | Filter Behavior                                                                                   |
+| ----------- | ------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------- |
+| `"text"`    | Plain text                                        | Text input                   | Substring match; supports `*` (any chars) and `?` (single char) wildcards                         |
+| `"number"`  | Locale-formatted with configurable decimal places | Text input                   | `10..20` range, `10..` (≥10), `..20` (≤20), exact number matches via startsWith, fallback to text |
+| `"date"`    | Locale-formatted date                             | Text input                   | Supports `DD.MM.YYYY`, `DD.MM.YY`, `YYYY-MM-DD`, `YYYY`, `MM.YYYY`. Range with `..` separator     |
+| `"boolean"` | Read-only Switch component                        | Select dropdown (All/Yes/No) | Exact boolean match                                                                               |
 
-### Row Actions
+### Sorting
 
-Define row-level dropdown actions via `singleItemActions` string:
+Sorting uses **3-state cycling**: unsorted → ascending → descending → unsorted. Sort icons show the current state: `↕` (unsorted, dimmed), `↑` (ascending), `↓` (descending). For right-aligned columns, the sort icon appears on the left of the label; for left-aligned columns, on the right.
+
+### Row Actions and Bulk Actions
+
+**Single-row actions** appear as a `⋮` (vertical dots) dropdown menu on each row:
 
 ```tsx
 <TsTable
-  data={data}
-  columnDefinitions={columns}
   singleItemActions="edit/Edit,delete/Delete,details/View Details"
-  onAction={(action, row) => {
-    switch (action) {
-      case "edit":
-        console.log("Edit", row)
-        break
-      case "delete":
-        console.log("Delete", row)
-        break
-      case "details":
-        console.log("Details", row)
-        break
-    }
-  }}
+  onAction={(action, row) => console.log(action, row)}
 />
 ```
 
-The actions column appears as a `⋮` (vertical dots) menu on each row.
+**Bulk actions** appear in the header actions column when rows are selected:
 
-### Features
+```tsx
+<TsTable
+  multipleItemsActions="delete/Delete Selected,export/Export Selected"
+  onBulkAction={(action, selectedRows) => console.log(action, selectedRows)}
+/>
+```
 
-- **Global search**: Full-text search across all visible columns
-- **Column sorting**: Click column headers to sort (asc/desc toggle with indicators)
-- **Column visibility**: Toggle columns via "Columns" dropdown
+The bulk actions dropdown shows the count of selected rows and includes an "Unselect all" option.
+
+### Selection View Mode
+
+When rows are selected, a filter icon appears in the selection column (filter row). Clicking it cycles through three modes:
+
+1. **All** — Show all rows (default)
+2. **Selected** — Show only selected rows (check icon badge)
+3. **Unselected** — Show only unselected rows (X icon badge)
+
+### Column Selector
+
+The column selector dropdown includes:
+
+- **Search field** with persistent focus (clicking within dropdown keeps focus)
+- Escape key clears search text first; second Escape (when empty) closes the dropdown
+- Columns maintain their definition order (hidden columns stay in their original position)
+- Columns with `unshowable: true` appear dimmed and cannot be toggled
+- Columns in `unhideableColumns` array appear checked but cannot be unchecked
+- Active filter indicator (filter icon) shown right-aligned for columns that have active filters
+
+### Column Resizing
+
+When `enableColumnResizing` is enabled:
+
+- Drag resize handles between column headers (subtle vertical line, always visible)
+- Double-click a resize handle to reset column to default width
+- Minimum column width of 80px for data columns; select/actions columns are fixed at 40px
+
+### Column Reordering
+
+When `enableColumnReordering` is enabled, left/right chevron arrows appear on header hover. The arrows respect alignment:
+
+- **Left-aligned**: arrows appear on the right of the label
+- **Right-aligned**: arrows appear on the left of the label
+- **Center-aligned**: left arrow on the left, right arrow on the right
+
+### Features Summary
+
+- **Global search**: Full-text search toolbar with text input
+- **Column sorting**: 3-state cycling (unsorted → asc → desc → unsorted)
+- **Column filters**: Per-column filters in a dedicated row below headers. Text wildcards, number ranges, date ranges, boolean select
+- **Column visibility**: Toggle via column selector dropdown with search
+- **Column resizing**: Drag handles with subtle always-visible separator lines
+- **Column reordering**: Hover arrows respecting column alignment
 - **Pagination**: Configurable page size with first/prev/next/last navigation
-- **Row selection**: Checkbox-based selection with "select all" header checkbox
-- **Excel export**: Downloads filtered data as `.xlsx` file
+- **Row selection**: Checkbox-based with select-all, selection view filter, bulk actions
+- **Excel export**: Downloads filtered/visible data as `.xlsx` file
 - **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json` to append rows
-- **Number range filters**: Use `>100`, `<50`, `10..20` syntax in column filters
-- **Selected count**: Shows "X of Y rows selected" in footer
+- **Predefined filters**: Lock specific column filters that users cannot modify
+- **Clickable columns**: Individual columns can be marked clickable (styled as links)
+- **Copy to clipboard**: Per-cell copy button on hover for enabled columns
+- **Row count**: Footer shows "X of Y rows selected" and total row count
 
 ### Complete Usage Example
 
@@ -1427,9 +1481,17 @@ const columns: TsTableColumnDef[] = [
   { key: "name", title: "Name", type: "text", isClickable: true },
   { key: "email", title: "Email", type: "text", canBeCopied: true },
   { key: "role", title: "Role", type: "text" },
-  { key: "salary", title: "Salary", type: "number", align: "right" },
+  {
+    key: "salary",
+    title: "Salary",
+    type: "number",
+    align: "right",
+    locale: "en-US",
+    decimalPlaces: 0,
+  },
   { key: "joinDate", title: "Joined", type: "date", align: "right" },
   { key: "active", title: "Active", type: "boolean", align: "center" },
+  { key: "internalId", title: "Internal", type: "text", unshowable: true },
 ]
 
 const data: User[] = [
@@ -1459,11 +1521,17 @@ export default function UsersPage() {
       data={data}
       columnDefinitions={columns}
       title="User Management"
+      enableClickableColumns
+      enableColumnResizing
+      enableColumnReordering
       singleItemActions="edit/Edit,delete/Delete"
+      multipleItemsActions="delete/Delete Selected,export/Export"
+      unhideableColumns={["name"]}
       pageSize={10}
       onRowClick={(row, col) => console.log("Clicked:", row.name, col)}
       onCreateClick={() => console.log("Create new user")}
       onAction={(action, row) => console.log(action, row)}
+      onBulkAction={(action, rows) => console.log(action, rows.length)}
       onSelectionChange={(rows) => console.log("Selected:", rows.length)}
     />
   )

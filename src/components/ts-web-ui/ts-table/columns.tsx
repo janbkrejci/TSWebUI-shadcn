@@ -99,6 +99,8 @@ export function generateColumns<TData>(
       enableHiding: false,
       enableResizing: false,
       size: 40,
+      minSize: 40,
+      maxSize: 40,
     })
   }
 
@@ -109,6 +111,8 @@ export function generateColumns<TData>(
       enableHiding: false,
       enableResizing: false,
       size: 40,
+      minSize: 40,
+      maxSize: 40,
       cell: ({ row }) => {
         return (
           <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
@@ -161,7 +165,7 @@ export function generateColumns<TData>(
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 data-[state=open]:bg-accent px-1"
+            className="h-8 data-[state=open]:bg-accent px-0"
             onClick={() => {
               if (!enableSorting || def.sortable === false) return
               if (isSorted === "asc") {
@@ -239,6 +243,7 @@ export function generateColumns<TData>(
       enableSorting: enableSorting && (def.sortable ?? true),
       enableColumnFilter: def.filterable ?? true,
       size: typeof def.width === "number" ? def.width : 200,
+      minSize: 80,
       filterFn: (row, id, value, addMeta) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (def.type === "number") return numberFilter(row as any, id, value, addMeta)

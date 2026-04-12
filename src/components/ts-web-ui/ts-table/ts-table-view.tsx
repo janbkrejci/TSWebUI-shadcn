@@ -364,9 +364,9 @@ export function TsTableView<TData>({
                           onDoubleClick={() => header.column.resetSize()}
                           className={cn(
                             "absolute -right-1 top-0 h-full w-2 cursor-col-resize select-none touch-none z-10",
-                            "opacity-0 group-hover/header:opacity-100 transition-opacity",
-                            "hover:bg-primary/50",
-                            header.column.getIsResizing() && "opacity-100 bg-primary"
+                            "after:absolute after:right-[3px] after:top-1 after:bottom-1 after:w-px after:bg-border",
+                            "hover:after:bg-primary/50 hover:after:w-0.5",
+                            header.column.getIsResizing() && "after:bg-primary after:w-0.5"
                           )}
                         />
                       )}
@@ -486,11 +486,21 @@ export function TsTableView<TData>({
                   )}
                   onClick={() => onRowClick?.(row.original)}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3 py-2">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isFixed = cell.column.id === "select" || cell.column.id === "actions"
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "px-3 py-2",
+                          isFixed && "w-[40px] min-w-[40px] max-w-[40px] p-0"
+                        )}
+                        style={isFixed ? { width: 40 } : undefined}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    )
+                  })}
                 </TableRow>
               ))
             ) : (

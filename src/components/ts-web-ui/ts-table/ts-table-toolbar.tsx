@@ -119,17 +119,19 @@ export function TsTableToolbar<TData>({
   const columnOrderState = table.getState().columnOrder
   const columnVisibilityState = table.getState().columnVisibility
   const orderedColumns = React.useMemo(() => {
-    const visibleOrder = table.getVisibleLeafColumns().map((c) => c.id)
     const allCols = table.getAllLeafColumns().filter((c) => c.id !== "select" && c.id !== "actions")
 
-    // Sort: visible ones first in display order, then hidden ones
+    // Sort all columns by their position in the current column order
+    // Hidden columns stay in their original position among visible ones
+    const orderMap = new Map<string, number>()
+    const currentOrder = table.getState().columnOrder
+    if (currentOrder.length > 0) {
+      currentOrder.forEach((id, idx) => orderMap.set(id, idx))
+    } else {
+      table.getAllLeafColumns().forEach((col, idx) => orderMap.set(col.id, idx))
+    }
     return [...allCols].sort((a, b) => {
-      const aIdx = visibleOrder.indexOf(a.id)
-      const bIdx = visibleOrder.indexOf(b.id)
-      if (aIdx >= 0 && bIdx >= 0) return aIdx - bIdx
-      if (aIdx >= 0) return -1
-      if (bIdx >= 0) return 1
-      return 0
+      return (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table, columnOrderState, columnVisibilityState])
@@ -204,19 +206,43 @@ export function TsTableToolbar<TData>({
                   <DropdownMenuSeparator />
                 </>
               )}
-              <div className="px-2 pb-1.5">
+              <div
+                className="px-2 pb-1.5"
+                onPointerDown={(e) => {
+                  // Prevent dropdown from stealing focus when clicking inside the search area
+                  e.stopPropagation()
+                }}
+              >
                 <Input
                   placeholder="Search columns..."
                   value={columnSearch}
                   onChange={(e) => setColumnSearch(e.target.value)}
                   onKeyDown={(e) => {
-                    // Stop ALL key events from reaching the dropdown (#2: prevents typeahead focus stealing)
+                    // Stop ALL key events from reaching the dropdown (prevents typeahead focus stealing)
                     e.stopPropagation()
                     if (e.key === "Escape") {
                       e.preventDefault()
-                      setColumnSearch("")
+                      // Only clear search text on first Escape; if empty, let event propagate to close dropdown
+                      if (columnSearch) {
+                        setColumnSearch("")
+                      } else {
+                        // Re-dispatch to parent to close the dropdown
+                        const parent = (e.target as HTMLElement).closest(
+                          "[data-radix-popper-content-wrapper]"
+                        )
+                        parent?.dispatchEvent(
+                          new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+                        )
+                      }
                     }
                     if (e.key === "Enter") e.preventDefault()
+                  }}
+                  onBlur={(e) => {
+                    // If focus moved within the dropdown content, reclaim it
+                    const container = (e.target as HTMLElement).closest('[role="menu"]')
+                    if (container?.contains(e.relatedTarget as Node)) {
+                      e.target.focus()
+                    }
                   }}
                   className="h-7 text-xs"
                   autoFocus
@@ -247,9 +273,11 @@ export function TsTableToolbar<TData>({
                         }}
                         onSelect={(e) => e.preventDefault()}
                       >
-                        <span className="flex items-center gap-1">
-                          {label}
-                          {hasFilter && <Filter className="h-3 w-3 text-primary shrink-0" />}
+                        <span className="flex items-center w-full">
+                          <span className="flex-1 truncate">{label}</span>
+                          {hasFilter && (
+                            <Filter className="h-3 w-3 text-primary shrink-0 ml-auto" />
+                          )}
                         </span>
                       </DropdownMenuCheckboxItem>
                     )
