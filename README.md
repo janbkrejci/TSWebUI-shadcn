@@ -137,10 +137,6 @@ src/
 └── lib/                    # Utilities
 ```
 
-## Documentation
-
-See [CLAUDE.md](./CLAUDE.md) for detailed development documentation and architecture guide.
-
 ## License
 
 MIT
