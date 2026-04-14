@@ -37,7 +37,7 @@ interface TsTableToolbarProps<TData> {
   onBulkAction?: (action: string, rows: TData[]) => void
   onUnselectAll?: () => void
   onCreateClick?: () => void
-  onImportClick?: (data: TData[]) => void
+  onImportClick?: (data: Record<string, unknown>[]) => void
   columnDefinitions?: TsTableColumnDef[]
   columnsRequiredForImport?: string[]
   predefinedFilterKeys?: string[]
@@ -86,30 +86,54 @@ export function TsTableToolbar<TData>({
 
     const reader = new FileReader()
     reader.onload = (event) => {
-      const bstr = event.target?.result
-      if (typeof bstr !== "string") return
-      const wb = XLSX.read(bstr, { type: "binary" })
+      const data = event.target?.result
+      if (!data) return
+      const wb = XLSX.read(data, { type: "array" })
       const wsname = wb.SheetNames[0]
       const ws = wb.Sheets[wsname]
-      const data = XLSX.utils.sheet_to_json(ws) as TData[]
+      const json = XLSX.utils.sheet_to_json(ws, { defval: "" }) as Record<string, unknown>[]
 
-      // Validate column headers
-      const requiredColumns = columnsRequiredForImport ?? columnDefinitions.map((c) => c.key)
-      if (requiredColumns.length > 0 && data.length > 0) {
-        const importedHeaders = Object.keys(data[0] as Record<string, unknown>)
-        const missingColumns = requiredColumns.filter((col) => !importedHeaders.includes(col))
-        if (missingColumns.length > 0) {
-          toast.error("Import failed: missing columns", {
-            description: missingColumns.join(", "),
-          })
-          return
-        }
+      // Empty file — nothing to import
+      if (json.length === 0) {
+        toast.info("Import file contains no data rows")
+        return
       }
 
-      onImportClick?.(data)
-      toast.success(`Import complete: ${data.length} row${data.length !== 1 ? "s" : ""} imported`)
+      // Validate column headers
+      const headersInFile = Object.keys(json[0] || {})
+      const columnsToValidate =
+        columnsRequiredForImport && columnsRequiredForImport.length > 0
+          ? columnDefinitions.filter((col) => columnsRequiredForImport.includes(col.key))
+          : columnDefinitions
+      const missingColumns = columnsToValidate
+        .map((col) => col.key)
+        .filter((key) => !headersInFile.includes(key))
+
+      if (missingColumns.length > 0) {
+        const label =
+          columnsRequiredForImport && columnsRequiredForImport.length > 0
+            ? "Missing required columns"
+            : "Missing columns"
+        toast.error(`Import failed: ${label}`, {
+          description: missingColumns.join(", "),
+        })
+        return
+      }
+
+      // Map rows: keep only known keys from column definitions
+      const knownKeys = new Set(columnDefinitions.map((c) => c.key))
+      const mapped = json.map((row) => {
+        const obj: Record<string, unknown> = {}
+        for (const [key, val] of Object.entries(row)) {
+          if (knownKeys.has(key)) obj[key] = val
+        }
+        return obj
+      })
+
+      // Call external handler — parent is responsible for processing and showing results
+      onImportClick?.(mapped)
     }
-    reader.readAsBinaryString(file)
+    reader.readAsArrayBuffer(file)
 
     // Reset input so the same file can be re-imported
     e.target.value = ""
@@ -199,6 +223,7 @@ export function TsTableToolbar<TData>({
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={handleClearAllFilters}
+                    onSelect={(e) => e.preventDefault()}
                   >
                     <XCircle className="h-3.5 w-3.5 mr-1.5" />
                     Clear all filters
@@ -221,19 +246,15 @@ export function TsTableToolbar<TData>({
                     // Stop ALL key events from reaching the dropdown (prevents typeahead focus stealing)
                     e.stopPropagation()
                     if (e.key === "Escape") {
-                      e.preventDefault()
-                      // Only clear search text on first Escape; if empty, let event propagate to close dropdown
                       if (columnSearch) {
+                        // First Escape: clear search text, block native event so Radix
+                        // DismissableLayer (document-level listener) doesn't close the dropdown
+                        e.preventDefault()
+                        e.nativeEvent.stopImmediatePropagation()
                         setColumnSearch("")
-                      } else {
-                        // Re-dispatch to parent to close the dropdown
-                        const parent = (e.target as HTMLElement).closest(
-                          "[data-radix-popper-content-wrapper]"
-                        )
-                        parent?.dispatchEvent(
-                          new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
-                        )
                       }
+                      // Second Escape (empty search): native event propagates normally,
+                      // Radix sees non-default-prevented Escape → closes dropdown
                     }
                     if (e.key === "Enter") e.preventDefault()
                   }}

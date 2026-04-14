@@ -161,15 +161,75 @@ export function TsTableView<TData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table, columnOrderState, columnVisibilityState])
 
+  // Measure container width so we can distribute extra space only to data columns
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = React.useState(0)
+
+  React.useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerWidth(Math.floor(entry.contentRect.width))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Compute effective column widths: fixed always 40px, data columns scale to fill container
+  const columnSizingState = table.getState().columnSizing
+  const FIXED_COL_PX = 40
+  const columnWidthMap = React.useMemo(() => {
+    const cols = table.getVisibleLeafColumns()
+    const fixedIds = new Set(
+      cols.filter((c) => c.id === "select" || c.id === "actions").map((c) => c.id)
+    )
+    const fixedTotal = fixedIds.size * FIXED_COL_PX
+    const dataTotal = cols.filter((c) => !fixedIds.has(c.id)).reduce((s, c) => s + c.getSize(), 0)
+    const contentTotal = fixedTotal + dataTotal
+
+    const map = new Map<string, number>()
+
+    if (containerWidth > 0 && contentTotal < containerWidth && dataTotal > 0) {
+      // Table content narrower than container — scale data columns to fill the gap
+      const dataSpace = containerWidth - fixedTotal
+      for (const col of cols) {
+        if (fixedIds.has(col.id)) {
+          map.set(col.id, FIXED_COL_PX)
+        } else {
+          map.set(col.id, (col.getSize() / dataTotal) * dataSpace)
+        }
+      }
+    } else {
+      // Content fills or overflows container — use natural sizes
+      for (const col of cols) {
+        map.set(col.id, fixedIds.has(col.id) ? FIXED_COL_PX : col.getSize())
+      }
+    }
+
+    return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, containerWidth, columnSizingState, columnOrderState, columnVisibilityState])
+
+  const effectiveTableWidth = React.useMemo(() => {
+    let sum = 0
+    for (const w of columnWidthMap.values()) sum += w
+    return Math.max(sum, containerWidth)
+  }, [columnWidthMap, containerWidth])
+
   return (
-    <div className="rounded-md border bg-card overflow-x-auto">
+    <div ref={containerRef} className="rounded-md border bg-card overflow-x-auto">
       <Table
         style={{
-          minWidth: "100%",
-          width: table.getCenterTotalSize(),
+          width: effectiveTableWidth || table.getCenterTotalSize(),
           tableLayout: "fixed",
         }}
       >
+        {/* Colgroup for column widths */}
+        <colgroup>
+          {table.getVisibleLeafColumns().map((col) => (
+            <col key={col.id} style={{ width: columnWidthMap.get(col.id) ?? col.getSize() }} />
+          ))}
+        </colgroup>
         <TableHeader className="bg-muted/50">
           {table.getHeaderGroups().map((headerGroup) => (
             <React.Fragment key={headerGroup.id}>
@@ -192,16 +252,14 @@ export function TsTableView<TData>({
                       key={header.id}
                       className={cn(
                         "py-2 px-3 font-bold text-muted-foreground relative group/header",
-                        !isDataColumn && "w-[40px] min-w-[40px] max-w-[40px]"
+                        !isDataColumn && "w-[40px] min-w-[40px] max-w-[40px] p-0"
                       )}
-                      style={
-                        isDataColumn
-                          ? {
-                              width: header.getSize(),
-                              minWidth: enableColumnResizing ? 50 : undefined,
-                            }
-                          : { width: 40 }
-                      }
+                      style={{
+                        width: columnWidthMap.get(header.column.id) ?? header.getSize(),
+                        ...(isDataColumn && enableColumnResizing
+                          ? { minWidth: header.column.columnDef.minSize ?? 60 }
+                          : {}),
+                      }}
                     >
                       {/* Select-all checkbox + selection filter in row 1 (#4) */}
                       {header.column.id === "select" ? (
@@ -382,7 +440,17 @@ export function TsTableView<TData>({
                     const meta = header.column.columnDef.meta as { type?: string } | undefined
 
                     return (
-                      <TableHead key={`filter-${header.id}`} className="py-1.5 px-3">
+                      <TableHead
+                        key={`filter-${header.id}`}
+                        className={cn(
+                          "py-1.5 px-3",
+                          (header.column.id === "select" || header.column.id === "actions") &&
+                            "w-[40px] min-w-[40px] max-w-[40px] p-0"
+                        )}
+                        style={{
+                          width: columnWidthMap.get(header.column.id) ?? header.getSize(),
+                        }}
+                      >
                         {header.column.id === "select" ? (
                           // Empty in filter row (checkbox moved to row 1)
                           <div className="flex justify-center">
@@ -495,7 +563,9 @@ export function TsTableView<TData>({
                           "px-3 py-2",
                           isFixed && "w-[40px] min-w-[40px] max-w-[40px] p-0"
                         )}
-                        style={isFixed ? { width: 40 } : undefined}
+                        style={{
+                          width: columnWidthMap.get(cell.column.id) ?? cell.column.getSize(),
+                        }}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>

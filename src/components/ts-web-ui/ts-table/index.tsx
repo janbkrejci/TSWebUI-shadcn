@@ -13,8 +13,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { Download, X } from "lucide-react"
+import * as XLSX from "xlsx"
 
 import * as React from "react"
+
+import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { TsTableColumnDef, TsTableRowAction, generateColumns } from "./columns"
 import { TsTablePagination } from "./ts-table-pagination"
@@ -22,6 +26,14 @@ import { TsTableToolbar } from "./ts-table-toolbar"
 import { TsTableView } from "./ts-table-view"
 
 export type { TsTableColumnDef } from "./columns"
+
+export interface ImportResult {
+  added: number
+  updated: number
+  rejected: number
+  skipped: number
+  rejectedRowsData?: Record<string, unknown>[]
+}
 
 export interface TsTableProps<TData extends Record<string, unknown> = Record<string, unknown>> {
   data: TData[]
@@ -44,6 +56,9 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   onRowClick?: (row: TData, columnKey?: string) => void
   onCreateClick?: () => void
   onAction?: (action: string, row: TData) => void
+  onImport?: (data: Record<string, unknown>[]) => void
+  importResult?: ImportResult | null
+  onImportResultClose?: () => void
   onDataChange?: (data: TData[]) => void
   onSelectionChange?: (selectedRows: TData[]) => void
   pageSize?: number
@@ -55,6 +70,74 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   predefinedFilters?: Record<string, unknown>
   getRowId?: (row: TData) => string
   initialRowSelection?: Record<string, boolean>
+}
+
+function ImportResultDialog({
+  result,
+  columnDefinitions,
+  onClose,
+}: {
+  result: ImportResult
+  columnDefinitions: TsTableColumnDef[]
+  onClose: () => void
+}) {
+  const saveRejectedRows = () => {
+    const data = result.rejectedRowsData
+    if (!data || data.length === 0) return
+    const headers = columnDefinitions.map((c) => c.key)
+    const aoa = [headers, ...data.map((row) => headers.map((h) => row[h] ?? ""))]
+    const ws = XLSX.utils.aoa_to_sheet(aoa)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Rejected")
+    const d = new Date()
+    const pad = (n: number) => String(n).padStart(2, "0")
+    XLSX.writeFile(
+      wb,
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} Rejected rows.xlsx`
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-background border rounded-lg shadow-lg p-6 w-[400px] max-w-[90vw]">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Import Results</h3>
+          <button onClick={onClose} className="p-1 hover:bg-accent rounded-sm">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>Added:</span>
+            <span className="font-medium">{result.added}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Updated:</span>
+            <span className="font-medium">{result.updated}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Rejected:</span>
+            <span className="font-medium text-destructive">{result.rejected}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Skipped:</span>
+            <span className="font-medium">{result.skipped}</span>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          {result.rejected > 0 && result.rejectedRowsData && result.rejectedRowsData.length > 0 && (
+            <Button variant="outline" size="sm" onClick={saveRejectedRows}>
+              <Download className="h-4 w-4 mr-1.5" />
+              Save rejected rows
+            </Button>
+          )}
+          <Button size="sm" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function TsTable<TData extends Record<string, unknown> = Record<string, unknown>>({
@@ -78,6 +161,9 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   onRowClick,
   onCreateClick,
   onAction,
+  onImport,
+  importResult = null,
+  onImportResultClose,
   onDataChange,
   onSelectionChange,
   pageSize = 10,
@@ -232,20 +318,6 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     [predefinedFilters]
   )
 
-  const handleImport = React.useCallback(
-    (newData: TData[]) => {
-      setData((prev) => {
-        const updated = [...prev, ...newData]
-        // Use setTimeout to avoid state update during render
-        if (onDataChange) {
-          setTimeout(() => onDataChange(updated), 0)
-        }
-        return updated
-      })
-    },
-    [onDataChange]
-  )
-
   // Unshowable column keys for selector (#8: pass to toolbar for dimmed display)
   const unshowableColumnKeys = React.useMemo(
     () => columnDefinitions.filter((col) => col.unshowable).map((col) => col.key),
@@ -268,7 +340,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onBulkAction={onBulkAction}
         onUnselectAll={() => setRowSelection({})}
         onCreateClick={onCreateClick}
-        onImportClick={handleImport}
+        onImportClick={onImport}
         columnDefinitions={columnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
         predefinedFilterKeys={predefinedFilterKeys}
@@ -288,6 +360,14 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onBulkAction={onBulkAction ? (action) => onBulkAction(action, selectedRows) : undefined}
         onUnselectAll={() => setRowSelection({})}
       />
+      {/* Import results dialog */}
+      {importResult && (
+        <ImportResultDialog
+          result={importResult}
+          columnDefinitions={columnDefinitions}
+          onClose={onImportResultClose ?? (() => {})}
+        />
+      )}
       {enablePagination && <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
     </div>
   )

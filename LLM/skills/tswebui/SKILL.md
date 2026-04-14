@@ -1337,20 +1337,46 @@ An advanced data grid built on TanStack Table v8 with sorting, filtering, pagina
 | `singleItemActions`        | `string`                  | `undefined`            | Row actions in `"action/Label,action/Label"` format                                                     |
 | `multipleItemsActions`     | `string`                  | `undefined`            | Bulk actions in `"action/Label,action/Label"` format (shown in header when rows selected)               |
 | `predefinedFilters`        | `Record<string, unknown>` | `undefined`            | Pre-set column filters (key = column key, value = filter text). These are read-only for user            |
-| `columnsRequiredForImport` | `string[]`                | `undefined`            | Column keys that must be present in imported files                                                      |
+| `columnsRequiredForImport` | `string[]`                | `undefined`            | Column keys that must be present in imported files. If not set, all column keys are validated           |
 | `getRowId`                 | `(row: TData) => string`  | `undefined`            | Custom row ID function for stable selection                                                             |
 | `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
+| `importResult`             | `ImportResult \| null`    | `null`                 | Import results to display in a dialog (set by parent after processing import data)                      |
+| `onImportResultClose`      | `() => void`              | `undefined`            | Called when user closes the import results dialog                                                       |
 
 ### Event Callbacks
 
-| Callback            | Signature                                  | Description                                                                                            |
-| ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `onRowClick`        | `(row: TData, columnKey?: string) => void` | Fires when a row or clickable cell is clicked. `columnKey` is provided only for `isClickable` columns. |
-| `onCreateClick`     | `() => void`                               | Fires when "New record" button is clicked                                                              |
-| `onAction`          | `(action: string, row: TData) => void`     | Fires when a single-row action is triggered from the dropdown menu                                     |
-| `onBulkAction`      | `(action: string, rows: TData[]) => void`  | Fires when a bulk action is triggered (receives all currently selected rows)                           |
-| `onDataChange`      | `(data: TData[]) => void`                  | Fires when data changes (after import)                                                                 |
-| `onSelectionChange` | `(selectedRows: TData[]) => void`          | Fires when row selection changes                                                                       |
+| Callback            | Signature                                   | Description                                                                                            |
+| ------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `onRowClick`        | `(row: TData, columnKey?: string) => void`  | Fires when a row or clickable cell is clicked. `columnKey` is provided only for `isClickable` columns. |
+| `onCreateClick`     | `() => void`                                | Fires when "New record" button is clicked                                                              |
+| `onAction`          | `(action: string, row: TData) => void`      | Fires when a single-row action is triggered from the dropdown menu                                     |
+| `onImport`          | `(data: Record<string, unknown>[]) => void` | Fires when import file is parsed. Table validates columns and maps data. Parent processes the import   |
+| `onBulkAction`      | `(action: string, rows: TData[]) => void`   | Fires when a bulk action is triggered (receives all currently selected rows)                           |
+| `onDataChange`      | `(data: TData[]) => void`                   | Fires when data changes                                                                                |
+| `onSelectionChange` | `(selectedRows: TData[]) => void`           | Fires when row selection changes                                                                       |
+
+### ImportResult
+
+The `ImportResult` interface is used to display import results in a dialog:
+
+```ts
+interface ImportResult {
+  added: number
+  updated: number
+  rejected: number
+  skipped: number
+  rejectedRowsData?: Record<string, unknown>[]
+}
+```
+
+### Import Flow
+
+The import follows a two-phase pattern matching the reference implementation:
+
+1. **Table handles file reading**: User selects a file → table reads it, validates column headers against `columnsRequiredForImport` (or all column definitions if not specified), and maps rows to known column keys only.
+2. **Parent handles processing**: `onImport(data)` is called with the mapped data. The parent processes it (e.g., API call) and then sets the `importResult` prop with the result.
+3. **Table shows results**: When `importResult` is set, a dialog shows counts (added, updated, rejected, skipped). If there are rejected rows with `rejectedRowsData`, user can download them as XLSX.
+4. **Cleanup**: When user closes the dialog, `onImportResultClose` is called. Parent should set `importResult` back to `null`.
 
 ### TsTableColumnDef
 
@@ -1381,7 +1407,7 @@ An advanced data grid built on TanStack Table v8 with sorting, filtering, pagina
 
 ### Sorting
 
-Sorting uses **3-state cycling**: unsorted → ascending → descending → unsorted. Sort icons show the current state: `↕` (unsorted, dimmed), `↑` (ascending), `↓` (descending). For right-aligned columns, the sort icon appears on the left of the label; for left-aligned columns, on the right.
+Sorting uses **3-state cycling**: unsorted → ascending → descending → unsorted. Sort icons: `↑` (ascending), `↓` (descending). The unsorted `↕` icon is only visible on **column header hover** (dimmed). For right-aligned columns, the sort icon appears on the left of the label; for left-aligned columns, on the right.
 
 ### Row Actions and Bulk Actions
 
@@ -1423,6 +1449,7 @@ The column selector dropdown includes:
 - Columns with `unshowable: true` appear dimmed and cannot be toggled
 - Columns in `unhideableColumns` array appear checked but cannot be unchecked
 - Active filter indicator (filter icon) shown right-aligned for columns that have active filters
+- "Clear all filters" button keeps the dropdown open (does not close on click)
 
 ### Column Resizing
 
@@ -1430,7 +1457,8 @@ When `enableColumnResizing` is enabled:
 
 - Drag resize handles between column headers (subtle vertical line, always visible)
 - Double-click a resize handle to reset column to default width
-- Minimum column width of 80px for data columns; select/actions columns are fixed at 40px
+- Minimum column width of 80px for data columns
+- Select column (checkbox) and actions column (row menu) always have a fixed width of 40px, enforced via colgroup and inline styles regardless of table layout
 
 ### Column Reordering
 
@@ -1451,7 +1479,7 @@ When `enableColumnReordering` is enabled, left/right chevron arrows appear on he
 - **Pagination**: Configurable page size with first/prev/next/last navigation
 - **Row selection**: Checkbox-based with select-all, selection view filter, bulk actions
 - **Excel export**: Downloads filtered/visible data as `.xlsx` file
-- **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json` to append rows
+- **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json`. Table validates columns and maps data, then calls `onImport`. Parent processes import and shows results via `importResult` prop
 - **Predefined filters**: Lock specific column filters that users cannot modify
 - **Clickable columns**: Individual columns can be marked clickable (styled as links)
 - **Copy to clipboard**: Per-cell copy button on hover for enabled columns
@@ -1462,8 +1490,10 @@ When `enableColumnReordering` is enabled, left/right chevron arrows appear on he
 ```tsx
 "use client"
 
+import * as React from "react"
+
 import { TsTable } from "@/components/ts-web-ui/ts-table"
-import { TsTableColumnDef } from "@/components/ts-web-ui/ts-table/columns"
+import { ImportResult, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 
 interface User {
   [key: string]: unknown
@@ -1516,6 +1546,13 @@ const data: User[] = [
 ]
 
 export default function UsersPage() {
+  const [importResult, setImportResult] = React.useState<ImportResult | null>(null)
+
+  const handleImport = (data: Record<string, unknown>[]) => {
+    // Process import (e.g., API call), then show results:
+    setImportResult({ added: data.length, updated: 0, rejected: 0, skipped: 0 })
+  }
+
   return (
     <TsTable
       data={data}
@@ -1531,6 +1568,9 @@ export default function UsersPage() {
       onRowClick={(row, col) => console.log("Clicked:", row.name, col)}
       onCreateClick={() => console.log("Create new user")}
       onAction={(action, row) => console.log(action, row)}
+      onImport={handleImport}
+      importResult={importResult}
+      onImportResultClose={() => setImportResult(null)}
       onBulkAction={(action, rows) => console.log(action, rows.length)}
       onSelectionChange={(rows) => console.log("Selected:", rows.length)}
     />

@@ -151,23 +151,28 @@ export function generateColumns<TData>(
       header: ({ column }) => {
         const isSorted = column.getIsSorted()
         const isRight = def.align === "right"
-        const sortIcon =
-          enableSorting &&
-          def.sortable !== false &&
-          (isSorted === "desc" ? (
-            <ArrowDown className={cn("h-4 w-4", isRight ? "mr-1" : "ml-1")} />
+        const isSortable = enableSorting && def.sortable !== false
+        const sortIcon = isSortable ? (
+          isSorted === "desc" ? (
+            <ArrowDown className={cn("h-4 w-4 shrink-0", isRight ? "mr-1" : "ml-1")} />
           ) : isSorted === "asc" ? (
-            <ArrowUp className={cn("h-4 w-4", isRight ? "mr-1" : "ml-1")} />
+            <ArrowUp className={cn("h-4 w-4 shrink-0", isRight ? "mr-1" : "ml-1")} />
           ) : (
-            <ArrowUpDown className={cn("h-4 w-4 opacity-50", isRight ? "mr-1" : "ml-1")} />
-          ))
+            <ArrowUpDown
+              className={cn(
+                "h-4 w-4 shrink-0 opacity-0 group-hover/header:opacity-50 transition-opacity",
+                isRight ? "mr-1" : "ml-1"
+              )}
+            />
+          )
+        ) : null
         return (
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 data-[state=open]:bg-accent px-0"
+            className="h-8 data-[state=open]:bg-accent px-0 has-[>svg]:px-0"
             onClick={() => {
-              if (!enableSorting || def.sortable === false) return
+              if (!isSortable) return
               if (isSorted === "asc") {
                 column.toggleSorting(true) // desc
               } else if (isSorted === "desc") {
@@ -176,10 +181,10 @@ export function generateColumns<TData>(
                 column.toggleSorting(false) // asc
               }
             }}
-            disabled={!enableSorting || def.sortable === false}
+            disabled={!isSortable}
           >
             {isRight && sortIcon}
-            <span>{def.title}</span>
+            <span className="truncate">{def.title}</span>
             {!isRight && sortIcon}
           </Button>
         )
@@ -243,7 +248,14 @@ export function generateColumns<TData>(
       enableSorting: enableSorting && (def.sortable ?? true),
       enableColumnFilter: def.filterable ?? true,
       size: typeof def.width === "number" ? def.width : 200,
-      minSize: 80,
+      minSize: (() => {
+        const isSortable = enableSorting && def.sortable !== false
+        // ~8px per char at text-sm, 22px for sort icon+gap, 24px for cell padding (px-3 both sides)
+        const labelPx = def.title.length * 8
+        const sortPx = isSortable ? 22 : 0
+        const paddingPx = 24
+        return Math.max(labelPx + sortPx + paddingPx, 60)
+      })(),
       filterFn: (row, id, value, addMeta) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (def.type === "number") return numberFilter(row as any, id, value, addMeta)

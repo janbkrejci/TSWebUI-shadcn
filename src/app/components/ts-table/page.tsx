@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
+import { ImportResult, TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 interface TableItem {
@@ -241,6 +241,7 @@ export default function TsTablePage() {
   const [showExportButton, setShowExportButton] = React.useState(true)
   const [showColumnSelector, setShowColumnSelector] = React.useState(true)
   const [showBulkActions, setShowBulkActions] = React.useState(true)
+  const [importResultState, setImportResultState] = React.useState<ImportResult | null>(null)
 
   const handleRowClick = React.useCallback((row: Record<string, unknown>, columnKey?: string) => {
     const item = row as TableItem
@@ -258,6 +259,20 @@ export default function TsTablePage() {
 
   const handleBulkAction = React.useCallback((action: string, rows: Record<string, unknown>[]) => {
     setLastAction(`Bulk action: ${action} on ${rows.length} rows`)
+  }, [])
+
+  const handleImport = React.useCallback((data: Record<string, unknown>[]) => {
+    setLastAction(`Import: received ${data.length} rows for processing`)
+    // Simulate partial import result (as if some rows were added, some rejected)
+    const added = Math.max(0, data.length - 2)
+    const rejected = Math.min(2, data.length)
+    setImportResultState({
+      added,
+      updated: 0,
+      rejected,
+      skipped: 0,
+      rejectedRowsData: data.slice(-rejected),
+    })
   }, [])
 
   return (
@@ -397,6 +412,9 @@ export default function TsTablePage() {
                 onRowClick={handleRowClick}
                 onCreateClick={handleCreate}
                 onAction={handleAction}
+                onImport={handleImport}
+                importResult={importResultState}
+                onImportResultClose={() => setImportResultState(null)}
                 singleItemActions="edit/Edit,delete/Delete,details/Details"
                 multipleItemsActions={
                   showBulkActions ? "delete/Delete Selected,export/Export Selected" : undefined
