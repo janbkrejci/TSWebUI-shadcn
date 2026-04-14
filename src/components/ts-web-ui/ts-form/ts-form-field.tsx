@@ -111,7 +111,8 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
                 fieldDef.hint as string | undefined,
                 fieldDef.readonly as boolean | undefined,
                 (fieldDef.hideLabel ? fieldDef.label || name : fieldDef.label || name) as string,
-                fieldDef.autofocus as boolean | undefined
+                fieldDef.autofocus as boolean | undefined,
+                tf.unsupportedWidget
               )}
             </FormControl>
 
@@ -142,7 +143,8 @@ function renderWidget(
   hint?: string | undefined,
   readOnly?: boolean,
   ariaLabel?: string,
-  autoFocus?: boolean
+  autoFocus?: boolean,
+  unsupportedWidgetLabel?: string
 ) {
   const commonProps = {
     field,
@@ -208,7 +210,8 @@ function renderWidget(
       const _exhaustive: never = knownDef
       return (
         <div className="p-2 border border-destructive/50 text-destructive text-sm rounded bg-destructive/10">
-          {tf.unsupportedWidget} {(_exhaustive as { type: string }).type}
+          {unsupportedWidgetLabel ?? "Unsupported widget: "}{" "}
+          {(_exhaustive as { type: string }).type}
         </div>
       )
     }
