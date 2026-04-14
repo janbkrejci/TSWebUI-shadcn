@@ -6,6 +6,7 @@ import * as React from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { TsInfoboxField, TsWidgetProps } from "../types"
@@ -29,6 +30,7 @@ export const InfoboxWidget = React.forwardRef<HTMLDivElement, TsInfoboxWidgetPro
     ref
   ) => {
     const [isVisible, setIsVisible] = React.useState(true)
+    const tf = useTsLocale().strings.form
 
     if (!isVisible) return null
 
@@ -82,7 +84,7 @@ export const InfoboxWidget = React.forwardRef<HTMLDivElement, TsInfoboxWidgetPro
             size="icon-xs"
             className="absolute right-2 top-2 h-6 w-6 text-current opacity-70 hover:opacity-100"
             onClick={() => setIsVisible(false)}
-            aria-label="Close"
+            aria-label={tf.close}
           >
             <X className="h-4 w-4" />
           </Button>

@@ -4,6 +4,8 @@ import { CloudUpload, Download, FileText as FileTextIcon, Plus, X as XIcon } fro
 
 import * as React from "react"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+
 import { cn } from "@/lib/utils"
 
 import { TsFileDescriptor, TsFileField, TsWidgetProps } from "../types"
@@ -29,6 +31,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
   ) => {
     const [isDragOver, setIsDragOver] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
+    const tf = useTsLocale().strings.form
 
     // Support extensions like .pdf,.doc and map common ones
     const accept = React.useMemo(() => {
@@ -150,10 +153,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
           >
             <CloudUpload className="h-8 w-8 text-muted-foreground" />
             <div className="text-sm text-muted-foreground">
-              {def.innerLabel ||
-                (multiple
-                  ? "Drop files here or click to upload"
-                  : "Drop file here or click to upload")}
+              {def.innerLabel || (multiple ? tf.dropFiles : tf.dropFile)}
             </div>
           </div>
         )}
@@ -164,7 +164,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
           accept={accept}
           multiple={multiple}
           className="hidden"
-          aria-label={ariaLabel || def.label || "File upload"}
+          aria-label={ariaLabel || def.label || tf.fileUpload}
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files)
             e.target.value = ""
@@ -189,7 +189,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
                   type="button"
                   className="shrink-0 text-muted-foreground hover:text-foreground"
                   onClick={() => downloadFile(file)}
-                  title="Download"
+                  title={tf.download}
                 >
                   <Download className="h-4 w-4" />
                 </button>
@@ -198,7 +198,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
                     type="button"
                     className="shrink-0 text-muted-foreground hover:text-destructive"
                     onClick={() => removeFile(index)}
-                    title="Remove"
+                    title={tf.remove}
                   >
                     <XIcon className="h-4 w-4" />
                   </button>
@@ -216,7 +216,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
           >
             <Plus className="h-4 w-4" />
             <span className="group-hover/add:underline underline-offset-4">
-              {def.addFileLabel || (multiple ? "Add files" : "Add file")}
+              {def.addFileLabel || (multiple ? tf.addFiles : tf.addFile)}
             </span>
           </button>
         )}

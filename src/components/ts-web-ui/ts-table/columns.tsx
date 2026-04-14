@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
 
+import { TsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
 import { booleanFilter, dateFilter, numberFilter, textFilter } from "./filters"
 
-function CopyButton({ value }: { value: string }) {
+function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string }) {
   const [copied, setCopied] = React.useState(false)
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -35,7 +36,7 @@ function CopyButton({ value }: { value: string }) {
     <button
       className="inline-flex items-center justify-center h-6 w-6 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
       onClick={handleCopy}
-      aria-label="Copy to clipboard"
+      aria-label={copyLabel ?? "Copy to clipboard"}
     >
       {copied ? (
         <Check className="h-4 w-4 text-green-500" />
@@ -74,8 +75,11 @@ export function generateColumns<TData>(
   rowActions?: TsTableRowAction[],
   onAction?: (action: string, row: TData) => void,
   enableSorting: boolean = true,
-  enableClickableColumns: boolean = false
+  enableClickableColumns: boolean = false,
+  enableColumnReordering: boolean = true,
+  tsLocale?: TsLocale
 ): ColumnDef<TData>[] {
+  const t = tsLocale?.strings.table
   const cols: ColumnDef<TData>[] = []
 
   // 1. Selection column — header checkbox rendered in filter row by TsTableView
@@ -89,7 +93,7 @@ export function generateColumns<TData>(
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={(e) => row.toggleSelected(e.target.checked)}
-            aria-label="Select row"
+            aria-label={t?.selectRow ?? "Select row"}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             className="h-4 w-4 accent-primary cursor-pointer"
           />
@@ -119,12 +123,12 @@ export function generateColumns<TData>(
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">{t?.openMenu ?? "Open menu"}</span>
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t?.actions ?? "Actions"}</DropdownMenuLabel>
                 {rowActions.map((action, idx) => (
                   <DropdownMenuItem
                     key={idx}
@@ -170,7 +174,7 @@ export function generateColumns<TData>(
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 data-[state=open]:bg-accent px-0 has-[>svg]:px-0"
+            className="h-8 data-[state=open]:bg-accent px-0 has-[>svg]:px-0 hover:bg-transparent hover:text-current dark:hover:bg-transparent"
             onClick={() => {
               if (!isSortable) return
               if (isSorted === "asc") {
@@ -241,7 +245,9 @@ export function generateColumns<TData>(
             }}
           >
             <span className="truncate">{formattedValue}</span>
-            {def.canBeCopied && value != null && <CopyButton value={String(value)} />}
+            {def.canBeCopied && value != null && (
+              <CopyButton value={String(value)} copyLabel={t?.copyToClipboard} />
+            )}
           </div>
         )
       },
@@ -250,11 +256,14 @@ export function generateColumns<TData>(
       size: typeof def.width === "number" ? def.width : 200,
       minSize: (() => {
         const isSortable = enableSorting && def.sortable !== false
-        // ~8px per char at text-sm, 22px for sort icon+gap, 24px for cell padding (px-3 both sides)
-        const labelPx = def.title.length * 8
+        // Sort icon: 16px + 4px gap = 20px
         const sortPx = isSortable ? 22 : 0
+        // Reorder arrows: 2 x (12px icon + 4px padding) + 2px gap = 34px
+        const reorderPx = enableColumnReordering ? 34 : 0
+        // Cell padding: px-3 both sides = 24px
         const paddingPx = 24
-        return Math.max(labelPx + sortPx + paddingPx, 60)
+        // Controls-only minimum (label will truncate)
+        return Math.max(sortPx + reorderPx + paddingPx, 60)
       })(),
       filterFn: (row, id, value, addMeta) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

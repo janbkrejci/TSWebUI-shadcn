@@ -10,6 +10,7 @@ A comprehensive UI component library built on **Next.js 16 + React 19 + Shadcn/U
 ## Table of Contents
 
 - [Prerequisites & Installation](#prerequisites--installation)
+- [Localization](#localization)
 - [ThemeProvider](#themeprovider)
 - [ModeToggle](#modetoggle)
 - [TsLayout](#tslayout)
@@ -102,6 +103,7 @@ src/
 │       │   └── widgets/             # 20+ field type widgets
 │       ├── ts-table/                # TsTable + sub-components
 │       ├── ts-window/               # TsWindow + WindowProvider
+│       ├── locale/                  # Localization (TsLocaleProvider, en, cs)
 │       ├── ts-layout/               # TsLayout (integrated shell)
 │       ├── ts-sidebar/              # Sidebar system
 │       ├── ts-topbar/               # TopBar
@@ -117,6 +119,7 @@ src/
 All imports use the `@/` path alias (configured in `tsconfig.json` by `shadcn init`):
 
 ```ts
+import { TsLocaleProvider, cs, en, useTsLocale } from "@/components/ts-web-ui/locale"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
 import { TsForm } from "@/components/ts-web-ui/ts-form"
@@ -152,6 +155,108 @@ npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-
 # 5. Install the window system (if needed)
 npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json
 ```
+
+---
+
+## Localization
+
+**Location:** `src/components/ts-web-ui/locale/`
+
+All static UI texts in every TSWebUI component are localizable. The library ships with **English** (default) and **Czech** presets and supports fully custom locale objects.
+
+### Architecture
+
+| Export               | Source               | Description                                                                                  |
+| -------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
+| `TsLocaleProvider`   | `locale/context.tsx` | React context provider — wrap app or subtree                                                 |
+| `useTsLocale()`      | `locale/context.tsx` | Hook returning the current `TsLocale` (accepts optional override)                            |
+| `en`                 | `locale/en.ts`       | English locale preset (default)                                                              |
+| `cs`                 | `locale/cs.ts`       | Czech locale preset                                                                          |
+| `TsLocale`           | `locale/types.ts`    | Full locale type (`strings` + `formatting`)                                                  |
+| `TsLocaleStrings`    | `locale/types.ts`    | All translatable string keys (table, form, window, sidebar, formEditor)                      |
+| `TsLocaleFormatting` | `locale/types.ts`    | `locale` (BCP 47 tag, e.g. `"en-US"`) and optional `timezone` (IANA, e.g. `"Europe/Prague"`) |
+
+### Import
+
+```ts
+import { TsLocaleProvider, cs, en, useTsLocale } from "@/components/ts-web-ui/locale"
+import type { TsLocale, TsLocaleFormatting, TsLocaleStrings } from "@/components/ts-web-ui/locale"
+```
+
+### Usage — Context Provider
+
+Wrap your app (or a subtree) with `TsLocaleProvider`. All TSWebUI components inside the provider automatically pick up the locale:
+
+```tsx
+import { TsLocaleProvider } from "@/components/ts-web-ui/locale"
+
+// Preset by name
+<TsLocaleProvider locale="cs">
+  {children}
+</TsLocaleProvider>
+
+// Full custom object
+<TsLocaleProvider locale={myCustomLocale}>
+  {children}
+</TsLocaleProvider>
+```
+
+If no provider is present, English (`en`) is used.
+
+### Usage — Component-Level Override
+
+`TsTable` and `TsForm` accept a `locale` prop that overrides the context for that component and its children:
+
+```tsx
+import { cs } from "@/components/ts-web-ui/locale"
+
+<TsTable data={data} columnDefinitions={cols} locale={cs} />
+<TsForm layout={layout} fields={fields} locale="cs" />
+```
+
+The `locale` prop accepts either a preset name string (`"en"`, `"cs"`) or a full `TsLocale` object.
+
+### Usage — Hook
+
+`useTsLocale(override?)` returns the resolved `TsLocale`. It reads from context by default but accepts an optional override (string or object):
+
+```ts
+const locale = useTsLocale()         // from context
+const locale = useTsLocale("cs")     // force Czech
+const { strings, formatting } = locale
+```
+
+### Creating a Custom Locale
+
+Spread an existing preset and override only what you need:
+
+```ts
+import { en } from "@/components/ts-web-ui/locale"
+import type { TsLocale } from "@/components/ts-web-ui/locale"
+
+const myLocale: TsLocale = {
+  strings: {
+    ...en.strings,
+    table: { ...en.strings.table, search: "Find...", noRecords: "Nothing here" },
+    form: { ...en.strings.form, required: "Mandatory" },
+  },
+  formatting: { locale: "en-GB", timezone: "Europe/London" },
+}
+```
+
+### String Categories
+
+`TsLocaleStrings` is organized into five groups:
+
+| Group        | Keys (selected)                                                                                                                                                                                                                       | Used By                                      |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `table`      | search, columns, viewColumns, searchColumns, clearAllFilters, export, import, newRecord, noRecords, rowsPerPage, pageOf, rowsSelected, selectAll, copyToClipboard, moveLeft, moveRight, first/previous/next/last, importResults, etc. | TsTable (toolbar, view, pagination, columns) |
+| `form`       | required, showPassword, hidePassword, selectPlaceholder, searchPlaceholder, notFound, useCustomValue, clear, today, addFile(s), selectEntity, chooseFromList, etc.                                                                    | TsForm (all field widgets)                   |
+| `window`     | centerOnScreen, fitToContent                                                                                                                                                                                                          | TsWindow (titlebar buttons)                  |
+| `sidebar`    | closeMenu, openMenu, expandMenu, collapseMenu                                                                                                                                                                                         | TsSidebar (aria-labels, tooltips)            |
+| `formEditor` | ~30 keys for the visual form editor                                                                                                                                                                                                   | TsFormEditor                                 |
+
+Some keys are functions for interpolation: `pageOf(page, total)`, `rowsSelected(selected, total)`, `selected(count)`, `fieldNotFound(field)`, `useCustomValue(value)`, `selectEntity(entity)`, etc.
 
 ---
 
@@ -301,6 +406,7 @@ interface NavSection {
 
 import { Home, Settings, Users } from "lucide-react"
 
+import { TsLocaleProvider } from "@/components/ts-web-ui/locale"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
 import { TsLayout } from "@/components/ts-web-ui/ts-layout"
@@ -323,17 +429,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <TsLayout
-            navigation={NAVIGATION}
-            logo={<Logo text="My App" href="/" />}
-            topBarRight={
-              <TopBarGroup>
-                <ModeToggle />
-              </TopBarGroup>
-            }
-          >
-            {children}
-          </TsLayout>
+          <TsLocaleProvider locale="en">
+            <TsLayout
+              navigation={NAVIGATION}
+              logo={<Logo text="My App" href="/" />}
+              topBarRight={
+                <TopBarGroup>
+                  <ModeToggle />
+                </TopBarGroup>
+              }
+            >
+              {children}
+            </TsLayout>
+          </TsLocaleProvider>
         </ThemeProvider>
       </body>
     </html>
@@ -426,7 +534,7 @@ Auto-installed dependencies: `lucide-react`, TSWebUI `button`, `ts-logo`, Shadcn
 
 > **Tip:** If you plan to use the full layout, install `integrated-layout` instead — it includes TopBar, Sidebar, and ThemeProvider.
 
-A fully-featured collapsible sidebar with data-driven navigation, mobile responsiveness, and localStorage persistence.
+A fully-featured collapsible sidebar with data-driven navigation, mobile responsiveness, and localStorage persistence. All accessibility labels (close/open menu, expand/collapse) are automatically localized via `useTsLocale()` context.
 
 ### System Components
 
@@ -502,7 +610,7 @@ npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-wi
 
 Auto-installed dependencies: `react-rnd`, `lucide-react`, TSWebUI `button`
 
-A draggable, resizable window system with minimize/maximize/restore, Z-index management, and an imperative API.
+A draggable, resizable window system with minimize/maximize/restore, Z-index management, and an imperative API. Titlebar button tooltips ("Center on Screen", "Fit to Content") are automatically localized via `useTsLocale()` context.
 
 ### Architecture
 
@@ -659,20 +767,20 @@ A fully JSON-driven form engine that generates complete forms from data definiti
 
 ### TsFormProps
 
-| Prop            | Type                                                                    | Default     | Description                                                                                                     |
-| --------------- | ----------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| `layout`        | `TsLayout`                                                              | —           | **Required.** Layout structure defining rows and/or tabs                                                        |
-| `fields`        | `Record<string, TsFieldDef>`                                            | —           | **Required.** Dictionary of field definitions keyed by field name                                               |
-| `values`        | `Record<string, unknown>`                                               | `{}`        | Initial/current form values                                                                                     |
-| `buttons`       | `TsButton[]`                                                            | `[]`        | Action buttons rendered at the bottom of the form                                                               |
-| `errors`        | `TsErrors`                                                              | `undefined` | External validation errors (from server/parent)                                                                 |
-| `activeTab`     | `string \| number`                                                      | `undefined` | Controlled active tab (label string or 0-based index)                                                           |
-| `onTabChange`   | `(tab: string \| number) => void`                                       | `undefined` | Callback when user switches tabs                                                                                |
-| `onAction`      | `(action: string, data: Record<string, unknown>) => void`               | `undefined` | **Primary callback.** Fires for all button actions (submit, delete, custom, etc.)                               |
-| `onFieldChange` | `(name: string, value: unknown, data: Record<string, unknown>) => void` | `undefined` | Fires when a field value changes. For text/number/textarea/password: on blur. For everything else: immediately. |
-| `readOnly`      | `boolean`                                                               | `false`     | Sets all fields to read-only and hides the button bar                                                           |
-| `className`     | `string`                                                                | `undefined` | Additional CSS classes for the form element                                                                     |
-| `locale`        | `string`                                                                | `undefined` | Global locale for date/number widgets (e.g. `"cs-CZ"`, `"en-US"`)                                               |
+| Prop            | Type                                                                    | Default     | Description                                                                                                                                                                     |
+| --------------- | ----------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`        | `TsLayout`                                                              | —           | **Required.** Layout structure defining rows and/or tabs                                                                                                                        |
+| `fields`        | `Record<string, TsFieldDef>`                                            | —           | **Required.** Dictionary of field definitions keyed by field name                                                                                                               |
+| `values`        | `Record<string, unknown>`                                               | `{}`        | Initial/current form values                                                                                                                                                     |
+| `buttons`       | `TsButton[]`                                                            | `[]`        | Action buttons rendered at the bottom of the form                                                                                                                               |
+| `errors`        | `TsErrors`                                                              | `undefined` | External validation errors (from server/parent)                                                                                                                                 |
+| `activeTab`     | `string \| number`                                                      | `undefined` | Controlled active tab (label string or 0-based index)                                                                                                                           |
+| `onTabChange`   | `(tab: string \| number) => void`                                       | `undefined` | Callback when user switches tabs                                                                                                                                                |
+| `onAction`      | `(action: string, data: Record<string, unknown>) => void`               | `undefined` | **Primary callback.** Fires for all button actions (submit, delete, custom, etc.)                                                                                               |
+| `onFieldChange` | `(name: string, value: unknown, data: Record<string, unknown>) => void` | `undefined` | Fires when a field value changes. For text/number/textarea/password: on blur. For everything else: immediately.                                                                 |
+| `readOnly`      | `boolean`                                                               | `false`     | Sets all fields to read-only and hides the button bar                                                                                                                           |
+| `className`     | `string`                                                                | `undefined` | Additional CSS classes for the form element                                                                                                                                     |
+| `locale`        | `string \| TsLocale`                                                    | `undefined` | UI locale override — preset name (`"en"`, `"cs"`) or full `TsLocale` object for all static texts. Also used for date/number formatting when `TsLocale.formatting.locale` is set |
 
 ### Layout System
 
@@ -1342,6 +1450,7 @@ An advanced data grid built on TanStack Table v8 with sorting, filtering, pagina
 | `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
 | `importResult`             | `ImportResult \| null`    | `null`                 | Import results to display in a dialog (set by parent after processing import data)                      |
 | `onImportResultClose`      | `() => void`              | `undefined`            | Called when user closes the import results dialog                                                       |
+| `locale`                   | `string \| TsLocale`      | `undefined`            | UI locale override — preset name (`"en"`, `"cs"`) or full `TsLocale` object. Falls back to context      |
 
 ### Event Callbacks
 
@@ -1444,7 +1553,7 @@ When rows are selected, a filter icon appears in the selection column (filter ro
 The column selector dropdown includes:
 
 - **Search field** with persistent focus (clicking within dropdown keeps focus)
-- Escape key clears search text first; second Escape (when empty) closes the dropdown
+- **Two-stage Escape**: pressing Escape clears the search text first; a second Escape (when the search field is already empty) closes the dropdown
 - Columns maintain their definition order (hidden columns stay in their original position)
 - Columns with `unshowable: true` appear dimmed and cannot be toggled
 - Columns in `unhideableColumns` array appear checked but cannot be unchecked
@@ -1457,7 +1566,8 @@ When `enableColumnResizing` is enabled:
 
 - Drag resize handles between column headers (subtle vertical line, always visible)
 - Double-click a resize handle to reset column to default width
-- Minimum column width of 80px for data columns
+- **Independent sizing**: each column's width is its own; resizing one column does not affect others. The table's total width equals the sum of all column widths (it does not stretch to fill the container)
+- Minimum column width is determined by the header controls (sort indicator + reorder arrows + padding). The column label truncates with ellipsis when the column is narrower than the label
 - Select column (checkbox) and actions column (row menu) always have a fixed width of 40px, enforced via colgroup and inline styles regardless of table layout
 
 ### Column Reordering

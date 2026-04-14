@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 
+import { TsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -42,6 +43,7 @@ interface TsTableToolbarProps<TData> {
   columnsRequiredForImport?: string[]
   predefinedFilterKeys?: string[]
   title?: string
+  locale?: TsLocale
 }
 
 export function TsTableToolbar<TData>({
@@ -62,8 +64,11 @@ export function TsTableToolbar<TData>({
   columnsRequiredForImport,
   predefinedFilterKeys = [],
   title,
+  locale,
 }: TsTableToolbarProps<TData>) {
+  const t = locale?.strings.table
   const [columnSearch, setColumnSearch] = React.useState("")
+  const [columnDropdownOpen, setColumnDropdownOpen] = React.useState(false)
 
   const doExport = (rows: TData[]) => {
     const ws = XLSX.utils.json_to_sheet(rows)
@@ -95,7 +100,7 @@ export function TsTableToolbar<TData>({
 
       // Empty file — nothing to import
       if (json.length === 0) {
-        toast.info("Import file contains no data rows")
+        toast.info(t?.importNoData ?? "Import file contains no data rows")
         return
       }
 
@@ -112,9 +117,9 @@ export function TsTableToolbar<TData>({
       if (missingColumns.length > 0) {
         const label =
           columnsRequiredForImport && columnsRequiredForImport.length > 0
-            ? "Missing required columns"
-            : "Missing columns"
-        toast.error(`Import failed: ${label}`, {
+            ? (t?.missingRequiredColumns ?? "Missing required columns")
+            : (t?.missingColumns ?? "Missing columns")
+        toast.error(t?.importFailedMissing?.(label) ?? `Import failed: ${label}`, {
           description: missingColumns.join(", "),
         })
         return
@@ -186,7 +191,7 @@ export function TsTableToolbar<TData>({
         <div className="relative w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search..."
+            placeholder={t?.search ?? "Search..."}
             value={(table.getState().globalFilter as string) ?? ""}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
             onKeyDown={(e) => {
@@ -204,18 +209,20 @@ export function TsTableToolbar<TData>({
       <div className="flex items-center gap-2">
         {showColumnSelector && (
           <DropdownMenu
+            open={columnDropdownOpen}
             onOpenChange={(open) => {
+              setColumnDropdownOpen(open)
               if (!open) setColumnSearch("")
             }}
           >
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 ml-auto flex gap-2">
                 <Settings2 className="h-4 w-4" />
-                Columns
+                {t?.columns ?? "Columns"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[220px]">
-              <DropdownMenuLabel>View columns</DropdownMenuLabel>
+              <DropdownMenuLabel>{t?.viewColumns ?? "View columns"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {/* Clear all filters (#9) */}
               {hasActiveUserFilters && (
@@ -226,7 +233,7 @@ export function TsTableToolbar<TData>({
                     onSelect={(e) => e.preventDefault()}
                   >
                     <XCircle className="h-3.5 w-3.5 mr-1.5" />
-                    Clear all filters
+                    {t?.clearAllFilters ?? "Clear all filters"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -239,23 +246,22 @@ export function TsTableToolbar<TData>({
                 }}
               >
                 <Input
-                  placeholder="Search columns..."
+                  placeholder={t?.searchColumns ?? "Search columns..."}
                   value={columnSearch}
                   onChange={(e) => setColumnSearch(e.target.value)}
                   onKeyDown={(e) => {
-                    // Stop ALL key events from reaching the dropdown (prevents typeahead focus stealing)
-                    e.stopPropagation()
                     if (e.key === "Escape") {
+                      e.preventDefault()
+                      e.stopPropagation()
                       if (columnSearch) {
-                        // First Escape: clear search text, block native event so Radix
-                        // DismissableLayer (document-level listener) doesn't close the dropdown
-                        e.preventDefault()
-                        e.nativeEvent.stopImmediatePropagation()
                         setColumnSearch("")
+                      } else {
+                        setColumnDropdownOpen(false)
                       }
-                      // Second Escape (empty search): native event propagates normally,
-                      // Radix sees non-default-prevented Escape → closes dropdown
+                      return
                     }
+                    // Stop other key events from reaching the dropdown (prevents typeahead focus stealing)
+                    e.stopPropagation()
                     if (e.key === "Enter") e.preventDefault()
                   }}
                   onBlur={(e) => {
@@ -311,7 +317,7 @@ export function TsTableToolbar<TData>({
         {showExportButton && selectedRows.length === 0 && (
           <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExportFiltered}>
             <Download className="h-4 w-4" />
-            Export
+            {t?.export ?? "Export"}
           </Button>
         )}
 
@@ -320,15 +326,17 @@ export function TsTableToolbar<TData>({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 gap-2">
                 <Download className="h-4 w-4" />
-                Export
+                {t?.export ?? "Export"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleExportFiltered}>
-                {`Export filtered (${table.getFilteredRowModel().rows.length} rows)`}
+                {t?.exportFiltered?.(table.getFilteredRowModel().rows.length) ??
+                  `Export filtered (${table.getFilteredRowModel().rows.length} rows)`}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportSelected}>
-                {`Export selected (${selectedRows.length} rows)`}
+                {t?.exportSelected?.(selectedRows.length) ??
+                  `Export selected (${selectedRows.length} rows)`}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -339,7 +347,7 @@ export function TsTableToolbar<TData>({
             <Button variant="outline" size="sm" className="h-9 gap-2" asChild>
               <label className="cursor-pointer">
                 <Upload className="h-4 w-4" />
-                Import
+                {t?.import ?? "Import"}
                 <input
                   type="file"
                   className="hidden"
@@ -354,7 +362,7 @@ export function TsTableToolbar<TData>({
         {showCreateButton && (
           <Button size="sm" className="h-9 gap-2" onClick={onCreateClick}>
             <Plus className="h-4 w-4" />
-            New record
+            {t?.newRecord ?? "New record"}
           </Button>
         )}
       </div>

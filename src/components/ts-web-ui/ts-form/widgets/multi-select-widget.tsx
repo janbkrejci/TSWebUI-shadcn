@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/command"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+
 import { cn } from "@/lib/utils"
 
 import { TsFieldOptions, TsMultiselectField, TsWidgetProps } from "../types"
@@ -41,6 +43,7 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
     const selectedValues: string[] = Array.isArray(field.value) ? (field.value as string[]) : []
     const options = (def.options || []).map((opt: TsFieldOptions | string) => {
       const value = typeof opt === "string" ? opt : String(opt.value)
@@ -123,7 +126,9 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
                   </Badge>
                 ))
               ) : (
-                <span className="text-muted-foreground">{def.placeholder || "Select..."}</span>
+                <span className="text-muted-foreground">
+                  {def.placeholder || tf.selectPlaceholder}
+                </span>
               )}
             </div>
             {!readOnly && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
@@ -147,14 +152,14 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
             filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
           >
             <CommandInput
-              placeholder={def.placeholder || "Search..."}
+              placeholder={def.placeholder || tf.searchPlaceholder}
               value={searchValue}
               onValueChange={setSearchValue}
             />
             <CommandList>
               <CommandEmpty className="py-1.5 px-2 text-left">
                 <span className="italic text-muted-foreground text-sm">
-                  {def.notFoundMessage || "Not found."}
+                  {def.notFoundMessage || tf.notFound}
                 </span>
               </CommandEmpty>
               <CommandGroup>

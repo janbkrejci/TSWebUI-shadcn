@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -43,6 +44,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
 
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
@@ -205,7 +207,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
                     setOpen(false)
                   }}
                 >
-                  {def.clearButtonText || "Clear"}
+                  {def.clearButtonText || tf.clear}
                 </Button>
               )}
               {def.showTodayButton !== false && (
@@ -220,7 +222,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
                     setOpen(false)
                   }}
                 >
-                  {def.todayButtonText || "Today"}
+                  {def.todayButtonText || tf.today}
                 </Button>
               )}
             </div>

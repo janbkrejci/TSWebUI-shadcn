@@ -5,6 +5,8 @@ import { ChevronsUpDown, Copy, Minus, Square, Target, X } from "lucide-react"
 import * as React from "react"
 import { Rnd, RndDragCallback, RndResizeCallback } from "react-rnd"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+
 import { cn } from "@/lib/utils"
 
 // Global Z-Index counter to ensure new or focused windows are always on top
@@ -59,6 +61,8 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
     },
     ref
   ) => {
+    const locale = useTsLocale()
+    const tw = locale.strings.window
     const [windowState, setWindowState] = React.useState<WindowState>("normal")
 
     // Internal Z-Index state
@@ -497,7 +501,7 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
           <div className="flex items-center gap-1 ml-2">
             {windowState === "normal" && (
               <>
-                <div title="Center on Screen" className="flex items-center justify-center">
+                <div title={tw.centerOnScreen} className="flex items-center justify-center">
                   <Target
                     className="w-3.5 h-3.5 cursor-pointer opacity-50 hover:opacity-100 text-foreground"
                     onClick={(e) => {
@@ -506,7 +510,7 @@ export const TsWindow = React.forwardRef<TsWindowRef, TsWindowProps>(
                     }}
                   />
                 </div>
-                <div title="Fit to Content" className="flex items-center justify-center">
+                <div title={tw.fitToContent} className="flex items-center justify-center">
                   <ChevronsUpDown
                     className="w-3.5 h-3.5 cursor-pointer opacity-50 hover:opacity-100 text-foreground"
                     onClick={(e) => {

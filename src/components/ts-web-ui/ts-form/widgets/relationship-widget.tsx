@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -44,6 +45,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
     ref
   ) => {
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
     const [pickerOpen, setPickerOpen] = React.useState(false)
@@ -170,7 +172,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
         <div className="flex flex-1 items-center gap-1 overflow-hidden min-w-0 flex-nowrap">
           {selectedValues.length === 0 ? (
             <span className="text-muted-foreground truncate">
-              {def.placeholder || `Select ${targetEntity}...`}
+              {def.placeholder || tf.selectEntity(targetEntity)}
             </span>
           ) : (
             <>
@@ -273,7 +275,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
               {mode === "multiple" && (
                 <div className="mt-4 pt-4 border-t flex justify-end">
                   <Button size="sm" onClick={() => setPickerOpen(false)}>
-                    Done
+                    {tf.done}
                   </Button>
                 </div>
               )}
@@ -297,15 +299,13 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
             className="max-w-[98vw] w-[98vw] max-h-[95vh] flex flex-col p-0"
           >
             <DialogHeader className="px-6 py-4 border-b text-left">
-              <DialogTitle>Select {targetEntity}</DialogTitle>
-              <DialogDescription className="sr-only">
-                Choose one or more items from the list below.
-              </DialogDescription>
+              <DialogTitle>{tf.selectEntity(targetEntity)}</DialogTitle>
+              <DialogDescription className="sr-only">{tf.chooseFromList}</DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-auto p-6 pt-2">{renderTable()}</div>
             {mode === "multiple" && (
               <div className="p-4 border-t flex justify-end">
-                <Button onClick={() => setPickerOpen(false)}>Done</Button>
+                <Button onClick={() => setPickerOpen(false)}>{tf.done}</Button>
               </div>
             )}
           </DialogContent>

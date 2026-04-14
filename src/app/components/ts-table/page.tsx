@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { cs, en } from "@/components/ts-web-ui/locale"
 import { ImportResult, TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
@@ -242,6 +243,7 @@ export default function TsTablePage() {
   const [showColumnSelector, setShowColumnSelector] = React.useState(true)
   const [showBulkActions, setShowBulkActions] = React.useState(true)
   const [importResultState, setImportResultState] = React.useState<ImportResult | null>(null)
+  const [locale, setLocale] = React.useState<"en" | "cs">("en")
 
   const handleRowClick = React.useCallback((row: Record<string, unknown>, columnKey?: string) => {
     const item = row as TableItem
@@ -378,6 +380,34 @@ export default function TsTablePage() {
             </CardContent>
           </Card>
 
+          {/* Locale Switcher */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Locale</CardTitle>
+              <CardDescription>Switch the UI language of the table component.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <Label className="text-sm">Language:</Label>
+                <div className="flex gap-2">
+                  {(["en", "cs"] as const).map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setLocale(l)}
+                      className={`px-3 py-1 rounded-md text-sm border transition-colors ${
+                        locale === l
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted border-border"
+                      }`}
+                    >
+                      {l === "en" ? "🇬🇧 English" : "🇨🇿 Čeština"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Table Preview */}
           <Card>
             <CardHeader>
@@ -422,6 +452,7 @@ export default function TsTablePage() {
                 onBulkAction={handleBulkAction}
                 getRowId={(row) => String(row.id)}
                 pageSize={5}
+                locale={locale === "cs" ? cs : en}
               />
               {lastAction && (
                 <div className="mt-4 p-3 bg-muted border rounded-md text-sm font-mono text-primary animate-in fade-in">

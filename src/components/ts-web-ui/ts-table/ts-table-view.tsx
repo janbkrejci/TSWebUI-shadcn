@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import { TsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -100,6 +101,7 @@ interface TsTableViewProps<TData> {
   selectedRowCount?: number
   onBulkAction?: (action: string) => void
   onUnselectAll?: () => void
+  locale?: TsLocale
 }
 
 export function TsTableView<TData>({
@@ -116,7 +118,9 @@ export function TsTableView<TData>({
   selectedRowCount = 0,
   onBulkAction,
   onUnselectAll,
+  locale,
 }: TsTableViewProps<TData>) {
+  const t = locale?.strings.table
   const cycleSelectionView = React.useCallback(() => {
     const modes: SelectionViewMode[] = ["all", "selected", "unselected"]
     const currentIdx = modes.indexOf(selectionViewMode)
@@ -163,58 +167,28 @@ export function TsTableView<TData>({
 
   // Measure container width so we can distribute extra space only to data columns
   const containerRef = React.useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = React.useState(0)
 
-  React.useLayoutEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const ro = new ResizeObserver(([entry]) => {
-      setContainerWidth(Math.floor(entry.contentRect.width))
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  // Compute effective column widths: fixed always 40px, data columns scale to fill container
+  // Compute effective column widths: fixed always 40px, data columns use their natural size
   const columnSizingState = table.getState().columnSizing
   const FIXED_COL_PX = 40
   const columnWidthMap = React.useMemo(() => {
     const cols = table.getVisibleLeafColumns()
-    const fixedIds = new Set(
-      cols.filter((c) => c.id === "select" || c.id === "actions").map((c) => c.id)
-    )
-    const fixedTotal = fixedIds.size * FIXED_COL_PX
-    const dataTotal = cols.filter((c) => !fixedIds.has(c.id)).reduce((s, c) => s + c.getSize(), 0)
-    const contentTotal = fixedTotal + dataTotal
-
     const map = new Map<string, number>()
 
-    if (containerWidth > 0 && contentTotal < containerWidth && dataTotal > 0) {
-      // Table content narrower than container — scale data columns to fill the gap
-      const dataSpace = containerWidth - fixedTotal
-      for (const col of cols) {
-        if (fixedIds.has(col.id)) {
-          map.set(col.id, FIXED_COL_PX)
-        } else {
-          map.set(col.id, (col.getSize() / dataTotal) * dataSpace)
-        }
-      }
-    } else {
-      // Content fills or overflows container — use natural sizes
-      for (const col of cols) {
-        map.set(col.id, fixedIds.has(col.id) ? FIXED_COL_PX : col.getSize())
-      }
+    for (const col of cols) {
+      const isFixed = col.id === "select" || col.id === "actions"
+      map.set(col.id, isFixed ? FIXED_COL_PX : col.getSize())
     }
 
     return map
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, containerWidth, columnSizingState, columnOrderState, columnVisibilityState])
+  }, [table, columnSizingState, columnOrderState, columnVisibilityState])
 
   const effectiveTableWidth = React.useMemo(() => {
     let sum = 0
     for (const w of columnWidthMap.values()) sum += w
-    return Math.max(sum, containerWidth)
-  }, [columnWidthMap, containerWidth])
+    return sum
+  }, [columnWidthMap])
 
   return (
     <div ref={containerRef} className="rounded-md border bg-card overflow-x-auto">
@@ -275,7 +249,7 @@ export function TsTableView<TData>({
                               }
                             }}
                             onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-                            aria-label="Select all"
+                            aria-label={t?.selectAll ?? "Select all"}
                             className="h-4 w-4 accent-primary cursor-pointer"
                           />
                         </div>
@@ -286,17 +260,20 @@ export function TsTableView<TData>({
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-7 w-7 p-0">
-                                  <span className="sr-only">Bulk actions</span>
+                                  <span className="sr-only">
+                                    {t?.bulkActions ?? "Bulk actions"}
+                                  </span>
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>
-                                  {`Selected: ${selectedRowCount}`}
+                                  {t?.selected?.(selectedRowCount) ??
+                                    `Selected: ${selectedRowCount}`}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => onUnselectAll?.()}>
-                                  Unselect all
+                                  {t?.unselectAll ?? "Unselect all"}
                                 </DropdownMenuItem>
                                 {bulkActions.map((action, idx) => (
                                   <DropdownMenuItem
@@ -325,7 +302,7 @@ export function TsTableView<TData>({
                                 )}
                                 onClick={() => handleMoveColumn(header.column.id, "left")}
                                 disabled={isFirstData}
-                                aria-label="Move column left"
+                                aria-label={t?.moveLeft ?? "Move column left"}
                               >
                                 <ChevronLeft className="h-3 w-3" />
                               </button>
@@ -336,7 +313,7 @@ export function TsTableView<TData>({
                                 )}
                                 onClick={() => handleMoveColumn(header.column.id, "right")}
                                 disabled={isLastData}
-                                aria-label="Move column right"
+                                aria-label={t?.moveRight ?? "Move column right"}
                               >
                                 <ChevronRight className="h-3 w-3" />
                               </button>
@@ -351,7 +328,7 @@ export function TsTableView<TData>({
                               )}
                               onClick={() => handleMoveColumn(header.column.id, "left")}
                               disabled={isFirstData}
-                              aria-label="Move column left"
+                              aria-label={t?.moveLeft ?? "Move column left"}
                             >
                               <ChevronLeft className="h-3 w-3" />
                             </button>
@@ -380,7 +357,7 @@ export function TsTableView<TData>({
                                 )}
                                 onClick={() => handleMoveColumn(header.column.id, "left")}
                                 disabled={isFirstData}
-                                aria-label="Move column left"
+                                aria-label={t?.moveLeft ?? "Move column left"}
                               >
                                 <ChevronLeft className="h-3 w-3" />
                               </button>
@@ -391,7 +368,7 @@ export function TsTableView<TData>({
                                 )}
                                 onClick={() => handleMoveColumn(header.column.id, "right")}
                                 disabled={isLastData}
-                                aria-label="Move column right"
+                                aria-label={t?.moveRight ?? "Move column right"}
                               >
                                 <ChevronRight className="h-3 w-3" />
                               </button>
@@ -406,7 +383,7 @@ export function TsTableView<TData>({
                               )}
                               onClick={() => handleMoveColumn(header.column.id, "right")}
                               disabled={isLastData}
-                              aria-label="Move column right"
+                              aria-label={t?.moveRight ?? "Move column right"}
                             >
                               <ChevronRight className="h-3 w-3" />
                             </button>
@@ -458,13 +435,13 @@ export function TsTableView<TData>({
                               <button
                                 className="hover:bg-accent rounded-sm shrink-0 relative"
                                 onClick={cycleSelectionView}
-                                aria-label="Toggle selection view"
+                                aria-label={t?.toggleSelectionView ?? "Toggle selection view"}
                                 title={
                                   selectionViewMode === "all"
-                                    ? "Show all rows"
+                                    ? (t?.showAllRows ?? "Show all rows")
                                     : selectionViewMode === "selected"
-                                      ? "Showing selected only"
-                                      : "Showing unselected only"
+                                      ? (t?.showSelectedOnly ?? "Showing selected only")
+                                      : (t?.showUnselectedOnly ?? "Showing unselected only")
                                 }
                               >
                                 <Filter
@@ -502,9 +479,9 @@ export function TsTableView<TData>({
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="true">Yes</SelectItem>
-                                    <SelectItem value="false">No</SelectItem>
+                                    <SelectItem value="all">{t?.all ?? "All"}</SelectItem>
+                                    <SelectItem value="true">{t?.yes ?? "Yes"}</SelectItem>
+                                    <SelectItem value="false">{t?.no ?? "No"}</SelectItem>
                                   </SelectContent>
                                 </Select>
                               )
@@ -576,7 +553,7 @@ export function TsTableView<TData>({
             ) : (
               <TableRow>
                 <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
-                  No records found.
+                  {t?.noRecords ?? "No records found."}
                 </TableCell>
               </TableRow>
             )

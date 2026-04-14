@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+
 import { cn } from "@/lib/utils"
 
 import { TsFieldOptions, TsSelectField, TsWidgetProps } from "../types"
@@ -34,6 +36,7 @@ export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetPr
     ref
   ) => {
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
     return (
       <Select
@@ -61,7 +64,7 @@ export const SelectWidget = React.forwardRef<HTMLButtonElement, TsSelectWidgetPr
           {...props}
           ref={ref || field.ref}
         >
-          <SelectValue placeholder={def.placeholder || "Select category"} />
+          <SelectValue placeholder={def.placeholder || tf.selectPlaceholder} />
         </SelectTrigger>
         <SelectContent>
           {(def.options || []).map((opt: TsFieldOptions | string) => {

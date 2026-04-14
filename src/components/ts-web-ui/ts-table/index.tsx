@@ -18,6 +18,7 @@ import * as XLSX from "xlsx"
 
 import * as React from "react"
 
+import { TsLocale, useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { TsTableColumnDef, TsTableRowAction, generateColumns } from "./columns"
@@ -70,16 +71,19 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   predefinedFilters?: Record<string, unknown>
   getRowId?: (row: TData) => string
   initialRowSelection?: Record<string, boolean>
+  locale?: string | TsLocale
 }
 
 function ImportResultDialog({
   result,
   columnDefinitions,
   onClose,
+  t,
 }: {
   result: ImportResult
   columnDefinitions: TsTableColumnDef[]
   onClose: () => void
+  t: TsLocale["strings"]["table"]
 }) {
   const saveRejectedRows = () => {
     const data = result.rejectedRowsData
@@ -101,26 +105,26 @@ function ImportResultDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-background border rounded-lg shadow-lg p-6 w-[400px] max-w-[90vw]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Import Results</h3>
+          <h3 className="text-lg font-semibold">{t.importResults}</h3>
           <button onClick={onClose} className="p-1 hover:bg-accent rounded-sm">
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Added:</span>
+            <span>{t.added}:</span>
             <span className="font-medium">{result.added}</span>
           </div>
           <div className="flex justify-between">
-            <span>Updated:</span>
+            <span>{t.updated}:</span>
             <span className="font-medium">{result.updated}</span>
           </div>
           <div className="flex justify-between">
-            <span>Rejected:</span>
+            <span>{t.rejected}:</span>
             <span className="font-medium text-destructive">{result.rejected}</span>
           </div>
           <div className="flex justify-between">
-            <span>Skipped:</span>
+            <span>{t.skipped}:</span>
             <span className="font-medium">{result.skipped}</span>
           </div>
         </div>
@@ -128,11 +132,11 @@ function ImportResultDialog({
           {result.rejected > 0 && result.rejectedRowsData && result.rejectedRowsData.length > 0 && (
             <Button variant="outline" size="sm" onClick={saveRejectedRows}>
               <Download className="h-4 w-4 mr-1.5" />
-              Save rejected rows
+              {t.saveRejectedRows}
             </Button>
           )}
           <Button size="sm" onClick={onClose}>
-            Close
+            {t.close}
           </Button>
         </div>
       </div>
@@ -175,7 +179,10 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   predefinedFilters,
   getRowId,
   initialRowSelection,
+  locale: localeProp,
 }: TsTableProps<TData>) {
+  const locale = useTsLocale(localeProp)
+  const t = locale.strings.table
   const [data, setData] = React.useState(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
 
@@ -251,7 +258,9 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         effectiveRowActions,
         onAction,
         enableSorting,
-        enableClickableColumns
+        enableClickableColumns,
+        enableColumnReordering,
+        locale
       ),
     [
       columnDefinitions,
@@ -261,6 +270,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       onAction,
       enableSorting,
       enableClickableColumns,
+      enableColumnReordering,
+      locale,
     ]
   )
 
@@ -344,6 +355,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         columnDefinitions={columnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
         predefinedFilterKeys={predefinedFilterKeys}
+        locale={locale}
       />
       <TsTableView
         table={table}
@@ -359,6 +371,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         selectedRowCount={selectedRows.length}
         onBulkAction={onBulkAction ? (action) => onBulkAction(action, selectedRows) : undefined}
         onUnselectAll={() => setRowSelection({})}
+        locale={locale}
       />
       {/* Import results dialog */}
       {importResult && (
@@ -366,9 +379,12 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
           result={importResult}
           columnDefinitions={columnDefinitions}
           onClose={onImportResultClose ?? (() => {})}
+          t={t}
         />
       )}
-      {enablePagination && <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
+      {enablePagination && (
+        <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} locale={locale} />
+      )}
     </div>
   )
 }

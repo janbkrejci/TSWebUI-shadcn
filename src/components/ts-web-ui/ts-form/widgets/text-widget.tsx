@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { Input } from "@/components/ui/input"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -30,6 +31,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
     ref
   ) => {
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
     const [showPassword, setShowPassword] = React.useState(false)
     const [internalValue, setInternalValue] = React.useState((field.value as string) ?? "")
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
@@ -113,7 +115,7 @@ export const TextWidget = React.forwardRef<HTMLInputElement, TsTextWidgetProps>(
             ) : (
               <Eye className="h-4 w-4 text-muted-foreground" />
             )}
-            <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+            <span className="sr-only">{showPassword ? tf.hidePassword : tf.showPassword}</span>
           </Button>
         )}
       </div>

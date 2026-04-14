@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -43,6 +44,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
     const [open, setOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
 
     const { errorClass, readonlyClass, readonlyPointerClass } = getFieldClasses(error, readOnly)
 
@@ -225,7 +227,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
                     setOpen(false)
                   }}
                 >
-                  {def.clearButtonText || "Clear"}
+                  {def.clearButtonText || tf.clear}
                 </Button>
               )}
               {def.showTodayButton !== false && (
@@ -240,14 +242,14 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
                     setOpen(false)
                   }}
                 >
-                  {def.todayButtonText || "Today"}
+                  {def.todayButtonText || tf.today}
                 </Button>
               )}
             </div>
           )}
           <div className="border-t p-3 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground w-10">Time</span>
+              <span className="text-sm text-muted-foreground w-10">{tf.time}</span>
               <Input
                 type="time"
                 value={getTimeValue()}
@@ -264,7 +266,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
               className="w-full h-8 text-xs"
               onClick={() => setOpen(false)}
             >
-              Close
+              {tf.close}
             </Button>
           </div>
         </PopoverContent>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -42,6 +43,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
     const [open, setOpen] = React.useState(false)
     const [searchValue, setSearchValue] = React.useState("")
     const safeId = sanitizeId(name)
+    const tf = useTsLocale().strings.form
     const options = (def.options || []).map((opt: TsFieldOptions | string) => {
       const value = typeof opt === "string" ? opt : String(opt.value)
       const label = typeof opt === "string" ? opt : opt.label
@@ -93,7 +95,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
                 {field.value
                   ? (options.find((framework) => framework.value === field.value)?.label ??
                     (field.value as string))
-                  : def.placeholder || "Select..."}
+                  : def.placeholder || tf.selectPlaceholder}
               </span>
               <ChevronsUpDown
                 className={cn("ml-2 h-4 w-4 shrink-0 opacity-50", readOnly && "hidden")}
@@ -133,14 +135,14 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
             filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
           >
             <CommandInput
-              placeholder={def.placeholder || "Search..."}
+              placeholder={def.placeholder || tf.searchPlaceholder}
               value={searchValue}
               onValueChange={setSearchValue}
             />
             <CommandList>
               <CommandEmpty className="py-1.5 px-2 text-left">
                 <span className="italic text-muted-foreground text-sm">
-                  {def.notFoundMessage || "Not found."}
+                  {def.notFoundMessage || tf.notFound}
                 </span>
               </CommandEmpty>
               <CommandGroup>
@@ -176,7 +178,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
                     }}
                   >
                     <Check className="mr-2 h-4 w-4 opacity-0" />
-                    Use: &quot;{searchValue}&quot;
+                    {tf.useCustomValue(searchValue)}
                   </CommandItem>
                 )}
               </CommandGroup>

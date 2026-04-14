@@ -6,6 +6,8 @@ import { useFormContext } from "react-hook-form"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+
 import { cn } from "@/lib/utils"
 
 import { TsFormField } from "./ts-form-field"
@@ -30,6 +32,8 @@ export function TsFormLayout({
   const {
     formState: { errors: rhfErrors },
   } = useFormContext()
+
+  const tf = useTsLocale().strings.form
 
   // Internal state for uncontrolled mode (when activeTab prop is not provided)
   const [internalActiveTabIndex, setInternalActiveTabIndex] = React.useState<number>(0)
@@ -127,7 +131,7 @@ export function TsFormLayout({
                   <span
                     className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-destructive animate-pulse"
                     aria-hidden="true"
-                    title="This tab contains validation errors"
+                    title={tf.tabHasErrors}
                   />
                 )}
               </TabsTrigger>
@@ -220,7 +224,7 @@ export function TsFormLayout({
             if (!fieldDef) {
               return (
                 <div key={colIndex} className="text-destructive text-sm">
-                  Field &apos;{item.field}&apos; not found
+                  {tf.fieldNotFound(item.field)}
                 </div>
               )
             }

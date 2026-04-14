@@ -11,6 +11,7 @@ import * as React from "react"
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
@@ -338,6 +339,7 @@ export function SidebarHeader({
   ...props
 }: SidebarHeaderProps) {
   const { close, isCollapsed, isTransitioning, isMobile, topBarHeight } = useSidebar()
+  const ts = useTsLocale().strings.sidebar
 
   const hasTopBar = topBarHeight > 0
 
@@ -379,7 +381,7 @@ export function SidebarHeader({
             size="icon"
             className="h-8 w-8"
             onClick={close}
-            aria-label="Close menu"
+            aria-label={ts.closeMenu}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -525,6 +527,7 @@ export function SidebarTrigger({
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const { toggle, isOpen } = useSidebar()
+  const ts = useTsLocale().strings.sidebar
 
   return (
     <Button
@@ -532,7 +535,7 @@ export function SidebarTrigger({
       size="icon"
       className={cn("h-8 w-8", className)}
       onClick={toggle}
-      aria-label={isOpen ? "Close menu" : "Open menu"}
+      aria-label={isOpen ? ts.closeMenu : ts.openMenu}
       {...props}
     >
       <Menu className="h-4 w-4" />
@@ -600,6 +603,7 @@ export function SidebarInset({
 
 export function SidebarCollapseTrigger({ className }: { className?: string }) {
   const { isCollapsed, toggleCollapsed, isMobile, isOpen, topBarHeight } = useSidebar()
+  const ts = useTsLocale().strings.sidebar
 
   if (isMobile || !isOpen) return null
 
@@ -615,8 +619,8 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
             className
           )}
           onClick={toggleCollapsed}
-          title={isCollapsed ? "Expand menu" : "Collapse menu"}
-          aria-label={isCollapsed ? "Expand menu" : "Collapse menu"}
+          title={isCollapsed ? ts.expandMenu : ts.collapseMenu}
+          aria-label={isCollapsed ? ts.expandMenu : ts.collapseMenu}
         >
           {isCollapsed ? (
             <ChevronRight className="h-3.5 w-3.5" />

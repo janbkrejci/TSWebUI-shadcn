@@ -12,6 +12,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+
 import { cn } from "@/lib/utils"
 
 import { TsFieldDef } from "./types"
@@ -58,6 +60,7 @@ const WIDGETS_WITHOUT_EXTERNAL_LABEL: Set<TsFieldDef["type"]> = new Set([
 
 export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps) {
   const form = useFormContext()
+  const tf = useTsLocale().strings.form
 
   return (
     <FormField
@@ -89,7 +92,7 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
                     <>
                       {" "}
                       <span aria-hidden="true">*</span>
-                      <span className="sr-only">(required)</span>
+                      <span className="sr-only">{tf.required}</span>
                     </>
                   )}
                 </FormLabel>
@@ -205,7 +208,7 @@ function renderWidget(
       const _exhaustive: never = knownDef
       return (
         <div className="p-2 border border-destructive/50 text-destructive text-sm rounded bg-destructive/10">
-          Unsupported widget: {(_exhaustive as { type: string }).type}
+          {tf.unsupportedWidget} {(_exhaustive as { type: string }).type}
         </div>
       )
     }
