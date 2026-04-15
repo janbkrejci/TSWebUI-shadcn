@@ -208,12 +208,6 @@ export function TsTableToolbar<TData>({
           <DropdownMenu
             open={columnDropdownOpen}
             onOpenChange={(open) => {
-              // When Radix tries to close (e.g. Escape key) but we have search text,
-              // intercept: clear the search instead of closing the dropdown.
-              if (!open && columnSearch) {
-                setColumnSearch("")
-                return
-              }
               setColumnDropdownOpen(open)
               if (!open) setColumnSearch("")
             }}
@@ -224,7 +218,17 @@ export function TsTableToolbar<TData>({
                 {t?.columns ?? "Columns"}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[220px]">
+            <DropdownMenuContent
+              align="end"
+              className="w-[220px]"
+              onEscapeKeyDown={(e) => {
+                // If search is active, first Escape clears search; only then closes dropdown
+                if (columnSearch) {
+                  e.preventDefault()
+                  setColumnSearch("")
+                }
+              }}
+            >
               <DropdownMenuLabel>{t?.viewColumns ?? "View columns"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {/* Clear all filters (#9) */}
@@ -253,17 +257,8 @@ export function TsTableToolbar<TData>({
                   value={columnSearch}
                   onChange={(e) => setColumnSearch(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      if (columnSearch) {
-                        setColumnSearch("")
-                      } else {
-                        setColumnDropdownOpen(false)
-                      }
-                      return
-                    }
-                    // Stop other key events from reaching the dropdown (prevents typeahead focus stealing)
+                    // Stop key events from reaching dropdown (prevents typeahead focus stealing)
+                    // Escape is handled by DropdownMenuContent.onEscapeKeyDown
                     e.stopPropagation()
                     if (e.key === "Enter") e.preventDefault()
                   }}
