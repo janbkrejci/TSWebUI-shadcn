@@ -47,11 +47,8 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/configure-pages@v5
 
-      - name: Check formatting
-        run: pnpm run format:check
-
-      - name: Run linter
-        run: pnpm run lint
+      - name: Run Biome check
+        run: pnpm exec biome ci
 
       - name: Run tests with coverage
         run: pnpm run test:coverage

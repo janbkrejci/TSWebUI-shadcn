@@ -1,9 +1,10 @@
 "use client"
 
-import { Toaster, toast } from "sonner"
-
 import * as React from "react"
-
+import { Toaster, toast } from "sonner"
+import { TsForm } from "@/components/ts-web-ui/ts-form"
+import { TsButton, TsFieldDef, TsLayout } from "@/components/ts-web-ui/ts-form/types"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -14,10 +15,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { TsForm } from "@/components/ts-web-ui/ts-form"
-import { TsButton, TsFieldDef, TsLayout } from "@/components/ts-web-ui/ts-form/types"
-import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const formFields: Record<string, TsFieldDef> = {
   name: { type: "text", label: "First Name", required: true, placeholder: "John" },

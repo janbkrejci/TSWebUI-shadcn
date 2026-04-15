@@ -2,7 +2,8 @@
 
 import { Table } from "@tanstack/react-table"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
-
+import { TsLocale } from "@/components/ts-web-ui/locale"
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   Select,
   SelectContent,
@@ -10,9 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
 
 interface TsTablePaginationProps<TData> {
   table: Table<TData>

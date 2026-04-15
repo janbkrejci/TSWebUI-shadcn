@@ -1,12 +1,10 @@
 "use client"
 
 import { CheckCircle2, Info, ShieldAlert } from "lucide-react"
-
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 export default function ThemeProviderPage() {
   const codeString = `import { ReactNode } from "react"

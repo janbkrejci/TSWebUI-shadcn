@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import {
   Select,
   SelectContent,
@@ -9,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-import { useTsLocale } from "@/components/ts-web-ui/locale"
 
 import { cn } from "@/lib/utils"
 

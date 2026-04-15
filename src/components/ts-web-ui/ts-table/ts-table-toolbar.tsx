@@ -2,11 +2,11 @@
 
 import { Table } from "@tanstack/react-table"
 import { Download, Filter, Plus, Search, Settings2, Upload, XCircle } from "lucide-react"
+import * as React from "react"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
-
-import * as React from "react"
-
+import { TsLocale } from "@/components/ts-web-ui/locale"
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -17,9 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-
-import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -211,6 +208,12 @@ export function TsTableToolbar<TData>({
           <DropdownMenu
             open={columnDropdownOpen}
             onOpenChange={(open) => {
+              // When Radix tries to close (e.g. Escape key) but we have search text,
+              // intercept: clear the search instead of closing the dropdown.
+              if (!open && columnSearch) {
+                setColumnSearch("")
+                return
+              }
               setColumnDropdownOpen(open)
               if (!open) setColumnSearch("")
             }}

@@ -4,24 +4,23 @@ import {
   ColumnFiltersState,
   ColumnOrderState,
   ColumnSizingState,
-  RowSelectionState,
-  SortingState,
-  VisibilityState,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  RowSelectionState,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 import { Download, X } from "lucide-react"
-import * as XLSX from "xlsx"
-
 import * as React from "react"
+import * as XLSX from "xlsx"
 
 import { TsLocale, useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 
-import { TsTableColumnDef, TsTableRowAction, generateColumns } from "./columns"
+import { generateColumns, TsTableColumnDef, TsTableRowAction } from "./columns"
 import { TsTablePagination } from "./ts-table-pagination"
 import { TsTableToolbar } from "./ts-table-toolbar"
 import { TsTableView } from "./ts-table-view"

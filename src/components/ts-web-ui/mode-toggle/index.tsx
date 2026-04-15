@@ -4,15 +4,13 @@ import { Check, Moon, Sun } from "lucide-react"
 
 import { useTheme } from "next-themes"
 import * as React from "react"
-
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-import { Button } from "@/components/ts-web-ui/ui/button"
 
 /**
  * ModeToggle - Theme switcher component (Light/Dark/System)

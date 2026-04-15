@@ -1,12 +1,11 @@
 "use client"
 
 import { Check, Copy } from "lucide-react"
-import remarkGfm from "remark-gfm"
-
 import * as React from "react"
 import Markdown from "react-markdown"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+import remarkGfm from "remark-gfm"
 
 import { Button } from "@/components/ts-web-ui/ui/button"
 

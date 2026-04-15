@@ -1,12 +1,12 @@
 "use client"
 
 import {
+  closestCenter,
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  closestCenter,
   useDraggable,
   useDroppable,
   useSensor,
@@ -31,7 +31,8 @@ import {
 } from "lucide-react"
 
 import * as React from "react"
-
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   Accordion,
   AccordionContent,
@@ -69,9 +70,6 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
-import { Button } from "@/components/ts-web-ui/ui/button"
-
 import { cn } from "@/lib/utils"
 
 import { TsForm } from "../ts-form"
@@ -82,7 +80,7 @@ import {
   TsFieldUpdate,
   TsInfoboxVariant,
 } from "../ts-form/types"
-import { VALID_FIELD_KEY, useFormEditorStore } from "./store"
+import { useFormEditorStore, VALID_FIELD_KEY } from "./store"
 import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./types"
 
 /**
@@ -96,6 +94,7 @@ import { EditorRow, EditorRowItem, EditorTab, GROUPED_FIELD_TYPES } from "./type
  * - JSON configuration export/import
  */
 export function TsFormEditor() {
+  const fe = useTsLocale().strings.formEditor
   const {
     form,
     selection,
@@ -321,7 +320,7 @@ export function TsFormEditor() {
       setShowImportDialog(false)
       setImportJsonText("")
     } else {
-      setImportError("Invalid JSON format. Check the structure.")
+      setImportError(fe.invalidJsonError)
     }
   }
 
@@ -375,8 +374,8 @@ export function TsFormEditor() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="single">No tabs</SelectItem>
-                <SelectItem value="tabs">With tabs</SelectItem>
+                <SelectItem value="single">{fe.noTabs}</SelectItem>
+                <SelectItem value="tabs">{fe.withTabs}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -389,7 +388,7 @@ export function TsFormEditor() {
                   <Undo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
+              <TooltipContent>{fe.undo}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -403,7 +402,7 @@ export function TsFormEditor() {
                   <Redo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Redo (Ctrl+Shift+Z)</TooltipContent>
+              <TooltipContent>{fe.redo}</TooltipContent>
             </Tooltip>
 
             <Separator orientation="vertical" className="h-6" />
@@ -415,7 +414,7 @@ export function TsFormEditor() {
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Reset form</TooltipContent>
+              <TooltipContent>{fe.resetForm}</TooltipContent>
             </Tooltip>
           </div>
 
@@ -425,13 +424,13 @@ export function TsFormEditor() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Upload className="h-4 w-4 mr-2" />
-                  Import
+                  {fe.import}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Import JSON Configuration</DialogTitle>
-                  <DialogDescription>Paste JSON form definition or upload a file</DialogDescription>
+                  <DialogTitle>{fe.importJsonConfig}</DialogTitle>
+                  <DialogDescription>{fe.importDescription}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="flex gap-2">
@@ -452,9 +451,9 @@ export function TsFormEditor() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowImportDialog(false)}>
-                    Cancel
+                    {fe.cancel}
                   </Button>
-                  <Button onClick={handleImport}>Import</Button>
+                  <Button onClick={handleImport}>{fe.import}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -464,17 +463,17 @@ export function TsFormEditor() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {fe.export}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleCopyJson}>
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy to clipboard
+                  {fe.copyToClipboard}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadJson}>
                   <FileJson className="h-4 w-4 mr-2" />
-                  Download as file
+                  {fe.downloadAsFile}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -484,7 +483,7 @@ export function TsFormEditor() {
             {/* Preview */}
             <Button variant="default" size="sm" onClick={() => setShowPreview(true)}>
               <Eye className="h-4 w-4 mr-2" />
-              Preview
+              {fe.preview}
             </Button>
           </div>
         </div>
@@ -500,7 +499,7 @@ export function TsFormEditor() {
             {/* Sidebar - Component Palette */}
             <div className="w-64 border-r bg-muted/20 flex flex-col min-h-0">
               <div className="p-3 border-b shrink-0">
-                <h3 className="font-semibold text-sm">Components</h3>
+                <h3 className="font-semibold text-sm">{fe.components}</h3>
               </div>
               <ScrollArea className="flex-1 min-h-0">
                 <Accordion
@@ -511,7 +510,8 @@ export function TsFormEditor() {
                   {Object.entries(GROUPED_FIELD_TYPES).map(([group, fields]) => (
                     <AccordionItem key={group} value={group} className="border-none">
                       <AccordionTrigger className="py-2 text-sm hover:no-underline">
-                        {group}
+                        {(fe.fieldGroupLabels as Record<string, string>)[group.toLowerCase()] ??
+                          group}
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="grid grid-cols-2 gap-1 pb-2">
@@ -519,7 +519,11 @@ export function TsFormEditor() {
                             <FieldPaletteItem
                               key={field.type}
                               type={field.type}
-                              label={field.label}
+                              label={
+                                (fe.fieldTypeLabels as Record<string, string>)[
+                                  field.type === "button-group" ? "buttonGroup" : field.type
+                                ] ?? field.label
+                              }
                               icon={field.icon}
                               onAdd={() => {
                                 const rows = getCurrentRows()
@@ -613,7 +617,7 @@ export function TsFormEditor() {
                 {/* Canvas with rows */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Form Layout</CardTitle>
+                    <CardTitle className="text-base">{fe.formLayout}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <SortableContext
@@ -651,7 +655,7 @@ export function TsFormEditor() {
                           onClick={() => addRow(activeTabIndex)}
                         >
                           <Plus className="h-4 w-4 mr-2" />
-                          Add row
+                          {fe.addRow}
                         </Button>
                       </div>
                     </SortableContext>
@@ -661,10 +665,10 @@ export function TsFormEditor() {
                 <Card>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">Buttons</CardTitle>
+                      <CardTitle className="text-base">{fe.buttons}</CardTitle>
                       <Button variant="outline" size="sm" onClick={addButton}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Add
+                        {fe.addButtonLabel}
                       </Button>
                     </div>
                   </CardHeader>
@@ -701,10 +705,10 @@ export function TsFormEditor() {
                     <div className="flex flex-col">
                       <span className="text-[10px] uppercase opacity-70 font-bold leading-none mb-1">
                         {dragType === "palette"
-                          ? "Adding"
+                          ? fe.dragAdding
                           : dragType === "row"
-                            ? "Moving Row"
-                            : "Moving Field"}
+                            ? fe.dragMovingRow
+                            : fe.dragMovingField}
                       </span>
                       <span className="text-sm font-medium">
                         {dragType === "palette"
@@ -712,8 +716,8 @@ export function TsFormEditor() {
                           : dragType === "field"
                             ? String(activeDragId).replace("field-", "")
                             : activeDragId.startsWith("button-")
-                              ? "Button"
-                              : "Row"}
+                              ? fe.dragButton
+                              : fe.dragRow}
                       </span>
                     </div>
                   </div>
@@ -724,7 +728,7 @@ export function TsFormEditor() {
             {/* Properties Panel */}
             <div className="w-80 border-l bg-background flex flex-col min-h-0">
               <div className="p-3 border-b shrink-0">
-                <h3 className="font-semibold text-sm">Properties</h3>
+                <h3 className="font-semibold text-sm">{fe.properties}</h3>
               </div>
               <ScrollArea className="flex-1 min-h-0">
                 <div className="p-3">
@@ -739,7 +743,7 @@ export function TsFormEditor() {
                     />
                   ) : (
                     <div className="text-sm text-muted-foreground text-center py-10">
-                      Select a field or button to edit properties
+                      {fe.selectFieldOrButton}
                     </div>
                   )}
                 </div>
@@ -758,8 +762,8 @@ export function TsFormEditor() {
             }}
           >
             <DialogHeader>
-              <DialogTitle>Form Preview</DialogTitle>
-              <DialogDescription>Interactive preview of your form</DialogDescription>
+              <DialogTitle>{fe.formPreview}</DialogTitle>
+              <DialogDescription>{fe.interactivePreview}</DialogDescription>
             </DialogHeader>
             <div
               ref={previewContainerRef}
@@ -799,16 +803,14 @@ export function TsFormEditor() {
             </div>
             <div className="mt-6 flex flex-col h-75">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Event Log</h4>
+                <h4 className="font-medium">{fe.eventLog}</h4>
                 <Button variant="ghost" size="sm" onClick={() => setEventLog([])}>
-                  Clear Log
+                  {fe.clearLog}
                 </Button>
               </div>
               <ScrollArea className="flex-1 border rounded-md bg-muted/20 p-2 font-mono text-xs">
                 {eventLog.length === 0 ? (
-                  <div className="text-muted-foreground text-center py-10">
-                    No events recorded yet
-                  </div>
+                  <div className="text-muted-foreground text-center py-10">{fe.noEvents}</div>
                 ) : (
                   <div className="space-y-1">
                     {eventLog.map((log) => (
@@ -913,6 +915,7 @@ function CanvasRow({
   onUpdateColumnWidth: (itemIndex: number, width: string) => void
   fields: Record<string, TsFieldDef>
 }) {
+  const fe = useTsLocale().strings.formEditor
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
     data: {
@@ -979,7 +982,7 @@ function CanvasRow({
               <Columns className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Add column</TooltipContent>
+          <TooltipContent>{fe.addColumn}</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -992,7 +995,7 @@ function CanvasRow({
               <Trash2 className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete row</TooltipContent>
+          <TooltipContent>{fe.deleteRow}</TooltipContent>
         </Tooltip>
       </div>
     </div>
@@ -1027,6 +1030,7 @@ function CanvasCell({
   rowIndex: number
   itemIndex: number
 }) {
+  const fe = useTsLocale().strings.formEditor
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: item.id,
     data: {
@@ -1084,7 +1088,7 @@ function CanvasCell({
               <Plus className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Insert column before</TooltipContent>
+          <TooltipContent>{fe.insertColumnBefore}</TooltipContent>
         </Tooltip>
       </div>
 
@@ -1097,7 +1101,7 @@ function CanvasCell({
         {isEmpty ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             <Plus className="h-4 w-4 mr-1" />
-            Drag a field here
+            {fe.dragFieldHere}
           </div>
         ) : (
           <div className="space-y-1">
@@ -1165,6 +1169,7 @@ function FieldPropertiesPanel({
   onUpdate: (config: TsFieldUpdate) => void
   onDelete: () => void
 }) {
+  const fe = useTsLocale().strings.formEditor
   const { form, selection, updateButton, removeButton } = useFormEditorStore()
   const [fieldNameDraft, setFieldNameDraft] = React.useState(fieldName)
   const [renameError, setRenameError] = React.useState<string | null>(null)
@@ -1182,7 +1187,7 @@ function FieldPropertiesPanel({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Badge>Button</Badge>
+          <Badge>{fe.buttonLabel}</Badge>
           <Button
             variant="destructive"
             size="sm"
@@ -1191,12 +1196,12 @@ function FieldPropertiesPanel({
             }}
           >
             <Trash2 className="h-3 w-3 mr-1" />
-            Delete
+            {fe.delete}
           </Button>
         </div>
 
         <div className="space-y-2">
-          <Label>Position</Label>
+          <Label>{fe.position}</Label>
           <Select
             value={button.position || "right"}
             onValueChange={(v) =>
@@ -1207,15 +1212,15 @@ function FieldPropertiesPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="left">Left</SelectItem>
-              <SelectItem value="center">Center</SelectItem>
-              <SelectItem value="right">Right</SelectItem>
+              <SelectItem value="left">{fe.positionLeft}</SelectItem>
+              <SelectItem value="center">{fe.positionCenter}</SelectItem>
+              <SelectItem value="right">{fe.positionRight}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label>Label</Label>
+          <Label>{fe.label}</Label>
           <Input
             value={button.label}
             onChange={(e) => updateButton(selection.itemIndex!, { label: e.target.value })}
@@ -1223,7 +1228,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
-          <Label>Action</Label>
+          <Label>{fe.action}</Label>
           <Input
             value={button.action}
             onChange={(e) => updateButton(selection.itemIndex!, { action: e.target.value })}
@@ -1231,16 +1236,16 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
-          <Label>Icon (Lucide name)</Label>
+          <Label>{fe.iconLucideName}</Label>
           <Input
             value={button.icon || ""}
             onChange={(e) => updateButton(selection.itemIndex!, { icon: e.target.value })}
-            placeholder="e.g. Save, Trash, Send"
+            placeholder={fe.actionPlaceholder}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Variant</Label>
+          <Label>{fe.variant}</Label>
           <Select
             value={button.variant || "default"}
             onValueChange={(v) =>
@@ -1251,15 +1256,15 @@ function FieldPropertiesPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="primary">Primary (Blue)</SelectItem>
-              <SelectItem value="secondary">Secondary</SelectItem>
-              <SelectItem value="success">Success (Green)</SelectItem>
-              <SelectItem value="warning">Warning (Amber)</SelectItem>
-              <SelectItem value="danger">Danger (Red)</SelectItem>
-              <SelectItem value="outline">Outline</SelectItem>
-              <SelectItem value="ghost">Ghost</SelectItem>
-              <SelectItem value="link">Link</SelectItem>
+              <SelectItem value="default">{fe.variantDefault}</SelectItem>
+              <SelectItem value="primary">{fe.variantPrimaryBlue}</SelectItem>
+              <SelectItem value="secondary">{fe.variantSecondary}</SelectItem>
+              <SelectItem value="success">{fe.variantSuccessGreen}</SelectItem>
+              <SelectItem value="warning">{fe.variantWarningAmber}</SelectItem>
+              <SelectItem value="danger">{fe.variantDangerRed}</SelectItem>
+              <SelectItem value="outline">{fe.variantOutline}</SelectItem>
+              <SelectItem value="ghost">{fe.variantGhost}</SelectItem>
+              <SelectItem value="link">{fe.variantLink}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1267,9 +1272,9 @@ function FieldPropertiesPanel({
         <Separator />
 
         <div className="space-y-3">
-          <h4 className="font-medium text-sm">Confirmation Dialog</h4>
+          <h4 className="font-medium text-sm">{fe.confirmationDialog}</h4>
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Enabled</Label>
+            <Label className="text-xs">{fe.confirmEnabled}</Label>
             <Switch
               checked={!!button.confirmation}
               onCheckedChange={(checked) => {
@@ -1300,7 +1305,7 @@ function FieldPropertiesPanel({
           {button.confirmation && (
             <>
               <div className="space-y-1">
-                <Label className="text-xs">Title</Label>
+                <Label className="text-xs">{fe.title}</Label>
                 <Input
                   value={button.confirmation.title}
                   onChange={(e) =>
@@ -1311,7 +1316,7 @@ function FieldPropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Message</Label>
+                <Label className="text-xs">{fe.message}</Label>
                 <Textarea
                   value={button.confirmation.text}
                   onChange={(e) =>
@@ -1323,7 +1328,7 @@ function FieldPropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Buttons (JSON)</Label>
+                <Label className="text-xs">{fe.confirmButtonsJson}</Label>
                 <Textarea
                   value={JSON.stringify(button.confirmation.buttons, null, 2)}
                   onChange={(e) => {
@@ -1355,15 +1360,15 @@ function FieldPropertiesPanel({
     const trimmedName = value.trim()
 
     if (!trimmedName) {
-      return "Field ID must be non-empty."
+      return fe.fieldIdRequired
     }
 
     if (!VALID_FIELD_KEY.test(trimmedName)) {
-      return "Field ID must start with a letter or underscore and use only letters, numbers, underscores or hyphens."
+      return fe.fieldIdInvalid
     }
 
     if (trimmedName !== fieldName && form.fields[trimmedName]) {
-      return "Field ID must be unique."
+      return fe.fieldIdNotUnique
     }
 
     return null
@@ -1387,7 +1392,7 @@ function FieldPropertiesPanel({
     const success = onRename(trimmedName)
 
     if (!success) {
-      setRenameError("Rename failed. Field ID must be unique and valid.")
+      setRenameError(fe.fieldIdRenameFailed)
       return
     }
 
@@ -1402,12 +1407,12 @@ function FieldPropertiesPanel({
           <Badge>{config.type}</Badge>
           <Button variant="destructive" size="sm" onClick={onDelete}>
             <Trash2 className="h-3 w-3 mr-1" />
-            Delete
+            {fe.delete}
           </Button>
         </div>
 
         <div className="space-y-2">
-          <Label>Field ID</Label>
+          <Label>{fe.fieldId}</Label>
           <Input
             aria-describedby={renameError ? "field-id-error" : undefined}
             aria-invalid={!!renameError}
@@ -1440,7 +1445,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
-          <Label>Label</Label>
+          <Label>{fe.label}</Label>
           <Input
             value={(config.label as string) || ""}
             onChange={(e) => onUpdate({ label: e.target.value })}
@@ -1448,7 +1453,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
-          <Label>Placeholder</Label>
+          <Label>{fe.placeholder}</Label>
           <Input
             value={(configProps.placeholder as string) || ""}
             onChange={(e) => onUpdate({ placeholder: e.target.value })}
@@ -1456,7 +1461,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="space-y-2">
-          <Label>Hint</Label>
+          <Label>{fe.hint}</Label>
           <Input
             value={(config.hint as string) || ""}
             onChange={(e) => onUpdate({ hint: e.target.value })}
@@ -1468,10 +1473,10 @@ function FieldPropertiesPanel({
 
       {/* States */}
       <div className="space-y-3">
-        <h4 className="font-medium text-sm">States</h4>
+        <h4 className="font-medium text-sm">{fe.states}</h4>
 
         <div className="flex items-center justify-between">
-          <Label>Required</Label>
+          <Label>{fe.required}</Label>
           <Switch
             checked={!!config.required}
             onCheckedChange={(checked: boolean) => onUpdate({ required: checked })}
@@ -1479,7 +1484,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Disabled</Label>
+          <Label>{fe.disabled}</Label>
           <Switch
             checked={!!config.disabled}
             onCheckedChange={(checked: boolean) => onUpdate({ disabled: checked })}
@@ -1487,7 +1492,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Read-only</Label>
+          <Label>{fe.readOnly}</Label>
           <Switch
             checked={!!config.readonly}
             onCheckedChange={(checked: boolean) => onUpdate({ readonly: checked })}
@@ -1497,7 +1502,7 @@ function FieldPropertiesPanel({
         {config.type !== "infobox" && config.type !== "markdown" && (
           <>
             <div className="flex items-center justify-between">
-              <Label>Select all on focus</Label>
+              <Label>{fe.selectAllOnFocus}</Label>
               <Switch
                 checked={!!configProps.selectAllOnFocus}
                 onCheckedChange={(checked: boolean) => onUpdate({ selectAllOnFocus: checked })}
@@ -1505,27 +1510,27 @@ function FieldPropertiesPanel({
             </div>
 
             <div className="space-y-2">
-              <Label>Enter Action</Label>
+              <Label>{fe.enterAction}</Label>
               <Input
                 value={(configProps.enterAction as string) || ""}
                 onChange={(e) => onUpdate({ enterAction: e.target.value })}
-                placeholder="e.g. submit, focus:next"
+                placeholder={fe.enterActionPlaceholder}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Escape Action</Label>
+              <Label>{fe.escapeAction}</Label>
               <Input
                 value={(configProps.escapeAction as string) || ""}
                 onChange={(e) => onUpdate({ escapeAction: e.target.value })}
-                placeholder="e.g. clear, cancel"
+                placeholder={fe.escapeActionPlaceholder}
               />
             </div>
           </>
         )}
 
         <div className="flex items-center justify-between">
-          <Label>Hidden</Label>
+          <Label>{fe.hidden}</Label>
           <Switch
             checked={!!config.hidden}
             onCheckedChange={(checked: boolean) => onUpdate({ hidden: checked })}
@@ -1533,7 +1538,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Auto focus</Label>
+          <Label>{fe.autoFocus}</Label>
           <Switch
             checked={!!configProps.autofocus}
             onCheckedChange={(checked: boolean) => onUpdate({ autofocus: checked })}
@@ -1541,7 +1546,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Hide label</Label>
+          <Label>{fe.hideLabel}</Label>
           <Switch
             checked={!!configProps.hideLabel}
             onCheckedChange={(checked: boolean) => onUpdate({ hideLabel: checked })}
@@ -1549,7 +1554,7 @@ function FieldPropertiesPanel({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>Exclude from submit</Label>
+          <Label>{fe.excludeFromSubmit}</Label>
           <Switch
             checked={!!configProps.excludeFromSubmit}
             onCheckedChange={(checked: boolean) => onUpdate({ excludeFromSubmit: checked })}
@@ -1562,10 +1567,10 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="font-medium text-sm">Numeric Settings</h4>
+            <h4 className="font-medium text-sm">{fe.numericSettings}</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Min</Label>
+                <Label className="text-xs">{fe.min}</Label>
                 <Input
                   type="number"
                   value={(config.min as number) ?? ""}
@@ -1575,7 +1580,7 @@ function FieldPropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Max</Label>
+                <Label className="text-xs">{fe.max}</Label>
                 <Input
                   type="number"
                   value={(config.max as number) ?? ""}
@@ -1585,7 +1590,7 @@ function FieldPropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Step</Label>
+                <Label className="text-xs">{fe.step}</Label>
                 <Input
                   type="number"
                   value={(config.step as number) ?? ""}
@@ -1597,7 +1602,7 @@ function FieldPropertiesPanel({
             </div>
             {config.type === "number" && (
               <div className="space-y-1">
-                <Label className="text-xs">Round to (decimals)</Label>
+                <Label className="text-xs">{fe.roundTo}</Label>
                 <Input
                   type="number"
                   value={(config.roundTo as number) ?? ""}
@@ -1615,7 +1620,7 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-2">
-            <Label>Row count</Label>
+            <Label>{fe.rowCount}</Label>
             <Input
               type="number"
               min={1}
@@ -1635,10 +1640,10 @@ function FieldPropertiesPanel({
           <Separator />
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">Options</h4>
+              <h4 className="font-medium text-sm">{fe.options}</h4>
               {config.type === "combobox" && (
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs">Allow Custom</Label>
+                  <Label className="text-xs">{fe.allowCustom}</Label>
                   <Switch
                     checked={!!config.allowCustom}
                     onCheckedChange={(checked) => onUpdate({ allowCustom: checked })}
@@ -1647,7 +1652,7 @@ function FieldPropertiesPanel({
               )}
               {config.type === "button-group" && (
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs">Process Style</Label>
+                  <Label className="text-xs">{fe.processStyle}</Label>
                   <Switch
                     checked={config.variant === "process"}
                     onCheckedChange={(checked) =>
@@ -1659,7 +1664,7 @@ function FieldPropertiesPanel({
             </div>
             {(config.type === "combobox" || config.type === "multiselect") && (
               <div className="space-y-2">
-                <Label className="text-xs">Not Found Message</Label>
+                <Label className="text-xs">{fe.notFoundMessage}</Label>
                 <Input
                   value={(config.notFoundMessage as string) || ""}
                   onChange={(e) => onUpdate({ notFoundMessage: e.target.value })}
@@ -1669,7 +1674,7 @@ function FieldPropertiesPanel({
             )}
 
             <div className="space-y-2">
-              <Label className="text-xs">Options (JSON)</Label>
+              <Label className="text-xs">{fe.optionsJson}</Label>
               <Textarea
                 value={JSON.stringify((config.options as unknown[]) || [], null, 2)}
                 onChange={(e) => {
@@ -1683,10 +1688,7 @@ function FieldPropertiesPanel({
                 rows={5}
                 className="font-mono text-xs"
               />
-              <p className="text-[10px] text-muted-foreground">
-                Format: [{'{ \"label\": \"...\", \"value\": \"...\" }'}] or [&quot;a&quot;,
-                &quot;b&quot;]
-              </p>
+              <p className="text-[10px] text-muted-foreground">{fe.optionsFormatHint}</p>
             </div>
           </div>
         </>
@@ -1696,17 +1698,15 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="font-medium text-sm">Date Settings</h4>
+            <h4 className="font-medium text-sm">{fe.dateSettings}</h4>
             <div className="space-y-2">
-              <Label className="text-xs">Date Format</Label>
+              <Label className="text-xs">{fe.dateFormat}</Label>
               <Input
                 value={(config.dateFormat as string) || ""}
                 onChange={(e) => onUpdate({ dateFormat: e.target.value })}
                 placeholder={config.type === "date" ? "d.M.yyyy" : "d.M.yyyy HH:mm"}
               />
-              <p className="text-[10px] text-muted-foreground">
-                Uses date-fns tokens (e.g., d.M.yyyy)
-              </p>
+              <p className="text-[10px] text-muted-foreground">{fe.dateFnsHint}</p>
             </div>
           </div>
         </>
@@ -1716,25 +1716,25 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="font-medium text-sm">File Upload</h4>
+            <h4 className="font-medium text-sm">{fe.fileUploadTitle}</h4>
             <div className="space-y-2">
-              <Label className="text-xs">Accept (mime types)</Label>
+              <Label className="text-xs">{fe.accept}</Label>
               <Input
                 value={(config.accept as string) || ""}
                 onChange={(e) => onUpdate({ accept: e.target.value })}
-                placeholder="e.g. .pdf,image/*"
+                placeholder={fe.acceptPlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Inner Label</Label>
+              <Label className="text-xs">{fe.innerLabel}</Label>
               <Input
                 value={(config.innerLabel as string) || ""}
                 onChange={(e) => onUpdate({ innerLabel: e.target.value })}
-                placeholder="Drop files here..."
+                placeholder={fe.innerLabelPlaceholder}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Allow Multiple</Label>
+              <Label className="text-xs">{fe.allowMultiple}</Label>
               <Switch
                 checked={!!config.multiple}
                 onCheckedChange={(checked) => onUpdate({ multiple: checked })}
@@ -1748,7 +1748,7 @@ function FieldPropertiesPanel({
         <>
           <Separator />
           <div className="space-y-2">
-            <Label>Content</Label>
+            <Label>{fe.content}</Label>
             <Textarea
               value={(config.value as string) || (config.content as string) || ""}
               onChange={(e) => onUpdate({ content: e.target.value })}
@@ -1760,7 +1760,7 @@ function FieldPropertiesPanel({
 
       {config.type === "infobox" && (
         <div className="space-y-2">
-          <Label>Variant</Label>
+          <Label>{fe.variant}</Label>
           <Select
             value={(config.variant as string) || "default"}
             onValueChange={(v) => onUpdate({ variant: v as TsInfoboxVariant })}
@@ -1769,11 +1769,11 @@ function FieldPropertiesPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="information">Information</SelectItem>
-              <SelectItem value="warning">Warning</SelectItem>
-              <SelectItem value="success">Success</SelectItem>
-              <SelectItem value="destructive">Destructive</SelectItem>
+              <SelectItem value="default">{fe.variantDefault}</SelectItem>
+              <SelectItem value="information">{fe.variantInformation}</SelectItem>
+              <SelectItem value="warning">{fe.variantWarning}</SelectItem>
+              <SelectItem value="success">{fe.variantSuccess}</SelectItem>
+              <SelectItem value="destructive">{fe.variantDestructive}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1781,7 +1781,7 @@ function FieldPropertiesPanel({
 
       {config.type === "button-group" && (
         <div className="space-y-2">
-          <Label>Visual Style</Label>
+          <Label>{fe.visualStyle}</Label>
           <Select
             value={(config.variant as string) || ""}
             onValueChange={(v) =>
@@ -1792,8 +1792,8 @@ function FieldPropertiesPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value=" ">Standard</SelectItem>
-              <SelectItem value="process">Process (Chevron)</SelectItem>
+              <SelectItem value=" ">{fe.variantStandard}</SelectItem>
+              <SelectItem value="process">{fe.variantProcess}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1803,15 +1803,15 @@ function FieldPropertiesPanel({
         <div className="space-y-3">
           <Separator />
           <div className="space-y-2">
-            <Label>Action Name</Label>
+            <Label>{fe.actionName}</Label>
             <Input
               value={(config.action as string) || ""}
               onChange={(e) => onUpdate({ action: e.target.value })}
-              placeholder="e.g. click:save"
+              placeholder={fe.actionNamePlaceholder}
             />
           </div>
           <div className="space-y-2">
-            <Label>Button Variant</Label>
+            <Label>{fe.buttonVariant}</Label>
             <Select
               value={(config.variant as string) || "default"}
               onValueChange={(v) => onUpdate({ variant: v as TsButtonVariant })}
@@ -1820,13 +1820,13 @@ function FieldPropertiesPanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="default">Default</SelectItem>
-                <SelectItem value="primary">Primary</SelectItem>
-                <SelectItem value="secondary">Secondary</SelectItem>
-                <SelectItem value="destructive">Destructive</SelectItem>
-                <SelectItem value="outline">Outline</SelectItem>
-                <SelectItem value="ghost">Ghost</SelectItem>
-                <SelectItem value="link">Link</SelectItem>
+                <SelectItem value="default">{fe.variantDefault}</SelectItem>
+                <SelectItem value="primary">{fe.variantPrimary}</SelectItem>
+                <SelectItem value="secondary">{fe.variantSecondary}</SelectItem>
+                <SelectItem value="destructive">{fe.variantDestructive}</SelectItem>
+                <SelectItem value="outline">{fe.variantOutline}</SelectItem>
+                <SelectItem value="ghost">{fe.variantGhost}</SelectItem>
+                <SelectItem value="link">{fe.variantLink}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1836,17 +1836,17 @@ function FieldPropertiesPanel({
       {config.type === "relationship" && (
         <div className="space-y-3">
           <Separator />
-          <h4 className="font-medium text-sm">Relationship Settings</h4>
+          <h4 className="font-medium text-sm">{fe.relationshipSettings}</h4>
           <div className="space-y-2">
-            <Label className="text-xs">Target Entity</Label>
+            <Label className="text-xs">{fe.targetEntity}</Label>
             <Input
               value={(config.targetEntity as string) || ""}
               onChange={(e) => onUpdate({ targetEntity: e.target.value })}
-              placeholder="e.g. users"
+              placeholder={fe.targetEntityPlaceholder}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs">Selection Mode</Label>
+            <Label className="text-xs">{fe.selectionMode}</Label>
             <Select
               value={(config.mode as string) || "single"}
               onValueChange={(v) => onUpdate({ mode: v as "single" | "multiple" })}
@@ -1855,20 +1855,20 @@ function FieldPropertiesPanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="single">Single</SelectItem>
-                <SelectItem value="multiple">Multiple</SelectItem>
+                <SelectItem value="single">{fe.selectionSingle}</SelectItem>
+                <SelectItem value="multiple">{fe.selectionMultiple}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs">Value Field (ID)</Label>
+            <Label className="text-xs">{fe.valueField}</Label>
             <Input
               value={(config.valueField as string) || "id"}
               onChange={(e) => onUpdate({ valueField: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs">Display Fields (JSON Array)</Label>
+            <Label className="text-xs">{fe.displayFields}</Label>
             <Input
               value={JSON.stringify((config.displayFields as string[]) || ["name"])}
               onChange={(e) => {
@@ -1881,7 +1881,7 @@ function FieldPropertiesPanel({
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs">Mock Options (JSON)</Label>
+            <Label className="text-xs">{fe.mockOptions}</Label>
             <Textarea
               value={JSON.stringify((config.options as unknown[]) || [], null, 2)}
               onChange={(e) => {
@@ -1901,16 +1901,16 @@ function FieldPropertiesPanel({
       {config.type === "table" && (
         <div className="space-y-3">
           <Separator />
-          <h4 className="font-medium text-sm">Table Configuration</h4>
+          <h4 className="font-medium text-sm">{fe.tableConfiguration}</h4>
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Show Create Button</Label>
+            <Label className="text-xs">{fe.showCreateButton}</Label>
             <Switch
               checked={!!config.showCreateButton}
               onCheckedChange={(checked) => onUpdate({ showCreateButton: checked })}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs">Columns (JSON)</Label>
+            <Label className="text-xs">{fe.columnsJson}</Label>
             <Textarea
               value={JSON.stringify((config.columns as unknown[]) || [], null, 2)}
               onChange={(e) => {

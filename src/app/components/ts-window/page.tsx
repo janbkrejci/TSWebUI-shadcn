@@ -3,7 +3,8 @@
 import { Plus } from "lucide-react"
 
 import * as React from "react"
-
+import { useWindowManager, WindowOutlet, WindowProvider } from "@/components/ts-web-ui/ts-window"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -15,9 +16,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { WindowOutlet, WindowProvider, useWindowManager } from "@/components/ts-web-ui/ts-window"
-import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 const WindowControls = ({ windowId }: { windowId: string }) => {
   const { getWindow } = useWindowManager()

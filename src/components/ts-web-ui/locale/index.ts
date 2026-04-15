@@ -1,5 +1,5 @@
-export { TsLocaleProvider, useTsLocale } from "./context"
 export type { TsLocaleProviderProps } from "./context"
-export { en } from "./en"
+export { TsLocaleProvider, useTsLocale } from "./context"
 export { cs } from "./cs"
-export type { TsLocale, TsLocaleStrings, TsLocaleFormatting } from "./types"
+export { en } from "./en"
+export type { TsLocale, TsLocaleFormatting, TsLocaleStrings } from "./types"

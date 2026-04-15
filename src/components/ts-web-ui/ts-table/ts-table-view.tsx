@@ -1,10 +1,11 @@
 "use client"
 
-import { Table as TanStackTable, flexRender } from "@tanstack/react-table"
+import { flexRender, Table as TanStackTable } from "@tanstack/react-table"
 import { Check, ChevronLeft, ChevronRight, Filter, MoreVertical, X as XIcon } from "lucide-react"
 
 import * as React from "react"
-
+import { TsLocale } from "@/components/ts-web-ui/locale"
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 

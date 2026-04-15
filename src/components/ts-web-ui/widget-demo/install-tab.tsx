@@ -1,13 +1,10 @@
 "use client"
 
 import { Copy } from "lucide-react"
-import { toast } from "sonner"
-
 import * as React from "react"
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
+import { toast } from "sonner"
 import { Button } from "@/components/ts-web-ui/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { getComponentRegistryUrl } from "@/lib/registry"
 

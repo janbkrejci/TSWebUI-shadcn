@@ -4,7 +4,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, ClipboardCopy, MoreVertical } from "lucide-react"
 
 import * as React from "react"
-
+import { TsLocale } from "@/components/ts-web-ui/locale"
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
-
-import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -256,23 +254,24 @@ export function generateColumns<TData>(
       size: typeof def.width === "number" ? def.width : 200,
       minSize: (() => {
         const isSortable = enableSorting && def.sortable !== false
-        // Sort icon: 16px + 4px gap = 20px
+        // ~7px per character at text-sm for the label
+        const labelPx = def.title.length * 7
+        // Sort icon: 16px icon + 4px gap = 20px, plus 2px for sort direction indicator gap
         const sortPx = isSortable ? 22 : 0
         // Reorder arrows: 2 x (12px icon + 4px padding) + 2px gap = 34px
         const reorderPx = enableColumnReordering ? 34 : 0
         // Cell padding: px-3 both sides = 24px
         const paddingPx = 24
-        // Controls-only minimum (label will truncate)
-        return Math.max(sortPx + reorderPx + paddingPx, 60)
+        return Math.max(labelPx + sortPx + reorderPx + paddingPx, 60)
       })(),
       filterFn: (row, id, value, addMeta) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
         if (def.type === "number") return numberFilter(row as any, id, value, addMeta)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
         if (def.type === "date") return dateFilter(row as any, id, value, addMeta)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
         if (def.type === "boolean") return booleanFilter(row as any, id, value, addMeta)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
         return textFilter(row as any, id, value, addMeta)
       },
       meta: {

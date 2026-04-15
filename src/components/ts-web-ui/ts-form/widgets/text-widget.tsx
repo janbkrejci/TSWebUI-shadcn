@@ -1,11 +1,9 @@
 import { Eye, EyeOff } from "lucide-react"
 
 import * as React from "react"
-
-import { Input } from "@/components/ui/input"
-
 import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
+import { Input } from "@/components/ui/input"
 
 import { cn } from "@/lib/utils"
 

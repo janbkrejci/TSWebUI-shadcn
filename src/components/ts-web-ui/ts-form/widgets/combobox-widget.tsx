@@ -3,7 +3,8 @@
 import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import * as React from "react"
-
+import { useTsLocale } from "@/components/ts-web-ui/locale"
+import { Button } from "@/components/ts-web-ui/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -13,9 +14,6 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-
-import { useTsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -178,7 +176,7 @@ export const ComboboxWidget = React.forwardRef<HTMLButtonElement, TsComboboxWidg
                     }}
                   >
                     <Check className="mr-2 h-4 w-4 opacity-0" />
-                    {tf.useCustomValue(searchValue)}
+                    {tf.customValueAdd(searchValue)}
                   </CommandItem>
                 )}
               </CommandGroup>

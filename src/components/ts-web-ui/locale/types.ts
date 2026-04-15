@@ -65,7 +65,7 @@ export interface TsLocaleStrings {
     selectPlaceholder: string
     searchPlaceholder: string
     notFound: string
-    useCustomValue: (value: string) => string
+    customValueAdd: (value: string) => string
     clear: string
     today: string
     addFiles: string
@@ -141,6 +141,109 @@ export interface TsLocaleStrings {
     targetEntityPlaceholder: string
     selectionMode: string
     showCreateButton: string
+    // Additional UI strings
+    undo: string
+    redo: string
+    export: string
+    preview: string
+    importDescription: string
+    cancel: string
+    invalidJsonError: string
+    copyToClipboard: string
+    downloadAsFile: string
+    addRow: string
+    addButtonLabel: string
+    iconLucideName: string
+    dragFieldHere: string
+    dragAdding: string
+    dragMovingRow: string
+    dragMovingField: string
+    dragButton: string
+    dragRow: string
+    selectFieldOrButton: string
+    delete: string
+    buttonLabel: string
+    positionLeft: string
+    positionCenter: string
+    positionRight: string
+    variantDefault: string
+    variantPrimary: string
+    variantPrimaryBlue: string
+    variantSecondary: string
+    variantSuccessGreen: string
+    variantWarningAmber: string
+    variantDangerRed: string
+    variantOutline: string
+    variantGhost: string
+    variantLink: string
+    variantDestructive: string
+    variantInformation: string
+    variantSuccess: string
+    variantWarning: string
+    variantStandard: string
+    variantProcess: string
+    confirmEnabled: string
+    confirmButtonsJson: string
+    states: string
+    readOnly: string
+    selectAllOnFocus: string
+    numericSettings: string
+    roundTo: string
+    options: string
+    allowCustom: string
+    processStyle: string
+    optionsJson: string
+    optionsFormatHint: string
+    dateSettings: string
+    dateFnsHint: string
+    accept: string
+    clearLog: string
+    noEvents: string
+    relationshipSettings: string
+    valueField: string
+    displayFields: string
+    mockOptions: string
+    selectionSingle: string
+    selectionMultiple: string
+    tableConfiguration: string
+    columnsJson: string
+    fieldIdRequired: string
+    fieldIdInvalid: string
+    fieldIdNotUnique: string
+    fieldIdRenameFailed: string
+    // Field type labels for the component palette
+    fieldTypeLabels: {
+      text: string
+      textarea: string
+      password: string
+      number: string
+      select: string
+      multiselect: string
+      combobox: string
+      radio: string
+      checkbox: string
+      switch: string
+      buttonGroup: string
+      date: string
+      datetime: string
+      slider: string
+      file: string
+      relationship: string
+      separator: string
+      infobox: string
+      markdown: string
+      button: string
+      table: string
+    }
+    // Field group labels for the component palette sidebar
+    fieldGroupLabels: {
+      text: string
+      selection: string
+      date: string
+      others: string
+      layout: string
+      complex: string
+    }
   }
 }
 

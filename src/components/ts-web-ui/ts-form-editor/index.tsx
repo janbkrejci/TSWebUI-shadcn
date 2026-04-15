@@ -10,14 +10,14 @@
  */
 
 export { TsFormEditor } from "./form-editor"
-export type {
-  EditorField,
-  EditorRowItem,
-  EditorRow,
-  EditorTab,
-  EditorFormDefinition,
-  EditorSelection,
-} from "./types"
 export type { FormEditorState } from "./store"
 export { useFormEditorStore } from "./store"
+export type {
+  EditorField,
+  EditorFormDefinition,
+  EditorRow,
+  EditorRowItem,
+  EditorSelection,
+  EditorTab,
+} from "./types"
 export { AVAILABLE_FIELD_TYPES, GROUPED_FIELD_TYPES } from "./types"

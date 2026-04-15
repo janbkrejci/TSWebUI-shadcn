@@ -19,6 +19,7 @@ A comprehensive UI component library built on **Next.js 16 + React 19 + Shadcn/U
 - [TsWindow](#tswindow)
 - [TsForm](#tsform)
 - [TsTable](#tstable)
+- [TsFormEditor](#tsformeditor)
 
 ---
 
@@ -251,12 +252,12 @@ const myLocale: TsLocale = {
 | Group        | Keys (selected)                                                                                                                                                                                                                       | Used By                                      |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | `table`      | search, columns, viewColumns, searchColumns, clearAllFilters, export, import, newRecord, noRecords, rowsPerPage, pageOf, rowsSelected, selectAll, copyToClipboard, moveLeft, moveRight, first/previous/next/last, importResults, etc. | TsTable (toolbar, view, pagination, columns) |
-| `form`       | required, showPassword, hidePassword, selectPlaceholder, searchPlaceholder, notFound, useCustomValue, clear, today, addFile(s), selectEntity, chooseFromList, etc.                                                                    | TsForm (all field widgets)                   |
+| `form`       | required, showPassword, hidePassword, selectPlaceholder, searchPlaceholder, notFound, customValueAdd, clear, today, addFile(s), selectEntity, chooseFromList, etc.                                                                    | TsForm (all field widgets)                   |
 | `window`     | centerOnScreen, fitToContent                                                                                                                                                                                                          | TsWindow (titlebar buttons)                  |
 | `sidebar`    | closeMenu, openMenu, expandMenu, collapseMenu                                                                                                                                                                                         | TsSidebar (aria-labels, tooltips)            |
-| `formEditor` | ~30 keys for the visual form editor                                                                                                                                                                                                   | TsFormEditor                                 |
+| `formEditor` | ~120 keys covering toolbar (undo/redo/reset/import/export/preview), canvas (addRow, dragFieldHere, field palette group labels, field palette type labels), drag overlay, properties panel (all field properties, button properties, every section heading, all variant options, all validation error messages). Also contains nested objects `fieldTypeLabels` (21 entries, one per field type) and `fieldGroupLabels` (6 entries for palette groups). | TsFormEditor |
 
-Some keys are functions for interpolation: `pageOf(page, total)`, `rowsSelected(selected, total)`, `selected(count)`, `fieldNotFound(field)`, `useCustomValue(value)`, `selectEntity(entity)`, etc.
+Some keys are functions for interpolation: `pageOf(page, total)`, `rowsSelected(selected, total)`, `selected(count)`, `fieldNotFound(field)`, `customValueAdd(value)`, `selectEntity(entity)`, etc.
 
 ---
 
@@ -1703,7 +1704,104 @@ interface MyDataType {
 
 ---
 
-## Logo Component
+## TsFormEditor
+
+**Location:** `src/components/ts-web-ui/ts-form-editor/`
+
+A visual drag-and-drop form builder. Users design forms interactively and export a JSON configuration that can then be passed directly to `TsForm`.
+
+### Import
+
+```tsx
+import { TsFormEditor } from "@/components/ts-web-ui/ts-form-editor/form-editor"
+```
+
+### Usage
+
+```tsx
+"use client"
+
+import { TsLocaleProvider } from "@/components/ts-web-ui/locale"
+import { TsFormEditor } from "@/components/ts-web-ui/ts-form-editor/form-editor"
+
+export default function FormBuilderPage() {
+  return (
+    <TsLocaleProvider locale="en">
+      <div className="h-screen">
+        <TsFormEditor />
+      </div>
+    </TsLocaleProvider>
+  )
+}
+```
+
+`TsFormEditor` takes no props. It is a fully controlled component backed by Zustand store (`useFormEditorStore`).
+
+### Features
+
+- **Drag-and-drop**: Drag field types from the left palette onto canvas rows/cells
+- **Row management**: Add/remove/reorder rows via drag (using `@dnd-kit/core`)
+- **Multi-column layout**: Add columns to rows; set each column's CSS grid width (`1fr`, `2fr`, `100px`, etc.)
+- **Tabs or single-page mode**: Toggle via the mode selector in the toolbar
+- **Field properties**: Click any field or button to inspect/edit its properties in the right panel
+- **Button configuration**: Add, reorder (drag), delete and configure action buttons including confirmation dialogs
+- **Undo/Redo**: Ctrl+Z / Ctrl+Shift+Z with full history stack
+- **Import/Export**: Load or save the form definition as JSON
+- **Live preview**: Open a modal dialog showing the actual `TsForm` rendered from the current definition
+- **Event log**: The preview dialog logs all form events in real time
+
+### Locale
+
+All ~120 UI strings inside `TsFormEditor` are localized via `useTsLocale()`. Wrap with `TsLocaleProvider` to switch language:
+
+```tsx
+<TsLocaleProvider locale="cs">
+  <TsFormEditor />
+</TsLocaleProvider>
+```
+
+The `formEditor` locale section includes:
+- **Toolbar**: `undo`, `redo`, `resetForm`, `import`, `export`, `preview`, `importJsonConfig`, `importDescription`, `cancel`, `invalidJsonError`, `copyToClipboard`, `downloadAsFile`
+- **Canvas**: `components`, `formLayout`, `buttons`, `addRow`, `addButtonLabel`, `addColumn`, `deleteRow`, `insertColumnBefore`, `dragFieldHere`, `properties`, `selectFieldOrButton`
+- **Drag overlay**: `dragAdding`, `dragMovingRow`, `dragMovingField`, `dragButton`, `dragRow`
+- **Preview dialog**: `formPreview`, `interactivePreview`, `eventLog`, `clearLog`, `noEvents`
+- **Button properties**: `buttonLabel`, `position`, `positionLeft/Center/Right`, `label`, `action`, `iconLucideName`, `variant`, `variantDefault/Primary/PrimaryBlue/Secondary/...`, `confirmationDialog`, `confirmEnabled`, `title`, `message`, `confirmButtonsJson`
+- **Field properties**: `fieldId`, `fieldIdRequired/Invalid/NotUnique/RenameFailed`, `placeholder`, `hint`, `states`, `required`, `disabled`, `readOnly`, `selectAllOnFocus`, `enterAction`, `escapeAction`, `hidden`, `autoFocus`, `hideLabel`, `excludeFromSubmit`
+- **Type-specific**: `numericSettings`, `min`, `max`, `step`, `roundTo`, `rowCount`, `options`, `allowCustom`, `processStyle`, `optionsJson`, `optionsFormatHint`, `dateSettings`, `dateFormat`, `dateFnsHint`, `fileUploadTitle`, `accept`, `acceptPlaceholder`, `innerLabel`, `innerLabelPlaceholder`, `allowMultiple`, `content`, `visualStyle`, `variantStandard`, `variantProcess`, `actionName`, `buttonVariant`, `relationshipSettings`, `targetEntity`, `selectionMode`, `selectionSingle/Multiple`, `valueField`, `displayFields`, `mockOptions`, `tableConfiguration`, `columnsJson`, `showCreateButton`, `delete`
+- **Palette labels**: `fieldTypeLabels` (nested object with 21 field type keys) and `fieldGroupLabels` (nested object with 6 group keys: `text`, `selection`, `date`, `others`, `layout`, `complex`)
+
+### Keyboard Shortcuts (inside TsFormEditor)
+
+| Shortcut         | Action                                    |
+| ---------------- | ----------------------------------------- |
+| `Ctrl+Z`         | Undo                                      |
+| `Ctrl+Shift+Z`   | Redo                                      |
+| `Delete/Backspace` | Delete selected field                   |
+| `Escape`         | Clear field selection                     |
+
+### Store API (useFormEditorStore)
+
+The editor state is managed by a Zustand store. You can import the hook directly if you need programmatic control:
+
+```tsx
+import { useFormEditorStore } from "@/components/ts-web-ui/ts-form-editor/store"
+
+const { form, importJson, exportJson, resetForm } = useFormEditorStore()
+```
+
+Key store methods:
+
+| Method              | Signature                                                       | Description                                    |
+| ------------------- | --------------------------------------------------------------- | ---------------------------------------------- |
+| `importJson`        | `(json: string) => boolean`                                     | Load form definition from JSON string          |
+| `exportJson`        | `() => string`                                                  | Serialize current form definition to JSON      |
+| `resetForm`         | `() => void`                                                    | Reset to empty default form                    |
+| `undo`              | `() => void`                                                    | Go back one history step                       |
+| `redo`              | `() => void`                                                    | Go forward one history step                    |
+| `addField`          | `(type, tabIndex, rowIndex, itemIndex) => void`                  | Add a field to a specific cell                 |
+| `updateFieldConfig` | `(fieldId, config) => void`                                     | Update a field's configuration                 |
+
+The exported JSON is compatible with `TsForm`'s `layout`, `fields`, and `buttons` props.
 
 **Location:** `src/components/ts-web-ui/ts-logo/index.tsx`
 

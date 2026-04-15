@@ -1,7 +1,9 @@
 "use client"
 
 import * as React from "react"
-
+import { cs, en } from "@/components/ts-web-ui/locale"
+import { ImportResult, TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -14,10 +16,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { cs, en } from "@/components/ts-web-ui/locale"
-import { ImportResult, TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
-import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 interface TableItem {
   [key: string]: unknown

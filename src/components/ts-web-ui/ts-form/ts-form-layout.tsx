@@ -2,11 +2,9 @@
 
 import * as React from "react"
 import { useFormContext } from "react-hook-form"
-
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { useTsLocale } from "@/components/ts-web-ui/locale"
 
 import { cn } from "@/lib/utils"
 

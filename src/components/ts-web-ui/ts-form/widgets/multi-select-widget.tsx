@@ -3,7 +3,7 @@
 import { Check, ChevronsUpDown, X as XIcon } from "lucide-react"
 
 import * as React from "react"
-
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Badge } from "@/components/ui/badge"
 import {
   Command,
@@ -14,8 +14,6 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-
-import { useTsLocale } from "@/components/ts-web-ui/locale"
 
 import { cn } from "@/lib/utils"
 

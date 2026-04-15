@@ -3,7 +3,15 @@
 import { BarChart, BookOpen, Calendar, FolderOpen, Home, Mail, Settings, Users } from "lucide-react"
 
 import * as React from "react"
-
+import {
+  NavSection,
+  Sidebar,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ts-web-ui/ts-sidebar"
+import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -16,16 +24,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import {
-  NavSection,
-  Sidebar,
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ts-web-ui/ts-sidebar"
-import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 
 /**
  * Menu items for demo

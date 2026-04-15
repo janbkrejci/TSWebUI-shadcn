@@ -4,10 +4,8 @@ import { Loader2 } from "lucide-react"
 
 import * as React from "react"
 import { type FieldPath, useForm } from "react-hook-form"
-
-import { Form } from "@/components/ui/form"
-
 import { Button } from "@/components/ts-web-ui/ui/button"
+import { Form } from "@/components/ui/form"
 
 import { TsFormConfirmationDialog } from "./ts-form-confirmation-dialog"
 import { TsFormLayout } from "./ts-form-layout"

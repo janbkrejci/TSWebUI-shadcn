@@ -1,8 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
-
 import * as React from "react"
+import { describe, expect, it, vi } from "vitest"
 
 import { TsForm } from "./index"
 import { TsFieldDef, TsLayout } from "./types"

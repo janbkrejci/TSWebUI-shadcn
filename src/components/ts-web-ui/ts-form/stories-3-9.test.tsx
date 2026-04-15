@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
-
 import { FormProvider, useForm } from "react-hook-form"
+import { describe, expect, it, vi } from "vitest"
 
 import { TsForm } from "./index"
 import { TsFieldDef, TsLayout } from "./types"
