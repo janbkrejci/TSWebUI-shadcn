@@ -44,6 +44,7 @@ export interface TsLocaleStrings {
     previous: string
     next: string
     last: string
+    exportAll: (count: number) => string
     exportFiltered: (count: number) => string
     exportSelected: (count: number) => string
   }
@@ -244,6 +245,23 @@ export interface TsLocaleStrings {
       layout: string
       complex: string
     }
+  }
+  nav: {
+    logoText: string
+    sectionOverview: string
+    sectionComponents: string
+    sectionUtilities: string
+    sectionFormWidgets: string
+    overview: string
+    window: string
+    table: string
+    form: string
+    topbar: string
+    sidebar: string
+    integratedLayout: string
+    formEditor: string
+    themeProvider: string
+    modeToggle: string
   }
 }
 

@@ -1,6 +1,6 @@
 ---
 name: tswebui
-description: Comprehensive guide for installing and using TSWebUI-shadcn components in Next.js projects. Covers ThemeProvider, ModeToggle, TsLayout, TsTopbar, TsSidebar, TsWindow, TsForm (JSON-driven forms with 20+ field types), and TsTable (advanced data grid). Use when building admin dashboards, form-heavy apps, or any UI requiring draggable windows, data tables, or dynamic forms.
+description: Comprehensive guide for installing and using TSWebUI-shadcn components in Next.js projects. Covers ThemeProvider, ModeToggle, LocaleToggle, TsLayout, TsTopbar, TsSidebar, TsWindow, TsForm (JSON-driven forms with 20+ field types), and TsTable (advanced data grid). Use when building admin dashboards, form-heavy apps, or any UI requiring draggable windows, data tables, or dynamic forms.
 ---
 
 # TSWebUI-shadcn Component Library
@@ -68,6 +68,7 @@ No manual npm installs or file copying needed — one command does everything.
 | **TsWindow**              | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json`         |
 | **TsTable**               | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json`          |
 | **TsForm**                | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json`           |
+| **LocaleToggle**          | Built-in — lives at `src/components/ts-web-ui/locale-toggle/index.tsx` (no separate registry entry) |
 
 ### Dependency Graph
 
@@ -105,6 +106,7 @@ src/
 │       ├── ts-table/                # TsTable + sub-components
 │       ├── ts-window/               # TsWindow + WindowProvider
 │       ├── locale/                  # Localization (TsLocaleProvider, en, cs)
+│       ├── locale-toggle/           # LocaleToggle (language switcher for TopBar)
 │       ├── ts-layout/               # TsLayout (integrated shell)
 │       ├── ts-sidebar/              # Sidebar system
 │       ├── ts-topbar/               # TopBar
@@ -120,7 +122,8 @@ src/
 All imports use the `@/` path alias (configured in `tsconfig.json` by `shadcn init`):
 
 ```ts
-import { TsLocaleProvider, cs, en, useTsLocale } from "@/components/ts-web-ui/locale"
+import { TsLocaleProvider, cs, en, useTsLocale, useTsLocaleSetter } from "@/components/ts-web-ui/locale"
+import { LocaleToggle } from "@/components/ts-web-ui/locale-toggle"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
 import { TsForm } from "@/components/ts-web-ui/ts-form"
@@ -171,6 +174,7 @@ All static UI texts in every TSWebUI component are localizable. The library ship
 | -------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
 | `TsLocaleProvider`   | `locale/context.tsx` | React context provider — wrap app or subtree                                                 |
 | `useTsLocale()`      | `locale/context.tsx` | Hook returning the current `TsLocale` (accepts optional override)                            |
+| `useTsLocaleSetter()`| `locale/context.tsx` | Hook returning `{ localeName, setLocaleName }` — use in locale switcher components           |
 | `en`                 | `locale/en.ts`       | English locale preset (default)                                                              |
 | `cs`                 | `locale/cs.ts`       | Czech locale preset                                                                          |
 | `TsLocale`           | `locale/types.ts`    | Full locale type (`strings` + `formatting`)                                                  |
@@ -180,7 +184,7 @@ All static UI texts in every TSWebUI component are localizable. The library ship
 ### Import
 
 ```ts
-import { TsLocaleProvider, cs, en, useTsLocale } from "@/components/ts-web-ui/locale"
+import { TsLocaleProvider, cs, en, useTsLocale, useTsLocaleSetter } from "@/components/ts-web-ui/locale"
 import type { TsLocale, TsLocaleFormatting, TsLocaleStrings } from "@/components/ts-web-ui/locale"
 ```
 
@@ -203,6 +207,44 @@ import { TsLocaleProvider } from "@/components/ts-web-ui/locale"
 ```
 
 If no provider is present, English (`en`) is used.
+
+`TsLocaleProvider` holds **mutable state** internally — the active locale can be changed at runtime by any child component using `useTsLocaleSetter()`.
+
+### Usage — Locale Setter Hook
+
+Use `useTsLocaleSetter()` in custom locale-switcher components. It returns `{ localeName, setLocaleName }` where `localeName` is the active preset name string and `setLocaleName` changes the locale globally:
+
+```tsx
+import { useTsLocaleSetter } from "@/components/ts-web-ui/locale"
+
+function MyLocaleSwitcher() {
+  const { localeName, setLocaleName } = useTsLocaleSetter()
+  return (
+    <button onClick={() => setLocaleName(localeName === "en" ? "cs" : "en")}>
+      {localeName === "en" ? "Switch to Czech" : "Switch to English"}
+    </button>
+  )
+}
+```
+
+### LocaleToggle — Ready-Made Language Switcher
+
+`LocaleToggle` is a pre-built dropdown for the TopBar. It uses `useTsLocaleSetter()` internally and shows 🇬🇧 English / 🇨🇿 Česky with a checkmark on the active locale:
+
+```tsx
+import { LocaleToggle } from "@/components/ts-web-ui/locale-toggle"
+import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
+import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
+
+<TopBar
+  rightContent={
+    <TopBarGroup>
+      <LocaleToggle />
+      <ModeToggle />
+    </TopBarGroup>
+  }
+/>
+```
 
 ### Usage — Component-Level Override
 
@@ -251,10 +293,11 @@ const myLocale: TsLocale = {
 
 | Group        | Keys (selected)                                                                                                                                                                                                                       | Used By                                      |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `table`      | search, columns, viewColumns, searchColumns, clearAllFilters, export, import, newRecord, noRecords, rowsPerPage, pageOf, rowsSelected, selectAll, copyToClipboard, moveLeft, moveRight, first/previous/next/last, importResults, etc. | TsTable (toolbar, view, pagination, columns) |
+| `table`      | search, columns, viewColumns, searchColumns, clearAllFilters, export, exportAll(count), exportFiltered(count), exportSelected(count), import, newRecord, noRecords, rowsPerPage, pageOf, rowsSelected, selectAll, copyToClipboard, moveLeft, moveRight, first/previous/next/last, importResults, etc. | TsTable (toolbar, view, pagination, columns) |
 | `form`       | required, showPassword, hidePassword, selectPlaceholder, searchPlaceholder, notFound, customValueAdd, clear, today, addFile(s), selectEntity, chooseFromList, etc.                                                                    | TsForm (all field widgets)                   |
 | `window`     | centerOnScreen, fitToContent                                                                                                                                                                                                          | TsWindow (titlebar buttons)                  |
 | `sidebar`    | closeMenu, openMenu, expandMenu, collapseMenu                                                                                                                                                                                         | TsSidebar (aria-labels, tooltips)            |
+| `nav`        | logoText, sectionOverview, sectionComponents, sectionUtilities, sectionFormWidgets, overview, window, table, form, topbar, sidebar, integratedLayout, formEditor, themeProvider, modeToggle | App layout (sidebar nav labels, logo text)   |
 | `formEditor` | ~120 keys covering toolbar (undo/redo/reset/import/export/preview), canvas (addRow, dragFieldHere, field palette group labels, field palette type labels), drag overlay, properties panel (all field properties, button properties, every section heading, all variant options, all validation error messages). Also contains nested objects `fieldTypeLabels` (21 entries, one per field type) and `fieldGroupLabels` (6 entries for palette groups). | TsFormEditor |
 
 Some keys are functions for interpolation: `pageOf(page, total)`, `rowsSelected(selected, total)`, `selected(count)`, `fieldNotFound(field)`, `customValueAdd(value)`, `selectEntity(entity)`, etc.
@@ -1429,7 +1472,7 @@ An advanced data grid built on TanStack Table v8 with sorting, filtering, pagina
 | `title`                    | `string`                  | `undefined`            | Title displayed in the toolbar                                                                          |
 | `showCreateButton`         | `boolean`                 | `true`                 | Show "New record" button                                                                                |
 | `showImportButton`         | `boolean`                 | `true`                 | Show "Import" button (Excel/CSV)                                                                        |
-| `showExportButton`         | `boolean`                 | `true`                 | Show "Export" button (Excel)                                                                            |
+| `showExportButton`         | `boolean`                 | `true`                 | Show "Export" button (Excel). Behavior is context-aware: when no filter is active and no rows are selected, shows a plain button that exports all rows. When a column filter, global search, or row selection is active, shows a dropdown with up to three options: "Export all (N rows)", "Export selected (N rows)" (only when rows are selected), "Export filtered (N rows)" (disabled if filter matches 0 rows). |
 | `showColumnSelector`       | `boolean`                 | `true`                 | Show column visibility toggle dropdown                                                                  |
 | `enableSelection`          | `boolean`                 | `true`                 | Show row selection checkboxes                                                                           |
 | `enableSorting`            | `boolean`                 | `true`                 | Enable column header sorting                                                                            |

@@ -254,12 +254,12 @@ export function generateColumns<TData>(
       size: typeof def.width === "number" ? def.width : 200,
       minSize: (() => {
         const isSortable = enableSorting && def.sortable !== false
-        // ~7px per character at text-sm for the label
-        const labelPx = def.title.length * 7
-        // Sort icon: 16px icon + 4px gap = 20px, plus 2px for sort direction indicator gap
+        // ~8.5px per character at text-sm (slightly over-estimate to avoid truncation)
+        const labelPx = Math.ceil(def.title.length * 8.5)
+        // Sort icon: 16px icon + 6px gap = 22px
         const sortPx = isSortable ? 22 : 0
-        // Reorder arrows: 2 x (12px icon + 4px padding) + 2px gap = 34px
-        const reorderPx = enableColumnReordering ? 34 : 0
+        // Reorder arrows: 2 x (12px icon + 5px padding) + 2px gap = 36px
+        const reorderPx = enableColumnReordering ? 36 : 0
         // Cell padding: px-3 both sides = 24px
         const paddingPx = 24
         return Math.max(labelPx + sortPx + reorderPx + paddingPx, 60)

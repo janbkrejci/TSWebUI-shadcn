@@ -74,6 +74,10 @@ export function TsTableToolbar<TData>({
     XLSX.writeFile(wb, `export-${new Date().toISOString().split("T")[0]}.xlsx`)
   }
 
+  const handleExportAll = () => {
+    doExport(table.getCoreRowModel().rows.map((row) => row.original))
+  }
+
   const handleExportFiltered = () => {
     doExport(table.getFilteredRowModel().rows.map((row) => row.original))
   }
@@ -174,6 +178,13 @@ export function TsTableToolbar<TData>({
       (f) => f.value !== "" && f.value != null && !predefinedFilterKeys.includes(f.id)
     )
   }, [columnFiltersState, predefinedFilterKeys])
+
+  const hasAnyActiveFilter = React.useMemo(() => {
+    const hasColFilter = columnFiltersState.some((f) => f.value !== "" && f.value != null)
+    const hasGlobalFilter = !!(table.getState().globalFilter as string)
+    return hasColFilter || hasGlobalFilter
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnFiltersState, table.getState().globalFilter])
 
   const handleClearAllFilters = React.useCallback(() => {
     const predefinedOnly = table
@@ -312,33 +323,47 @@ export function TsTableToolbar<TData>({
           </DropdownMenu>
         )}
 
-        {showExportButton && selectedRows.length === 0 && (
-          <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExportFiltered}>
+        {showExportButton && !hasAnyActiveFilter && selectedRows.length === 0 && (
+          <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExportAll}>
             <Download className="h-4 w-4" />
             {t?.export ?? "Export"}
           </Button>
         )}
 
-        {showExportButton && selectedRows.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2">
-                <Download className="h-4 w-4" />
-                {t?.export ?? "Export"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleExportFiltered}>
-                {t?.exportFiltered?.(table.getFilteredRowModel().rows.length) ??
-                  `Export filtered (${table.getFilteredRowModel().rows.length} rows)`}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportSelected}>
-                {t?.exportSelected?.(selectedRows.length) ??
-                  `Export selected (${selectedRows.length} rows)`}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        {showExportButton &&
+          (hasAnyActiveFilter || selectedRows.length > 0) &&
+          (() => {
+            const allCount = table.getCoreRowModel().rows.length
+            const filteredCount = table.getFilteredRowModel().rows.length
+            const selectedCount = selectedRows.length
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-2">
+                    <Download className="h-4 w-4" />
+                    {t?.export ?? "Export"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportAll}>
+                    {t?.exportAll?.(allCount) ?? `Export all (${allCount} rows)`}
+                  </DropdownMenuItem>
+                  {selectedCount > 0 && (
+                    <DropdownMenuItem onClick={handleExportSelected}>
+                      {t?.exportSelected?.(selectedCount) ??
+                        `Export selected (${selectedCount} rows)`}
+                    </DropdownMenuItem>
+                  )}
+                  {hasAnyActiveFilter && (
+                    <DropdownMenuItem onClick={handleExportFiltered} disabled={filteredCount === 0}>
+                      {t?.exportFiltered?.(filteredCount) ??
+                        `Export filtered (${filteredCount} rows)`}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )
+          })()}
 
         {showImportButton && (
           <div className="relative">
