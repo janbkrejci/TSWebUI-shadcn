@@ -49,3 +49,6 @@ next-env.d.ts
 reference-tswebui/
 \nreference-tswebui/
 \nreference-ruian/
+
+# Proof screenshots (local only)
+proof/
