@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react"
 
 import * as React from "react"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { useWindowManager, WindowOutlet, WindowProvider } from "@/components/ts-web-ui/ts-window"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Button } from "@/components/ui/button"
@@ -19,10 +20,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const WindowControls = ({ windowId }: { windowId: string }) => {
   const { getWindow } = useWindowManager()
+  const locale = useTsLocale()
+  const d = locale.strings.demo
 
   return (
     <div className="bg-muted/50 p-3 rounded-md border text-xs mt-4">
-      <p className="font-semibold mb-2">Imperative API Control:</p>
+      <p className="font-semibold mb-2">{d.windowImperativeAPILabel}</p>
       <div className="grid grid-cols-2 gap-2">
         <Button
           variant="outline"
@@ -30,7 +33,7 @@ const WindowControls = ({ windowId }: { windowId: string }) => {
           className="h-7 text-xs"
           onClick={() => getWindow(windowId)?.minimize()}
         >
-          Minimize
+          {d.windowMinimize}
         </Button>
         <Button
           variant="outline"
@@ -38,7 +41,7 @@ const WindowControls = ({ windowId }: { windowId: string }) => {
           className="h-7 text-xs"
           onClick={() => getWindow(windowId)?.maximize()}
         >
-          Maximize
+          {d.windowMaximize}
         </Button>
         <Button
           variant="outline"
@@ -46,7 +49,7 @@ const WindowControls = ({ windowId }: { windowId: string }) => {
           className="h-7 text-xs"
           onClick={() => getWindow(windowId)?.restore()}
         >
-          Restore
+          {d.windowRestore}
         </Button>
         <Button
           variant="outline"
@@ -54,7 +57,7 @@ const WindowControls = ({ windowId }: { windowId: string }) => {
           className="h-7 text-xs"
           onClick={() => getWindow(windowId)?.centerOnScreen()}
         >
-          Center
+          {d.windowCenter}
         </Button>
         <Button
           variant="outline"
@@ -62,7 +65,7 @@ const WindowControls = ({ windowId }: { windowId: string }) => {
           className="h-7 text-xs col-span-2"
           onClick={() => getWindow(windowId)?.fitToContent()}
         >
-          Fit to Content
+          {d.windowFitContent}
         </Button>
       </div>
     </div>
@@ -71,6 +74,8 @@ const WindowControls = ({ windowId }: { windowId: string }) => {
 
 function TsWindowDemo() {
   const { openWindow, windows } = useWindowManager()
+  const locale = useTsLocale()
+  const d = locale.strings.demo
 
   const openWelcomeWindow = React.useCallback(() => {
     const id = "welcome"
@@ -177,18 +182,18 @@ function TsWindowDemo() {
     <div className="flex-1 flex flex-col gap-4 min-h-125 data-[state=inactive]:hidden text-foreground">
       <div className="flex flex-wrap gap-2 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm">
         <Button onClick={openWelcomeWindow} disabled={isWelcomeOpen}>
-          Open Welcome
+          {d.windowOpenWelcome}
         </Button>
         <Button onClick={openDataWindow} disabled={isDataOpen}>
-          Open Data
+          {d.windowOpenData}
         </Button>
         <Button onClick={openSettingsWindow} disabled={isSettingsOpen}>
-          Open Settings
+          {d.windowOpenSettings}
         </Button>
         <div className="h-6 w-px bg-border mx-2" />
         <Button onClick={createNewWindow} variant="secondary">
           <Plus className="w-4 h-4 mr-2" />
-          Create New Window
+          {d.windowCreateNew}
         </Button>
       </div>
 
@@ -196,7 +201,7 @@ function TsWindowDemo() {
       <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-100 select-none">
         <div className="absolute inset-0 p-8 pointer-events-none">
           <div className="h-full w-full border-2 border-dashed border-slate-300 dark:border-slate-800 rounded flex items-center justify-center text-slate-400">
-            Window Workspace Area (Select text disabled)
+            {d.windowWorkspaceArea}
           </div>
         </div>
 
@@ -208,6 +213,8 @@ function TsWindowDemo() {
 }
 
 export default function TsWindowPage() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
   const codeString = `"use client"
 
 import { 
@@ -300,18 +307,15 @@ export default function Page() {
     <div className="flex flex-col flex-1 gap-6 min-h-0 pb-6">
       <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">TS Window</h1>
-        <p className="text-muted-foreground mt-2">
-          A professional window component with drag, resize, minimize, maximize, and Z-index
-          management.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.windowPageDesc}</p>
       </div>
 
       <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
         <TabsList className="shrink-0 w-fit">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
+          <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
+          <TabsTrigger value="documentation">{d.tabDocumentation}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="flex-1 flex flex-col min-h-0 pt-4">

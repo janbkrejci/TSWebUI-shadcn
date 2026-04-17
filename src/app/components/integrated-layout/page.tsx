@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import * as React from "react"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { TsLayout } from "@/components/ts-web-ui/ts-layout"
 import { Logo } from "@/components/ts-web-ui/ts-logo"
@@ -47,6 +48,9 @@ const NAVIGATION: NavSection[] = [
  * Interactive Integrated Demo
  */
 function IntegratedDemo() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
   return (
     <div className="flex-1 relative border rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shadow-inner min-h-125">
       <TsLayout
@@ -70,16 +74,14 @@ function IntegratedDemo() {
       >
         <div className="p-6 space-y-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">Dashboard Overview</h2>
-            <p className="text-muted-foreground">
-              This demo shows how TopBar and Sidebar work together seamlessly.
-            </p>
+            <h2 className="text-2xl font-bold tracking-tight">{d.integratedDashboardTitle}</h2>
+            <p className="text-muted-foreground">{d.integratedDashboardDesc}</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">{d.integratedTotalUsers}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -89,7 +91,7 @@ function IntegratedDemo() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+                <CardTitle className="text-sm font-medium">{d.integratedActiveSessions}</CardTitle>
                 <BarChart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -183,20 +185,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 }`
 
 export default function IntegratedLayoutPage() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
   return (
     <div className="flex flex-col flex-1 gap-6 min-h-0 pb-6">
       <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">Integrated Layout</h1>
-        <p className="text-muted-foreground mt-2">
-          Full application layout shell combining TopBar and Sidebar into a single component.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.integratedLayoutPageDesc}</p>
       </div>
 
       <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
         <TabsList className="shrink-0 w-fit">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
+          <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="flex-1 flex flex-col min-h-0 pt-4">

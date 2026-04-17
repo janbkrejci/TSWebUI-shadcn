@@ -1,16 +1,18 @@
+"use client"
+
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
-/**
- * Demo page for Markdown widget
- * Displaying formatted text using Markdown
- */
+export default function MarkdownWidgetDemo() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
 
-const attributes: WidgetAttribute[] = [
-  {
-    name: "content",
-    label: "Content",
-    type: "textarea",
-    defaultValue: `# Level 1 Heading
+  const attributes: WidgetAttribute[] = [
+    {
+      name: "content",
+      label: d.attrContent,
+      type: "textarea",
+      defaultValue: `# Level 1 Heading
 
 This is a paragraph with **bold text** and *italics*.
 
@@ -38,16 +40,15 @@ const greeting = "Hello World";
 console.log(greeting);
 \`\`\`
 `,
-    hint: "Markdown formatted text (supports GFM tables, links, code blocks)",
-  },
-  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
-]
+      hint: "Markdown formatted text (supports GFM tables, links, code blocks)",
+    },
+    { name: "hidden", label: d.attrHidden, type: "boolean", defaultValue: false },
+  ]
 
-export default function MarkdownWidgetDemo() {
   return (
     <WidgetDemoWrapper
-      title="Markdown"
-      description="A widget for displaying formatted text using Markdown syntax. Suitable for help, documentation, or dynamic content."
+      title={d.widgetMarkdownTitle}
+      description={d.widgetMarkdownDescription}
       widgetType="markdown"
       attributes={attributes}
     />

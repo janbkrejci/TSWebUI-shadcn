@@ -1,91 +1,92 @@
+"use client"
+
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
-/**
- * Demo page for Date Picker widget
- * Date selection using a calendar
- */
-
-const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Date of Birth" },
-  { name: "placeholder", label: "Placeholder", type: "string", defaultValue: "d.m.yyyy" },
-  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
-  {
-    name: "dateFormat",
-    label: "Date format",
-    type: "string",
-    defaultValue: "d.M.yyyy",
-    hint: "date-fns format string (e.g. d.M.yyyy, dd/MM/yyyy, MM/dd/yyyy)",
-  },
-  {
-    name: "selectAllOnFocus",
-    label: "Select all on focus",
-    type: "boolean",
-    defaultValue: true,
-    hint: "Select all text when the input gets focus",
-  },
-  {
-    name: "error",
-    label: "Error message",
-    type: "string",
-    defaultValue: "",
-    hint: "If provided, the widget will be displayed in an error state",
-  },
-  {
-    name: "enterAction",
-    label: "Enter Action",
-    type: "string",
-    defaultValue: "",
-    hint: "Action to trigger on Enter key",
-  },
-  {
-    name: "escapeAction",
-    label: "Escape Action",
-    type: "string",
-    defaultValue: "",
-    hint: "Action to trigger on Escape key (e.g. clear)",
-  },
-  {
-    name: "locale",
-    label: "Locale",
-    type: "string",
-    defaultValue: "cs",
-    hint: "Date-fns locale code (e.g. cs, en-US, de)",
-  },
-  {
-    name: "showTodayButton",
-    label: "Show Today",
-    type: "boolean",
-    defaultValue: true,
-  },
-  {
-    name: "showClearButton",
-    label: "Show Clear",
-    type: "boolean",
-    defaultValue: true,
-  },
-  {
-    name: "todayButtonText",
-    label: "Today Button Text",
-    type: "string",
-    defaultValue: "Today",
-  },
-  {
-    name: "clearButtonText",
-    label: "Clear Button Text",
-    type: "string",
-    defaultValue: "Clear",
-  },
-  { name: "required", label: "Required", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
-]
-
 export default function DateWidgetDemo() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
+  const attributes: WidgetAttribute[] = [
+    { name: "label", label: d.attrLabel, type: "string", defaultValue: d.dateDefaultLabel },
+    { name: "placeholder", label: d.attrPlaceholder, type: "string", defaultValue: "d.m.yyyy" },
+    { name: "hint", label: d.attrHint, type: "string", defaultValue: "" },
+    {
+      name: "dateFormat",
+      label: d.attrDateFormat,
+      type: "string",
+      defaultValue: "d.M.yyyy",
+      hint: d.attrDateFormatHint,
+    },
+    {
+      name: "selectAllOnFocus",
+      label: d.attrSelectAllOnFocus,
+      type: "boolean",
+      defaultValue: true,
+      hint: d.attrSelectAllOnFocusHint,
+    },
+    {
+      name: "error",
+      label: d.attrError,
+      type: "string",
+      defaultValue: "",
+      hint: d.attrErrorHint,
+    },
+    {
+      name: "enterAction",
+      label: d.attrEnterAction,
+      type: "string",
+      defaultValue: "",
+      hint: d.attrEnterActionHint,
+    },
+    {
+      name: "escapeAction",
+      label: d.attrEscapeAction,
+      type: "string",
+      defaultValue: "",
+      hint: d.attrEscapeActionHint,
+    },
+    {
+      name: "locale",
+      label: d.attrLocale,
+      type: "string",
+      defaultValue: "cs",
+      hint: d.attrLocaleHint,
+    },
+    {
+      name: "showTodayButton",
+      label: d.attrShowToday,
+      type: "boolean",
+      defaultValue: true,
+    },
+    {
+      name: "showClearButton",
+      label: d.attrShowClear,
+      type: "boolean",
+      defaultValue: true,
+    },
+    {
+      name: "todayButtonText",
+      label: d.attrTodayButtonText,
+      type: "string",
+      defaultValue: "Today",
+    },
+    {
+      name: "clearButtonText",
+      label: d.attrClearButtonText,
+      type: "string",
+      defaultValue: "Clear",
+    },
+    { name: "required", label: d.attrRequired, type: "boolean", defaultValue: false },
+    { name: "disabled", label: d.attrDisabled, type: "boolean", defaultValue: false },
+    { name: "readonly", label: d.attrReadOnly, type: "boolean", defaultValue: false },
+    { name: "hidden", label: d.attrHidden, type: "boolean", defaultValue: false },
+  ]
+
   return (
     <WidgetDemoWrapper
-      title="Date Picker"
-      description="Select a date using an editable text input with calendar popup. The value is formatted according to a configurable date-fns format string with Czech locale."
+      title={d.widgetDateTitle}
+      description={d.widgetDateDescription}
       widgetType="date"
       attributes={attributes}
       defaultFieldValue={new Date()}

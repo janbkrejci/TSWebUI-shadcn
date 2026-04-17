@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { ImportResult, TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -164,44 +165,6 @@ const tableData: TableItem[] = [
   },
 ]
 
-const columnDefinitions: TsTableColumnDef[] = [
-  { key: "id", title: "ID", type: "number", visible: false, align: "right", unshowable: true },
-  {
-    key: "name",
-    title: "Name",
-    type: "text",
-    sortable: true,
-    filterable: true,
-    visible: true,
-    align: "left",
-    isClickable: true,
-  },
-  { key: "username", title: "Username", type: "text", visible: false },
-  { key: "email", title: "E-mail", type: "text", visible: true, canBeCopied: true },
-  { key: "city", title: "City", type: "text", visible: true },
-  { key: "company", title: "Company", type: "text", visible: true, isClickable: true },
-  {
-    key: "turnover",
-    title: "Turnover",
-    type: "number",
-    sortable: true,
-    visible: true,
-    align: "right",
-    locale: "cs-CZ",
-    decimalPlaces: 2,
-  },
-  {
-    key: "contractDate",
-    title: "Contract",
-    type: "date",
-    sortable: true,
-    visible: true,
-    align: "right",
-    locale: "cs-CZ",
-  },
-  { key: "approved", title: "Approved", type: "boolean", visible: true, align: "center" },
-]
-
 function ToggleControl({
   label,
   checked,
@@ -222,6 +185,47 @@ function ToggleControl({
 }
 
 export default function TsTablePage() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
+  const columnDefinitions: TsTableColumnDef[] = [
+    { key: "id", title: d.colId, type: "number", visible: false, align: "right", unshowable: true },
+    {
+      key: "name",
+      title: d.colName,
+      type: "text",
+      sortable: true,
+      filterable: true,
+      visible: true,
+      align: "left",
+      isClickable: true,
+    },
+    { key: "username", title: d.colUsername, type: "text", visible: false },
+    { key: "email", title: d.colEmail, type: "text", visible: true, canBeCopied: true },
+    { key: "city", title: d.colCity, type: "text", visible: true },
+    { key: "company", title: d.colCompany, type: "text", visible: true, isClickable: true },
+    {
+      key: "turnover",
+      title: d.colTurnover,
+      type: "number",
+      sortable: true,
+      visible: true,
+      align: "right",
+      locale: "cs-CZ",
+      decimalPlaces: 2,
+    },
+    {
+      key: "contractDate",
+      title: d.colContract,
+      type: "date",
+      sortable: true,
+      visible: true,
+      align: "right",
+      locale: "cs-CZ",
+    },
+    { key: "approved", title: d.colApproved, type: "boolean", visible: true, align: "center" },
+  ]
+
   const [lastAction, setLastAction] = React.useState<string | null>(null)
 
   // Feature toggles
@@ -277,98 +281,93 @@ export default function TsTablePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">TsTable</h1>
-        <p className="text-muted-foreground mt-2">
-          Feature-rich data grid with sorting, filtering, column management, selection, bulk
-          actions, import/export, and locale-aware formatting.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.tablePageDesc}</p>
       </div>
 
       <Tabs defaultValue="preview" className="w-full">
         <TabsList>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
+          <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
+          <TabsTrigger value="documentation">{d.tabDocumentation}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="space-y-4 pt-4">
           {/* Interactive Controls */}
           <Card>
             <CardHeader>
-              <CardTitle>Feature Toggles</CardTitle>
-              <CardDescription>
-                Toggle individual features on/off to see how TsTable adapts.
-              </CardDescription>
+              <CardTitle>{d.featureToggles}</CardTitle>
+              <CardDescription>{d.featureTogglesDescription}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <ToggleControl
-                  label="Selection"
+                  label={d.featureSelection}
                   checked={enableSelection}
                   onCheckedChange={setEnableSelection}
                 />
                 <ToggleControl
-                  label="Sorting"
+                  label={d.featureSorting}
                   checked={enableSorting}
                   onCheckedChange={setEnableSorting}
                 />
                 <ToggleControl
-                  label="Filtering"
+                  label={d.featureFiltering}
                   checked={enableFiltering}
                   onCheckedChange={setEnableFiltering}
                 />
                 <ToggleControl
-                  label="Pagination"
+                  label={d.featurePagination}
                   checked={enablePagination}
                   onCheckedChange={setEnablePagination}
                 />
                 <ToggleControl
-                  label="Row Menu"
+                  label={d.featureRowMenu}
                   checked={enableRowMenu}
                   onCheckedChange={setEnableRowMenu}
                 />
                 <ToggleControl
-                  label="Clickable Rows"
+                  label={d.featureClickableRows}
                   checked={enableClickableRows}
                   onCheckedChange={setEnableClickableRows}
                 />
                 <ToggleControl
-                  label="Clickable Columns"
+                  label={d.featureClickableColumns}
                   checked={enableClickableColumns}
                   onCheckedChange={setEnableClickableColumns}
                 />
                 <ToggleControl
-                  label="Column Resizing"
+                  label={d.featureColumnResizing}
                   checked={enableColumnResizing}
                   onCheckedChange={setEnableColumnResizing}
                 />
                 <ToggleControl
-                  label="Column Reordering"
+                  label={d.featureColumnReordering}
                   checked={enableColumnReordering}
                   onCheckedChange={setEnableColumnReordering}
                 />
                 <ToggleControl
-                  label="Create Button"
+                  label={d.featureCreateButton}
                   checked={showCreateButton}
                   onCheckedChange={setShowCreateButton}
                 />
                 <ToggleControl
-                  label="Import Button"
+                  label={d.featureImportButton}
                   checked={showImportButton}
                   onCheckedChange={setShowImportButton}
                 />
                 <ToggleControl
-                  label="Export Button"
+                  label={d.featureExportButton}
                   checked={showExportButton}
                   onCheckedChange={setShowExportButton}
                 />
                 <ToggleControl
-                  label="Column Selector"
+                  label={d.featureColumnSelector}
                   checked={showColumnSelector}
                   onCheckedChange={setShowColumnSelector}
                 />
                 <ToggleControl
-                  label="Bulk Actions"
+                  label={d.featureBulkActions}
                   checked={showBulkActions}
                   onCheckedChange={setShowBulkActions}
                 />
@@ -379,21 +378,14 @@ export default function TsTablePage() {
           {/* Table Preview */}
           <Card>
             <CardHeader>
-              <CardTitle>Interactive Demo</CardTitle>
-              <CardDescription>
-                Try sorting (click header: asc → desc → clear), filtering (use
-                &quot;10000..200000&quot; for number ranges, &quot;2020..2023&quot; for date
-                ranges), column selector (with search, filter icons, and clear-all-filters),
-                resizing, reordering, and exports. ID column is unshowable (dimmed in selector).
-                Name and Company columns are clickable. Select rows to see the bulk actions menu in
-                the filter row.
-              </CardDescription>
+              <CardTitle>{d.interactiveDemo}</CardTitle>
+              <CardDescription>{d.tableDemoDescription}</CardDescription>
             </CardHeader>
             <CardContent>
               <TsTable
                 data={tableData}
                 columnDefinitions={columnDefinitions}
-                title="Client Management"
+                title={d.tableClientTitle}
                 enableSelection={enableSelection}
                 enableSorting={enableSorting}
                 enableFiltering={enableFiltering}
@@ -423,7 +415,7 @@ export default function TsTablePage() {
               />
               {lastAction && (
                 <div className="mt-4 p-3 bg-muted border rounded-md text-sm font-mono text-primary animate-in fade-in">
-                  <span className="font-bold mr-2">Last Action:</span> {lastAction}
+                  <span className="font-bold mr-2">{d.lastAction}:</span> {lastAction}
                 </div>
               )}
             </CardContent>

@@ -1,5 +1,15 @@
 [
   {
+    "name": "ts-web-ui/locale",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale.json"
+  },
+  {
+    "name": "ts-web-ui/locale-toggle",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale-toggle.json"
+  },
+  {
     "name": "ts-web-ui/ui/alert-dialog",
     "type": "registry:block",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/alert-dialog.json"

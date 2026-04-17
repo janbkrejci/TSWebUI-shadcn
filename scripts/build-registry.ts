@@ -17,6 +17,24 @@ const REGISTRY_BASE_URL =
  */
 const REGISTRY_COMPONENTS = [
   {
+    name: "ts-web-ui/locale",
+    dependencies: [],
+    registryDependencies: [],
+    files: [
+      "locale/index.ts",
+      "locale/types.ts",
+      "locale/context.tsx",
+      "locale/cs.ts",
+      "locale/en.ts",
+    ],
+  },
+  {
+    name: "ts-web-ui/locale-toggle",
+    dependencies: ["lucide-react"],
+    registryDependencies: ["ts-web-ui/locale", "ts-web-ui/ui/button", "dropdown-menu"],
+    files: ["locale-toggle/index.tsx"],
+  },
+  {
     name: "ts-web-ui/ui/alert-dialog",
     dependencies: ["@radix-ui/react-alert-dialog", "lucide-react"],
     registryDependencies: ["ts-web-ui/ui/button"],
@@ -49,7 +67,12 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-sidebar",
     dependencies: ["lucide-react"],
-    registryDependencies: ["ts-web-ui/ui/button", "tooltip", "ts-web-ui/ts-logo"],
+    registryDependencies: [
+      "ts-web-ui/locale",
+      "ts-web-ui/ui/button",
+      "tooltip",
+      "ts-web-ui/ts-logo",
+    ],
     files: ["ts-sidebar/index.tsx"],
   },
   {
@@ -61,13 +84,14 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-window",
     dependencies: ["lucide-react", "react-rnd"],
-    registryDependencies: ["ts-web-ui/ui/button"],
+    registryDependencies: ["ts-web-ui/locale", "ts-web-ui/ui/button"],
     files: ["ts-window/index.tsx"],
   },
   {
     name: "ts-web-ui/ts-table",
     dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "date-fns"],
     registryDependencies: [
+      "ts-web-ui/locale",
       "ts-web-ui/ui/button",
       "checkbox",
       "dropdown-menu",
@@ -96,6 +120,7 @@ const REGISTRY_COMPONENTS = [
       "react-syntax-highlighter",
     ],
     registryDependencies: [
+      "ts-web-ui/locale",
       "ts-web-ui/ui/alert-dialog",
       "ts-web-ui/ui/button",
       "form",
@@ -172,6 +197,9 @@ async function buildRegistry() {
 
         // Adjust imports to point to the target location in the user's project
         const processedContent = content
+          .replace(/@\/components\/ts-web-ui\/locale/g, "@/components/ts-web-ui/locale")
+          .replace(/from "\.\.\/locale"/g, 'from "@/components/ts-web-ui/locale"')
+          .replace(/from '\.\.\/locale'/g, "from '@/components/ts-web-ui/locale'")
           .replace(
             /@\/components\/ts-web-ui\/ui\/alert-dialog/g,
             "@/components/ts-web-ui/ui/alert-dialog"

@@ -9,6 +9,7 @@ import {
   CircleDot,
   FileText,
   FormInput,
+  Globe,
   Hash,
   Home,
   Info,
@@ -86,6 +87,12 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
             icon: Palette,
           },
           { name: "mode-toggle", href: "/components/mode-toggle", label: n.modeToggle, icon: Moon },
+          {
+            name: "locale-toggle",
+            href: "/components/locale-toggle",
+            label: n.localeToggle,
+            icon: Globe,
+          },
         ],
       },
       {
@@ -166,7 +173,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <TsLocaleProvider locale="en">
+      <TsLocaleProvider locale="cs">
         <AppLayoutInner>{children}</AppLayoutInner>
       </TsLocaleProvider>
     </ThemeProvider>

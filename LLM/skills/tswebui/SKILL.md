@@ -61,6 +61,8 @@ No manual npm installs or file copying needed — one command does everything.
 | ------------------------- | --------------------------------------------------------------------------------------------------- |
 | **ThemeProvider**         | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json`    |
 | **ModeToggle**            | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/mode-toggle.json`       |
+| **LocaleToggle**          | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale-toggle.json`     |
+| **Locale (system)**       | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale.json`            |
 | **TsLogo**                | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json`           |
 | **TsTopbar**              | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json`         |
 | **TsSidebar**             | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json`        |
@@ -68,18 +70,18 @@ No manual npm installs or file copying needed — one command does everything.
 | **TsWindow**              | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json`         |
 | **TsTable**               | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json`          |
 | **TsForm**                | `npx shadcn@latest add https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json`           |
-| **LocaleToggle**          | Built-in — lives at `src/components/ts-web-ui/locale-toggle/index.tsx` (no separate registry entry) |
 
 ### Dependency Graph
 
 You don't need to install transitive dependencies manually. For reference, here's what each component pulls in:
 
-- **TsForm** → `ts-table`, `button`, `alert-dialog` + 15 Shadcn primitives (`form`, `input`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `popover`, `calendar`, `command`, `dialog`, `separator`, `tabs`, `textarea`, `toggle-group`) + npm: `react-hook-form`, `lucide-react`, `date-fns`, `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
-- **TsTable** → `button` + Shadcn `checkbox`, `dropdown-menu`, `input`, `select`, `table`, `badge` + npm: `@tanstack/react-table`, `lucide-react`, `xlsx`, `date-fns`
+- **LocaleToggle** → `locale`, `button` + Shadcn `dropdown-menu` + npm: `lucide-react`
+- **TsForm** → `locale`, `ts-table`, `button`, `alert-dialog` + 15 Shadcn primitives (`form`, `input`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `popover`, `calendar`, `command`, `dialog`, `separator`, `tabs`, `textarea`, `toggle-group`) + npm: `react-hook-form`, `lucide-react`, `date-fns`, `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
+- **TsTable** → `locale`, `button` + Shadcn `checkbox`, `dropdown-menu`, `input`, `select`, `table`, `badge` + npm: `@tanstack/react-table`, `lucide-react`, `xlsx`, `date-fns`
 - **TsLayout** (integrated) → `ts-sidebar`, `ts-topbar`, `theme-provider` (and their transitive deps)
-- **TsSidebar** → `button`, `ts-logo` + Shadcn `tooltip`
+- **TsSidebar** → `locale`, `button`, `ts-logo` + Shadcn `tooltip`
 - **TsTopbar** → `ts-logo`
-- **TsWindow** → `button` + npm: `react-rnd`, `lucide-react`
+- **TsWindow** → `locale`, `button` + npm: `react-rnd`, `lucide-react`
 - **ModeToggle** → `button` + Shadcn `dropdown-menu` + npm: `next-themes`, `lucide-react`
 - **ThemeProvider** → npm: `next-themes`
 - **TsLogo** → npm: `lucide-react`
@@ -229,7 +231,7 @@ function MyLocaleSwitcher() {
 
 ### LocaleToggle — Ready-Made Language Switcher
 
-`LocaleToggle` is a pre-built dropdown for the TopBar. It uses `useTsLocaleSetter()` internally and shows 🇬🇧 English / 🇨🇿 Česky with a checkmark on the active locale:
+`LocaleToggle` is a pre-built dropdown for the TopBar. It uses `useTsLocaleSetter()` internally and shows SVG-flag buttons. Czech (🇨🇿 Česky) is listed first and is the default locale in the demo app. Install it with:
 
 ```tsx
 import { LocaleToggle } from "@/components/ts-web-ui/locale-toggle"

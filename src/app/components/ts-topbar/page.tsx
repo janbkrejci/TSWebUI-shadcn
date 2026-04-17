@@ -3,6 +3,7 @@
 import { Palette, Search, User } from "lucide-react"
 
 import * as React from "react"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Logo } from "@/components/ts-web-ui/ts-logo"
 import { TopBar, TopBarGroup } from "@/components/ts-web-ui/ts-topbar"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
@@ -28,6 +29,8 @@ function TopBarDemo() {
   const [showCenter, setShowCenter] = React.useState(true)
   const [isBordered, setIsBordered] = React.useState(true)
   const [height, setHeight] = React.useState(56)
+  const locale = useTsLocale()
+  const d = locale.strings.demo
 
   return (
     <div className="flex-1 flex flex-col gap-4 min-h-0">
@@ -35,14 +38,14 @@ function TopBarDemo() {
       <div className="flex flex-wrap gap-6 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm">
         <div className="flex items-center gap-2">
           <Switch id="bordered" checked={isBordered} onCheckedChange={setIsBordered} />
-          <Label htmlFor="bordered">Border</Label>
+          <Label htmlFor="bordered">{d.topbarBorderLabel}</Label>
         </div>
         <div className="flex items-center gap-2">
           <Switch id="center" checked={showCenter} onCheckedChange={setShowCenter} />
-          <Label htmlFor="center">Center Content</Label>
+          <Label htmlFor="center">{d.topbarCenterContentLabel}</Label>
         </div>
         <div className="flex items-center gap-2">
-          <Label htmlFor="height">Height:</Label>
+          <Label htmlFor="height">{d.topbarHeightLabel}</Label>
           <input
             id="height"
             type="range"
@@ -122,21 +125,22 @@ export default function Layout({ children }) {
 }`
 
 export default function TopBarPage() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
   return (
     <div className="flex flex-col flex-1 gap-6 min-h-0 pb-6">
       <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">TopBar</h1>
-        <p className="text-muted-foreground mt-2">
-          Universal top bar for navigation, logos, and global application actions.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.topbarPageDesc}</p>
       </div>
 
       <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
         <TabsList className="shrink-0 w-fit">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
+          <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
+          <TabsTrigger value="documentation">{d.tabDocumentation}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="flex-1 flex flex-col min-h-0 pt-4">

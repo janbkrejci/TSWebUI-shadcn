@@ -1,12 +1,15 @@
 "use client"
 
 import { CheckCircle2, Info, ShieldAlert } from "lucide-react"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ThemeProviderPage() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
   const codeString = `import { ReactNode } from "react"
 import { ThemeProvider } from "@/components/ts-web-ui/theme-provider"
 import "./globals.css"
@@ -27,35 +30,26 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Theme Provider</h1>
-        <p className="text-muted-foreground mt-2">
-          A context provider that handles theme support (light/dark mode) with built-in protection
-          against hydration mismatches.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.themeProviderPageDesc}</p>
       </div>
 
       <Alert>
         <ShieldAlert className="h-4 w-4" />
-        <AlertTitle>Hydration Protection</AlertTitle>
-        <AlertDescription>
-          This component automatically defers application rendering until the client has mounted,
-          effectively acting as a <code>ClientOnly</code> wrapper for your entire application.
-        </AlertDescription>
+        <AlertTitle>{d.themeProviderHydrationTitle}</AlertTitle>
+        <AlertDescription>{d.themeProviderHydrationDesc}</AlertDescription>
       </Alert>
 
       <Tabs defaultValue="code" className="w-full">
         <TabsList>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="code" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Root Layout Integration</CardTitle>
-              <CardDescription>
-                Place the ThemeProvider around your main content. It provides optimized defaults for
-                shadcn/ui and Tailwind CSS v4.
-              </CardDescription>
+              <CardTitle>{d.themeProviderRootLayoutTitle}</CardTitle>
+              <CardDescription>{d.themeProviderRootLayoutDesc}</CardDescription>
             </CardHeader>
             <CardContent>
               <CodeBlock code={codeString} />
@@ -73,7 +67,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
-              Key Advantages
+              {d.themeProviderKeyAdvantagesTitle}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">

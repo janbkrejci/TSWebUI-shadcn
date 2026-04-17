@@ -3,6 +3,7 @@
 import { BarChart, BookOpen, Calendar, FolderOpen, Home, Mail, Settings, Users } from "lucide-react"
 
 import * as React from "react"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import {
   NavSection,
   Sidebar,
@@ -26,30 +27,18 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 /**
- * Menu items for demo
- */
-const menuItems = [
-  { icon: Home, label: "Dashboard", active: true },
-  { icon: BarChart, label: "Analytics" },
-  { icon: Users, label: "Users" },
-  { icon: FolderOpen, label: "Projects" },
-  { icon: Calendar, label: "Calendar" },
-  { icon: Mail, label: "Messages" },
-  { icon: BookOpen, label: "Documentation" },
-  { icon: Settings, label: "Settings" },
-]
-
-/**
  * Component for controlling the demo sidebar
  */
 function SidebarControls() {
   const { isOpen, toggle, isCollapsed, toggleCollapsed, isMobile } = useSidebar()
+  const locale = useTsLocale()
+  const d = locale.strings.demo
 
   return (
     <div className="flex flex-wrap gap-4 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm m-4">
       <div className="flex items-center gap-2">
         <Switch id="open" checked={isOpen} onCheckedChange={toggle} />
-        <Label htmlFor="open">Open</Label>
+        <Label htmlFor="open">{d.sidebarOpenLabel}</Label>
       </div>
       <div className="flex items-center gap-2">
         <Switch
@@ -59,12 +48,12 @@ function SidebarControls() {
           disabled={!isOpen}
         />
         <Label htmlFor="collapsed" className={!isOpen ? "opacity-50" : ""}>
-          Collapsed
+          {d.sidebarCollapsedLabel}
         </Label>
       </div>
       <div className="text-sm text-muted-foreground">
-        Mode:{" "}
-        <span className="font-medium">{isMobile ? "Mobile (overlay)" : "Desktop (push)"}</span>
+        {d.sidebarModeLabel}{" "}
+        <span className="font-medium">{isMobile ? d.sidebarMobileMode : d.sidebarDesktopMode}</span>
       </div>
     </div>
   )
@@ -76,6 +65,19 @@ function SidebarControls() {
 function SidebarDemo() {
   const [showTopBar, setShowTopBar] = React.useState(true)
   const topBarHeight = showTopBar ? 56 : 0
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
+  const menuItems = [
+    { icon: Home, label: d.navDashboard, active: true },
+    { icon: BarChart, label: d.navAnalytics },
+    { icon: Users, label: d.navUsers },
+    { icon: FolderOpen, label: d.navProjects },
+    { icon: Calendar, label: d.navCalendar },
+    { icon: Mail, label: d.navMessages },
+    { icon: BookOpen, label: d.navDocumentation },
+    { icon: Settings, label: d.navSettings },
+  ]
 
   const NAVIGATION: NavSection[] = [
     {
@@ -95,7 +97,7 @@ function SidebarDemo() {
       <div className="flex flex-wrap gap-4 p-4 border rounded-lg bg-card items-center shrink-0 shadow-sm">
         <div className="flex items-center gap-2">
           <Switch id="topbar" checked={showTopBar} onCheckedChange={setShowTopBar} />
-          <Label htmlFor="topbar">Show TopBar</Label>
+          <Label htmlFor="topbar">{d.sidebarShowTopBarLabel}</Label>
         </div>
       </div>
 
@@ -209,21 +211,22 @@ export default function Layout({ children }) {
 `
 
 export default function SidebarPage() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
   return (
     <div className="flex flex-col flex-1 gap-6 min-h-0 pb-6">
       <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">Sidebar</h1>
-        <p className="text-muted-foreground mt-2">
-          Animated sidebar with support for collapsing and automatic hiding on tablets.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.sidebarPageDesc}</p>
       </div>
 
       <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
         <TabsList className="shrink-0 w-fit">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
+          <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
+          <TabsTrigger value="documentation">{d.tabDocumentation}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="flex-1 flex flex-col min-h-0 pt-4">

@@ -1,40 +1,41 @@
+"use client"
+
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
-/**
- * Demo page for Slider widget
- * Slider for selecting a value from a range
- */
-
-const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "Volume" },
-  { name: "hint", label: "Hint", type: "string", defaultValue: "Adjust the value" },
-  { name: "min", label: "Minimum value", type: "number", defaultValue: 0 },
-  { name: "max", label: "Maximum value", type: "number", defaultValue: 100 },
-  {
-    name: "step",
-    label: "Step",
-    type: "number",
-    defaultValue: 1,
-    hint: "How much the value changes when sliding",
-  },
-  {
-    name: "error",
-    label: "Error message",
-    type: "string",
-    defaultValue: "",
-    hint: "If provided, the widget will be displayed in an error state",
-  },
-  { name: "required", label: "Required", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
-]
-
 export default function SliderWidgetDemo() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
+  const attributes: WidgetAttribute[] = [
+    { name: "label", label: d.attrLabel, type: "string", defaultValue: d.sliderDefaultLabel },
+    { name: "hint", label: d.attrHint, type: "string", defaultValue: d.sliderDefaultHint },
+    { name: "min", label: d.attrMin, type: "number", defaultValue: 0 },
+    { name: "max", label: d.attrMax, type: "number", defaultValue: 100 },
+    {
+      name: "step",
+      label: d.attrStep,
+      type: "number",
+      defaultValue: 1,
+      hint: d.attrStepHint,
+    },
+    {
+      name: "error",
+      label: d.attrError,
+      type: "string",
+      defaultValue: "",
+      hint: d.attrErrorHint,
+    },
+    { name: "required", label: d.attrRequired, type: "boolean", defaultValue: false },
+    { name: "disabled", label: d.attrDisabled, type: "boolean", defaultValue: false },
+    { name: "readonly", label: d.attrReadOnly, type: "boolean", defaultValue: false },
+    { name: "hidden", label: d.attrHidden, type: "boolean", defaultValue: false },
+  ]
+
   return (
     <WidgetDemoWrapper
-      title="Slider"
-      description="A slider for selecting a numeric value from a defined range. Suitable for settings like volume, opacity, etc."
+      title={d.widgetSliderTitle}
+      description={d.widgetSliderDescription}
       widgetType="slider"
       attributes={attributes}
       defaultFieldValue={50}

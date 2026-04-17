@@ -1,31 +1,32 @@
+"use client"
+
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { WidgetAttribute, WidgetDemoWrapper } from "@/components/ts-web-ui/widget-demo"
 
-/**
- * Demo page for Checkbox widget
- * Checkbox for boolean values
- */
-
-const attributes: WidgetAttribute[] = [
-  { name: "label", label: "Label", type: "string", defaultValue: "I agree to the terms" },
-  { name: "hint", label: "Hint", type: "string", defaultValue: "" },
-  {
-    name: "error",
-    label: "Error message",
-    type: "string",
-    defaultValue: "",
-    hint: "If provided, the widget will be displayed in an error state",
-  },
-  { name: "required", label: "Required", type: "boolean", defaultValue: false },
-  { name: "disabled", label: "Disabled", type: "boolean", defaultValue: false },
-  { name: "readonly", label: "Read-only", type: "boolean", defaultValue: false },
-  { name: "hidden", label: "Hidden", type: "boolean", defaultValue: false },
-]
-
 export default function CheckboxWidgetDemo() {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
+  const attributes: WidgetAttribute[] = [
+    { name: "label", label: d.attrLabel, type: "string", defaultValue: d.checkboxDefaultLabel },
+    { name: "hint", label: d.attrHint, type: "string", defaultValue: "" },
+    {
+      name: "error",
+      label: d.attrError,
+      type: "string",
+      defaultValue: "",
+      hint: d.attrErrorHint,
+    },
+    { name: "required", label: d.attrRequired, type: "boolean", defaultValue: false },
+    { name: "disabled", label: d.attrDisabled, type: "boolean", defaultValue: false },
+    { name: "readonly", label: d.attrReadOnly, type: "boolean", defaultValue: false },
+    { name: "hidden", label: d.attrHidden, type: "boolean", defaultValue: false },
+  ]
+
   return (
     <WidgetDemoWrapper
-      title="Checkbox"
-      description="A checkbox for binary choices (yes/no). Suitable for agreeing to terms, activating features, etc."
+      title={d.widgetCheckboxTitle}
+      description={d.widgetCheckboxDescription}
       widgetType="checkbox"
       attributes={attributes}
       defaultFieldValue={true}

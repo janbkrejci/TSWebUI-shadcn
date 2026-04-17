@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Toaster, toast } from "sonner"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { TsForm } from "@/components/ts-web-ui/ts-form"
 import { TsButton, TsFieldDef, TsLayout } from "@/components/ts-web-ui/ts-form/types"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
@@ -16,132 +17,145 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const formFields: Record<string, TsFieldDef> = {
-  name: { type: "text", label: "First Name", required: true, placeholder: "John" },
-  surname: { type: "text", label: "Last Name", required: true, placeholder: "Doe" },
-  email: { type: "text", label: "E-mail", required: true, placeholder: "john@example.com" },
-  age: { type: "number", label: "Age", min: 18, max: 99, required: true },
-  bio: {
-    type: "textarea",
-    label: "Biography",
-    rows: 4,
-    hint: "A short description about yourself",
-  },
-  role: {
-    type: "select",
-    label: "Role",
-    options: [
-      { value: "admin", label: "Administrator" },
-      { value: "user", label: "User" },
-      { value: "guest", label: "Guest" },
-    ],
-    required: true,
-  },
-  country: {
-    type: "combobox",
-    label: "Country",
-    options: [
-      { value: "us", label: "United States" },
-      { value: "gb", label: "United Kingdom" },
-      { value: "de", label: "Germany" },
-      { value: "fr", label: "France" },
-    ],
-    placeholder: "Search country...",
-  },
-  gender: {
-    type: "radio",
-    label: "Gender",
-    options: [
-      { value: "male", label: "Male" },
-      { value: "female", label: "Female" },
-      { value: "other", label: "Other" },
-    ],
-  },
-  rating: {
-    type: "slider",
-    label: "Satisfaction (0-10)",
-    min: 0,
-    max: 10,
-  },
-  active: { type: "switch", label: "Active Account" },
-  birthDate: { type: "date", label: "Date of Birth", required: true },
-  tempInternalNote: {
-    type: "text",
-    label: "Internal Note (Excluded from Submit)",
-    excludeFromSubmit: true,
-    placeholder: "This will not appear in the JSON output",
-  },
-  notes: {
-    type: "markdown",
-    value: "### Important Notes\n- Use **Markdown** for styling\n- Lists and links are supported",
-  },
-}
-
-const formLayout: TsLayout = {
-  tabs: [
-    {
-      label: "General Info",
-      rows: [
-        [
-          { field: "name", width: "1fr" },
-          { field: "surname", width: "1fr" },
-        ],
-        [
-          { field: "email", width: "1fr" },
-          { field: "age", width: "100px" },
-        ],
-        [
-          { field: "birthDate", width: "1fr" },
-          { field: "gender", width: "1fr" },
-        ],
-        [{ field: "tempInternalNote", width: "1fr" }],
-        [{ field: "bio", width: "1fr" }],
-      ],
-    },
-    {
-      label: "Settings & Advanced",
-      rows: [
-        [
-          { field: "country", width: "1fr" },
-          { field: "role", width: "1fr" },
-        ],
-        [{ field: "active" }],
-        [{ field: "rating" }],
-        [{ type: "separator", label: "Custom Content", field: "custom_content_sep" }],
-        [{ field: "notes" }],
-      ],
-    },
-  ],
-}
-
-const formButtons: TsButton[] = [
-  {
-    action: "delete",
-    label: "Delete Account",
-    variant: "destructive",
-    type: "button",
-    confirmation: {
-      title: "Are you absolutely sure?",
-      text: "This action cannot be undone. This will permanently delete your account.",
-      buttons: [
-        { action: "cancel", label: "Cancel" },
-        { action: "confirm", label: "Delete", variant: "destructive", confirm: true },
-      ],
-    },
-  },
-  { action: "save", label: "Save Changes", variant: "default", type: "submit" },
-]
-
 export default function TsFormPage() {
   const [formData, setFormData] = React.useState<{
     action: string
     data: Record<string, unknown>
   } | null>(null)
 
+  const locale = useTsLocale()
+  const d = locale.strings.demo
+
+  const formFields: Record<string, TsFieldDef> = {
+    name: { type: "text", label: d.fieldName, required: true, placeholder: d.fieldNamePlaceholder },
+    surname: {
+      type: "text",
+      label: d.fieldSurname,
+      required: true,
+      placeholder: d.fieldSurnamePlaceholder,
+    },
+    email: {
+      type: "text",
+      label: d.fieldEmail,
+      required: true,
+      placeholder: d.fieldEmailPlaceholder,
+    },
+    age: { type: "number", label: d.fieldAge, min: 18, max: 99, required: true },
+    bio: {
+      type: "textarea",
+      label: d.fieldBio,
+      rows: 4,
+      hint: d.fieldBioHint,
+    },
+    role: {
+      type: "select",
+      label: d.fieldRole,
+      options: [
+        { value: "admin", label: d.roleAdmin },
+        { value: "user", label: d.roleUser },
+        { value: "guest", label: d.roleGuest },
+      ],
+      required: true,
+    },
+    country: {
+      type: "combobox",
+      label: d.fieldCountry,
+      options: [
+        { value: "us", label: d.countryUS },
+        { value: "gb", label: d.countryGB },
+        { value: "de", label: d.countryDE },
+        { value: "fr", label: d.countryFR },
+      ],
+      placeholder: d.fieldCountryPlaceholder,
+    },
+    gender: {
+      type: "radio",
+      label: d.fieldGender,
+      options: [
+        { value: "male", label: d.genderMale },
+        { value: "female", label: d.genderFemale },
+        { value: "other", label: d.genderOther },
+      ],
+    },
+    rating: {
+      type: "slider",
+      label: d.fieldRating,
+      min: 0,
+      max: 10,
+    },
+    active: { type: "switch", label: d.fieldActive },
+    birthDate: { type: "date", label: d.fieldBirthDate, required: true },
+    tempInternalNote: {
+      type: "text",
+      label: d.fieldTempNote,
+      excludeFromSubmit: true,
+      placeholder: d.fieldTempNotePlaceholder,
+    },
+    notes: {
+      type: "markdown",
+      value: "### Important Notes\n- Use **Markdown** for styling\n- Lists and links are supported",
+    },
+  }
+
+  const formLayout: TsLayout = {
+    tabs: [
+      {
+        label: d.formTabGeneral,
+        rows: [
+          [
+            { field: "name", width: "1fr" },
+            { field: "surname", width: "1fr" },
+          ],
+          [
+            { field: "email", width: "1fr" },
+            { field: "age", width: "100px" },
+          ],
+          [
+            { field: "birthDate", width: "1fr" },
+            { field: "gender", width: "1fr" },
+          ],
+          [{ field: "tempInternalNote", width: "1fr" }],
+          [{ field: "bio", width: "1fr" }],
+        ],
+      },
+      {
+        label: d.formTabSettings,
+        rows: [
+          [
+            { field: "country", width: "1fr" },
+            { field: "role", width: "1fr" },
+          ],
+          [{ field: "active" }],
+          [{ field: "rating" }],
+          [{ type: "separator", label: d.formSepCustomContent, field: "custom_content_sep" }],
+          [{ field: "notes" }],
+        ],
+      },
+    ],
+  }
+
+  const formButtons: TsButton[] = [
+    {
+      action: "delete",
+      label: d.btnDeleteAccount,
+      variant: "destructive",
+      type: "button",
+      confirmation: {
+        title: d.btnDeleteTitle,
+        text: d.btnDeleteText,
+        buttons: [
+          { action: "cancel", label: d.btnCancel },
+          { action: "confirm", label: d.btnDelete, variant: "destructive", confirm: true },
+        ],
+      },
+    },
+    { action: "save", label: d.btnSave, variant: "default", type: "submit" },
+  ]
+
   const handleAction = (action: string, data: Record<string, unknown>) => {
     setFormData({ action, data })
     toast(`Form action: ${action}`, {
-      description: action === "save" ? "Successfully saved." : "Action performed.",
+      description: action === "save" ? d.toastSaved : d.toastAction,
     })
   }
 
@@ -150,27 +164,23 @@ export default function TsFormPage() {
       <Toaster />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">TS Form</h1>
-        <p className="text-muted-foreground mt-2">
-          Dynamic, JSON-driven form generation with external validation and layout management.
-        </p>
+        <p className="text-muted-foreground mt-2">{d.formPageDesc}</p>
       </div>
 
       <Tabs defaultValue="preview" className="w-full">
         <TabsList>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="install">Install</TabsTrigger>
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
+          <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+          <TabsTrigger value="code">{d.tabCode}</TabsTrigger>
+          <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
+          <TabsTrigger value="documentation">{d.tabDocumentation}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="pt-4 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle>Interactive Form</CardTitle>
-                <CardDescription>
-                  Generated from JSON. Includes tabs, validation, and confirmation.
-                </CardDescription>
+                <CardTitle>{d.interactiveFormTitle}</CardTitle>
+                <CardDescription>{d.interactiveFormDescription}</CardDescription>
               </CardHeader>
               <CardContent>
                 <TsForm
@@ -189,19 +199,19 @@ export default function TsFormPage() {
               <Card className="shadow-sm bg-muted/20">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground font-bold">
-                    Result
+                    {d.result}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-slate-950 text-slate-50 p-4 rounded-lg overflow-auto text-xs min-h-[150px]">
-                    {formData ? JSON.stringify(formData, null, 2) : "// Awaiting submission..."}
+                    {formData ? JSON.stringify(formData, null, 2) : d.awaitingSubmission}
                   </pre>
                 </CardContent>
               </Card>
               <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground font-bold">
-                    Raw JSON Layout
+                    {d.rawJsonLayout}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

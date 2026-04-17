@@ -4,6 +4,7 @@ import { Copy, Trash2 } from "lucide-react"
 import * as React from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ts-web-ui/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +15,6 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-
 import { getComponentRegistryUrl } from "@/lib/registry"
 
 import { TsFormField } from "../ts-form/ts-form-field"
@@ -82,6 +82,8 @@ export function WidgetDemoWrapper({
   additionalFieldProps = {},
   showInstallTab = false,
 }: WidgetDemoWrapperProps) {
+  const locale = useTsLocale()
+  const d = locale.strings.demo
   // Widget attributes state
   const [attrValues, setAttrValues] = React.useState<Record<string, unknown>>(() => {
     const initial: Record<string, unknown> = {}
@@ -216,8 +218,8 @@ export function WidgetDemoWrapper({
       {/* Left column - Widget Preview */}
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Preview</CardTitle>
-          <CardDescription>Interactive widget preview</CardDescription>
+          <CardTitle>{d.tabPreview}</CardTitle>
+          <CardDescription>{d.widgetInteractivePreview}</CardDescription>
         </CardHeader>
         <CardContent>
           <div ref={widgetContainerRef} className="p-4 border rounded-lg bg-muted/20">
@@ -233,9 +235,9 @@ export function WidgetDemoWrapper({
           {/* Current value */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Current value:</Label>
+              <Label className="text-sm font-medium">{d.widgetCurrentValue}</Label>
               <Button variant="outline" size="sm" onClick={resetValue}>
-                <Trash2 className="h-3 w-3 mr-1" /> Reset
+                <Trash2 className="h-3 w-3 mr-1" /> {d.widgetReset}
               </Button>
             </div>
             <pre className="p-3 bg-muted rounded-md text-sm overflow-auto max-h-32">
@@ -251,9 +253,9 @@ export function WidgetDemoWrapper({
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Attributes</CardTitle>
+              <CardTitle className="text-base">{d.widgetAttributes}</CardTitle>
               <Button variant="ghost" size="sm" onClick={copyJsonConfig}>
-                <Copy className="h-3 w-3 mr-1" /> Copy
+                <Copy className="h-3 w-3 mr-1" /> {d.widgetCopyJson}
               </Button>
             </div>
           </CardHeader>
@@ -265,6 +267,7 @@ export function WidgetDemoWrapper({
                   attribute={attr}
                   value={attrValues[attr.name]}
                   onChange={(value) => updateAttribute(attr.name, value)}
+                  selectPlaceholder={d.widgetSelectPlaceholder}
                 />
               ))}
             </div>
@@ -274,7 +277,7 @@ export function WidgetDemoWrapper({
         {/* JSON Configuration */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">JSON Configuration</CardTitle>
+            <CardTitle className="text-base">{d.widgetJsonConfig}</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="p-3 bg-muted rounded-md text-xs overflow-auto max-h-48">
@@ -297,8 +300,8 @@ export function WidgetDemoWrapper({
       {showInstallTab ? (
         <Tabs defaultValue="preview" className="w-full">
           <TabsList className="w-fit">
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-            <TabsTrigger value="install">Install</TabsTrigger>
+            <TabsTrigger value="preview">{d.tabPreview}</TabsTrigger>
+            <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="preview" className="pt-4 space-y-6">
@@ -308,10 +311,8 @@ export function WidgetDemoWrapper({
           <TabsContent value="install" className="pt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Component Installation</CardTitle>
-                <CardDescription>
-                  Use the shadcn CLI to add this component to your project.
-                </CardDescription>
+                <CardTitle>{d.widgetInstallTitle}</CardTitle>
+                <CardDescription>{d.widgetInstallDescription}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-slate-950 text-slate-50 p-4 rounded-lg relative group">
@@ -322,16 +323,13 @@ export function WidgetDemoWrapper({
                     className="absolute right-2 top-2 h-8 w-8 text-slate-400 hover:text-slate-50"
                     onClick={() => {
                       navigator.clipboard.writeText(installCommand)
-                      toast.success("Command copied to clipboard")
+                      toast.success(d.widgetCommandCopied)
                     }}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground italic">
-                  Note: This command will automatically install all required NPM dependencies and
-                  shadcn UI components.
-                </p>
+                <p className="text-sm text-muted-foreground italic">{d.widgetInstallNote}</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -344,19 +342,17 @@ export function WidgetDemoWrapper({
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Event Log</CardTitle>
+            <CardTitle>{d.widgetEventLog}</CardTitle>
             <Button variant="outline" size="sm" onClick={clearEventLog}>
-              <Trash2 className="h-3 w-3 mr-1" /> Clear
+              <Trash2 className="h-3 w-3 mr-1" /> {d.widgetClearLog}
             </Button>
           </div>
-          <CardDescription>Recorded events from the widget</CardDescription>
+          <CardDescription>{d.widgetEventsDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px]">
             {eventLog.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-8">
-                No events yet. Interact with the widget.
-              </p>
+              <p className="text-muted-foreground text-sm text-center py-8">{d.widgetNoEvents}</p>
             ) : (
               <div className="space-y-2">
                 {eventLog.map((entry) => (
@@ -391,10 +387,12 @@ function AttributeControl({
   attribute,
   value,
   onChange,
+  selectPlaceholder = "-- Select --",
 }: {
   attribute: WidgetAttribute
   value: unknown
   onChange: (value: unknown) => void
+  selectPlaceholder?: string
 }) {
   switch (attribute.type) {
     case "boolean":
@@ -431,7 +429,7 @@ function AttributeControl({
             value={(value as string) ?? ""}
             onChange={(e) => onChange(e.target.value)}
           >
-            <option value="">-- Select --</option>
+            <option value="">{selectPlaceholder}</option>
             {attribute.options?.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
