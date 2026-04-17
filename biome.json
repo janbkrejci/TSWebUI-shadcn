@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "ignoreUnknown": false, "includes": ["**", "!src/app/globals.css"] },
+  "files": { "ignoreUnknown": false, "includes": ["**", "!src/app/globals.css", "!public/**"] },
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
