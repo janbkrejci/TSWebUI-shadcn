@@ -275,6 +275,7 @@ export function generateColumns<TData>(
         return textFilter(row as any, id, value, addMeta)
       },
       meta: {
+        title: def.title,
         type: def.type,
         align: def.align,
       },

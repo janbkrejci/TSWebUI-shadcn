@@ -41,4 +41,20 @@ describe("TsTable", () => {
     fireEvent.click(screen.getByText("Alice"))
     expect(onRowClick).toHaveBeenCalledWith(data[0])
   })
+
+  it("uses column titles in the column selector instead of internal column ids", () => {
+    const localizedColumns: TsTableColumnDef[] = [
+      { key: "ico", title: "IČO", type: "text" },
+      { key: "name", title: "Název", type: "text" },
+    ]
+
+    render(<TsTable data={[{ ico: "123", name: "ACME" }]} columnDefinitions={localizedColumns} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Columns/i }))
+
+    expect(screen.getByText("IČO")).toBeInTheDocument()
+    expect(screen.getByText("Název")).toBeInTheDocument()
+    expect(screen.queryByText("ico")).not.toBeInTheDocument()
+    expect(screen.queryByText("name")).not.toBeInTheDocument()
+  })
 })

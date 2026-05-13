@@ -159,6 +159,22 @@ describe("Story 2-5: Implementace mřížkového zarovnání", () => {
     expect(checkboxWidget).toBeInTheDocument()
   })
 
+  it("keeps aligned row items pinned to the top instead of stretching vertically", () => {
+    const alignedFields: Record<string, TsFieldDef> = {
+      short: { type: "text", label: "Short" },
+      tall: { type: "textarea", label: "Tall" },
+    }
+    const alignedLayout: TsLayout = {
+      rows: [[{ field: "short", align: "center" }, { field: "tall" }]],
+    }
+
+    const { container } = render(<TsForm layout={alignedLayout} fields={alignedFields} />)
+
+    const shortFieldWrapper = container.querySelector('[data-field="short"]')?.closest(".min-w-0")
+
+    expect(shortFieldWrapper).toHaveClass("flex", "w-full", "items-start")
+  })
+
   it("torture test: layout stability with long labels and errors", () => {
     const tortureFields: Record<string, TsFieldDef> = {
       f1: { type: "text", label: "Short" },
