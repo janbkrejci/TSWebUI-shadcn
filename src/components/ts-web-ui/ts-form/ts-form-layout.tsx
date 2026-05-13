@@ -233,7 +233,7 @@ export function TsFormLayout({
             return (
               <div
                 key={item.field}
-                className={cn("min-w-0", item.align && "flex w-full", alignmentClass)}
+                className={cn("min-w-0", item.align && "flex w-full items-start", alignmentClass)}
               >
                 <div className={cn(item.align ? "w-fit" : "w-full")}>
                   <TsFormField

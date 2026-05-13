@@ -67,6 +67,26 @@ export function TsTableToolbar<TData>({
   const [columnSearch, setColumnSearch] = React.useState("")
   const [columnDropdownOpen, setColumnDropdownOpen] = React.useState(false)
 
+  const getColumnLabel = React.useCallback(
+    (column: ReturnType<Table<TData>["getAllLeafColumns"]>[number]) => {
+      const meta = column.columnDef.meta as { title?: string } | undefined
+      if (typeof meta?.title === "string" && meta.title.trim()) {
+        return meta.title
+      }
+
+      const definitionTitle = columnDefinitions.find(
+        (definition) => definition.key === column.id
+      )?.title
+      if (definitionTitle) {
+        return definitionTitle
+      }
+
+      const header = column.columnDef.header
+      return typeof header === "string" ? header : column.id
+    },
+    [columnDefinitions]
+  )
+
   const doExport = (rows: TData[]) => {
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
@@ -288,20 +308,18 @@ export function TsTableToolbar<TData>({
                 {orderedColumns
                   .filter((column) => {
                     if (!columnSearch) return true
-                    const header = column.columnDef.header
-                    const label = typeof header === "string" ? header : column.id
+                    const label = getColumnLabel(column)
                     return label.toLowerCase().includes(columnSearch.toLowerCase())
                   })
                   .map((column) => {
                     const isUnhideable = unhideableColumns.includes(column.id)
                     const isUnshowable = unshowableColumns.includes(column.id)
-                    const header = column.columnDef.header
-                    const label = typeof header === "string" ? header : column.id
+                    const label = getColumnLabel(column)
                     const hasFilter = activeFilterIds.has(column.id)
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}
-                        className={cn("capitalize", isUnshowable && "opacity-50")}
+                        className={cn(isUnshowable && "opacity-50")}
                         checked={column.getIsVisible()}
                         disabled={isUnhideable || isUnshowable}
                         onCheckedChange={(value) => {
