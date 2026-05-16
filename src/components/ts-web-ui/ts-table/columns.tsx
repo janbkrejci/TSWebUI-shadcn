@@ -13,287 +13,292 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Switch } from "@/components/ui/switch"
 
-import { cn } from "@/lib/utils"
+export interface TsColumnDef<TData = unknown> extends ColumnDef<TData> {
+  /** Human-readable title for the column header */
+  title: string
+  /** Column type: 'text', 'number', 'date', 'boolean', 'json' */
+  type?: string
+  /** Whether sorting is allowed (default: true) */
+  sortable?: boolean
+  /** Whether filtering is allowed (default: true) */
+  filterable?: boolean
+  /** Width in pixels or string (e.g., '1fr', 'auto') */
+  width?: number | string
+  /** Mark column as required (for form columns) */
+  required?: boolean
+  /** Mark column as read-only (for form columns) */
+  readOnly?: boolean
+  /** Mark column as not visible by default */
+  hidden?: boolean
+  /** Can this column be copied to clipboard? (for display columns) */
+  canBeCopied?: boolean
+  /** Locale for text formatting (default: 'en-US') */
+  locale?: TsLocale
+}
 
-import { booleanFilter, dateFilter, numberFilter, textFilter } from "./filters"
+export function generateColumns<TData extends Record<string, unknown>>(
+  defs: TsColumnDef<TData>[],
+  options?: {
+    enableSorting?: boolean
+    locale?: TsLocale
+  },
+) {
+  const enableSorting = options?.enableSorting ?? true
+  const locale = options?.locale ?? "en-US"
 
-function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string }) {
+  return defs.map((def) => {
+    const cell = def.cell
+
+    if (!cell) {
+      // No custom cell renderer → use default display
+      return {
+        ...def,
+        header: def.title,
+        cell: ({ getValue }: { getValue: () => unknown }) => {
+          const value = getValue()
+
+          if (def.type === "boolean") {
+            return value ? (
+              <div className="flex items-center justify-center">
+                <Check className="h-4 w-4 text-green-600" />
+              </div>
+            ) : null
+          }
+
+          if (def.type === "json") {
+            const json = value ? JSON.stringify(value, null, 2) : ""
+            return json ? (
+              <pre className="max-h-40 overflow-auto rounded bg-muted p-2 text-xs">{json}</pre>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )
+          }
+
+          // Default: format as string
+          const formatted =
+            value === null || value === undefined
+              ? "—"
+              : def.type === "number"
+                ? Number(value).toLocaleString(locale)
+                : def.type === "date" && value instanceof Date
+                  ? value.toLocaleDateString(locale)
+                  : String(value)
+
+          return (
+            <span
+              className={def.type === "json" ? "font-mono" : ""}
+              title={formatted}
+            >
+              {formatted}
+            </span>
+          )
+        },
+      }
+    }
+
+    // Custom cell renderer already specified
+    return {
+      ...def,
+      header: def.title,
+    }
+  })
+}
+
+export function buildCellContent(
+  value: unknown,
+  type?: string,
+  locale?: TsLocale,
+  canBeCopied?: boolean,
+) {
+  const finalLocale = locale ?? "en-US"
+
+  if (type === "boolean") {
+    return value ? (
+      <div className="flex items-center justify-center">
+        <Check className="h-4 w-4 text-green-600" />
+      </div>
+    ) : null
+  }
+
+  if (type === "json") {
+    const json = value ? JSON.stringify(value, null, 2) : ""
+    return json ? (
+      <pre className="max-h-40 overflow-auto rounded bg-muted p-2 text-xs font-mono">
+        {json}
+      </pre>
+    ) : (
+      <span className="text-muted-foreground">—</span>
+    )
+  }
+
+  // Default: format as string
+  const formatted =
+    value === null || value === undefined
+      ? "—"
+      : type === "number"
+        ? Number(value).toLocaleString(finalLocale)
+        : type === "date" && value instanceof Date
+          ? value.toLocaleDateString(finalLocale)
+          : String(value)
+
+  if (canBeCopied && formatted !== "—") {
+    return (
+      <CopyableCell value={formatted}>
+        <span className="truncate">{formatted}</span>
+      </CopyableCell>
+    )
+  }
+
+  return <span className="truncate">{formatted}</span>
+}
+
+function CopyableCell({
+  value,
+  children,
+}: {
+  value: string
+  children: React.ReactNode
+}) {
   const [copied, setCopied] = React.useState(false)
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    navigator.clipboard.writeText(value).then(() => {
+    try {
+      await navigator.clipboard.writeText(value)
       setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error("Failed to copy:", err)
+    }
   }
 
   return (
-    <button
-      className="inline-flex items-center justify-center h-6 w-6 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
-      onClick={handleCopy}
-      aria-label={copyLabel ?? "Copy to clipboard"}
+    <div
+      className="group flex items-center gap-2"
+      onClick={(e) => e.stopPropagation()}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          handleCopy(e as any)
+        }
+      }}
     >
-      {copied ? (
-        <Check className="h-4 w-4 text-green-500" />
-      ) : (
-        <ClipboardCopy className="h-4 w-4 text-foreground" />
-      )}
-    </button>
+      {children}
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100"
+        onClick={handleCopy}
+        title={copied ? "Copied!" : "Copy to clipboard"}
+      >
+        {copied ? (
+          <Check className="h-3 w-3" />
+        ) : (
+          <ClipboardCopy className="h-3 w-3" />
+        )}
+      </Button>
+    </div>
   )
 }
 
-export interface TsTableColumnDef {
-  key: string
-  title: string
-  type?: "text" | "number" | "date" | "boolean"
-  sortable?: boolean
-  filterable?: boolean
-  visible?: boolean
-  unshowable?: boolean
-  width?: number | string
-  align?: "left" | "center" | "right"
-  canBeCopied?: boolean
-  isClickable?: boolean
-  locale?: string
-  decimalPlaces?: number
-}
-
-export interface TsTableRowAction {
-  action: string
-  label: string
-}
-
-export function generateColumns<TData>(
-  columnDefinitions: TsTableColumnDef[],
-  enableSelection: boolean,
-  onRowClick?: (row: TData, columnKey?: string) => void,
-  rowActions?: TsTableRowAction[],
-  onAction?: (action: string, row: TData) => void,
-  enableSorting: boolean = true,
-  enableClickableColumns: boolean = false,
-  enableColumnReordering: boolean = true,
-  tsLocale?: TsLocale
-): ColumnDef<TData>[] {
-  const t = tsLocale?.strings.table
-  const cols: ColumnDef<TData>[] = []
-
-  // 1. Selection column — header checkbox rendered in filter row by TsTableView
-  if (enableSelection) {
-    cols.push({
-      id: "select",
-      header: () => null,
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={row.getIsSelected()}
-            onChange={(e) => row.toggleSelected(e.target.checked)}
-            aria-label={t?.selectRow ?? "Select row"}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            className="h-4 w-4 accent-primary cursor-pointer"
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      enableResizing: false,
-      size: 40,
-      minSize: 40,
-      maxSize: 40,
-    })
-  }
-
-  // 2. Row Actions Column (if enabled)
-  if (rowActions && rowActions.length > 0) {
-    cols.push({
-      id: "actions",
-      enableHiding: false,
-      enableResizing: false,
-      size: 40,
-      minSize: 40,
-      maxSize: 40,
-      cell: ({ row }) => {
-        return (
-          <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">{t?.openMenu ?? "Open menu"}</span>
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t?.actions ?? "Actions"}</DropdownMenuLabel>
-                {rowActions.map((action, idx) => (
-                  <DropdownMenuItem
-                    key={idx}
-                    onClick={() => onAction?.(action.action, row.original)}
-                  >
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )
-      },
-    })
-  }
-
-  // 3. Data columns
-  columnDefinitions.forEach((def) => {
-    const locale = def.locale || "cs-CZ"
-    const decimalPlaces = def.decimalPlaces ?? 2
-
-    cols.push({
-      accessorKey: def.key,
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted()
-        const isRight = def.align === "right"
-        const isSortable = enableSorting && def.sortable !== false
-        const sortIcon = isSortable ? (
-          isSorted === "desc" ? (
-            <ArrowDown className={cn("h-4 w-4 shrink-0", isRight ? "mr-1" : "ml-1")} />
-          ) : isSorted === "asc" ? (
-            <ArrowUp className={cn("h-4 w-4 shrink-0", isRight ? "mr-1" : "ml-1")} />
-          ) : (
-            <ArrowUpDown
-              className={cn(
-                "h-4 w-4 shrink-0 opacity-0 group-hover/header:opacity-50 transition-opacity",
-                isRight ? "mr-1" : "ml-1"
-              )}
-            />
-          )
-        ) : null
-        return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 data-[state=open]:bg-accent px-0 has-[>svg]:px-0 hover:bg-transparent hover:text-current dark:hover:bg-transparent"
+export function buildColumnActions<TData extends Record<string, unknown>>(
+  columnId: string,
+  onColumnChange?: (columnId: string, changes: Partial<TsColumnDef<TData>>) => void,
+) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Column Actions</DropdownMenuLabel>
+        {onColumnChange && (
+          <DropdownMenuItem
             onClick={() => {
-              if (!isSortable) return
-              if (isSorted === "asc") {
-                column.toggleSorting(true) // desc
-              } else if (isSorted === "desc") {
-                column.clearSorting() // no sort
-              } else {
-                column.toggleSorting(false) // asc
-              }
+              onColumnChange(columnId, { hidden: true })
             }}
-            disabled={!isSortable}
           >
-            {isRight && sortIcon}
-            <span className="truncate">{def.title}</span>
-            {!isRight && sortIcon}
-          </Button>
-        )
-      },
-      cell: ({ row }) => {
-        const value = row.getValue(def.key)
+            Hide
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
-        let formattedValue: React.ReactNode = String(value ?? "")
+export function buildTableColumns<TData extends Record<string, unknown>>(
+  columnDefs: TsColumnDef<TData>[],
+  options?: {
+    enableSorting?: boolean
+    onColumnChange?: (columnId: string, changes: Partial<TsColumnDef<TData>>) => void
+    locale?: TsLocale
+  },
+): ColumnDef<TData>[] {
+  const enableSorting = options?.enableSorting ?? true
+  const locale = options?.locale ?? "en-US"
 
-        if (def.type === "number" && typeof value === "number") {
-          formattedValue = value.toLocaleString(locale, {
-            minimumFractionDigits: decimalPlaces,
-            maximumFractionDigits: decimalPlaces,
-          })
-        } else if (def.type === "date" && value) {
-          const d = new Date(value as string)
-          if (!isNaN(d.getTime())) {
-            formattedValue = new Intl.DateTimeFormat(locale).format(d)
-          }
-        } else if (def.type === "boolean") {
-          formattedValue = (
-            <div
-              className={cn(
-                "flex",
-                def.align === "center" && "justify-center",
-                def.align === "right" && "justify-end"
+  return columnDefs
+    .filter((def) => !def.hidden)
+    .map((def) => {
+      const title = def.title
+      const canBeCopied = def.canBeCopied ?? false
+
+      return {
+        accessorKey: def.id,
+        header: ({ column }) => {
+          return (
+            <div className="flex items-center gap-2">
+              <span>{title}</span>
+              {column.getCanSort() && (
+                <button
+                  className="inline-flex h-8 w-8 items-center justify-center rounded hover:bg-accent"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  title={`Sort: ${column.getIsSorted() === "asc" ? "ascending" : column.getIsSorted() === "desc" ? "descending" : "none"}`}
+                >
+                  {column.getIsSorted() === "asc" && <ArrowUp className="h-4 w-4" />}
+                  {column.getIsSorted() === "desc" && <ArrowDown className="h-4 w-4" />}
+                  {!column.getIsSorted() && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                </button>
               )}
-            >
-              <Switch
-                checked={!!value}
-                aria-readonly="true"
-                tabIndex={-1}
-                className="pointer-events-none"
-              />
+              {options?.onColumnChange && (
+                <buildColumnActions(def.id as string, options.onColumnChange) as any
+              )}
             </div>
           )
-        }
-
-        return (
-          <div
-            className={cn(
-              "flex items-center gap-1",
-              def.align === "center" && "justify-center",
-              def.align === "right" && "justify-end",
-              enableClickableColumns &&
-                def.isClickable &&
-                "text-primary hover:underline cursor-pointer font-medium"
-            )}
-            onClick={(e) => {
-              if (enableClickableColumns && def.isClickable) {
-                e.stopPropagation()
-                onRowClick?.(row.original, def.key)
-              }
-            }}
-          >
-            <span className="truncate">{formattedValue}</span>
-            {def.canBeCopied && value != null && (
-              <CopyButton value={String(value)} copyLabel={t?.copyToClipboard} />
-            )}
-          </div>
-        )
-      },
-      enableSorting: enableSorting && (def.sortable ?? true),
-      ...((!def.type || def.type === "text") && enableSorting && def.sortable !== false
-        ? {
-            sortingFn: (
-              rowA: Row<TData>,
-              rowB: Row<TData>,
-              columnId: string,
-            ): number => {
-              const a = String(rowA.getValue(columnId) ?? "")
-              const b = String(rowB.getValue(columnId) ?? "")
-              return a.localeCompare(b, locale)
-            },
-          }
-        : {}),
-      enableColumnFilter: def.filterable ?? true,
-      size: typeof def.width === "number" ? def.width : 200,
-      minSize: (() => {
-        const isSortable = enableSorting && def.sortable !== false
-        // ~8.5px per character at text-sm (slightly over-estimate to avoid truncation)
-        const labelPx = Math.ceil(def.title.length * 8.5)
-        // Sort icon: 16px icon + 6px gap = 22px
-        const sortPx = isSortable ? 22 : 0
-        // Reorder arrows: 2 x (12px icon + 5px padding) + 2px gap = 36px
-        const reorderPx = enableColumnReordering ? 36 : 0
-        // Cell padding: px-3 both sides = 24px
-        const paddingPx = 24
-        return Math.max(labelPx + sortPx + reorderPx + paddingPx, 60)
-      })(),
-      filterFn: (row, id, value, addMeta) => {
-        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
-        if (def.type === "number") return numberFilter(row as any, id, value, addMeta)
-        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
-        if (def.type === "date") return dateFilter(row as any, id, value, addMeta)
-        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
-        if (def.type === "boolean") return booleanFilter(row as any, id, value, addMeta)
-        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
-        return textFilter(row as any, id, value, addMeta)
-      },
-      meta: {
-        title: def.title,
-        type: def.type,
-        align: def.align,
-      },
+        },
+        cell: ({ getValue }) => {
+          const value = getValue()
+          return (
+            <div className="flex items-center">
+              {buildCellContent(value, def.type, locale, canBeCopied)}
+            </div>
+          )
+        },
+        enableSorting: enableSorting && (def.sortable ?? true),
+        ...((!def.type || def.type === "text") && enableSorting && def.sortable !== false
+          ? {
+              sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string): number => {
+                const a = String(rowA.getValue(columnId) ?? "")
+                const b = String(rowB.getValue(columnId) ?? "")
+                return a.localeCompare(b, locale)
+              },
+            }
+          : {}),
+        enableColumnFilter: def.filterable ?? true,
+        size: typeof def.width === "number" ? def.width : 200,
+        minSize: (() => {
+          const isSortable = enableSorting && def.sortable !== false
+          // ~8.5px per character at text-sm (slightly over-estimate to avoid truncation)
+          const labelPx = Math.ceil(def.title.length * 8.5)
+          // Sort icon: 16px icon + 6px gap = 22px
+          const minForSort = isSortable ? 22 : 0
+          return Math.max(60, labelPx + minForSort)
+        })(),
+      } as ColumnDef<TData>
     })
-  })
-
-  return cols
 }
