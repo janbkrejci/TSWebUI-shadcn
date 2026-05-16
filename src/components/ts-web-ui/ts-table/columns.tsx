@@ -250,6 +250,19 @@ export function generateColumns<TData>(
         )
       },
       enableSorting: enableSorting && (def.sortable ?? true),
+      ...((!def.type || def.type === "text") && enableSorting && def.sortable !== false
+        ? {
+            sortingFn: (
+              rowA: Parameters<NonNullable<ColumnDef<TData>["sortingFn"]>>[0],
+              rowB: Parameters<NonNullable<ColumnDef<TData>["sortingFn"]>>[1],
+              columnId: string,
+            ): number => {
+              const a = String(rowA.getValue(columnId) ?? "")
+              const b = String(rowB.getValue(columnId) ?? "")
+              return a.localeCompare(b, locale)
+            },
+          }
+        : {}),
       enableColumnFilter: def.filterable ?? true,
       size: typeof def.width === "number" ? def.width : 200,
       minSize: (() => {
