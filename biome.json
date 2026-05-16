@@ -98,9 +98,9 @@
       "semicolons": "asNeeded",
       "arrowParentheses": "always",
       "bracketSameLine": false,
+      "bracketSpacing": true,
       "quoteStyle": "double",
-      "attributePosition": "auto",
-      "bracketSpacing": true
+      "attributePosition": "auto"
     },
     "globals": []
   },

@@ -179,10 +179,9 @@ export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
 
 export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)
-  const val = String(filterValue)
-
-  if (val === "true") return cellValue === true
-  if (val === "false") return cellValue === false
+  // Accept both boolean values (from predefinedFilters) and string values (from UI)
+  if (filterValue === true || filterValue === "true") return cellValue === true
+  if (filterValue === false || filterValue === "false") return cellValue === false
   return true // 'all' or empty
 }
 
