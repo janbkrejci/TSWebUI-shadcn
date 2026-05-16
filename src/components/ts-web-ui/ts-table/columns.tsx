@@ -1,6 +1,6 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, Row } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, ClipboardCopy, MoreVertical } from "lucide-react"
 
 import * as React from "react"
@@ -253,8 +253,8 @@ export function generateColumns<TData>(
       ...((!def.type || def.type === "text") && enableSorting && def.sortable !== false
         ? {
             sortingFn: (
-              rowA: Parameters<NonNullable<ColumnDef<TData>["sortingFn"]>>[0],
-              rowB: Parameters<NonNullable<ColumnDef<TData>["sortingFn"]>>[1],
+              rowA: Row<TData>,
+              rowB: Row<TData>,
               columnId: string,
             ): number => {
               const a = String(rowA.getValue(columnId) ?? "")
