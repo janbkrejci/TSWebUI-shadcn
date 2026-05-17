@@ -46,7 +46,7 @@ function DebouncedFilterInput({
   onChange: (value: string) => void
 } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
   const [localValue, setLocalValue] = React.useState(externalValue)
-  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>(null)
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // Sync from external if changed programmatically
   React.useEffect(() => {

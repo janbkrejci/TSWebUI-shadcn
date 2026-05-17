@@ -156,9 +156,27 @@ export const MultiSelectWidget = React.forwardRef<HTMLDivElement, TsMultiSelectW
             />
             <CommandList>
               <CommandEmpty className="py-1.5 px-2 text-left">
-                <span className="italic text-muted-foreground text-sm">
-                  {def.notFoundMessage || tf.notFound}
-                </span>
+                {def.allowCustom && searchValue.trim() ? (
+                  <button
+                    type="button"
+                    className="w-full text-left text-sm px-1 py-0.5 hover:bg-accent rounded"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      const trimmed = searchValue.trim()
+                      if (!selectedValues.includes(trimmed)) {
+                        field.onChange([...selectedValues, trimmed])
+                      }
+                      setSearchValue("")
+                      setOpen(false)
+                    }}
+                  >
+                    + {searchValue.trim()}
+                  </button>
+                ) : (
+                  <span className="italic text-muted-foreground text-sm">
+                    {def.notFoundMessage || tf.notFound}
+                  </span>
+                )}
               </CommandEmpty>
               <CommandGroup>
                 {options.map((opt: { value: string; label: string }) => (
