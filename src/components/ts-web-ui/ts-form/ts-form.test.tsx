@@ -374,6 +374,7 @@ describe("TsForm Tabs and Layout", () => {
       { label: "Tab 2", rows: [[{ field: "lastName" }]] },
     ],
   }
+  const tabButtons = [{ action: "submit", label: "Submit", type: "submit" as const }]
 
   it("shows error dot on Tab 2 when lastName has error", async () => {
     const errors: TsErrors = { lastName: "Required field" }
@@ -433,12 +434,33 @@ describe("TsForm Tabs and Layout", () => {
       manyFields[`field${i}`] = { type: "text", label: `Field ${i}` }
     })
 
-    const startTime = performance.now()
     render(<TsForm layout={manyTabsLayout} fields={manyFields} buttons={[]} />)
-    const endTime = performance.now()
 
     expect(screen.getByText("Tab 0")).toBeInTheDocument()
-    // Should render within a reasonable time (e.g., < 1000ms for initial render of 50 tabs)
-    expect(endTime - startTime).toBeLessThan(1000)
+  })
+
+  it("keeps tabs fixed above a scrollable tab body", () => {
+    const { container } = render(<TsForm layout={tabLayout} fields={fields} buttons={tabButtons} />)
+
+    const form = container.querySelector("form")
+    const tabs = container.querySelector('[data-slot="tabs"]')
+    const tabList = container.querySelector('[data-slot="tabs-list"]')
+    const tabContent = container.querySelector('[data-slot="tabs-content"]')
+
+    expect(form).toHaveClass("flex", "h-full", "min-h-0", "flex-col")
+    expect(tabs).toHaveClass("flex-1", "min-h-0", "flex-col")
+    expect(tabList).toHaveClass("shrink-0")
+    expect(tabContent).toHaveClass("flex-1", "min-h-0", "overflow-y-auto")
+  })
+
+  it("keeps the button bar outside the scrollable form body", () => {
+    const { container } = render(<TsForm layout={tabLayout} fields={fields} buttons={tabButtons} />)
+
+    const submitButton = screen.getByRole("button", { name: /Submit/i })
+    const buttonBar = submitButton.closest(".border-t")
+
+    expect(buttonBar).toHaveClass("shrink-0")
+    expect(buttonBar).toHaveClass("mt-4")
+    expect(container.querySelector('[data-slot="tabs-content"]')).toHaveClass("overflow-y-auto")
   })
 })

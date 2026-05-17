@@ -755,19 +755,19 @@ export function TsFormEditor() {
         {/* Preview Dialog */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
           <DialogContent
-            className="max-w-none w-[98vw] min-w-300 max-h-[95vh] overflow-auto"
+            className="max-w-none w-[98vw] min-w-300 max-h-[95vh] overflow-hidden flex flex-col"
             onEscapeKeyDown={(e) => {
               // Prevent dialog from closing on Escape so that form fields can handle it
               e.preventDefault()
             }}
           >
-            <DialogHeader>
+            <DialogHeader className="shrink-0">
               <DialogTitle>{fe.formPreview}</DialogTitle>
               <DialogDescription>{fe.interactivePreview}</DialogDescription>
             </DialogHeader>
             <div
               ref={previewContainerRef}
-              className="border rounded-lg p-6 bg-background shadow-sm"
+              className="h-96 shrink-0 overflow-hidden border rounded-lg p-6 bg-background shadow-sm"
             >
               <TsForm
                 fields={form.fields}
@@ -801,8 +801,8 @@ export function TsFormEditor() {
                 onAction={(action, data) => addLog("SUBMIT", { action, data })}
               />
             </div>
-            <div className="mt-6 flex flex-col h-75">
-              <div className="flex items-center justify-between mb-2">
+            <div className="mt-4 flex min-h-0 flex-1 flex-col">
+              <div className="flex shrink-0 items-center justify-between mb-2">
                 <h4 className="font-medium">{fe.eventLog}</h4>
                 <Button variant="ghost" size="sm" onClick={() => setEventLog([])}>
                   {fe.clearLog}

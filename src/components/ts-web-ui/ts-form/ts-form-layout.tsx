@@ -107,8 +107,12 @@ export function TsFormLayout({
     }
 
     return (
-      <Tabs value={currentTabValue} onValueChange={handleValueChange} className="w-full">
-        <TabsList className="bg-muted/50 w-full justify-start overflow-x-auto [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:display-none">
+      <Tabs
+        value={currentTabValue}
+        onValueChange={handleValueChange}
+        className="flex min-h-0 flex-1 flex-col gap-0 w-full"
+      >
+        <TabsList className="shrink-0 bg-muted/50 w-full justify-start overflow-x-auto [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:display-none">
           {layout.tabs.map((tab, index) => {
             const hasError = tabErrors[index]
 
@@ -141,7 +145,7 @@ export function TsFormLayout({
             key={index}
             value={String(index)}
             forceMount
-            className="space-y-4 pt-4 data-[state=inactive]:hidden"
+            className="min-h-0 flex-1 overflow-y-auto space-y-4 pt-4 data-[state=inactive]:hidden"
           >
             {renderRows(tab.rows, fields, externalErrors)}
           </TabsContent>
@@ -151,7 +155,11 @@ export function TsFormLayout({
   }
 
   if (layout.rows) {
-    return <div className="space-y-4">{renderRows(layout.rows, fields, externalErrors)}</div>
+    return (
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="space-y-4">{renderRows(layout.rows, fields, externalErrors)}</div>
+      </div>
+    )
   }
 
   return null

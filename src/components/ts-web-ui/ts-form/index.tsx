@@ -7,6 +7,8 @@ import { type FieldPath, useForm } from "react-hook-form"
 import { Button } from "@/components/ts-web-ui/ui/button"
 import { Form } from "@/components/ui/form"
 
+import { cn } from "@/lib/utils"
+
 import { TsFormConfirmationDialog } from "./ts-form-confirmation-dialog"
 import { TsFormLayout } from "./ts-form-layout"
 import { TsButton, TsConfirmation, TsErrors, TsFormProps } from "./types"
@@ -258,7 +260,7 @@ export function TsForm({
     })
 
     prevErrorPathsRef.current = currentErrorPaths
-  }, [errors, fields, form])
+  }, [errors, form])
 
   // Merge global properties into field definitions
   const mergedFields = React.useMemo(() => {
@@ -459,7 +461,11 @@ export function TsForm({
   return (
     <>
       <Form {...form}>
-        <form ref={formRef} onSubmit={(e) => e.preventDefault()} className={className}>
+        <form
+          ref={formRef}
+          onSubmit={(e) => e.preventDefault()}
+          className={cn("flex h-full min-h-0 flex-col", className)}
+        >
           <TsFormLayout
             layout={layout}
             fields={mergedFields}
@@ -474,7 +480,7 @@ export function TsForm({
               const visibleButtons = buttons.filter((b) => !b.hidden)
               if (visibleButtons.length === 0) return null
               return (
-                <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t w-full">
+                <div className="flex shrink-0 items-center justify-between gap-2 mt-4 pt-4 border-t w-full">
                   <div className="flex flex-1 flex-row items-center justify-start gap-2">
                     {renderButtons(visibleButtons.filter((b) => b.position === "left"))}
                   </div>
