@@ -991,15 +991,17 @@ All field types share these **base properties**:
   label: "Skills",
   placeholder: "Select skills...",
   options: ["JavaScript", "TypeScript", "React"],
+  allowCustom: true,
   notFoundMessage: "No skills match."
 }
 ```
 
-| Property          | Type                           | Description                        |
-| ----------------- | ------------------------------ | ---------------------------------- |
-| `placeholder`     | `string`                       | Placeholder text                   |
-| `options`         | `TsFieldOptions[] \| string[]` | Available options                  |
-| `notFoundMessage` | `string`                       | Message when search has no results |
+| Property          | Type                           | Description                                              |
+| ----------------- | ------------------------------ | -------------------------------------------------------- |
+| `placeholder`     | `string`                       | Placeholder text                                         |
+| `options`         | `TsFieldOptions[] \| string[]` | Available options                                        |
+| `allowCustom`     | `boolean`                      | Allow adding custom values directly from search          |
+| `notFoundMessage` | `string`                       | Message when search has no results (or custom add prompt) |
 
 #### Combobox
 
@@ -1464,6 +1466,8 @@ Auto-installed dependencies:
 - **Shadcn:** `checkbox`, `dropdown-menu`, `input`, `select`, `table`, `badge`
 
 An advanced data grid built on TanStack Table v8 with sorting, filtering, pagination, column visibility/reordering/resizing, row selection with bulk actions, Excel import/export, clickable columns, and row actions.
+
+React 19 compatibility note: debounced filter timeout refs should use `useRef<ReturnType<typeof setTimeout> | undefined>(undefined)` (instead of `null`) for strict TypeScript compatibility.
 
 ### TsTableProps
 

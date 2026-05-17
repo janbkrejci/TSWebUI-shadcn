@@ -42,9 +42,14 @@ Each command will automatically:
 - **JSON-Driven Forms** - Build complex forms from JSON definitions with 20+ field types
 - **Draggable Windows** - Resizable, draggable window components
 - **Advanced Tables** - Powered by TanStack Table with sorting, filtering, and pagination
+- **Custom MultiSelect Values** - `multiselect` fields can allow ad-hoc entries via `allowCustom: true`
 - **Dark Mode** - Full theme support with next-themes
 - **Form Builder** - Visual form editor with drag & drop
 - **shadcn/ui** - Built on top of high-quality Radix UI primitives
+
+## Notes
+
+- For React 19 + strict TypeScript compatibility, timeout refs in debounced inputs should be typed as `useRef<ReturnType<typeof setTimeout> | undefined>(undefined)`.
 
 ## Tech Stack
 
