@@ -186,6 +186,8 @@ export interface TsSelectField extends TsFieldBase {
 /** Definition for multi-selection tag-based field. */
 export interface TsMultiselectField extends TsFieldBase, TsFieldWithOptions {
   type: "multiselect"
+  /** Allow the user to enter a custom value not present in the options list */
+  allowCustom?: boolean
 }
 
 /** Definition for searchable dropdown with optional custom values. */

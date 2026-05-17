@@ -34,6 +34,13 @@ export default function MultiSelectWidgetDemo() {
       hint: d.attrOptionsHint,
     },
     {
+      name: "allowCustom",
+      label: d.attrAllowCustom,
+      type: "boolean",
+      defaultValue: false,
+      hint: d.attrAllowCustomHint,
+    },
+    {
       name: "error",
       label: d.attrError,
       type: "string",
