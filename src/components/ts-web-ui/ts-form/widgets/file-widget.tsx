@@ -128,6 +128,7 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
       <div className="flex flex-col gap-1.5" {...props} ref={ref}>
         {shouldShowDropZone && (
           <div
+            role="button"
             className={cn(
               "flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 text-center transition-colors cursor-pointer hover:border-primary hover:bg-muted/30 mb-0.5",
               errorBorderClass,
@@ -135,9 +136,16 @@ export const FileWidget = React.forwardRef<HTMLDivElement, TsFileWidgetProps>(
             )}
             autoFocus={autoFocus}
             tabIndex={isInteractive ? 0 : -1}
-            aria-invalid={hasError}
             aria-label={ariaLabel || def.label}
+            aria-disabled={!isInteractive}
             onClick={() => inputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (!isInteractive) return
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                inputRef.current?.click()
+              }
+            }}
             onDragOver={(e) => {
               if (readOnly) return
               e.preventDefault()

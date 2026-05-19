@@ -12,7 +12,6 @@ import {
   Users,
 } from "lucide-react"
 
-import * as React from "react"
 import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { ModeToggle } from "@/components/ts-web-ui/mode-toggle"
 import { TsLayout } from "@/components/ts-web-ui/ts-layout"

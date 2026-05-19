@@ -16,13 +16,13 @@ export const EmptyWidget = React.forwardRef<HTMLDivElement, TsEmptyWidgetProps>(
       hint: _hint,
       readOnly: _readOnly,
       autoFocus: _autoFocus,
-      "aria-label": ariaLabel,
+      "aria-label": _ariaLabel,
       "aria-required": _ariaRequired,
       ...props
     },
     ref
   ) => {
-    return <div className="min-h-10" aria-label={ariaLabel} {...props} ref={ref} />
+    return <div className="min-h-10" {...props} ref={ref} />
   }
 )
 EmptyWidget.displayName = "EmptyWidget"

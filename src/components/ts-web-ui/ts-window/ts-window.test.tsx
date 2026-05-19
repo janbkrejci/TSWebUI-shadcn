@@ -9,6 +9,7 @@ const TestApp = () => {
   return (
     <div>
       <button
+        type="button"
         onClick={() =>
           openWindow(<div data-testid="window-content">Hello</div>, {
             id: "test",

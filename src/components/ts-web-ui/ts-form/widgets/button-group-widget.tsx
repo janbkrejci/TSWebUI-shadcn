@@ -37,14 +37,13 @@ export const ButtonGroupWidget = React.forwardRef<HTMLDivElement, TsButtonGroupW
 
     return (
       <div
+        role="group"
         className={cn(
           "flex",
           def.disabled && "opacity-50 pointer-events-none",
           readonlyPointerClass
         )}
         aria-label={ariaLabel || def.label}
-        aria-required={ariaRequired}
-        aria-readonly={readOnly}
         {...props}
         ref={ref}
       >

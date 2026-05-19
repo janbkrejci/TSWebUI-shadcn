@@ -1,7 +1,6 @@
 "use client"
 
 import { Check } from "lucide-react"
-import * as React from "react"
 
 import { Button } from "@/components/ts-web-ui/ui/button"
 import {

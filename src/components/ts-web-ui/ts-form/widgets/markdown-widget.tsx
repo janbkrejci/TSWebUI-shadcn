@@ -46,11 +46,11 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
     {
       field: _field,
       name: _name,
-      error,
+      error: _error,
       hint: _hint,
       readOnly: _readOnly,
       autoFocus: _autoFocus,
-      "aria-label": ariaLabel,
+      "aria-label": _ariaLabel,
       "aria-required": _ariaRequired,
       def,
       ...props
@@ -60,10 +60,8 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
     return (
       <div
         className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2"
-        aria-label={ariaLabel || def.label}
         {...props}
         ref={ref}
-        aria-invalid={!!error}
       >
         <Markdown
           remarkPlugins={[remarkGfm]}

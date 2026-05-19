@@ -105,7 +105,7 @@ function ImportResultDialog({
       <div className="bg-background border rounded-lg shadow-lg p-6 w-[400px] max-w-[90vw]">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{t.importResults}</h3>
-          <button onClick={onClose} className="p-1 hover:bg-accent rounded-sm">
+          <button type="button" onClick={onClose} className="p-1 hover:bg-accent rounded-sm">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -311,16 +311,11 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   // Propagate selection changes back up
   React.useEffect(() => {
     if (!onSelectionChange) return
-    const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
-    onSelectionChange(selectedRows)
-  }, [rowSelection, table, onSelectionChange])
+    onSelectionChange(table.getFilteredSelectedRowModel().rows.map((row) => row.original))
+  }, [onSelectionChange, table])
 
   // Get selected rows for toolbar
-  const selectedRows = React.useMemo(
-    () => table.getFilteredSelectedRowModel().rows.map((row) => row.original),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rowSelection, table]
-  )
+  const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
 
   // Track predefined filter keys for persistence
   const predefinedFilterKeys = React.useMemo(

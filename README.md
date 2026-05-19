@@ -109,19 +109,19 @@ pnpm start            # Start production server
 
 This project maintains strict code quality standards:
 
-- **ESLint** - Enforces code quality and consistency
-- **Prettier** - Automatic code formatting
+- **Biome** - Unified formatting and linting for source code
 - **TypeScript** - Type safety throughout
 - **Vitest** - Comprehensive test coverage (80%+ threshold)
 - **Pre-commit Hooks** - Automatic formatting and linting before commits
-- **CI/CD** - Automated testing and builds on every push
+- **Quality Workflow** - Automated Biome, registry, and test checks on every push/PR
+- **CI/CD** - Build and deploy after successful quality checks on `main`
 
 ### Pre-commit Hooks
 
 Husky and lint-staged automatically run before each commit:
 
-- Prettier formats all staged files
-- ESLint checks and fixes staged files
+- Biome formats and checks staged files
+- The registry JSON files are regenerated and staged automatically
 - Commits are blocked if checks fail
 
 To bypass (not recommended): `git commit --no-verify`

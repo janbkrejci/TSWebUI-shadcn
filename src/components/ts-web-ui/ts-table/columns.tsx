@@ -32,6 +32,7 @@ function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string })
 
   return (
     <button
+      type="button"
       className="inline-flex items-center justify-center h-6 w-6 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
       onClick={handleCopy}
       aria-label={copyLabel ?? "Copy to clipboard"}

@@ -25,7 +25,6 @@ export const TableWidget = React.forwardRef<HTMLDivElement, TsTableWidgetProps>(
     ref
   ) => {
     const { errorClass } = getFieldClasses(error, readOnly)
-    const hasError = !!error
 
     const dispatchAction = (action: string, data?: unknown) => {
       dispatchFormAction(ref, name, action, data, "form-table-action")
@@ -46,14 +45,12 @@ export const TableWidget = React.forwardRef<HTMLDivElement, TsTableWidgetProps>(
 
     return (
       <div
+        role="group"
         className={cn("border rounded-md p-2", errorClass)}
         aria-label={ariaLabel || def.label || name}
-        aria-required={ariaRequired}
-        aria-readonly={readOnly}
         tabIndex={autoFocus ? 0 : undefined}
         {...props}
         ref={ref}
-        aria-invalid={hasError}
       >
         <TsTable
           data={(field.value as Record<string, unknown>[]) || []}

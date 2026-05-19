@@ -167,24 +167,22 @@ export function TsTableToolbar<TData>({
 
   // Get columns in the order they are displayed (#1: react to column order/visibility changes)
   const columnOrderState = table.getState().columnOrder
-  const columnVisibilityState = table.getState().columnVisibility
-  const orderedColumns = React.useMemo(() => {
-    const allCols = table.getAllLeafColumns().filter((c) => c.id !== "select" && c.id !== "actions")
+  const orderedColumns = (() => {
+    const allColumns = table.getAllLeafColumns()
+    const allCols = allColumns.filter((c) => c.id !== "select" && c.id !== "actions")
 
     // Sort all columns by their position in the current column order
     // Hidden columns stay in their original position among visible ones
     const orderMap = new Map<string, number>()
-    const currentOrder = table.getState().columnOrder
-    if (currentOrder.length > 0) {
-      currentOrder.forEach((id, idx) => orderMap.set(id, idx))
+    if (columnOrderState.length > 0) {
+      columnOrderState.forEach((id, idx) => orderMap.set(id, idx))
     } else {
-      table.getAllLeafColumns().forEach((col, idx) => orderMap.set(col.id, idx))
+      allColumns.forEach((col, idx) => orderMap.set(col.id, idx))
     }
     return [...allCols].sort((a, b) => {
       return (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999)
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, columnOrderState, columnVisibilityState])
+  })()
 
   // Check for active column filters (#9)
   const columnFiltersState = table.getState().columnFilters
@@ -199,12 +197,9 @@ export function TsTableToolbar<TData>({
     )
   }, [columnFiltersState, predefinedFilterKeys])
 
-  const hasAnyActiveFilter = React.useMemo(() => {
-    const hasColFilter = columnFiltersState.some((f) => f.value !== "" && f.value != null)
-    const hasGlobalFilter = !!(table.getState().globalFilter as string)
-    return hasColFilter || hasGlobalFilter
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnFiltersState, table.getState().globalFilter])
+  const globalFilterState = table.getState().globalFilter as string | undefined
+  const hasAnyActiveFilter =
+    columnFiltersState.some((f) => f.value !== "" && f.value != null) || !!globalFilterState
 
   const handleClearAllFilters = React.useCallback(() => {
     const predefinedOnly = table

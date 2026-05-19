@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { LocaleToggle } from "@/components/ts-web-ui/locale-toggle"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"

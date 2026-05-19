@@ -156,20 +156,16 @@ export function TsTableView<TData>({
   )
 
   // Get visible data columns for checking move boundaries (#5: react to column order)
-  const columnOrderState = table.getState().columnOrder
-  const columnVisibilityState = table.getState().columnVisibility
-  const visibleDataColumns = React.useMemo(() => {
-    return table.getVisibleLeafColumns().filter((c) => c.id !== "select" && c.id !== "actions")
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, columnOrderState, columnVisibilityState])
+  const visibleDataColumns = table
+    .getVisibleLeafColumns()
+    .filter((c) => c.id !== "select" && c.id !== "actions")
 
   // Measure container width so we can distribute extra space only to data columns
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   // Compute effective column widths: fixed always 40px, data columns use their natural size
-  const columnSizingState = table.getState().columnSizing
   const FIXED_COL_PX = 40
-  const columnWidthMap = React.useMemo(() => {
+  const columnWidthMap = (() => {
     const cols = table.getVisibleLeafColumns()
     const map = new Map<string, number>()
 
@@ -179,8 +175,7 @@ export function TsTableView<TData>({
     }
 
     return map
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, columnSizingState, columnOrderState, columnVisibilityState])
+  })()
 
   const effectiveTableWidth = React.useMemo(() => {
     let sum = 0
@@ -294,6 +289,7 @@ export function TsTableView<TData>({
                           {enableColumnReordering && colAlign === "right" && (
                             <div className="flex items-center shrink-0">
                               <button
+                                type="button"
                                 className={cn(
                                   "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
                                   isFirstData && "invisible"
@@ -305,6 +301,7 @@ export function TsTableView<TData>({
                                 <ChevronLeft className="h-3 w-3" />
                               </button>
                               <button
+                                type="button"
                                 className={cn(
                                   "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
                                   isLastData && "invisible"
@@ -320,6 +317,7 @@ export function TsTableView<TData>({
                           {/* Left arrow for center-aligned columns */}
                           {enableColumnReordering && colAlign === "center" && (
                             <button
+                              type="button"
                               className={cn(
                                 "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm shrink-0",
                                 isFirstData && "invisible"
@@ -349,6 +347,7 @@ export function TsTableView<TData>({
                           {enableColumnReordering && colAlign === "left" && (
                             <div className="flex items-center shrink-0">
                               <button
+                                type="button"
                                 className={cn(
                                   "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
                                   isFirstData && "invisible"
@@ -360,6 +359,7 @@ export function TsTableView<TData>({
                                 <ChevronLeft className="h-3 w-3" />
                               </button>
                               <button
+                                type="button"
                                 className={cn(
                                   "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm",
                                   isLastData && "invisible"
@@ -375,6 +375,7 @@ export function TsTableView<TData>({
                           {/* Right arrow for center-aligned columns */}
                           {enableColumnReordering && colAlign === "center" && (
                             <button
+                              type="button"
                               className={cn(
                                 "opacity-0 group-hover/header:opacity-100 transition-opacity p-0.5 hover:bg-accent rounded-sm shrink-0",
                                 isLastData && "invisible"
@@ -431,6 +432,7 @@ export function TsTableView<TData>({
                           <div className="flex justify-center">
                             {hasSelectedRows && (
                               <button
+                                type="button"
                                 className="hover:bg-accent rounded-sm shrink-0 relative"
                                 onClick={cycleSelectionView}
                                 aria-label={t?.toggleSelectionView ?? "Toggle selection view"}

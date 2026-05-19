@@ -612,6 +612,7 @@ export function SidebarCollapseTrigger({ className }: { className?: string }) {
         style={{ top: `calc(50% + ${topBarHeight / 2}px)` }}
       >
         <button
+          type="button"
           className={cn(
             "h-6 w-6 rounded-full bg-background border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 pointer-events-auto",
             className
