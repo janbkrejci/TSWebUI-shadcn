@@ -1,3 +1,4 @@
 pnpm exec lint-staged
+pnpm run ci:check
 pnpm run build:registry
 git add public/registry
