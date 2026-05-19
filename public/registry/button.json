@@ -1,7 +1,10 @@
 {
   "name": "ts-web-ui/ui/button",
   "type": "registry:block",
-  "dependencies": ["@radix-ui/react-slot", "class-variance-authority"],
+  "dependencies": [
+    "@radix-ui/react-slot",
+    "class-variance-authority"
+  ],
   "registryDependencies": [],
   "files": [
     {

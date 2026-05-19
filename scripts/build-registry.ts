@@ -78,7 +78,7 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-topbar",
     dependencies: ["lucide-react"],
-    registryDependencies: ["ts-web-ui/ts-logo"],
+    registryDependencies: ["ts-web-ui/ts-sidebar"],
     files: ["ts-topbar/index.tsx"],
   },
   {
@@ -89,7 +89,7 @@ const REGISTRY_COMPONENTS = [
   },
   {
     name: "ts-web-ui/ts-table",
-    dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "date-fns"],
+    dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "sonner"],
     registryDependencies: [
       "ts-web-ui/locale",
       "ts-web-ui/ui/button",
@@ -139,7 +139,6 @@ const REGISTRY_COMPONENTS = [
       "switch",
       "tabs",
       "textarea",
-      "toggle-group",
       "ts-web-ui/ts-table",
     ],
     files: [
@@ -157,13 +156,9 @@ const REGISTRY_COMPONENTS = [
     ],
   },
   {
-    name: "ts-web-ui/integrated-layout",
-    dependencies: ["lucide-react"],
-    registryDependencies: [
-      "ts-web-ui/ts-sidebar",
-      "ts-web-ui/ts-topbar",
-      "ts-web-ui/theme-provider",
-    ],
+    name: "ts-web-ui/ts-layout",
+    dependencies: [],
+    registryDependencies: ["ts-web-ui/ts-sidebar", "ts-web-ui/ts-topbar"],
     files: ["ts-layout/index.tsx"],
   },
 ]

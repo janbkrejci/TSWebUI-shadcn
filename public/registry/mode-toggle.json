@@ -1,7 +1,10 @@
 {
   "name": "ts-web-ui/mode-toggle",
   "type": "registry:block",
-  "dependencies": ["lucide-react", "next-themes"],
+  "dependencies": [
+    "lucide-react",
+    "next-themes"
+  ],
   "registryDependencies": [
     "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json",
     "dropdown-menu"

@@ -145,7 +145,7 @@ export function TsFormLayout({
             key={index}
             value={String(index)}
             forceMount
-            className="min-h-0 flex-1 overflow-y-auto space-y-4 pt-4 data-[state=inactive]:hidden"
+            className="min-h-0 flex-1 overflow-y-auto space-y-1 pt-2 data-[state=inactive]:hidden"
           >
             {renderRows(tab.rows, fields, externalErrors)}
           </TabsContent>
@@ -157,7 +157,7 @@ export function TsFormLayout({
   if (layout.rows) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="space-y-4">{renderRows(layout.rows, fields, externalErrors)}</div>
+        <div className="space-y-1">{renderRows(layout.rows, fields, externalErrors)}</div>
       </div>
     )
   }

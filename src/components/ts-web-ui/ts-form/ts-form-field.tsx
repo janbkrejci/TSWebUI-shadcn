@@ -83,8 +83,10 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
               even if labels wrap up to 3 lines or are missing.
             */}
             {shouldShowLabel ? (
-              <div className="min-h-14 flex items-end">
-                <FormLabel className={cn("pb-1 leading-tight", errorMessage && "text-destructive")}>
+              <div className="min-h-8 flex items-end">
+                <FormLabel
+                  className={cn("pb-0.5 leading-tight", errorMessage && "text-destructive")}
+                >
                   {fieldDef.label as string}
                   {!!fieldDef.required && (
                     <>
@@ -97,7 +99,7 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
               </div>
             ) : (
               // Empty but sized placeholder for alignment in complex grid layouts
-              <div className="min-h-14" aria-hidden="true" />
+              <div className="min-h-8" aria-hidden="true" />
             )}
 
             <FormControl>
@@ -115,7 +117,7 @@ export function TsFormField({ name, fieldDef, externalError }: TsFormFieldProps)
             </FormControl>
 
             {/* Error/Hint slot with fixed minimum height to prevent row jumping */}
-            <div className="min-h-8 mt-1">
+            <div className="min-h-4">
               {errorMessage ? (
                 <FormMessage className="text-xs leading-tight">{errorMessage}</FormMessage>
               ) : (

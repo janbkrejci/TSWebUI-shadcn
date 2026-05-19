@@ -225,9 +225,9 @@ export default function IntegratedLayoutPage() {
 
         <TabsContent value="install" className="pt-4">
           <InstallTab
-            componentName="integrated-layout"
-            dependencies={["lucide-react"]}
-            instructions="Installs the integrated application layout shell and all its dependencies (TopBar, Sidebar, ThemeProvider)."
+            componentName="ts-layout"
+            dependencies={[]}
+            instructions="Installs the integrated application layout shell and all its dependencies (TopBar, Sidebar)."
           />
         </TabsContent>
       </Tabs>

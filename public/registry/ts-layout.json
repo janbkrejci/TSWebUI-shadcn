@@ -1,13 +1,10 @@
 {
-  "name": "ts-web-ui/integrated-layout",
+  "name": "ts-web-ui/ts-layout",
   "type": "registry:block",
-  "dependencies": [
-    "lucide-react"
-  ],
+  "dependencies": [],
   "registryDependencies": [
     "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-sidebar.json",
-    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json",
-    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/theme-provider.json"
+    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-topbar.json"
   ],
   "files": [
     {

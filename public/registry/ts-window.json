@@ -1,7 +1,10 @@
 {
   "name": "ts-web-ui/ts-window",
   "type": "registry:block",
-  "dependencies": ["lucide-react", "react-rnd"],
+  "dependencies": [
+    "lucide-react",
+    "react-rnd"
+  ],
   "registryDependencies": [
     "https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale.json",
     "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json"
