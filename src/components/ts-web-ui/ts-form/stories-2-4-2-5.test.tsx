@@ -146,7 +146,7 @@ describe("Story 2-5: Implementace mřížkového zarovnání", () => {
     const { container } = render(<TsForm layout={layout} fields={fields} />)
 
     // Find label containers and placeholders
-    const labelContainers = container.querySelectorAll(".min-h-14")
+    const labelContainers = container.querySelectorAll(".min-h-8")
     // 2 text labels + 1 checkbox placeholder = 3
     expect(labelContainers.length).toBe(3)
   })
@@ -196,12 +196,12 @@ describe("Story 2-5: Implementace mřížkového zarovnání", () => {
 
     const { container } = render(<TsForm layout={tortureLayout} fields={tortureFields} />)
 
-    // All fields should have min-h-14 label slot
-    const labels = container.querySelectorAll(".min-h-14")
+    // All fields should have min-h-8 label slot
+    const labels = container.querySelectorAll(".min-h-8")
     expect(labels.length).toBe(4)
 
-    // All fields should have min-h-8 error slot
-    const errorSlots = container.querySelectorAll(".min-h-8")
+    // All fields should have min-h-4 error slot
+    const errorSlots = container.querySelectorAll(".min-h-4")
     expect(errorSlots.length).toBe(4)
 
     // Error message should be visible in one of them
