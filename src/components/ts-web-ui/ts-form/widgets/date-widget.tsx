@@ -222,7 +222,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
               if (date) field.onChange(toDateOnlyString(date))
               setOpen(false)
             }}
-            initialFocus
+            autoFocus
           />
           {(def.showTodayButton !== false || def.showClearButton !== false) && (
             <div className="flex items-center justify-between p-2 border-t gap-2 bg-muted/10">

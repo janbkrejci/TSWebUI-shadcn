@@ -36,13 +36,13 @@ const REGISTRY_COMPONENTS = [
   },
   {
     name: "ts-web-ui/ui/alert-dialog",
-    dependencies: ["@radix-ui/react-alert-dialog", "lucide-react"],
+    dependencies: ["radix-ui", "lucide-react"],
     registryDependencies: ["ts-web-ui/ui/button"],
     files: ["ui/alert-dialog.tsx"],
   },
   {
     name: "ts-web-ui/ui/button",
-    dependencies: ["@radix-ui/react-slot", "class-variance-authority"],
+    dependencies: ["radix-ui", "class-variance-authority"],
     registryDependencies: [],
     files: ["ui/button.tsx"],
   },

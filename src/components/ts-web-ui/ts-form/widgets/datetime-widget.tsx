@@ -210,7 +210,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
             selected={getValidDate()}
             onSelect={handleDateSelect}
             locale={dateLocale}
-            initialFocus
+            autoFocus
           />
           {(def.showTodayButton !== false || def.showClearButton !== false) && (
             <div className="flex items-center justify-between p-2 border-t gap-2 bg-muted/10 px-3">
