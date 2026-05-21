@@ -7,7 +7,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import remarkGfm from "remark-gfm"
 
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 
 import { TsMarkdownField, TsWidgetProps } from "../types"
 

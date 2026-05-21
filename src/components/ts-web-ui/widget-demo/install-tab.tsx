@@ -2,7 +2,7 @@
 
 import { Copy } from "lucide-react"
 import { toast } from "sonner"
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { getComponentRegistryUrl } from "@/lib/registry"

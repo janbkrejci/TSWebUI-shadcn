@@ -3,7 +3,7 @@
 import * as React from "react"
 import { ControllerRenderProps, FieldValues } from "react-hook-form"
 
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 

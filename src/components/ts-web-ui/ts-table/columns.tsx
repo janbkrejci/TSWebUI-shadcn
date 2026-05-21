@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Check, ClipboardCopy, MoreVertical } f
 
 import * as React from "react"
 import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,

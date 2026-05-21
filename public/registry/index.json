@@ -10,16 +10,6 @@
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale-toggle.json"
   },
   {
-    "name": "ts-web-ui/ui/alert-dialog",
-    "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/alert-dialog.json"
-  },
-  {
-    "name": "ts-web-ui/ui/button",
-    "type": "registry:block",
-    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json"
-  },
-  {
     "name": "ts-web-ui/ts-logo",
     "type": "registry:block",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-logo.json"

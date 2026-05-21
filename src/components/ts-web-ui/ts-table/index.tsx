@@ -19,7 +19,7 @@ import * as React from "react"
 import * as XLSX from "xlsx"
 
 import { TsLocale, useTsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 
 import { generateColumns, TsTableColumnDef, TsTableRowAction } from "./columns"
 import { TsTablePagination } from "./ts-table-pagination"

@@ -31,20 +31,8 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/locale-toggle",
     dependencies: ["lucide-react"],
-    registryDependencies: ["ts-web-ui/locale", "ts-web-ui/ui/button", "dropdown-menu"],
+    registryDependencies: ["ts-web-ui/locale", "button", "dropdown-menu"],
     files: ["locale-toggle/index.tsx"],
-  },
-  {
-    name: "ts-web-ui/ui/alert-dialog",
-    dependencies: ["radix-ui", "lucide-react"],
-    registryDependencies: ["ts-web-ui/ui/button"],
-    files: ["ui/alert-dialog.tsx"],
-  },
-  {
-    name: "ts-web-ui/ui/button",
-    dependencies: ["radix-ui", "class-variance-authority"],
-    registryDependencies: [],
-    files: ["ui/button.tsx"],
   },
   {
     name: "ts-web-ui/ts-logo",
@@ -61,18 +49,13 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/mode-toggle",
     dependencies: ["lucide-react", "next-themes"],
-    registryDependencies: ["ts-web-ui/ui/button", "dropdown-menu"],
+    registryDependencies: ["button", "dropdown-menu"],
     files: ["mode-toggle/index.tsx"],
   },
   {
     name: "ts-web-ui/ts-sidebar",
     dependencies: ["lucide-react"],
-    registryDependencies: [
-      "ts-web-ui/locale",
-      "ts-web-ui/ui/button",
-      "tooltip",
-      "ts-web-ui/ts-logo",
-    ],
+    registryDependencies: ["ts-web-ui/locale", "button", "tooltip", "ts-web-ui/ts-logo"],
     files: ["ts-sidebar/index.tsx"],
   },
   {
@@ -84,7 +67,7 @@ const REGISTRY_COMPONENTS = [
   {
     name: "ts-web-ui/ts-window",
     dependencies: ["lucide-react", "react-rnd"],
-    registryDependencies: ["ts-web-ui/locale", "ts-web-ui/ui/button"],
+    registryDependencies: ["ts-web-ui/locale", "button"],
     files: ["ts-window/index.tsx"],
   },
   {
@@ -92,7 +75,7 @@ const REGISTRY_COMPONENTS = [
     dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "sonner"],
     registryDependencies: [
       "ts-web-ui/locale",
-      "ts-web-ui/ui/button",
+      "button",
       "checkbox",
       "dropdown-menu",
       "input",
@@ -121,8 +104,8 @@ const REGISTRY_COMPONENTS = [
     ],
     registryDependencies: [
       "ts-web-ui/locale",
-      "ts-web-ui/ui/alert-dialog",
-      "ts-web-ui/ui/button",
+      "alert-dialog",
+      "button",
       "form",
       "alert",
       "badge",
@@ -168,6 +151,19 @@ async function buildRegistry() {
     fs.mkdirSync(REGISTRY_PATH, { recursive: true })
   }
 
+  const expectedJsonFiles = new Set([
+    "index.json",
+    ...REGISTRY_COMPONENTS.map((component) => `${component.name.split("/").pop()}.json`),
+  ])
+
+  for (const entry of fs.readdirSync(REGISTRY_PATH)) {
+    if (!entry.endsWith(".json") || expectedJsonFiles.has(entry)) {
+      continue
+    }
+
+    fs.unlinkSync(path.join(REGISTRY_PATH, entry))
+  }
+
   for (const component of REGISTRY_COMPONENTS) {
     const registryItem = {
       name: component.name,
@@ -195,13 +191,6 @@ async function buildRegistry() {
           .replace(/@\/components\/ts-web-ui\/locale/g, "@/components/ts-web-ui/locale")
           .replace(/from "\.\.\/locale"/g, 'from "@/components/ts-web-ui/locale"')
           .replace(/from '\.\.\/locale'/g, "from '@/components/ts-web-ui/locale'")
-          .replace(
-            /@\/components\/ts-web-ui\/ui\/alert-dialog/g,
-            "@/components/ts-web-ui/ui/alert-dialog"
-          )
-          .replace(/@\/components\/ts-web-ui\/ui\/button/g, "@/components/ts-web-ui/ui/button")
-          .replace(/@\/components\/ui\/alert-dialog/g, "@/components/ts-web-ui/ui/alert-dialog")
-          .replace(/@\/components\/ui\/button/g, "@/components/ts-web-ui/ui/button")
           .replace(/@\/components\/ui\//g, "@/components/ui/")
           .replace(/\.\.\/client-only/g, "@/components/ts-web-ui/client-only")
           .replace(/\.\.\/\.\.\/ts-table/g, "@/components/ts-web-ui/ts-table") // Handle widget depth

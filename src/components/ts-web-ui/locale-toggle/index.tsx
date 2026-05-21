@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react"
 
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,

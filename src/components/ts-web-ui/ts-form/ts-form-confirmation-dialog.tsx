@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ts-web-ui/ui/alert-dialog"
+} from "@/components/ui/alert-dialog"
 
 import { TsButton, TsConfirmation } from "./types"
 

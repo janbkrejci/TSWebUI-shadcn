@@ -6,7 +6,7 @@ import * as React from "react"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
 import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,

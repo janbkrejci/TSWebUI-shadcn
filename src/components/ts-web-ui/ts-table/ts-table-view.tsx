@@ -5,7 +5,7 @@ import { Check, ChevronLeft, ChevronRight, Filter, MoreVertical, X as XIcon } fr
 
 import * as React from "react"
 import { TsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,

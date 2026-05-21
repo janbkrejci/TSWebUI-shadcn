@@ -7,7 +7,7 @@
   ],
   "registryDependencies": [
     "https://janbkrejci.github.io/TSWebUI-shadcn/registry/locale.json",
-    "https://janbkrejci.github.io/TSWebUI-shadcn/registry/button.json"
+    "button"
   ],
   "files": [
     {

@@ -4,8 +4,8 @@ import { Search, X as XIcon } from "lucide-react"
 
 import * as React from "react"
 import { useTsLocale } from "@/components/ts-web-ui/locale"
-import { Button } from "@/components/ts-web-ui/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
