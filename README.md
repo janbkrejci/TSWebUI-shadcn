@@ -1,6 +1,6 @@
 # TS Web UI (Shadcn Edition)
 
-[![CI/CD](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/ci-cd.yml)
+[![CI/CD](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/quality.yml/badge.svg)](https://github.com/janbkrejci/TSWebUI-shadcn/actions/workflows/quality.yml)
 
 A React/Shadcn implementation of the TS Web UI components - a comprehensive UI component library with JSON-driven forms, draggable windows, advanced tables, and more.
 
@@ -113,8 +113,7 @@ This project maintains strict code quality standards:
 - **TypeScript** - Type safety throughout
 - **Vitest** - Comprehensive test coverage (80%+ threshold)
 - **Pre-commit Hooks** - Automatic formatting and linting before commits
-- **Quality Workflow** - Automated Biome, registry, and test checks on every push/PR
-- **CI/CD** - Build and deploy after successful quality checks on `main`
+- **CI/CD Workflow** - Automated Biome, registry, and test checks on every push/PR, then build and deploy to GitHub Pages from `main`
 
 ### Pre-commit Hooks
 
