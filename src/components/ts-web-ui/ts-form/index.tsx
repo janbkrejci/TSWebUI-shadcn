@@ -67,49 +67,15 @@ export function TsForm({
 
   // Handle onFieldChange
   React.useEffect(() => {
-    const el = formRef.current
-    if (!el) return
-
-    // 1. Handle onBlur for input-like text fields (text, number, textarea, password)
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement
-      const name = target.closest("[data-field]")?.getAttribute("data-field")
-
-      if (name) {
-        const fieldDef = fields[name]
-        const isInputLike = ["text", "number", "textarea", "password"].includes(fieldDef?.type)
-
-        if (isInputLike) {
-          const currentValues = form.getValues()
-          const val = getNestedValue(currentValues as Record<string, unknown>, name)
-          const prevVal = getNestedValue(prevValuesRef.current, name)
-
-          if (JSON.stringify(val) !== JSON.stringify(prevVal)) {
-            const filteredData = normalizeFormOutput(
-              filterExcludeFromSubmit(currentValues as Record<string, unknown>, fields)
-            )
-            setNestedValue(prevValuesRef.current, name, deepClone(val))
-            lastEmittedValuesRef.current = JSON.stringify(filteredData)
-            onFieldChange?.(name, val === null ? undefined : val, filteredData)
-          }
-        }
-      }
-    }
-
-    // 2. Handle immediate change for choice-like fields (radio, checkbox, select, etc.)
+    // Emit field-change for every actual value change from form controls.
+    // Skip non-input display-only field types.
     const subscription = form.watch((data, { name }) => {
       if (name) {
         const fieldDef = fields[name]
-        const isChoiceLike = ![
-          "text",
-          "number",
-          "textarea",
-          "password",
-          "markdown",
-          "infobox",
-        ].includes(fieldDef?.type)
+        const canEmit =
+          fieldDef && !["markdown", "infobox", "empty", "separator"].includes(fieldDef.type)
 
-        if (isChoiceLike) {
+        if (canEmit) {
           const val = getNestedValue(data as Record<string, unknown>, name)
           const prevVal = getNestedValue(prevValuesRef.current, name)
 
@@ -125,9 +91,7 @@ export function TsForm({
       }
     })
 
-    el.addEventListener("focusout", handleFocusOut)
     return () => {
-      el.removeEventListener("focusout", handleFocusOut)
       subscription.unsubscribe()
     }
   }, [onFieldChange, form, fields])

@@ -21,12 +21,30 @@ import { booleanFilter, dateFilter, numberFilter, textFilter } from "./filters"
 
 function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string }) {
   const [copied, setCopied] = React.useState(false)
+  const resetTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isMountedRef = React.useRef(false)
+
+  React.useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
     navigator.clipboard.writeText(value).then(() => {
+      if (!isMountedRef.current) return
       setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current)
+      }
+      resetTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) setCopied(false)
+      }, 1500)
     })
   }
 

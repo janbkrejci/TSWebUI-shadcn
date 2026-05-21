@@ -823,7 +823,7 @@ A fully JSON-driven form engine that generates complete forms from data definiti
 | `activeTab`     | `string \| number`                                                      | `undefined` | Controlled active tab (label string or 0-based index)                                                                                                                           |
 | `onTabChange`   | `(tab: string \| number) => void`                                       | `undefined` | Callback when user switches tabs                                                                                                                                                |
 | `onAction`      | `(action: string, data: Record<string, unknown>) => void`               | `undefined` | **Primary callback.** Fires for all button actions (submit, delete, custom, etc.)                                                                                               |
-| `onFieldChange` | `(name: string, value: unknown, data: Record<string, unknown>) => void` | `undefined` | Fires when a field value changes. For text/number/textarea/password: on blur. For everything else: immediately.                                                                 |
+| `onFieldChange` | `(name: string, value: unknown, data: Record<string, unknown>) => void` | `undefined` | Fires when a field value changes. Emits on **every change** for all editable field types (text, number, textarea, password, date, select, checkbox, switch, etc.). Display-only types (`markdown`, `infobox`, `empty`, `separator`) never emit. De-duplication guard prevents redundant emissions when the value did not actually change. |
 | `readOnly`      | `boolean`                                                               | `false`     | Sets all fields to read-only and hides the button bar                                                                                                                           |
 | `className`     | `string`                                                                | `undefined` | Additional CSS classes for the form element                                                                                                                                     |
 | `locale`        | `string \| TsLocale`                                                    | `undefined` | UI locale override — preset name (`"en"`, `"cs"`) or full `TsLocale` object for all static texts. Also used for date/number formatting when `TsLocale.formatting.locale` is set |
@@ -1095,13 +1095,15 @@ Boolean toggle. No additional properties beyond base.
 | Property           | Type      | Default      | Description                          |
 | ------------------ | --------- | ------------ | ------------------------------------ |
 | `placeholder`      | `string`  | —            | Placeholder for text input           |
-| `dateFormat`       | `string`  | `"d.M.yyyy"` | date-fns format string               |
+| `dateFormat`       | `string`  | `"d.M.yyyy"` | date-fns format string for display   |
 | `locale`           | `string`  | —            | Locale for calendar (e.g. `"cs-CZ"`) |
 | `selectAllOnFocus` | `boolean` | —            | Select text on focus                 |
 | `showTodayButton`  | `boolean` | —            | Show "Today" button in popup         |
 | `showClearButton`  | `boolean` | —            | Show "Clear" button in popup         |
 | `todayButtonText`  | `string`  | —            | Custom label for Today button        |
 | `clearButtonText`  | `string`  | —            | Custom label for Clear button        |
+
+> **Value format:** The stored value for `type: "date"` is always a **`YYYY-MM-DD` string** (e.g. `"2024-03-15"`), not a JS `Date` object. This is timezone-safe and maps directly to a SQL `DATE` column. The widget accepts pre-existing `Date` objects or ISO strings as input but always writes back a `YYYY-MM-DD` string. For timestamps with time component, use `type: "datetime"` (which works the same way but the display format includes time). For DB best practice: store date-only values as `DATE`/`YYYY-MM-DD`, store moments as UTC ISO datetime.
 
 #### DateTime
 
@@ -1476,6 +1478,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `data`                     | `TData[]`                 | —                      | **Required.** Array of data objects to display                                                          |
 | `columnDefinitions`        | `TsTableColumnDef[]`      | —                      | **Required.** Column configuration array                                                                |
 | `title`                    | `string`                  | `undefined`            | Title displayed in the toolbar                                                                          |
+| `showFulltext`             | `boolean`                 | `true`                 | Show the global full-text search input below the toolbar title row. Disable to hide it while keeping column filters active. |
 | `showCreateButton`         | `boolean`                 | `true`                 | Show "New record" button                                                                                |
 | `showImportButton`         | `boolean`                 | `true`                 | Show "Import" button (Excel/CSV)                                                                        |
 | `showExportButton`         | `boolean`                 | `true`                 | Show "Export" button (Excel). Behavior is context-aware: when no filter is active and no rows are selected, shows a plain button that exports all rows. When a column filter, global search, or row selection is active, shows a dropdown with up to three options: "Export all (N rows)", "Export selected (N rows)" (only when rows are selected), "Export filtered (N rows)" (disabled if filter matches 0 rows). |
@@ -1494,7 +1497,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `pageSizeOptions`          | `number[]`                | `[5, 10, 20, 50, 100]` | Available page size options                                                                             |
 | `singleItemActions`        | `string`                  | `undefined`            | Row actions in `"action/Label,action/Label"` format                                                     |
 | `multipleItemsActions`     | `string`                  | `undefined`            | Bulk actions in `"action/Label,action/Label"` format (shown in header when rows selected)               |
-| `predefinedFilters`        | `Record<string, unknown>` | `undefined`            | Pre-set column filters (key = column key, value = filter text). These are read-only for user            |
+| `predefinedFilters`        | `Record<string, unknown>` | `undefined`            | Pre-set column filters applied as **defaults on mount** (key = column key, value = filter text). User can freely modify or override them — once a predefined column's filter is touched, the predefined default no longer controls it. Active predefined keys are highlighted in the filter row label. |
 | `columnsRequiredForImport` | `string[]`                | `undefined`            | Column keys that must be present in imported files. If not set, all column keys are validated           |
 | `getRowId`                 | `(row: TData) => string`  | `undefined`            | Custom row ID function for stable selection                                                             |
 | `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
@@ -1789,15 +1792,16 @@ export default function FormBuilderPage() {
 ### Features
 
 - **Drag-and-drop**: Drag field types from the left palette onto canvas rows/cells
+- **Palette click-to-add**: Click a widget in the palette to place it in the first free empty slot. If no free slot exists, a **new row is added automatically with the same number of columns as the last existing row**, and the widget is placed in its first slot
 - **Row management**: Add/remove/reorder rows via drag (using `@dnd-kit/core`)
-- **Multi-column layout**: Add columns to rows; set each column's CSS grid width (`1fr`, `2fr`, `100px`, etc.)
+- **Multi-column layout**: Add columns to rows; remove individual columns via the ✕ button that appears on cell hover; set each column's CSS grid width (`1fr`, `2fr`, `100px`, etc.)
 - **Tabs or single-page mode**: Toggle via the mode selector in the toolbar
 - **Field properties**: Click any field or button to inspect/edit its properties in the right panel
 - **Button configuration**: Add, reorder (drag), delete and configure action buttons including confirmation dialogs
 - **Undo/Redo**: Ctrl+Z / Ctrl+Shift+Z with full history stack
 - **Import/Export**: Load or save the form definition as JSON
 - **Live preview**: Open a modal dialog showing the actual `TsForm` rendered from the current definition
-- **Event log**: The preview dialog logs all form events in real time
+- **Event log**: The preview dialog logs all form events in real time — `onAction` (button actions), `onFieldChange` (per-keystroke for all editable field types), `onTabChange`, and custom `form-table-action` DOM events from nested table widgets
 
 ### Locale
 

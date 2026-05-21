@@ -165,6 +165,15 @@ export function TsFormEditor() {
         addLog("FIELD_ACTION", customEvent.detail)
       }
     }
+
+    const handleTableAction = (e: Event) => {
+      const customEvent = e as CustomEvent
+      // Only log events from our preview container
+      if (previewContainerRef.current?.contains(e.target as Node)) {
+        addLog("TABLE_ACTION", customEvent.detail)
+      }
+    }
+
     const handleKeyAction = (e: Event) => {
       const customEvent = e as CustomEvent
       // Only log events from our preview container
@@ -174,10 +183,12 @@ export function TsFormEditor() {
     }
 
     window.addEventListener("form-field-action", handleFieldAction)
+    window.addEventListener("form-table-action", handleTableAction)
     window.addEventListener("form-key-action", handleKeyAction)
 
     return () => {
       window.removeEventListener("form-field-action", handleFieldAction)
+      window.removeEventListener("form-table-action", handleTableAction)
       window.removeEventListener("form-key-action", handleKeyAction)
     }
   }, [showPreview, addLog])
@@ -546,13 +557,16 @@ export function TsFormEditor() {
                                   }
                                 }
                                 if (!added) {
-                                  // Add new row
-                                  addRow(activeTabIndex)
-                                  const newRows = getCurrentRows()
+                                  // Add a new row matching the last row's column count,
+                                  // then place the widget into its first slot.
+                                  const lastRow = rows[rows.length - 1]
+                                  const colCount = lastRow ? lastRow.items.length : 1
+                                  const newRowIndex = rows.length
+                                  addRow(activeTabIndex, undefined, colCount)
                                   addField(
                                     field.type as TsFieldDef["type"],
                                     activeTabIndex,
-                                    newRows.length - 1,
+                                    newRowIndex,
                                     0
                                   )
                                 }
@@ -798,7 +812,9 @@ export function TsFormEditor() {
                       }
                 }
                 buttons={form.buttons}
-                onAction={(action, data) => addLog("SUBMIT", { action, data })}
+                onAction={(action, data) => addLog("ACTION", { action, data })}
+                onFieldChange={(name, value, data) => addLog("FIELD_CHANGE", { name, value, data })}
+                onTabChange={(tab) => addLog("TAB_CHANGE", { tab })}
               />
             </div>
             <div className="mt-4 flex min-h-0 flex-1 flex-col">
@@ -1092,6 +1108,23 @@ function CanvasCell({
         </Tooltip>
       </div>
 
+      {showRemove && (
+        <div className="absolute top-1 right-1 z-20 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-5 w-5 text-destructive"
+            aria-label="Remove column"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove()
+            }}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+
       <div
         ref={setDraggableRef}
         {...listeners}
@@ -1109,19 +1142,6 @@ function CanvasCell({
               <span className="font-medium text-sm truncate">
                 {(fieldConfig?.label as string) || item.field}
               </span>
-              {showRemove && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onRemove()
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
             </div>
             <Badge variant="secondary" className="text-xs">
               {fieldConfig?.type || "field"}

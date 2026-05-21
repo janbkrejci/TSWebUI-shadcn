@@ -241,6 +241,7 @@ export default function TsTablePage() {
   const [showCreateButton, setShowCreateButton] = React.useState(true)
   const [showImportButton, setShowImportButton] = React.useState(true)
   const [showExportButton, setShowExportButton] = React.useState(true)
+  const [showFulltext, setShowFulltext] = React.useState(true)
   const [showColumnSelector, setShowColumnSelector] = React.useState(true)
   const [showBulkActions, setShowBulkActions] = React.useState(true)
   const [importResultState, setImportResultState] = React.useState<ImportResult | null>(null)
@@ -291,7 +292,6 @@ export default function TsTablePage() {
           <TabsTrigger value="install">{d.tabInstall}</TabsTrigger>
           <TabsTrigger value="documentation">{d.tabDocumentation}</TabsTrigger>
         </TabsList>
-
         <TabsContent value="preview" className="space-y-4 pt-4">
           {/* Interactive Controls */}
           <Card>
@@ -362,6 +362,11 @@ export default function TsTablePage() {
                   onCheckedChange={setShowExportButton}
                 />
                 <ToggleControl
+                  label="Fulltext Search"
+                  checked={showFulltext}
+                  onCheckedChange={setShowFulltext}
+                />
+                <ToggleControl
                   label={d.featureColumnSelector}
                   checked={showColumnSelector}
                   onCheckedChange={setShowColumnSelector}
@@ -398,6 +403,7 @@ export default function TsTablePage() {
                 showCreateButton={showCreateButton}
                 showImportButton={showImportButton}
                 showExportButton={showExportButton}
+                showFulltext={showFulltext}
                 showColumnSelector={showColumnSelector}
                 onRowClick={handleRowClick}
                 onCreateClick={handleCreate}
@@ -409,6 +415,7 @@ export default function TsTablePage() {
                 multipleItemsActions={
                   showBulkActions ? "delete/Delete Selected,export/Export Selected" : undefined
                 }
+                predefinedFilters={{ approved: true }}
                 onBulkAction={handleBulkAction}
                 getRowId={(row) => String(row.id)}
                 pageSize={5}
@@ -421,7 +428,6 @@ export default function TsTablePage() {
             </CardContent>
           </Card>
         </TabsContent>
-
         <TabsContent value="code" className="pt-4">
           <Card>
             <CardHeader>
@@ -467,6 +473,7 @@ export default function MyPage() {
       showCreateButton={true}
       showImportButton={true}
       showExportButton={true}
+      showFulltext={true}
       showColumnSelector={true}
       // Actions (comma-separated "action/Label" pairs)
       singleItemActions="edit/Edit,delete/Delete"
@@ -483,7 +490,7 @@ export default function MyPage() {
       pageSizeOptions={[5, 10, 20, 50]}
       // Advanced
       unhideableColumns={["name"]}
-      predefinedFilters={{ city: "Prague" }}
+      predefinedFilters={{ approved: true }}
       getRowId={(row) => String(row.id)}
       initialRowSelection={{ "1": true }}
       columnsRequiredForImport={["name", "email"]}
@@ -494,14 +501,12 @@ export default function MyPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
         <TabsContent value="install" className="pt-4">
           <InstallTab
             componentName="ts-table"
             dependencies={["@tanstack/react-table", "lucide-react", "xlsx"]}
           />
         </TabsContent>
-
         <TabsContent value="documentation" className="pt-4">
           <div className="space-y-8 pb-8">
             {/* Component Props */}
@@ -567,6 +572,7 @@ export default function MyPage() {
                         "true",
                         "Show the Export button (CSV/XLSX/JSON).",
                       ],
+                      ["showFulltext", "boolean", "true", "Show global fulltext search input."],
                       [
                         "showColumnSelector",
                         "boolean",
@@ -595,7 +601,7 @@ export default function MyPage() {
                         "predefinedFilters",
                         "Record<string, unknown>",
                         "—",
-                        "Filters pre-set and locked (user cannot clear).",
+                        "Initial filters; once changed by user, they behave as regular filters.",
                       ],
                       ["pageSize", "number", "10", "Initial number of rows per page."],
                       [
@@ -658,6 +664,32 @@ export default function MyPage() {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Predefined Filters</CardTitle>
+                <CardDescription>
+                  Apply default filter values that users can override during interaction.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <p>
+                  Use <span className="font-mono">predefinedFilters</span> to prefill filters on
+                  initial render. Users can still edit these filters, and after first change they
+                  are treated the same as any other filter.
+                </p>
+                <CodeBlock
+                  code={`<TsTable
+  data={data}
+  columnDefinitions={columns}
+  predefinedFilters={{
+    approved: true,
+  }}
+/>
+`}
+                />
               </CardContent>
             </Card>
 

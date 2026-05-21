@@ -106,16 +106,14 @@ const createDefaultFieldDef = (type: TsFieldDef["type"]): TsFieldDef => {
 }
 
 /** Creates an empty row */
-const createEmptyRow = (): EditorRow => ({
+const createEmptyRow = (columnCount = 1): EditorRow => ({
   id: generateId(),
-  items: [
-    {
-      id: generateId(),
-      field: "",
-      type: "empty",
-      width: "1fr",
-    },
-  ],
+  items: Array.from({ length: Math.max(1, columnCount) }, () => ({
+    id: generateId(),
+    field: "",
+    type: "empty" as const,
+    width: "1fr",
+  })),
 })
 
 /** Creates a default tab */
@@ -213,7 +211,7 @@ export interface FormEditorState {
   setActiveTabIndex: (index: number) => void
 
   // Rows
-  addRow: (tabIndex: number, afterRowIndex?: number) => void
+  addRow: (tabIndex: number, afterRowIndex?: number, columnCount?: number) => void
   removeRow: (tabIndex: number, rowIndex: number) => void
   reorderRows: (tabIndex: number, fromIndex: number, toIndex: number) => void
 
@@ -453,11 +451,11 @@ export const useFormEditorStore = create<FormEditorState>()((set, get) => ({
 
   // === Rows ===
 
-  addRow: (tabIndex: number, afterRowIndex?: number) => {
+  addRow: (tabIndex: number, afterRowIndex?: number, columnCount?: number) => {
     const { form, saveToHistory } = get()
     saveToHistory()
 
-    const newRow = createEmptyRow()
+    const newRow = createEmptyRow(columnCount)
 
     if (form.mode === "single") {
       const newRows = [...(form.rows || [])]

@@ -93,7 +93,6 @@ interface TsTableViewProps<TData> {
   selectionViewMode?: SelectionViewMode
   onSelectionViewModeChange?: (mode: SelectionViewMode) => void
   hasSelectedRows?: boolean
-  predefinedFilterKeys?: string[]
   onRowClick?: (row: TData) => void
   bulkActions?: TsTableRowAction[]
   selectedRowCount?: number
@@ -110,7 +109,6 @@ export function TsTableView<TData>({
   selectionViewMode = "all",
   onSelectionViewModeChange,
   hasSelectedRows = false,
-  predefinedFilterKeys = [],
   onRowClick,
   bulkActions = [],
   selectedRowCount = 0,
@@ -465,7 +463,6 @@ export function TsTableView<TData>({
                           <div />
                         ) : header.column.getCanFilter() ? (
                           (() => {
-                            const isPredefined = predefinedFilterKeys.includes(header.column.id)
                             if (meta?.type === "boolean") {
                               return (
                                 <Select
@@ -473,7 +470,6 @@ export function TsTableView<TData>({
                                   onValueChange={(val: string) =>
                                     header.column.setFilterValue(val === "all" ? "" : val)
                                   }
-                                  disabled={isPredefined}
                                 >
                                   <SelectTrigger className="h-7 text-xs bg-background w-full">
                                     <SelectValue />
@@ -490,11 +486,7 @@ export function TsTableView<TData>({
                               <DebouncedFilterInput
                                 value={(header.column.getFilterValue() ?? "") as string}
                                 onChange={(value) => header.column.setFilterValue(value)}
-                                readOnly={isPredefined}
-                                className={cn(
-                                  "h-7 text-xs bg-background",
-                                  isPredefined && "opacity-60 cursor-not-allowed"
-                                )}
+                                className="h-7 text-xs bg-background"
                               />
                             )
                           })()

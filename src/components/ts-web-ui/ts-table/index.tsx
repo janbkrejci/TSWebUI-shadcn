@@ -10,6 +10,7 @@ import {
   getSortedRowModel,
   RowSelectionState,
   SortingState,
+  Updater,
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
@@ -39,6 +40,7 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   data: TData[]
   columnDefinitions: TsTableColumnDef[]
   title?: string
+  showFulltext?: boolean
   showCreateButton?: boolean
   showImportButton?: boolean
   showExportButton?: boolean
@@ -147,6 +149,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   data: initialData,
   columnDefinitions,
   title,
+  showFulltext = true,
   showCreateButton = true,
   showImportButton = true,
   showExportButton = true,
@@ -185,11 +188,18 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   const [data, setData] = React.useState(initialData)
   const [sorting, setSorting] = React.useState<SortingState>([])
 
+  const initialPredefinedFilters = React.useMemo(() => {
+    if (!predefinedFilters) return {} as Record<string, string>
+    return Object.fromEntries(
+      Object.entries(predefinedFilters).map(([id, value]) => [id, String(value)])
+    )
+  }, [predefinedFilters])
+
   // Initialize filters with predefined filters if available
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
-    if (!predefinedFilters) return []
-    return Object.entries(predefinedFilters).map(([id, value]) => ({ id, value: String(value) }))
+    return Object.entries(initialPredefinedFilters).map(([id, value]) => ({ id, value }))
   })
+  const touchedPredefinedFilterKeysRef = React.useRef<Set<string>>(new Set())
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
     const vis: VisibilityState = {}
@@ -219,6 +229,32 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       setRowSelection(initialRowSelection)
     }
   }, [initialRowSelection])
+
+  const handleColumnFiltersChange = React.useCallback(
+    (updater: Updater<ColumnFiltersState>) => {
+      setColumnFilters((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater
+
+        for (const key of Object.keys(initialPredefinedFilters)) {
+          if (touchedPredefinedFilterKeysRef.current.has(key)) continue
+
+          const prevValue = String(prev.find((filter) => filter.id === key)?.value ?? "")
+          const nextValue = String(next.find((filter) => filter.id === key)?.value ?? "")
+
+          if (prevValue !== nextValue) {
+            touchedPredefinedFilterKeysRef.current.add(key)
+          }
+        }
+
+        return next
+      })
+    },
+    [initialPredefinedFilters]
+  )
+
+  const activePredefinedFilterKeys = Object.keys(initialPredefinedFilters).filter(
+    (key) => !touchedPredefinedFilterKeysRef.current.has(key)
+  )
 
   // Parse row actions
   const rowActions = React.useMemo<TsTableRowAction[]>(() => {
@@ -290,7 +326,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     enableSorting,
     enableColumnFilters: enableFiltering,
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: handleColumnFiltersChange,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
@@ -317,12 +353,6 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   // Get selected rows for toolbar
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
 
-  // Track predefined filter keys for persistence
-  const predefinedFilterKeys = React.useMemo(
-    () => (predefinedFilters ? Object.keys(predefinedFilters) : []),
-    [predefinedFilters]
-  )
-
   // Unshowable column keys for selector (#8: pass to toolbar for dimmed display)
   const unshowableColumnKeys = React.useMemo(
     () => columnDefinitions.filter((col) => col.unshowable).map((col) => col.key),
@@ -334,6 +364,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       <TsTableToolbar
         table={table}
         title={title}
+        showFulltext={showFulltext}
         showCreateButton={showCreateButton}
         showImportButton={showImportButton}
         showExportButton={showExportButton}
@@ -348,7 +379,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onImportClick={onImport}
         columnDefinitions={columnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
-        predefinedFilterKeys={predefinedFilterKeys}
+        predefinedFilterKeys={activePredefinedFilterKeys}
         locale={locale}
       />
       <TsTableView
@@ -359,7 +390,6 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         selectionViewMode={selectionViewMode}
         onSelectionViewModeChange={setSelectionViewMode}
         hasSelectedRows={Object.keys(rowSelection).length > 0}
-        predefinedFilterKeys={predefinedFilterKeys}
         onRowClick={enableClickableRows && onRowClick ? (row) => onRowClick(row) : undefined}
         bulkActions={bulkActions}
         selectedRowCount={selectedRows.length}

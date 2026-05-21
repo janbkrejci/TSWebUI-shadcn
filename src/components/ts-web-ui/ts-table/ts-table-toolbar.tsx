@@ -24,6 +24,7 @@ import { TsTableColumnDef, TsTableRowAction } from "./columns"
 
 interface TsTableToolbarProps<TData> {
   table: Table<TData>
+  showFulltext?: boolean
   showCreateButton?: boolean
   showImportButton?: boolean
   showExportButton?: boolean
@@ -45,6 +46,7 @@ interface TsTableToolbarProps<TData> {
 
 export function TsTableToolbar<TData>({
   table,
+  showFulltext = true,
   showCreateButton = true,
   showImportButton = true,
   showExportButton = true,
@@ -209,9 +211,192 @@ export function TsTableToolbar<TData>({
   }, [table, predefinedFilterKeys])
 
   return (
-    <div className="flex items-center justify-between py-4 gap-2">
-      <div className="flex flex-1 items-center gap-2">
-        <div className="relative w-64">
+    <div className="space-y-4 pt-4 pb-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          {title && <h2 className="text-lg font-semibold">{title}</h2>}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {showColumnSelector && (
+            <DropdownMenu
+              open={columnDropdownOpen}
+              onOpenChange={(open) => {
+                setColumnDropdownOpen(open)
+                if (!open) setColumnSearch("")
+              }}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 ml-auto flex gap-2">
+                  <Settings2 className="h-4 w-4" />
+                  {t?.columns ?? "Columns"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-[220px]"
+                onEscapeKeyDown={(e) => {
+                  // If search is active, first Escape clears search; only then closes dropdown
+                  if (columnSearch) {
+                    e.preventDefault()
+                    setColumnSearch("")
+                  }
+                }}
+              >
+                <DropdownMenuLabel>{t?.viewColumns ?? "View columns"}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {/* Clear all filters (#9) */}
+                {hasActiveUserFilters && (
+                  <>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={handleClearAllFilters}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                      {t?.clearAllFilters ?? "Clear all filters"}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <div
+                  className="px-2 pb-1.5"
+                  onPointerDown={(e) => {
+                    // Prevent dropdown from stealing focus when clicking inside the search area
+                    e.stopPropagation()
+                  }}
+                >
+                  <Input
+                    placeholder={t?.searchColumns ?? "Search columns..."}
+                    value={columnSearch}
+                    onChange={(e) => setColumnSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Stop key events from reaching dropdown (prevents typeahead focus stealing)
+                      // Escape is handled by DropdownMenuContent.onEscapeKeyDown
+                      e.stopPropagation()
+                      if (e.key === "Enter") e.preventDefault()
+                    }}
+                    onBlur={(e) => {
+                      // If focus moved within the dropdown content, reclaim it
+                      const container = (e.target as HTMLElement).closest('[role="menu"]')
+                      if (container?.contains(e.relatedTarget as Node)) {
+                        e.target.focus()
+                      }
+                    }}
+                    className="h-7 text-xs"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  {orderedColumns
+                    .filter((column) => {
+                      if (!columnSearch) return true
+                      const label = getColumnLabel(column)
+                      return label.toLowerCase().includes(columnSearch.toLowerCase())
+                    })
+                    .map((column) => {
+                      const isUnhideable = unhideableColumns.includes(column.id)
+                      const isUnshowable = unshowableColumns.includes(column.id)
+                      const label = getColumnLabel(column)
+                      const hasFilter = activeFilterIds.has(column.id)
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className={cn(isUnshowable && "opacity-50")}
+                          checked={column.getIsVisible()}
+                          disabled={isUnhideable || isUnshowable}
+                          onCheckedChange={(value) => {
+                            if (!isUnhideable && !isUnshowable) column.toggleVisibility(!!value)
+                          }}
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <span className="flex items-center w-full">
+                            <span className="flex-1 truncate">{label}</span>
+                            {hasFilter && (
+                              <Filter className="h-3 w-3 text-primary shrink-0 ml-auto" />
+                            )}
+                          </span>
+                        </DropdownMenuCheckboxItem>
+                      )
+                    })}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {showExportButton && !hasAnyActiveFilter && selectedRows.length === 0 && (
+            <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExportAll}>
+              <Download className="h-4 w-4" />
+              {t?.export ?? "Export"}
+            </Button>
+          )}
+
+          {showExportButton &&
+            (hasAnyActiveFilter || selectedRows.length > 0) &&
+            (() => {
+              const allCount = table.getCoreRowModel().rows.length
+              const filteredCount = table.getFilteredRowModel().rows.length
+              const selectedCount = selectedRows.length
+              return (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-2">
+                      <Download className="h-4 w-4" />
+                      {t?.export ?? "Export"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportAll}>
+                      {t?.exportAll?.(allCount) ?? `Export all (${allCount} rows)`}
+                    </DropdownMenuItem>
+                    {selectedCount > 0 && (
+                      <DropdownMenuItem onClick={handleExportSelected}>
+                        {t?.exportSelected?.(selectedCount) ??
+                          `Export selected (${selectedCount} rows)`}
+                      </DropdownMenuItem>
+                    )}
+                    {hasAnyActiveFilter && (
+                      <DropdownMenuItem
+                        onClick={handleExportFiltered}
+                        disabled={filteredCount === 0}
+                      >
+                        {t?.exportFiltered?.(filteredCount) ??
+                          `Export filtered (${filteredCount} rows)`}
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )
+            })()}
+
+          {showImportButton && (
+            <div className="relative">
+              <Button variant="outline" size="sm" className="h-9 gap-2" asChild>
+                <label className="cursor-pointer">
+                  <Upload className="h-4 w-4" />
+                  {t?.import ?? "Import"}
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".xlsx,.xls,.csv,.json"
+                    onChange={handleImport}
+                  />
+                </label>
+              </Button>
+            </div>
+          )}
+
+          {showCreateButton && (
+            <Button size="sm" className="h-9 gap-2" onClick={onCreateClick}>
+              <Plus className="h-4 w-4" />
+              {t?.newRecord ?? "New record"}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {showFulltext && (
+        <div className="relative w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t?.search ?? "Search..."}
@@ -226,182 +411,7 @@ export function TsTableToolbar<TData>({
             className="pl-8 h-9"
           />
         </div>
-        {title && <h2 className="text-lg font-semibold ml-4">{title}</h2>}
-      </div>
-
-      <div className="flex items-center gap-2">
-        {showColumnSelector && (
-          <DropdownMenu
-            open={columnDropdownOpen}
-            onOpenChange={(open) => {
-              setColumnDropdownOpen(open)
-              if (!open) setColumnSearch("")
-            }}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 ml-auto flex gap-2">
-                <Settings2 className="h-4 w-4" />
-                {t?.columns ?? "Columns"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-[220px]"
-              onEscapeKeyDown={(e) => {
-                // If search is active, first Escape clears search; only then closes dropdown
-                if (columnSearch) {
-                  e.preventDefault()
-                  setColumnSearch("")
-                }
-              }}
-            >
-              <DropdownMenuLabel>{t?.viewColumns ?? "View columns"}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {/* Clear all filters (#9) */}
-              {hasActiveUserFilters && (
-                <>
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={handleClearAllFilters}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <XCircle className="h-3.5 w-3.5 mr-1.5" />
-                    {t?.clearAllFilters ?? "Clear all filters"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <div
-                className="px-2 pb-1.5"
-                onPointerDown={(e) => {
-                  // Prevent dropdown from stealing focus when clicking inside the search area
-                  e.stopPropagation()
-                }}
-              >
-                <Input
-                  placeholder={t?.searchColumns ?? "Search columns..."}
-                  value={columnSearch}
-                  onChange={(e) => setColumnSearch(e.target.value)}
-                  onKeyDown={(e) => {
-                    // Stop key events from reaching dropdown (prevents typeahead focus stealing)
-                    // Escape is handled by DropdownMenuContent.onEscapeKeyDown
-                    e.stopPropagation()
-                    if (e.key === "Enter") e.preventDefault()
-                  }}
-                  onBlur={(e) => {
-                    // If focus moved within the dropdown content, reclaim it
-                    const container = (e.target as HTMLElement).closest('[role="menu"]')
-                    if (container?.contains(e.relatedTarget as Node)) {
-                      e.target.focus()
-                    }
-                  }}
-                  className="h-7 text-xs"
-                  autoFocus
-                />
-              </div>
-              <div className="max-h-[300px] overflow-y-auto">
-                {orderedColumns
-                  .filter((column) => {
-                    if (!columnSearch) return true
-                    const label = getColumnLabel(column)
-                    return label.toLowerCase().includes(columnSearch.toLowerCase())
-                  })
-                  .map((column) => {
-                    const isUnhideable = unhideableColumns.includes(column.id)
-                    const isUnshowable = unshowableColumns.includes(column.id)
-                    const label = getColumnLabel(column)
-                    const hasFilter = activeFilterIds.has(column.id)
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className={cn(isUnshowable && "opacity-50")}
-                        checked={column.getIsVisible()}
-                        disabled={isUnhideable || isUnshowable}
-                        onCheckedChange={(value) => {
-                          if (!isUnhideable && !isUnshowable) column.toggleVisibility(!!value)
-                        }}
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        <span className="flex items-center w-full">
-                          <span className="flex-1 truncate">{label}</span>
-                          {hasFilter && (
-                            <Filter className="h-3 w-3 text-primary shrink-0 ml-auto" />
-                          )}
-                        </span>
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-
-        {showExportButton && !hasAnyActiveFilter && selectedRows.length === 0 && (
-          <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExportAll}>
-            <Download className="h-4 w-4" />
-            {t?.export ?? "Export"}
-          </Button>
-        )}
-
-        {showExportButton &&
-          (hasAnyActiveFilter || selectedRows.length > 0) &&
-          (() => {
-            const allCount = table.getCoreRowModel().rows.length
-            const filteredCount = table.getFilteredRowModel().rows.length
-            const selectedCount = selectedRows.length
-            return (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-2">
-                    <Download className="h-4 w-4" />
-                    {t?.export ?? "Export"}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportAll}>
-                    {t?.exportAll?.(allCount) ?? `Export all (${allCount} rows)`}
-                  </DropdownMenuItem>
-                  {selectedCount > 0 && (
-                    <DropdownMenuItem onClick={handleExportSelected}>
-                      {t?.exportSelected?.(selectedCount) ??
-                        `Export selected (${selectedCount} rows)`}
-                    </DropdownMenuItem>
-                  )}
-                  {hasAnyActiveFilter && (
-                    <DropdownMenuItem onClick={handleExportFiltered} disabled={filteredCount === 0}>
-                      {t?.exportFiltered?.(filteredCount) ??
-                        `Export filtered (${filteredCount} rows)`}
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )
-          })()}
-
-        {showImportButton && (
-          <div className="relative">
-            <Button variant="outline" size="sm" className="h-9 gap-2" asChild>
-              <label className="cursor-pointer">
-                <Upload className="h-4 w-4" />
-                {t?.import ?? "Import"}
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".xlsx,.xls,.csv,.json"
-                  onChange={handleImport}
-                />
-              </label>
-            </Button>
-          </div>
-        )}
-
-        {showCreateButton && (
-          <Button size="sm" className="h-9 gap-2" onClick={onCreateClick}>
-            <Plus className="h-4 w-4" />
-            {t?.newRecord ?? "New record"}
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   )
 }

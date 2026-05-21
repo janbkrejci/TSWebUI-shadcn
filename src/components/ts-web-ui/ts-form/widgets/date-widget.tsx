@@ -23,6 +23,42 @@ import {
 
 export type TsDateWidgetProps = TsWidgetProps<TsDateField>
 
+function toDateOnlyString(date: Date): string {
+  return format(date, "yyyy-MM-dd")
+}
+
+function parseDateValue(value: unknown): Date | undefined {
+  if (!value) return undefined
+
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? undefined : value
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+
+    // Preferred storage for date-only fields.
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed)
+    if (m) {
+      const y = Number(m[1])
+      const mo = Number(m[2])
+      const d = Number(m[3])
+      const localDate = new Date(y, mo - 1, d)
+      return isNaN(localDate.getTime()) ? undefined : localDate
+    }
+
+    const parsed = new Date(trimmed)
+    return isNaN(parsed.getTime()) ? undefined : parsed
+  }
+
+  if (typeof value === "number") {
+    const parsed = new Date(value)
+    return isNaN(parsed.getTime()) ? undefined : parsed
+  }
+
+  return undefined
+}
+
 export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
   (
     {
@@ -48,8 +84,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
 
     const dateFormat = def.dateFormat || "d.M.yyyy"
     const [inputValue, setInputValue] = React.useState(() => {
-      const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
-      const validDate = dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
+      const validDate = parseDateValue(field.value)
       return validDate ? format(validDate, dateFormat) : ""
     })
 
@@ -59,8 +94,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
         const parsed = parseSmartDate(inputValue)
         if (parsed) return parsed
       }
-      const dv = field.value ? new Date(field.value as string | number | Date) : undefined
-      return dv && !isNaN(dv.getTime()) ? dv : undefined
+      return parseDateValue(field.value)
     }, [inputValue, field.value])
 
     // Only sync input from field value when not focused
@@ -70,8 +104,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
         setInputValue("")
         return
       }
-      const dateValue = new Date(field.value as string | number | Date)
-      const validDate = !isNaN(dateValue.getTime()) ? dateValue : undefined
+      const validDate = parseDateValue(field.value)
       if (validDate && !open) {
         setInputValue(format(validDate, dateFormat))
       }
@@ -91,7 +124,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
       const parsed = parseSmartDate(trimmed)
 
       if (parsed && isValidDate(parsed)) {
-        field.onChange(parsed)
+        field.onChange(toDateOnlyString(parsed))
         setInputValue(format(parsed, dateFormat))
       }
     }
@@ -125,13 +158,12 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
                 const parsed = parseSmartDate(inputValue)
 
                 if (parsed && isValidDate(parsed)) {
-                  field.onChange(parsed)
+                  field.onChange(toDateOnlyString(parsed))
                   setInputValue(format(parsed, dateFormat))
 
                   // If it was a manual entry, stop propagation to prevent form action
                   // unless it's the exact same as current field value
-                  const wasNew =
-                    !field.value || new Date(field.value as string).getTime() !== parsed.getTime()
+                  const wasNew = !field.value || toDateOnlyString(parsed) !== String(field.value)
                   if (wasNew) {
                     e.preventDefault()
                     e.stopPropagation()
@@ -187,7 +219,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
             defaultMonth={calendarDate}
             locale={dateLocale}
             onSelect={(date) => {
-              if (date) field.onChange(date)
+              if (date) field.onChange(toDateOnlyString(date))
               setOpen(false)
             }}
             initialFocus
@@ -215,7 +247,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
                   className="text-xs h-8 px-2 flex-1"
                   onClick={() => {
                     const today = new Date()
-                    field.onChange(today)
+                    field.onChange(toDateOnlyString(today))
                     setInputValue(format(today, dateFormat))
                     setOpen(false)
                   }}
