@@ -109,7 +109,7 @@ const REGISTRY_COMPONENTS = [
       "form",
       "alert",
       "badge",
-      "calendar",
+      "ts-web-ui/calendar",
       "checkbox",
       "command",
       "dialog",
@@ -137,6 +137,12 @@ const REGISTRY_COMPONENTS = [
         .filter((file) => file.endsWith(".tsx"))
         .map((file) => `ts-form/widgets/${file}`),
     ],
+  },
+  {
+    name: "ts-web-ui/calendar",
+    dependencies: ["react-day-picker", "lucide-react"],
+    registryDependencies: ["button"],
+    files: ["../ui/calendar.tsx"],
   },
   {
     name: "ts-web-ui/ts-layout",
@@ -183,8 +189,14 @@ async function buildRegistry() {
         return dep
       }),
       files: component.files.map((fileRelPath) => {
-        const fullPath = path.join(COMPONENTS_BASE_PATH, fileRelPath)
+        const normalizedFilePath = fileRelPath.replaceAll("\\", "/")
+        const fullPath = path.resolve(COMPONENTS_BASE_PATH, normalizedFilePath)
         const content = fs.readFileSync(fullPath, "utf8")
+
+        const isUiComponent = normalizedFilePath.startsWith("../ui/")
+        const cleanRelativePath = isUiComponent
+          ? normalizedFilePath.slice("../ui/".length)
+          : normalizedFilePath
 
         // Adjust imports to point to the target location in the user's project
         const processedContent = content
@@ -205,8 +217,10 @@ async function buildRegistry() {
           .replace(/\.\/ts-topbar/g, "@/components/ts-web-ui/ts-topbar")
 
         return {
-          path: `ts-web-ui/${fileRelPath}`,
-          target: `components/ts-web-ui/${fileRelPath}`,
+          path: isUiComponent ? `ui/${cleanRelativePath}` : `ts-web-ui/${cleanRelativePath}`,
+          target: isUiComponent
+            ? `components/ui/${cleanRelativePath}`
+            : `components/ts-web-ui/${cleanRelativePath}`,
           content: processedContent,
           type: "registry:component",
         }
