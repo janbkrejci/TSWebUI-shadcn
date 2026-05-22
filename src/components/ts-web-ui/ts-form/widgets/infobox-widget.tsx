@@ -79,7 +79,7 @@ export const InfoboxWidget = React.forwardRef<HTMLDivElement, TsInfoboxWidgetPro
           <Button
             type="button"
             variant="ghost"
-            size="icon-xs"
+            size="icon"
             className="absolute right-2 top-2 h-6 w-6 text-current opacity-70 hover:opacity-100"
             onClick={() => setIsVisible(false)}
             aria-label={tf.close}

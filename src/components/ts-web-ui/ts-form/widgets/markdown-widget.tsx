@@ -32,7 +32,7 @@ function MarkdownCopyButton({ text }: { text: string }) {
   return (
     <Button
       variant="ghost"
-      size="icon-xs"
+      size="icon"
       className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
       onClick={copy}
     >
