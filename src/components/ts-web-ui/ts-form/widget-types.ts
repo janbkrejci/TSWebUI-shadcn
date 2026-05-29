@@ -238,6 +238,12 @@ export interface TsDateField extends TsFieldBase {
   selectAllOnFocus?: boolean
   /** Global locale for widgets (e.g. 'cs-CZ') */
   locale?: string
+  /** Disallow selecting any date after today (today stays selectable) */
+  disableFuture?: boolean
+  /** Latest selectable date (ISO string or date-fns parsable); later dates are disabled */
+  maxDate?: string
+  /** Earliest selectable date (ISO string or date-fns parsable); earlier dates are disabled */
+  minDate?: string
   /** Show Today button in calendar popup */
   showTodayButton?: boolean
   /** Show Clear button in calendar popup */
@@ -259,6 +265,12 @@ export interface TsDateTimeField extends TsFieldBase {
   selectAllOnFocus?: boolean
   /** Global locale for widgets (e.g. 'cs-CZ') */
   locale?: string
+  /** Disallow selecting any date after today (today stays selectable) */
+  disableFuture?: boolean
+  /** Latest selectable date (ISO string or date-fns parsable); later dates are disabled */
+  maxDate?: string
+  /** Earliest selectable date (ISO string or date-fns parsable); earlier dates are disabled */
+  minDate?: string
   /** Show Today button in calendar popup */
   showTodayButton?: boolean
   /** Show Clear button in calendar popup */
@@ -309,6 +321,10 @@ export interface TsButtonField extends TsFieldBase {
   action?: string
   /** Visual variant of the button */
   variant?: TsButtonVariant
+  /** Name of a Lucide icon to render inside the button (e.g. 'ArrowLeftRight') */
+  icon?: string
+  /** Render a compact, square icon-only button (no label, no full width) */
+  iconOnly?: boolean
 }
 
 /** Definition for horizontal section dividers. */
@@ -448,6 +464,11 @@ export interface TsFieldUpdate {
   escapeAction?: string
   autofocus?: boolean
   dateFormat?: string
+  disableFuture?: boolean
+  maxDate?: string
+  minDate?: string
+  icon?: string
+  iconOnly?: boolean
   content?: string
   value?: unknown
   variant?: TsButtonVariant | TsInfoboxVariant | "process"

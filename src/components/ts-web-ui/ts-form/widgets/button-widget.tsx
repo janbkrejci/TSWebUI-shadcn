@@ -1,5 +1,6 @@
 "use client"
 
+import { icons } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -29,11 +30,20 @@ export const ButtonWidget = React.forwardRef<HTMLButtonElement, TsButtonWidgetPr
   ) => {
     const { variant, className: customClass } = getButtonVariantClasses(def.variant)
 
+    const Icon = def.icon ? icons[def.icon as keyof typeof icons] : undefined
+    // Icon-only button: explicitly requested, or an icon with no label.
+    const isIconOnly = !!Icon && (def.iconOnly || !def.label)
+
     return (
       <Button
         variant={variant}
-        className={cn("w-full", customClass, readOnly && "pointer-events-none opacity-100")}
-        aria-label={ariaLabel || def.label}
+        size={isIconOnly ? "icon" : undefined}
+        className={cn(
+          !isIconOnly && "w-full",
+          customClass,
+          readOnly && "pointer-events-none opacity-100"
+        )}
+        aria-label={ariaLabel || def.label || def.action}
         autoFocus={autoFocus}
         {...props}
         ref={ref}
@@ -48,7 +58,8 @@ export const ButtonWidget = React.forwardRef<HTMLButtonElement, TsButtonWidgetPr
           e.currentTarget.dispatchEvent(event)
         }}
       >
-        {def.label}
+        {Icon ? <Icon className="h-4 w-4" /> : null}
+        {isIconOnly ? null : def.label}
       </Button>
     )
   }
