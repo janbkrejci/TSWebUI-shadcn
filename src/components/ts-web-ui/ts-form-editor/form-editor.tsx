@@ -1963,7 +1963,8 @@ function FieldPropertiesPanel({
                 <Label className="text-xs">{label}</Label>
                 <Switch
                   checked={
-                    ((config as Record<string, unknown>)[key] as boolean | undefined) ?? true
+                    ((config as Record<string, unknown>)[key] as boolean | undefined) ??
+                    !["showCreateButton", "showImportButton", "showExportButton"].includes(key)
                   }
                   onCheckedChange={(checked) => onUpdate({ [key]: checked })}
                 />

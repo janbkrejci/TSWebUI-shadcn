@@ -42,6 +42,9 @@ describe("Story 3.3: Tabulkový Dropdown v Relationship Pickeru", () => {
     // Check if custom titles are in the dialog/table
     expect(screen.getByText("Custom Name")).toBeDefined()
     expect(screen.getByText("Technical Code")).toBeDefined()
+    expect(screen.queryByRole("button", { name: /new record/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /import/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /export/i })).toBeNull()
   })
 
   it("should pass table configuration and modal width to relationship picker dialog", () => {

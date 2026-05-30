@@ -1248,9 +1248,9 @@ Value: `Array<Record<string, unknown>>` — array of row objects.
 | `displayFields`     | `string[]`                  | —            | Fields shown in search results                    |
 | `chipDisplayFields` | `string[]`                  | —            | Fields shown in selected chip                     |
 | `columns`           | `TsTableColumnDef[]`        | —            | Full column definitions (overrides displayFields) |
-| `showCreateButton`  | `boolean`                   | `true`       | Show the nested TsTable "New record" button       |
-| `showImportButton`  | `boolean`                   | `true`       | Show the nested TsTable "Import" button           |
-| `showExportButton`  | `boolean`                   | `true`       | Show the nested TsTable "Export" button           |
+| `showCreateButton`  | `boolean`                   | `false`      | Show the nested TsTable "New record" button       |
+| `showImportButton`  | `boolean`                   | `false`      | Show the nested TsTable "Import" button           |
+| `showExportButton`  | `boolean`                   | `false`      | Show the nested TsTable "Export" button           |
 | `showColumnSelector` | `boolean`                  | `true`       | Show the nested TsTable column selector            |
 | `enableSorting`     | `boolean`                   | `true`       | Enable sorting in the nested TsTable              |
 | `enableFiltering`   | `boolean`                   | `true`       | Enable column filtering in the nested TsTable     |
