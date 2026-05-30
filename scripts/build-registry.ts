@@ -71,6 +71,18 @@ const REGISTRY_COMPONENTS = [
     files: ["ts-window/index.tsx"],
   },
   {
+    name: "ts-web-ui/dialog",
+    dependencies: ["lucide-react", "radix-ui"],
+    registryDependencies: [],
+    files: ["../ui/dialog.tsx"],
+  },
+  {
+    name: "ts-web-ui/alert-dialog",
+    dependencies: ["radix-ui"],
+    registryDependencies: ["button"],
+    files: ["../ui/alert-dialog.tsx"],
+  },
+  {
     name: "ts-web-ui/ts-table",
     dependencies: ["@tanstack/react-table", "lucide-react", "xlsx", "sonner"],
     registryDependencies: [
@@ -105,7 +117,7 @@ const REGISTRY_COMPONENTS = [
     ],
     registryDependencies: [
       "ts-web-ui/locale",
-      "alert-dialog",
+      "ts-web-ui/alert-dialog",
       "button",
       "form",
       "alert",
@@ -113,7 +125,7 @@ const REGISTRY_COMPONENTS = [
       "ts-web-ui/calendar",
       "checkbox",
       "command",
-      "dialog",
+      "ts-web-ui/dialog",
       "input",
       "popover",
       "radio-group",
@@ -154,7 +166,7 @@ const REGISTRY_COMPONENTS = [
       "badge",
       "button",
       "card",
-      "dialog",
+      "ts-web-ui/dialog",
       "input",
       "label",
       "scroll-area",

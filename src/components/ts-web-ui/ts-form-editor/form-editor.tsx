@@ -1939,6 +1939,89 @@ function FieldPropertiesPanel({
             />
           </div>
           <div className="space-y-2">
+            <Label className="text-xs">{fe.modalMaxWidth}</Label>
+            <Input
+              value={(config.modalMaxWidth as string) || ""}
+              onChange={(e) => onUpdate({ modalMaxWidth: e.target.value || undefined })}
+              placeholder="900px"
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {[
+              ["showCreateButton", fe.showCreateButton],
+              ["showImportButton", fe.showImportButton],
+              ["showExportButton", fe.showExportButton],
+              ["showColumnSelector", fe.showColumnSelector],
+              ["enableSorting", fe.enableSorting],
+              ["enableFiltering", fe.enableFiltering],
+              ["enablePagination", fe.enablePagination],
+              ["enableRowMenu", fe.enableRowMenu],
+              ["enableColumnResizing", fe.enableColumnResizing],
+              ["enableColumnReordering", fe.enableColumnReordering],
+            ].map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between gap-2">
+                <Label className="text-xs">{label}</Label>
+                <Switch
+                  checked={
+                    ((config as Record<string, unknown>)[key] as boolean | undefined) ?? true
+                  }
+                  onCheckedChange={(checked) => onUpdate({ [key]: checked })}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">{fe.pageSize}</Label>
+            <Input
+              type="number"
+              value={(config.pageSize as number | undefined) ?? ""}
+              onChange={(e) =>
+                onUpdate({ pageSize: e.target.value ? Number(e.target.value) : undefined })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">{fe.pageSizeOptions}</Label>
+            <Input
+              value={JSON.stringify((config.pageSizeOptions as number[]) || [5, 10, 20, 50, 100])}
+              onChange={(e) => {
+                try {
+                  onUpdate({ pageSizeOptions: JSON.parse(e.target.value) })
+                } catch {
+                  /* ignore */
+                }
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">{fe.unhideableColumns}</Label>
+            <Input
+              value={JSON.stringify((config.unhideableColumns as string[]) || [])}
+              onChange={(e) => {
+                try {
+                  onUpdate({ unhideableColumns: JSON.parse(e.target.value) })
+                } catch {
+                  /* ignore */
+                }
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">{fe.columnsJson}</Label>
+            <Textarea
+              value={JSON.stringify((config.columns as unknown[]) || [], null, 2)}
+              onChange={(e) => {
+                try {
+                  onUpdate({ columns: JSON.parse(e.target.value) })
+                } catch {
+                  /* ignore */
+                }
+              }}
+              rows={5}
+              className="font-mono text-xs"
+            />
+          </div>
+          <div className="space-y-2">
             <Label className="text-xs">{fe.mockOptions}</Label>
             <Textarea
               value={JSON.stringify((config.options as unknown[]) || [], null, 2)}

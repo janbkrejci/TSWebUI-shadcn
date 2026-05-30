@@ -56,6 +56,55 @@ export default function RelationshipWidgetDemo() {
       hint: "Field used as value (usually id)",
     },
     {
+      name: "modalMaxWidth",
+      label: "Modal Max Width",
+      type: "string",
+      defaultValue: "900px",
+      hint: 'CSS max-width for dialog variant, e.g. "900px" or "72rem"',
+    },
+    {
+      name: "columns",
+      label: "Columns (JSON)",
+      type: "json",
+      defaultValue: JSON.stringify(
+        [
+          { key: "name", title: "Name", sortable: true, filterable: true },
+          { key: "email", title: "Email", sortable: true, filterable: true },
+        ],
+        null,
+        2
+      ),
+      hint: "Full TsTable column definitions; use visible: false or unshowable: true to hide columns",
+    },
+    {
+      name: "showCreateButton",
+      label: "Show New Record",
+      type: "boolean",
+      defaultValue: false,
+      hint: "Controls the nested TsTable New record button",
+    },
+    {
+      name: "showImportButton",
+      label: "Show Import",
+      type: "boolean",
+      defaultValue: false,
+      hint: "Controls the nested TsTable Import button",
+    },
+    {
+      name: "showExportButton",
+      label: "Show Export",
+      type: "boolean",
+      defaultValue: false,
+      hint: "Controls the nested TsTable Export button",
+    },
+    {
+      name: "showColumnSelector",
+      label: "Show Columns",
+      type: "boolean",
+      defaultValue: true,
+      hint: "Controls the nested TsTable column selector",
+    },
+    {
       name: "options",
       label: "Mock Data (JSON)",
       type: "json",

@@ -142,6 +142,19 @@ export interface TsLocaleStrings {
     targetEntityPlaceholder: string
     selectionMode: string
     showCreateButton: string
+    showImportButton: string
+    showExportButton: string
+    showColumnSelector: string
+    enableSorting: string
+    enableFiltering: string
+    enablePagination: string
+    enableRowMenu: string
+    enableColumnResizing: string
+    enableColumnReordering: string
+    pageSize: string
+    pageSizeOptions: string
+    unhideableColumns: string
+    modalMaxWidth: string
     // Additional UI strings
     undo: string
     redo: string
