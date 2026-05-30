@@ -1,7 +1,66 @@
 import { describe, expect, it } from "vitest"
 
 import { TsFieldDef } from "./types"
-import { evaluateMath, filterExcludeFromSubmit, parseNumericValue } from "./utils"
+import {
+  evaluateMath,
+  filterExcludeFromSubmit,
+  isDateWithinBounds,
+  parseBoundaryDate,
+  parseNumericValue,
+  resolveMaxDateBound,
+  resolveMinDateBound,
+} from "./utils"
+
+describe("TsForm Utils - Date Bounds", () => {
+  it("parses date-only boundaries in local time (not UTC)", () => {
+    const start = parseBoundaryDate("2026-04-01", "start")
+    expect(start?.getFullYear()).toBe(2026)
+    expect(start?.getMonth()).toBe(3) // April (0-based)
+    expect(start?.getDate()).toBe(1)
+    expect(start?.getHours()).toBe(0)
+    expect(start?.getMinutes()).toBe(0)
+
+    const end = parseBoundaryDate("2026-04-01", "end")
+    expect(end?.getDate()).toBe(1)
+    expect(end?.getHours()).toBe(23)
+  })
+
+  it("returns undefined for missing/invalid values", () => {
+    expect(parseBoundaryDate(undefined, "start")).toBeUndefined()
+    expect(parseBoundaryDate("   ", "start")).toBeUndefined()
+    expect(parseBoundaryDate("not-a-date", "start")).toBeUndefined()
+  })
+
+  it("allows selecting the minDate day itself (no off-by-one)", () => {
+    const minBound = resolveMinDateBound("2026-04-01")
+    // Local midnight of the boundary day must be allowed.
+    expect(isDateWithinBounds(new Date(2026, 3, 1), minBound, undefined)).toBe(true)
+    // The day before must be blocked.
+    expect(isDateWithinBounds(new Date(2026, 2, 31), minBound, undefined)).toBe(false)
+    // A later day is allowed.
+    expect(isDateWithinBounds(new Date(2026, 3, 2), minBound, undefined)).toBe(true)
+  })
+
+  it("combines disableFuture with maxDate, taking the earlier bound", () => {
+    const now = new Date(2026, 4, 15, 9, 0) // May 15
+    const maxBound = resolveMaxDateBound({ disableFuture: true, maxDate: "2026-04-01", now })
+    // maxDate (Apr 1) is earlier than today (May 15) → it wins.
+    expect(maxBound?.getTime()).toBe(new Date(2026, 3, 1, 23, 59, 59, 999).getTime())
+    expect(isDateWithinBounds(new Date(2026, 3, 1, 12, 0), undefined, maxBound)).toBe(true)
+    expect(isDateWithinBounds(new Date(2026, 3, 2), undefined, maxBound)).toBe(false)
+  })
+
+  it("uses end-of-today for disableFuture alone", () => {
+    const now = new Date(2026, 3, 10, 8, 0)
+    const maxBound = resolveMaxDateBound({ disableFuture: true, now })
+    expect(maxBound?.getTime()).toBe(new Date(2026, 3, 10, 23, 59, 59, 999).getTime())
+  })
+
+  it("returns no bound when neither disableFuture nor maxDate is set", () => {
+    expect(resolveMaxDateBound({})).toBeUndefined()
+    expect(resolveMinDateBound(undefined)).toBeUndefined()
+  })
+})
 
 describe("TsForm Utils - Data Filtering", () => {
   describe("filterExcludeFromSubmit", () => {
