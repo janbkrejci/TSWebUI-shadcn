@@ -72,6 +72,8 @@ export interface TsTableColumnDef {
   filterable?: boolean
   visible?: boolean
   unshowable?: boolean
+  /** When true, the column's value is omitted from the Excel export. */
+  excludeFromExport?: boolean
   width?: number | string
   align?: "left" | "center" | "right"
   canBeCopied?: boolean

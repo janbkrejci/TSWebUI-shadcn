@@ -86,6 +86,12 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
    * e.g. so settings survive navigating to a detail page and back.
    */
   persistStateKey?: string
+  /**
+   * Initial sort applied on mount. The user can freely re-sort afterwards; this only seeds the
+   * starting sort state (e.g. newest records first). Persisted sorting (when persistStateKey is
+   * set) takes precedence.
+   */
+  defaultSorting?: SortingState
   locale?: string | TsLocale
 }
 
@@ -197,6 +203,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   getRowId,
   initialRowSelection,
   persistStateKey,
+  defaultSorting,
   locale: localeProp,
 }: TsTableProps<TData>) {
   const locale = useTsLocale(localeProp)
@@ -206,7 +213,10 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   // Restore any persisted view state once on mount.
   const persisted = React.useMemo(() => loadPersistedTableState(persistStateKey), [persistStateKey])
 
-  const [sorting, setSorting] = React.useState<SortingState>(() => persisted?.sorting ?? [])
+  // Persisted sorting wins; otherwise seed from defaultSorting (if provided).
+  const [sorting, setSorting] = React.useState<SortingState>(
+    () => persisted?.sorting ?? defaultSorting ?? []
+  )
 
   const initialPredefinedFilters = React.useMemo(() => {
     if (!predefinedFilters) return {} as Record<string, string>

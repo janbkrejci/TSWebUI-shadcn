@@ -1533,6 +1533,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `singleItemActions`        | `string`                  | `undefined`            | Row actions in `"action/Label,action/Label"` format                                                     |
 | `multipleItemsActions`     | `string`                  | `undefined`            | Bulk actions in `"action/Label,action/Label"` format (shown in header when rows selected)               |
 | `predefinedFilters`        | `Record<string, unknown>` | `undefined`            | Pre-set column filters applied as **defaults on mount** (key = column key, value = filter text). User can freely modify or override them — once a predefined column's filter is touched, the predefined default no longer controls it. Active predefined keys are highlighted in the filter row label. |
+| `defaultSorting`           | `SortingState`            | `undefined`            | Initial sort applied **on mount** (e.g. `[{ id: "duzp", desc: true }]` for newest-first). Only seeds the starting sort state — the user can re-sort or clear it freely afterwards. |
 | `columnsRequiredForImport` | `string[]`                | `undefined`            | Column keys that must be present in imported files. If not set, all column keys are validated           |
 | `getRowId`                 | `(row: TData) => string`  | `undefined`            | Custom row ID function for stable selection                                                             |
 | `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
@@ -1590,6 +1591,7 @@ The import follows a two-phase pattern matching the reference implementation:
 | `filterable`    | `boolean`                                   | `true`    | Enable filtering for this column                                                                                              |
 | `visible`       | `boolean`                                   | `true`    | Initial column visibility (user can toggle via column selector)                                                               |
 | `unshowable`    | `boolean`                                   | `false`   | Column is never shown in the table. Appears dimmed in column selector, not toggleable                                         |
+| `excludeFromExport` | `boolean`                               | `false`   | Keep the column in the grid (still rendered/filterable) but omit its value from the Excel export (all / filtered / selected). Use for action-link, internal-reference, or display-only columns |
 | `width`         | `number \| string`                          | `200`     | Column width in pixels                                                                                                        |
 | `align`         | `"left" \| "center" \| "right"`             | `"left"`  | Content alignment (affects header label, sort icon position, and reorder arrows)                                              |
 | `canBeCopied`   | `boolean`                                   | `false`   | Show copy-to-clipboard icon on row hover                                                                                      |
@@ -1609,6 +1611,8 @@ The import follows a two-phase pattern matching the reference implementation:
 ### Sorting
 
 Sorting uses **3-state cycling**: unsorted → ascending → descending → unsorted. Sort icons: `↑` (ascending), `↓` (descending). The unsorted `↕` icon is only visible on **column header hover** (dimmed). For right-aligned columns, the sort icon appears on the left of the label; for left-aligned columns, on the right.
+
+Pass `defaultSorting` (a `SortingState`, e.g. `[{ id: "duzp", desc: true }]`) to seed the initial sort on mount — handy for "newest first" lists. It only sets the starting state; the user can still cycle or clear it.
 
 ### Row Actions and Bulk Actions
 
@@ -1680,7 +1684,7 @@ When `enableColumnReordering` is enabled, left/right chevron arrows appear on he
 - **Column reordering**: Hover arrows respecting column alignment
 - **Pagination**: Configurable page size with first/prev/next/last navigation
 - **Row selection**: Checkbox-based with select-all, selection view filter, bulk actions
-- **Excel export**: Downloads filtered/visible data as `.xlsx` file
+- **Excel export**: Downloads filtered/visible data as `.xlsx` file. Columns flagged `excludeFromExport` are omitted from the workbook
 - **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json`. Table validates columns and maps data, then calls `onImport`. Parent processes import and shows results via `importResult` prop
 - **Predefined filters**: Lock specific column filters that users cannot modify
 - **Clickable columns**: Individual columns can be marked clickable (styled as links)

@@ -200,7 +200,14 @@ export default function TsTablePage() {
       align: "left",
       isClickable: true,
     },
-    { key: "username", title: d.colUsername, type: "text", visible: false },
+    // excludeFromExport: kept in the grid but stripped from the Excel export.
+    {
+      key: "username",
+      title: d.colUsername,
+      type: "text",
+      visible: false,
+      excludeFromExport: true,
+    },
     { key: "email", title: d.colEmail, type: "text", visible: true, canBeCopied: true },
     { key: "city", title: d.colCity, type: "text", visible: true },
     { key: "company", title: d.colCompany, type: "text", visible: true, isClickable: true },
@@ -417,6 +424,7 @@ export default function TsTablePage() {
                   showBulkActions ? "delete/Delete Selected,export/Export Selected" : undefined
                 }
                 predefinedFilters={{ approved: true }}
+                defaultSorting={[{ id: "contractDate", desc: true }]}
                 onBulkAction={handleBulkAction}
                 getRowId={(row) => String(row.id)}
                 pageSize={5}
@@ -446,6 +454,8 @@ import { TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 const columns: TsTableColumnDef[] = [
   { key: "id", title: "ID", type: "number", visible: false, unshowable: true },
   { key: "name", title: "Name", type: "text", sortable: true, isClickable: true },
+  // Internal column kept in the grid but never written to the Excel export.
+  { key: "internalRef", title: "Ref", type: "text", excludeFromExport: true },
   { key: "email", title: "E-mail", type: "text", canBeCopied: true },
   { key: "turnover", title: "Turnover", type: "number", align: "right",
     locale: "cs-CZ", decimalPlaces: 2 },
@@ -492,6 +502,7 @@ export default function MyPage() {
       // Advanced
       unhideableColumns={["name"]}
       predefinedFilters={{ approved: true }}
+      defaultSorting={[{ id: "contractDate", desc: true }]}  // newest first on mount
       getRowId={(row) => String(row.id)}
       initialRowSelection={{ "1": true }}
       columnsRequiredForImport={["name", "email"]}
@@ -604,6 +615,12 @@ export default function MyPage() {
                         "—",
                         "Initial filters; once changed by user, they behave as regular filters.",
                       ],
+                      [
+                        "defaultSorting",
+                        "SortingState",
+                        "—",
+                        "Initial sort applied on mount, e.g. [{ id: 'date', desc: true }]. Users can re-sort freely afterwards.",
+                      ],
                       ["pageSize", "number", "10", "Initial number of rows per page."],
                       [
                         "pageSizeOptions",
@@ -694,6 +711,55 @@ export default function MyPage() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Default Sorting</CardTitle>
+                <CardDescription>
+                  Seed the initial sort order on mount without locking it.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <p>
+                  Pass <span className="font-mono">defaultSorting</span> to start the table sorted
+                  by one or more columns (for example, newest records first). It only seeds the
+                  initial sort state — users can re-sort or clear it like any other sort.
+                </p>
+                <CodeBlock
+                  code={`<TsTable
+  data={data}
+  columnDefinitions={columns}
+  defaultSorting={[{ id: "contractDate", desc: true }]}
+/>
+`}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Excluding Columns From Export</CardTitle>
+                <CardDescription>
+                  Keep a column visible in the grid but out of the Excel export.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <p>
+                  Mark a column with <span className="font-mono">excludeFromExport</span> to drop
+                  its value from every export (all / filtered / selected). The column still renders
+                  and filters normally — only the exported workbook omits it. Useful for action-link
+                  columns, internal references, or computed display-only cells.
+                </p>
+                <CodeBlock
+                  code={`const columns: TsTableColumnDef[] = [
+  { key: "name", title: "Name", type: "text" },
+  // Rendered in the grid, but never written to the .xlsx export.
+  { key: "openLink", title: "Open", type: "text", isClickable: true, excludeFromExport: true },
+]
+`}
+                />
+              </CardContent>
+            </Card>
+
             {/* Column Definition */}
             <Card>
               <CardHeader>
@@ -740,6 +806,12 @@ export default function MyPage() {
                         "boolean",
                         "false",
                         "Column is always hidden and appears dimmed/uncheckable in column selector.",
+                      ],
+                      [
+                        "excludeFromExport",
+                        "boolean",
+                        "false",
+                        "Keep the column in the grid but omit its value from the Excel export.",
                       ],
                       ["align", '"left" | "center" | "right"', '"left"', "Cell content alignment."],
                       [

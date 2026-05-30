@@ -1,8 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
+import * as XLSX from "xlsx"
 
 import { TsTableColumnDef } from "./columns"
 import { TsTable } from "./index"
+
+// writeFile would hit the filesystem during the export test — stub it, keep the rest of xlsx real
+// so json_to_sheet still produces a worksheet we can inspect.
+vi.mock("xlsx", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("xlsx")>()
+  return { ...actual, writeFile: vi.fn() }
+})
 
 describe("TsTable", () => {
   const columns: TsTableColumnDef[] = [
@@ -92,5 +100,41 @@ describe("TsTable", () => {
     expect(screen.getByText("Název")).toBeInTheDocument()
     expect(screen.queryByText("ico")).not.toBeInTheDocument()
     expect(screen.queryByText("name")).not.toBeInTheDocument()
+  })
+
+  it("applies defaultSorting on mount", () => {
+    render(
+      <TsTable
+        data={data}
+        columnDefinitions={columns}
+        defaultSorting={[{ id: "name", desc: true }]}
+      />
+    )
+
+    // Descending by name → Bob renders before Alice.
+    const cells = screen.getAllByText(/Alice|Bob/)
+    expect(cells[0]).toHaveTextContent("Bob")
+    expect(cells[1]).toHaveTextContent("Alice")
+  })
+
+  it("omits excludeFromExport columns from the exported rows", () => {
+    const exportColumns: TsTableColumnDef[] = [
+      { key: "id", title: "ID", type: "number" },
+      { key: "name", title: "Name", type: "text" },
+      { key: "secret", title: "Secret", type: "text", excludeFromExport: true },
+    ]
+    const exportData = [{ id: 1, name: "Alice", secret: "hidden-a" }]
+
+    const sheetSpy = vi.spyOn(XLSX.utils, "json_to_sheet")
+
+    render(<TsTable data={exportData} columnDefinitions={exportColumns} />)
+    fireEvent.click(screen.getByRole("button", { name: /Export/i }))
+
+    expect(sheetSpy).toHaveBeenCalledTimes(1)
+    const exportedRows = sheetSpy.mock.calls[0][0] as Record<string, unknown>[]
+    expect(exportedRows[0]).toMatchObject({ id: 1, name: "Alice" })
+    expect(exportedRows[0]).not.toHaveProperty("secret")
+
+    sheetSpy.mockRestore()
   })
 })

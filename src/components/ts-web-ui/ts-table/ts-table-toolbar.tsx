@@ -98,7 +98,21 @@ export function TsTableToolbar<TData>({
   )
 
   const doExport = (rows: TData[]) => {
-    const ws = XLSX.utils.json_to_sheet(rows)
+    // Columns flagged excludeFromExport are stripped from each exported row.
+    const excludedKeys = columnDefinitions
+      .filter((definition) => definition.excludeFromExport)
+      .map((definition) => definition.key)
+    const exportRows =
+      excludedKeys.length === 0
+        ? rows
+        : rows.map((row) => {
+            const clone = { ...(row as Record<string, unknown>) }
+            for (const key of excludedKeys) {
+              delete clone[key]
+            }
+            return clone as TData
+          })
+    const ws = XLSX.utils.json_to_sheet(exportRows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Data")
     XLSX.writeFile(wb, `export-${new Date().toISOString().split("T")[0]}.xlsx`)
