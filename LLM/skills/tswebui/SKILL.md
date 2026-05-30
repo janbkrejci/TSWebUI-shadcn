@@ -1809,6 +1809,7 @@ export default function FormBuilderPage() {
 
 - **Drag-and-drop**: Drag field types from the left palette onto canvas rows/cells
 - **Palette click-to-add**: Click a widget in the palette to place it in the first free empty slot. If no free slot exists, a **new row is added automatically with the same number of columns as the last existing row**, and the widget is placed in its first slot
+- **Relationship picker**: Available in the palette as `Relationship` under `Others`. It creates a `type: "relationship"` field and exposes `targetEntity`, `mode`, `valueField`, `displayFields`, and `options` in the properties panel.
 - **Row management**: Add/remove/reorder rows via drag (using `@dnd-kit/core`)
 - **Multi-column layout**: Add columns to rows; remove individual columns via the ✕ button that appears on cell hover; set each column's CSS grid width (`1fr`, `2fr`, `100px`, etc.)
 - **Tabs or single-page mode**: Toggle via the mode selector in the toolbar

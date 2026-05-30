@@ -50,6 +50,11 @@
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form.json"
   },
   {
+    "name": "ts-web-ui/ts-form-editor",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-form-editor.json"
+  },
+  {
     "name": "ts-web-ui/calendar",
     "type": "registry:block",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/calendar.json"

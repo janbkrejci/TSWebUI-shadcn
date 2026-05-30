@@ -1,8 +1,24 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
 import { useFormEditorStore } from "./store"
+import { AVAILABLE_FIELD_TYPES, GROUPED_FIELD_TYPES } from "./types"
 
 const state = () => useFormEditorStore.getState()
+
+describe("TsFormEditor field palette", () => {
+  it("exposes the relationship picker in the Others group", () => {
+    expect(AVAILABLE_FIELD_TYPES).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "relationship",
+          label: "Relationship",
+          group: "Others",
+        }),
+      ])
+    )
+    expect(GROUPED_FIELD_TYPES.Others.map((field) => field.type)).toContain("relationship")
+  })
+})
 
 describe("TsFormEditor Store - renameField", () => {
   beforeEach(() => {
