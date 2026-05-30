@@ -391,6 +391,7 @@ export default function TsTablePage() {
                 data={tableData}
                 columnDefinitions={columnDefinitions}
                 title={d.tableClientTitle}
+                persistStateKey="demo-ts-table"
                 enableSelection={enableSelection}
                 enableSorting={enableSorting}
                 enableFiltering={enableFiltering}
