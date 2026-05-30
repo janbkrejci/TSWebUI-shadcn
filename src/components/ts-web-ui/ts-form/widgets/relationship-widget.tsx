@@ -232,9 +232,9 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
         data={availableItems}
         columnDefinitions={tableColumns}
         enableSelection={mode === "multiple"}
-        showCreateButton={def.showCreateButton}
-        showImportButton={def.showImportButton}
-        showExportButton={def.showExportButton}
+        showCreateButton={def.showCreateButton ?? false}
+        showImportButton={def.showImportButton ?? false}
+        showExportButton={def.showExportButton ?? false}
         showColumnSelector={def.showColumnSelector}
         enableSorting={def.enableSorting}
         enableFiltering={def.enableFiltering}
