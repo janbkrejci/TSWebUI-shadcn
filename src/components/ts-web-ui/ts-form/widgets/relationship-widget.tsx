@@ -232,6 +232,19 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
         data={availableItems}
         columnDefinitions={tableColumns}
         enableSelection={mode === "multiple"}
+        showCreateButton={def.showCreateButton}
+        showImportButton={def.showImportButton}
+        showExportButton={def.showExportButton}
+        showColumnSelector={def.showColumnSelector}
+        enableSorting={def.enableSorting}
+        enableFiltering={def.enableFiltering}
+        enablePagination={def.enablePagination}
+        enableRowMenu={def.enableRowMenu}
+        enableColumnResizing={def.enableColumnResizing}
+        enableColumnReordering={def.enableColumnReordering}
+        pageSize={def.pageSize}
+        pageSizeOptions={def.pageSizeOptions}
+        unhideableColumns={def.unhideableColumns}
         getRowId={(row) => String(row[valueField])}
         initialRowSelection={initialRowSelection}
         onRowClick={(row) => {
@@ -295,6 +308,7 @@ export const RelationshipWidget = React.forwardRef<HTMLDivElement, TsRelationshi
           <DialogContent
             id={`popover-content-${safeId}`}
             className="max-w-[98vw] w-[98vw] max-h-[95vh] flex flex-col p-0"
+            style={{ maxWidth: def.modalMaxWidth }}
           >
             <DialogHeader className="px-6 py-4 border-b text-left">
               <DialogTitle>{tf.selectEntity(targetEntity)}</DialogTitle>

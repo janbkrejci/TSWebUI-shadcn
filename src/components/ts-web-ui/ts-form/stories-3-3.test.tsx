@@ -44,6 +44,41 @@ describe("Story 3.3: Tabulkový Dropdown v Relationship Pickeru", () => {
     expect(screen.getByText("Technical Code")).toBeDefined()
   })
 
+  it("should pass table configuration and modal width to relationship picker dialog", () => {
+    const layout: TsLayout = { rows: [[{ field: "rel" }]] }
+    const fields: Record<string, TsFieldDef> = {
+      rel: {
+        type: "relationship",
+        label: "Entity",
+        options,
+        modalMaxWidth: "720px",
+        showCreateButton: false,
+        showImportButton: false,
+        showExportButton: false,
+        columns: [
+          { key: "name", title: "Visible Name" },
+          { key: "code", title: "Hidden Code", visible: false },
+        ],
+      },
+    }
+
+    render(
+      <TestWrapper>
+        <TsForm layout={layout} fields={fields} />
+      </TestWrapper>
+    )
+
+    fireEvent.click(screen.getByRole("combobox"))
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveStyle({ maxWidth: "720px" })
+    expect(screen.getByText("Visible Name")).toBeDefined()
+    expect(screen.queryByText("Hidden Code")).toBeNull()
+    expect(screen.queryByRole("button", { name: /new record/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /import/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /export/i })).toBeNull()
+  })
+
   it("should support dropdown variant", () => {
     const layout: TsLayout = { rows: [[{ field: "rel" }]] }
     const fields: Record<string, TsFieldDef> = {

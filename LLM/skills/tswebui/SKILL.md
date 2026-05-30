@@ -1219,8 +1219,17 @@ Value: `Array<Record<string, unknown>>` — array of row objects.
   targetEntity: "User",
   mode: "single",            // or "multiple"
   variant: "dropdown",       // or "dialog"
+  modalMaxWidth: "900px",
   displayFields: ["name", "email"],
   chipDisplayFields: ["name"],
+  columns: [
+    { key: "name", title: "Name", sortable: true, filterable: true },
+    { key: "email", title: "Email", visible: false },
+  ],
+  showCreateButton: false,
+  showImportButton: false,
+  showExportButton: false,
+  showColumnSelector: true,
   valueField: "id",
   options: [
     { id: 1, name: "John", email: "john@example.com" },
@@ -1235,9 +1244,23 @@ Value: `Array<Record<string, unknown>>` — array of row objects.
 | `targetEntity`      | `string`                    | —            | Entity name for labels                            |
 | `mode`              | `"single" \| "multiple"`    | `"single"`   | Selection mode                                    |
 | `variant`           | `"dropdown" \| "dialog"`    | `"dropdown"` | UI variant (popover or modal)                     |
+| `modalMaxWidth`     | `string`                    | —            | CSS max-width for the dialog variant, e.g. `"900px"` |
 | `displayFields`     | `string[]`                  | —            | Fields shown in search results                    |
 | `chipDisplayFields` | `string[]`                  | —            | Fields shown in selected chip                     |
 | `columns`           | `TsTableColumnDef[]`        | —            | Full column definitions (overrides displayFields) |
+| `showCreateButton`  | `boolean`                   | `true`       | Show the nested TsTable "New record" button       |
+| `showImportButton`  | `boolean`                   | `true`       | Show the nested TsTable "Import" button           |
+| `showExportButton`  | `boolean`                   | `true`       | Show the nested TsTable "Export" button           |
+| `showColumnSelector` | `boolean`                  | `true`       | Show the nested TsTable column selector            |
+| `enableSorting`     | `boolean`                   | `true`       | Enable sorting in the nested TsTable              |
+| `enableFiltering`   | `boolean`                   | `true`       | Enable column filtering in the nested TsTable     |
+| `enablePagination`  | `boolean`                   | `true`       | Enable pagination in the nested TsTable           |
+| `enableRowMenu`     | `boolean`                   | `true`       | Enable row action menu in the nested TsTable      |
+| `enableColumnResizing` | `boolean`                | `true`       | Enable column resizing in the nested TsTable      |
+| `enableColumnReordering` | `boolean`              | `true`       | Enable column reordering in the nested TsTable    |
+| `pageSize`          | `number`                    | `10`         | Initial nested TsTable page size                  |
+| `pageSizeOptions`   | `number[]`                  | —            | Nested TsTable page size options                  |
+| `unhideableColumns` | `string[]`                  | —            | Column keys that cannot be hidden in selector     |
 | `valueField`        | `string`                    | —            | Primary key field for stored value                |
 | `options`           | `Record<string, unknown>[]` | —            | Available records to select from                  |
 
@@ -1809,7 +1832,7 @@ export default function FormBuilderPage() {
 
 - **Drag-and-drop**: Drag field types from the left palette onto canvas rows/cells
 - **Palette click-to-add**: Click a widget in the palette to place it in the first free empty slot. If no free slot exists, a **new row is added automatically with the same number of columns as the last existing row**, and the widget is placed in its first slot
-- **Relationship picker**: Available in the palette as `Relationship` under `Others`. It creates a `type: "relationship"` field and exposes `targetEntity`, `mode`, `valueField`, `displayFields`, and `options` in the properties panel.
+- **Relationship picker**: Available in the palette as `Relationship` under `Others`. It creates a `type: "relationship"` field and exposes `targetEntity`, `mode`, `valueField`, `displayFields`, `columns`, nested table controls, `modalMaxWidth`, and `options` in the properties panel.
 - **Row management**: Add/remove/reorder rows via drag (using `@dnd-kit/core`)
 - **Multi-column layout**: Add columns to rows; remove individual columns via the ✕ button that appears on cell hover; set each column's CSS grid width (`1fr`, `2fr`, `100px`, etc.)
 - **Tabs or single-page mode**: Toggle via the mode selector in the toolbar
@@ -1837,7 +1860,7 @@ The `formEditor` locale section includes:
 - **Preview dialog**: `formPreview`, `interactivePreview`, `eventLog`, `clearLog`, `noEvents`
 - **Button properties**: `buttonLabel`, `position`, `positionLeft/Center/Right`, `label`, `action`, `iconLucideName`, `variant`, `variantDefault/Primary/PrimaryBlue/Secondary/...`, `confirmationDialog`, `confirmEnabled`, `title`, `message`, `confirmButtonsJson`
 - **Field properties**: `fieldId`, `fieldIdRequired/Invalid/NotUnique/RenameFailed`, `placeholder`, `hint`, `states`, `required`, `disabled`, `readOnly`, `selectAllOnFocus`, `enterAction`, `escapeAction`, `hidden`, `autoFocus`, `hideLabel`, `excludeFromSubmit`
-- **Type-specific**: `numericSettings`, `min`, `max`, `step`, `roundTo`, `rowCount`, `options`, `allowCustom`, `processStyle`, `optionsJson`, `optionsFormatHint`, `dateSettings`, `dateFormat`, `dateFnsHint`, `disableFuture`, `maxDate`, `minDate`, `iconOnly`, `fileUploadTitle`, `accept`, `acceptPlaceholder`, `innerLabel`, `innerLabelPlaceholder`, `allowMultiple`, `content`, `visualStyle`, `variantStandard`, `variantProcess`, `actionName`, `buttonVariant`, `relationshipSettings`, `targetEntity`, `selectionMode`, `selectionSingle/Multiple`, `valueField`, `displayFields`, `mockOptions`, `tableConfiguration`, `columnsJson`, `showCreateButton`, `delete`
+- **Type-specific**: `numericSettings`, `min`, `max`, `step`, `roundTo`, `rowCount`, `options`, `allowCustom`, `processStyle`, `optionsJson`, `optionsFormatHint`, `dateSettings`, `dateFormat`, `dateFnsHint`, `disableFuture`, `maxDate`, `minDate`, `iconOnly`, `fileUploadTitle`, `accept`, `acceptPlaceholder`, `innerLabel`, `innerLabelPlaceholder`, `allowMultiple`, `content`, `visualStyle`, `variantStandard`, `variantProcess`, `actionName`, `buttonVariant`, `relationshipSettings`, `targetEntity`, `selectionMode`, `selectionSingle/Multiple`, `valueField`, `displayFields`, `mockOptions`, `tableConfiguration`, `columnsJson`, `showCreateButton`, `showImportButton`, `showExportButton`, `showColumnSelector`, `enableSorting`, `enableFiltering`, `enablePagination`, `enableRowMenu`, `enableColumnResizing`, `enableColumnReordering`, `pageSize`, `pageSizeOptions`, `unhideableColumns`, `modalMaxWidth`, `delete`
 - **Palette labels**: `fieldTypeLabels` (nested object with 21 field type keys) and `fieldGroupLabels` (nested object with 6 group keys: `text`, `selection`, `date`, `others`, `layout`, `complex`)
 
 ### Keyboard Shortcuts (inside TsFormEditor)

@@ -40,6 +40,16 @@
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-window.json"
   },
   {
+    "name": "ts-web-ui/dialog",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/dialog.json"
+  },
+  {
+    "name": "ts-web-ui/alert-dialog",
+    "type": "registry:block",
+    "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/alert-dialog.json"
+  },
+  {
     "name": "ts-web-ui/ts-table",
     "type": "registry:block",
     "href": "https://janbkrejci.github.io/TSWebUI-shadcn/registry/ts-table.json"

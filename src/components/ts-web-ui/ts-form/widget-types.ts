@@ -363,6 +363,34 @@ export interface TsRelationshipField extends TsFieldBase {
   chipDisplayFields?: string[]
   /** Full column definitions for the search table (optional, overrides displayFields) */
   columns?: TsTableColumnDef[]
+  /** Whether to show the nested table create button */
+  showCreateButton?: boolean
+  /** Whether to show the nested table import button */
+  showImportButton?: boolean
+  /** Whether to show the nested table export button */
+  showExportButton?: boolean
+  /** Whether to show the nested table column selector */
+  showColumnSelector?: boolean
+  /** Whether sorting is enabled in the nested table */
+  enableSorting?: boolean
+  /** Whether column filtering is enabled in the nested table */
+  enableFiltering?: boolean
+  /** Whether pagination is enabled in the nested table */
+  enablePagination?: boolean
+  /** Whether row actions are enabled in the nested table */
+  enableRowMenu?: boolean
+  /** Whether column resizing is enabled in the nested table */
+  enableColumnResizing?: boolean
+  /** Whether column reordering is enabled in the nested table */
+  enableColumnReordering?: boolean
+  /** Initial nested table page size */
+  pageSize?: number
+  /** Nested table page size options */
+  pageSizeOptions?: number[]
+  /** Column keys that cannot be hidden via the column selector */
+  unhideableColumns?: string[]
+  /** CSS max-width for the dialog variant, e.g. "900px" or "72rem" */
+  modalMaxWidth?: string
   /** Field used as the stored value / primary key */
   valueField?: string
   /** Available records to select from (static or pre-fetched) */
@@ -457,6 +485,19 @@ export interface TsFieldUpdate {
   valueField?: string
   columns?: TsTableColumnDef[]
   showCreateButton?: boolean
+  showImportButton?: boolean
+  showExportButton?: boolean
+  showColumnSelector?: boolean
+  enableSorting?: boolean
+  enableFiltering?: boolean
+  enablePagination?: boolean
+  enableRowMenu?: boolean
+  enableColumnResizing?: boolean
+  enableColumnReordering?: boolean
+  pageSize?: number
+  pageSizeOptions?: number[]
+  unhideableColumns?: string[]
+  modalMaxWidth?: string
   action?: string
   allowCustom?: boolean
   selectAllOnFocus?: boolean
