@@ -18,6 +18,27 @@ export default function DateTimeWidgetDemo() {
       hint: d.attrDateFormatHint,
     },
     {
+      name: "disableFuture",
+      label: "Disallow future dates",
+      type: "boolean",
+      defaultValue: false,
+      hint: "Disable selecting any date after today (today stays selectable)",
+    },
+    {
+      name: "maxDate",
+      label: "Max date (ISO)",
+      type: "string",
+      defaultValue: "",
+      hint: "Latest selectable date, e.g. 2026-12-31; later dates are disabled",
+    },
+    {
+      name: "minDate",
+      label: "Min date (ISO)",
+      type: "string",
+      defaultValue: "",
+      hint: "Earliest selectable date, e.g. 2000-01-01; earlier dates are disabled",
+    },
+    {
       name: "selectAllOnFocus",
       label: d.attrSelectAllOnFocus,
       type: "boolean",

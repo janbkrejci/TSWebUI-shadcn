@@ -1102,12 +1102,20 @@ Boolean toggle. No additional properties beyond base.
 | `showClearButton`  | `boolean` | —            | Show "Clear" button in popup         |
 | `todayButtonText`  | `string`  | —            | Custom label for Today button        |
 | `clearButtonText`  | `string`  | —            | Custom label for Clear button        |
+| `disableFuture`    | `boolean` | —            | Disallow selecting dates after today (today stays selectable) |
+| `maxDate`          | `string`  | —            | Latest selectable date (ISO); later dates are disabled and rejected on manual entry |
+| `minDate`          | `string`  | —            | Earliest selectable date (ISO); earlier dates are disabled and rejected on manual entry |
 
 > **Value format:** The stored value for `type: "date"` is always a **`YYYY-MM-DD` string** (e.g. `"2024-03-15"`), not a JS `Date` object. This is timezone-safe and maps directly to a SQL `DATE` column. The widget accepts pre-existing `Date` objects or ISO strings as input but always writes back a `YYYY-MM-DD` string. For timestamps with time component, use `type: "datetime"` (which works the same way but the display format includes time). For DB best practice: store date-only values as `DATE`/`YYYY-MM-DD`, store moments as UTC ISO datetime.
 
+> **Limiting the range:** Use `disableFuture: true` for fields that can never be in the future
+> (e.g. exchange-rate dates), or `maxDate`/`minDate` for explicit bounds. Disabled days are not
+> clickable in the calendar and out-of-range manual text entry is rejected (reverts to the last
+> valid value).
+
 #### DateTime
 
-Same properties as Date, but with time component. Default format: `"d.M.yyyy HH:mm"`.
+Same properties as Date (including `disableFuture` / `maxDate` / `minDate`), but with time component. Default format: `"d.M.yyyy HH:mm"`.
 
 ```ts
 { type: "datetime", label: "Event Start", dateFormat: "d.M.yyyy HH:mm" }
@@ -1151,12 +1159,16 @@ interface TsFileDescriptor {
 
 ```ts
 { type: "button", label: "Generate Report", action: "generate", variant: "outline" }
+// Compact icon-only button (e.g. a swap control):
+{ type: "button", action: "swap", icon: "ArrowLeftRight", iconOnly: true, variant: "outline" }
 ```
 
-| Property  | Type              | Description                  |
-| --------- | ----------------- | ---------------------------- |
-| `action`  | `string`          | Action name emitted on click |
-| `variant` | `TsButtonVariant` | Visual variant               |
+| Property   | Type              | Description                                                        |
+| ---------- | ----------------- | ----------------------------------------------------------------- |
+| `action`   | `string`          | Action name emitted on click                                      |
+| `variant`  | `TsButtonVariant` | Visual variant                                                    |
+| `icon`     | `string`          | Lucide icon name rendered inside the button (e.g. `ArrowLeftRight`) |
+| `iconOnly` | `boolean`         | Render a compact, square icon-only button (no label, no full width) |
 
 #### Separator
 
@@ -1501,6 +1513,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `columnsRequiredForImport` | `string[]`                | `undefined`            | Column keys that must be present in imported files. If not set, all column keys are validated           |
 | `getRowId`                 | `(row: TData) => string`  | `undefined`            | Custom row ID function for stable selection                                                             |
 | `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
+| `persistStateKey`          | `string`                  | `undefined`            | When set, the view state (sorting, column filters, column visibility/order/width, global filter, pagination) is persisted to `localStorage` under this key and restored on mount — e.g. so settings survive navigating to a detail page and back. Use a unique key per table. |
 | `importResult`             | `ImportResult \| null`    | `null`                 | Import results to display in a dialog (set by parent after processing import data)                      |
 | `onImportResultClose`      | `() => void`              | `undefined`            | Called when user closes the import results dialog                                                       |
 | `locale`                   | `string \| TsLocale`      | `undefined`            | UI locale override — preset name (`"en"`, `"cs"`) or full `TsLocale` object. Falls back to context      |
@@ -1513,6 +1526,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `onCreateClick`     | `() => void`                                | Fires when "New record" button is clicked                                                              |
 | `onAction`          | `(action: string, row: TData) => void`      | Fires when a single-row action is triggered from the dropdown menu                                     |
 | `onImport`          | `(data: Record<string, unknown>[]) => void` | Fires when import file is parsed. Table validates columns and maps data. Parent processes the import   |
+| `onImportFile`      | `(file: File) => void \| Promise<void>`     | **Open import pipeline.** When set, the raw selected `File` is handed to this callback and the built-in XLSX parsing / column-filtering is skipped — parse it yourself (read as UTF-8, keep cells as strings, keep all columns). Takes precedence over `onImport`. Use when the default parsing corrupts data (diacritics, leading-zero codes) or drops columns not declared on the table. |
 | `onBulkAction`      | `(action: string, rows: TData[]) => void`   | Fires when a bulk action is triggered (receives all currently selected rows)                           |
 | `onDataChange`      | `(data: TData[]) => void`                   | Fires when data changes                                                                                |
 | `onSelectionChange` | `(selectedRows: TData[]) => void`           | Fires when row selection changes                                                                       |
@@ -1539,6 +1553,8 @@ The import follows a two-phase pattern matching the reference implementation:
 2. **Parent handles processing**: `onImport(data)` is called with the mapped data. The parent processes it (e.g., API call) and then sets the `importResult` prop with the result.
 3. **Table shows results**: When `importResult` is set, a dialog shows counts (added, updated, rejected, skipped). If there are rejected rows with `rejectedRowsData`, user can download them as XLSX.
 4. **Cleanup**: When user closes the dialog, `onImportResultClose` is called. Parent should set `importResult` back to `null`.
+
+**Open pipeline (`onImportFile`)**: when the built-in parsing is unsuitable — e.g. it corrupts diacritics (CSV read with the wrong codepage), drops leading zeros of numeric-looking codes (IČO, ZIP), or discards columns not declared on the table — provide `onImportFile(file)` instead of `onImport`. The table then hands you the raw `File` and skips its own parsing/column-filtering entirely, so you can read it as UTF-8, keep every cell as a string and keep all columns. You still drive steps 2–4 yourself via `importResult` / `onImportResultClose`.
 
 ### TsTableColumnDef
 
@@ -1820,7 +1836,7 @@ The `formEditor` locale section includes:
 - **Preview dialog**: `formPreview`, `interactivePreview`, `eventLog`, `clearLog`, `noEvents`
 - **Button properties**: `buttonLabel`, `position`, `positionLeft/Center/Right`, `label`, `action`, `iconLucideName`, `variant`, `variantDefault/Primary/PrimaryBlue/Secondary/...`, `confirmationDialog`, `confirmEnabled`, `title`, `message`, `confirmButtonsJson`
 - **Field properties**: `fieldId`, `fieldIdRequired/Invalid/NotUnique/RenameFailed`, `placeholder`, `hint`, `states`, `required`, `disabled`, `readOnly`, `selectAllOnFocus`, `enterAction`, `escapeAction`, `hidden`, `autoFocus`, `hideLabel`, `excludeFromSubmit`
-- **Type-specific**: `numericSettings`, `min`, `max`, `step`, `roundTo`, `rowCount`, `options`, `allowCustom`, `processStyle`, `optionsJson`, `optionsFormatHint`, `dateSettings`, `dateFormat`, `dateFnsHint`, `fileUploadTitle`, `accept`, `acceptPlaceholder`, `innerLabel`, `innerLabelPlaceholder`, `allowMultiple`, `content`, `visualStyle`, `variantStandard`, `variantProcess`, `actionName`, `buttonVariant`, `relationshipSettings`, `targetEntity`, `selectionMode`, `selectionSingle/Multiple`, `valueField`, `displayFields`, `mockOptions`, `tableConfiguration`, `columnsJson`, `showCreateButton`, `delete`
+- **Type-specific**: `numericSettings`, `min`, `max`, `step`, `roundTo`, `rowCount`, `options`, `allowCustom`, `processStyle`, `optionsJson`, `optionsFormatHint`, `dateSettings`, `dateFormat`, `dateFnsHint`, `disableFuture`, `maxDate`, `minDate`, `iconOnly`, `fileUploadTitle`, `accept`, `acceptPlaceholder`, `innerLabel`, `innerLabelPlaceholder`, `allowMultiple`, `content`, `visualStyle`, `variantStandard`, `variantProcess`, `actionName`, `buttonVariant`, `relationshipSettings`, `targetEntity`, `selectionMode`, `selectionSingle/Multiple`, `valueField`, `displayFields`, `mockOptions`, `tableConfiguration`, `columnsJson`, `showCreateButton`, `delete`
 - **Palette labels**: `fieldTypeLabels` (nested object with 21 field type keys) and `fieldGroupLabels` (nested object with 6 group keys: `text`, `selection`, `date`, `others`, `layout`, `complex`)
 
 ### Keyboard Shortcuts (inside TsFormEditor)

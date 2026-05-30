@@ -1728,6 +1728,29 @@ function FieldPropertiesPanel({
               />
               <p className="text-[10px] text-muted-foreground">{fe.dateFnsHint}</p>
             </div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">{fe.disableFuture}</Label>
+              <Switch
+                checked={!!config.disableFuture}
+                onCheckedChange={(checked) => onUpdate({ disableFuture: checked })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">{fe.maxDate}</Label>
+              <Input
+                value={(config.maxDate as string) || ""}
+                onChange={(e) => onUpdate({ maxDate: e.target.value })}
+                placeholder="2026-12-31"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">{fe.minDate}</Label>
+              <Input
+                value={(config.minDate as string) || ""}
+                onChange={(e) => onUpdate({ minDate: e.target.value })}
+                placeholder="2000-01-01"
+              />
+            </div>
           </div>
         </>
       )}
@@ -1849,6 +1872,21 @@ function FieldPropertiesPanel({
                 <SelectItem value="link">{fe.variantLink}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{fe.iconLucideName}</Label>
+            <Input
+              value={(config.icon as string) || ""}
+              onChange={(e) => onUpdate({ icon: e.target.value })}
+              placeholder="ArrowLeftRight"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label>{fe.iconOnly}</Label>
+            <Switch
+              checked={!!config.iconOnly}
+              onCheckedChange={(checked) => onUpdate({ iconOnly: checked })}
+            />
           </div>
         </div>
       )}

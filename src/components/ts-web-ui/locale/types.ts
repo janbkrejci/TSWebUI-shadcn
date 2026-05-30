@@ -197,6 +197,10 @@ export interface TsLocaleStrings {
     optionsFormatHint: string
     dateSettings: string
     dateFnsHint: string
+    disableFuture: string
+    maxDate: string
+    minDate: string
+    iconOnly: string
     accept: string
     clearLog: string
     noEvents: string
