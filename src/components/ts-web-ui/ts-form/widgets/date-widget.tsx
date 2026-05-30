@@ -18,7 +18,10 @@ import {
   getDateLocale,
   getFieldClasses,
   handleFieldKeyDown,
+  isDateWithinBounds,
   parseSmartDate,
+  resolveMaxDateBound,
+  resolveMinDateBound,
   sanitizeId,
 } from "../utils"
 
@@ -114,27 +117,14 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
     // Get date-fns locale object from string
     const dateLocale = React.useMemo(() => getDateLocale(def.locale), [def.locale])
 
-    // Upper/lower date bounds (disableFuture / maxDate / minDate).
-    const maxBound = React.useMemo(() => {
-      if (def.disableFuture) {
-        const end = new Date()
-        end.setHours(23, 59, 59, 999)
-        return end
-      }
-      if (def.maxDate) {
-        const d = new Date(def.maxDate)
-        if (!isNaN(d.getTime())) return d
-      }
-      return undefined
-    }, [def.disableFuture, def.maxDate])
+    // Upper/lower date bounds. disableFuture and maxDate combine (the earlier wins); date-only
+    // bounds are parsed in local time so they match the calendar's local-midnight days.
+    const maxBound = React.useMemo(
+      () => resolveMaxDateBound({ disableFuture: def.disableFuture, maxDate: def.maxDate }),
+      [def.disableFuture, def.maxDate]
+    )
 
-    const minBound = React.useMemo(() => {
-      if (def.minDate) {
-        const d = new Date(def.minDate)
-        if (!isNaN(d.getTime())) return d
-      }
-      return undefined
-    }, [def.minDate])
+    const minBound = React.useMemo(() => resolveMinDateBound(def.minDate), [def.minDate])
 
     const disabledMatcher = React.useMemo<Matcher[] | undefined>(() => {
       const matchers: Matcher[] = []
@@ -144,12 +134,8 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
     }, [maxBound, minBound])
 
     const isDateAllowed = React.useCallback(
-      (date: Date) => {
-        if (maxBound && date.getTime() > maxBound.getTime()) return false
-        if (minBound && date.getTime() < minBound.getTime()) return false
-        return true
-      },
-      [maxBound, minBound]
+      (date: Date) => isDateWithinBounds(date, minBound, maxBound),
+      [minBound, maxBound]
     )
 
     const resetInputFromField = React.useCallback(() => {

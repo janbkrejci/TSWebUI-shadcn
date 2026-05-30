@@ -26,6 +26,60 @@ export function getDateLocale(localeStr?: string): Locale | undefined {
 }
 
 /**
+ * Parse a min/max boundary date for a date field. Date-only strings (`YYYY-MM-DD`) are parsed in
+ * LOCAL time so they line up with the calendar's local-midnight day values, and `edge` puts the
+ * boundary at the start (00:00:00.000) or end (23:59:59.999) of that day.
+ */
+export function parseBoundaryDate(
+  value: string | undefined,
+  edge: "start" | "end"
+): Date | undefined {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed)
+  const date = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(trimmed)
+  if (Number.isNaN(date.getTime())) return undefined
+  if (edge === "end") date.setHours(23, 59, 59, 999)
+  else date.setHours(0, 0, 0, 0)
+  return date
+}
+
+/**
+ * Latest selectable instant given `disableFuture` and/or `maxDate`. When both are set the tighter
+ * (earlier) bound wins; returns undefined when neither is set.
+ */
+export function resolveMaxDateBound(options: {
+  disableFuture?: boolean
+  maxDate?: string
+  now?: Date
+}): Date | undefined {
+  const bounds: number[] = []
+  if (options.disableFuture) {
+    const end = options.now ? new Date(options.now) : new Date()
+    end.setHours(23, 59, 59, 999)
+    bounds.push(end.getTime())
+  }
+  const max = parseBoundaryDate(options.maxDate, "end")
+  if (max) bounds.push(max.getTime())
+  return bounds.length > 0 ? new Date(Math.min(...bounds)) : undefined
+}
+
+/** Earliest selectable instant given `minDate` (start of that local day). */
+export function resolveMinDateBound(minDate?: string): Date | undefined {
+  return parseBoundaryDate(minDate, "start")
+}
+
+/** Whether `date` falls within the optional [minBound, maxBound] range (inclusive of both ends). */
+export function isDateWithinBounds(date: Date, minBound?: Date, maxBound?: Date): boolean {
+  const time = date.getTime()
+  if (minBound && time < minBound.getTime()) return false
+  if (maxBound && time > maxBound.getTime()) return false
+  return true
+}
+
+/**
  * Converts null values to undefined in form output data.
  * Needed because NumberWidget uses null internally (RHF treats undefined as "use defaultValue")
  * but the external API should expose undefined for empty fields.
