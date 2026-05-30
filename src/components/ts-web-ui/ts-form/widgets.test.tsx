@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { FormProvider, useForm } from "react-hook-form"
-import { describe, expect, it } from "vitest"
-
+import { describe, expect, it, vi } from "vitest"
 import { TsFormField } from "./ts-form-field"
 import { TsFieldDef } from "./types"
 import { sanitizeId } from "./utils"
+import { DateWidget } from "./widgets/date-widget"
 
 // Helper to wrap TsFormField in FormProvider
 const TestForm = ({ name, fieldDef }: { name: string; fieldDef: TsFieldDef }) => {
@@ -98,6 +98,33 @@ describe("Widget Architecture & Sanity", () => {
 
     const trigger = screen.getByRole("combobox")
     expect(trigger).toHaveAttribute("aria-controls", `popover-content-user-org-0`)
+  })
+
+  it("disables DateWidget Today button when today is after maxDate", () => {
+    const onChange = vi.fn()
+    const { container } = render(
+      <DateWidget
+        name="dueDate"
+        field={
+          {
+            value: "",
+            onChange,
+            onBlur: vi.fn(),
+            ref: vi.fn(),
+          } as never
+        }
+        def={{ type: "date", label: "Due date", maxDate: "2000-01-01" }}
+      />
+    )
+
+    const trigger = container.querySelector('button[type="button"]')
+    expect(trigger).not.toBeNull()
+    fireEvent.click(trigger!)
+
+    const todayButton = screen.getByRole("button", { name: "Today" })
+    expect(todayButton).toBeDisabled()
+    fireEvent.click(todayButton)
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   it("renders TableWidget and handles data", () => {

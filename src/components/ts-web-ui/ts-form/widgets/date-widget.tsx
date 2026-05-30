@@ -137,6 +137,7 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
       (date: Date) => isDateWithinBounds(date, minBound, maxBound),
       [minBound, maxBound]
     )
+    const isTodayAllowed = isDateAllowed(new Date())
 
     const resetInputFromField = React.useCallback(() => {
       const dv = field.value ? new Date(field.value as string | number | Date) : undefined
@@ -288,8 +289,10 @@ export const DateWidget = React.forwardRef<HTMLInputElement, TsDateWidgetProps>(
                   variant="ghost"
                   size="sm"
                   className="text-xs h-8 px-2 flex-1"
+                  disabled={!isTodayAllowed}
                   onClick={() => {
                     const today = new Date()
+                    if (!isDateAllowed(today)) return
                     field.onChange(toDateOnlyString(today))
                     setInputValue(format(today, dateFormat))
                     setOpen(false)
