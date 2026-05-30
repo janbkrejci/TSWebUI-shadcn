@@ -42,6 +42,42 @@ describe("TsTable", () => {
     expect(onRowClick).toHaveBeenCalledWith(data[0])
   })
 
+  it("hands the raw file to onImportFile without parsing it", () => {
+    const onImportFile = vi.fn()
+    const onImport = vi.fn()
+    const { container } = render(
+      <TsTable
+        data={data}
+        columnDefinitions={columns}
+        onImportFile={onImportFile}
+        onImport={onImport}
+      />
+    )
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(["ico\n01"], "clients.csv", { type: "text/csv" })
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    expect(onImportFile).toHaveBeenCalledTimes(1)
+    expect(onImportFile.mock.calls[0][0]).toBe(file)
+    // Built-in parsing path is skipped when onImportFile is set.
+    expect(onImport).not.toHaveBeenCalled()
+  })
+
+  it("restores persisted view state for the same persistStateKey", () => {
+    window.localStorage.clear()
+    const view = render(
+      <TsTable data={data} columnDefinitions={columns} persistStateKey="test-table" />
+    )
+
+    fireEvent.change(view.getByPlaceholderText(/Search.../i), { target: { value: "Alice" } })
+    view.unmount()
+
+    render(<TsTable data={data} columnDefinitions={columns} persistStateKey="test-table" />)
+    expect(screen.getByPlaceholderText(/Search.../i)).toHaveValue("Alice")
+    window.localStorage.clear()
+  })
+
   it("uses column titles in the column selector instead of internal column ids", () => {
     const localizedColumns: TsTableColumnDef[] = [
       { key: "ico", title: "IČO", type: "text" },

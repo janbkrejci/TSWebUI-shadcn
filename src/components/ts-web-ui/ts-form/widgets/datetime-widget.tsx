@@ -4,6 +4,7 @@ import { format, isValid as isValidDate } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 
 import * as React from "react"
+import type { Matcher } from "react-day-picker"
 import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -70,6 +71,44 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
     // Get date-fns locale object from string
     const dateLocale = React.useMemo(() => getDateLocale(def.locale), [def.locale])
 
+    // Upper/lower date bounds (disableFuture / maxDate / minDate).
+    const maxBound = React.useMemo(() => {
+      if (def.disableFuture) {
+        const end = new Date()
+        end.setHours(23, 59, 59, 999)
+        return end
+      }
+      if (def.maxDate) {
+        const d = new Date(def.maxDate)
+        if (!isNaN(d.getTime())) return d
+      }
+      return undefined
+    }, [def.disableFuture, def.maxDate])
+
+    const minBound = React.useMemo(() => {
+      if (def.minDate) {
+        const d = new Date(def.minDate)
+        if (!isNaN(d.getTime())) return d
+      }
+      return undefined
+    }, [def.minDate])
+
+    const disabledMatcher = React.useMemo<Matcher[] | undefined>(() => {
+      const matchers: Matcher[] = []
+      if (maxBound) matchers.push({ after: maxBound })
+      if (minBound) matchers.push({ before: minBound })
+      return matchers.length > 0 ? matchers : undefined
+    }, [maxBound, minBound])
+
+    const isDateAllowed = React.useCallback(
+      (date: Date) => {
+        if (maxBound && date.getTime() > maxBound.getTime()) return false
+        if (minBound && date.getTime() < minBound.getTime()) return false
+        return true
+      },
+      [maxBound, minBound]
+    )
+
     const getValidDate = () => {
       const dateValue = field.value ? new Date(field.value as string | number | Date) : undefined
       return dateValue && !isNaN(dateValue.getTime()) ? dateValue : undefined
@@ -82,12 +121,18 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
         : ""
     }
 
+    const resetInputFromField = React.useCallback(() => {
+      const dv = field.value ? new Date(field.value as string | number | Date) : undefined
+      setInputValue(dv && !isNaN(dv.getTime()) ? format(dv, dateFormat) : "")
+    }, [field.value, dateFormat])
+
     const handleDateSelect = (date: Date | undefined) => {
       if (readOnly) return
       if (!date) {
         field.onChange(undefined)
         return
       }
+      if (!isDateAllowed(date)) return
       const newDate = new Date(date)
       const vd = getValidDate()
       if (vd) {
@@ -116,9 +161,11 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
 
       const parsed = parseSmartDateTime(trimmed)
 
-      if (parsed && isValidDate(parsed)) {
+      if (parsed && isValidDate(parsed) && isDateAllowed(parsed)) {
         field.onChange(parsed)
         setInputValue(format(parsed, dateFormat))
+      } else {
+        resetInputFromField()
       }
     }
 
@@ -150,7 +197,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
               if (e.key === "Enter") {
                 const parsed = parseSmartDateTime(inputValue)
 
-                if (parsed && isValidDate(parsed)) {
+                if (parsed && isValidDate(parsed) && isDateAllowed(parsed)) {
                   field.onChange(parsed)
                   setInputValue(format(parsed, dateFormat))
 
@@ -161,6 +208,11 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
                     e.stopPropagation()
                     return
                   }
+                } else if (parsed && isValidDate(parsed) && !isDateAllowed(parsed)) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  resetInputFromField()
+                  return
                 }
               }
               handleFieldKeyDown(
@@ -210,6 +262,7 @@ export const DateTimeWidget = React.forwardRef<HTMLInputElement, TsDateTimeWidge
             selected={getValidDate()}
             onSelect={handleDateSelect}
             locale={dateLocale}
+            disabled={disabledMatcher}
             autoFocus
           />
           {(def.showTodayButton !== false || def.showClearButton !== false) && (

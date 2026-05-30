@@ -8,6 +8,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  PaginationState,
   RowSelectionState,
   SortingState,
   Updater,
@@ -22,6 +23,7 @@ import { TsLocale, useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ui/button"
 
 import { generateColumns, TsTableColumnDef, TsTableRowAction } from "./columns"
+import { loadPersistedTableState, savePersistedTableState } from "./persistence"
 import { TsTablePagination } from "./ts-table-pagination"
 import { TsTableToolbar } from "./ts-table-toolbar"
 import { TsTableView } from "./ts-table-view"
@@ -59,6 +61,12 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   onCreateClick?: () => void
   onAction?: (action: string, row: TData) => void
   onImport?: (data: Record<string, unknown>[]) => void
+  /**
+   * Open import pipeline: receive the raw selected File and parse it yourself (UTF-8, string
+   * cells, all columns). When set, the built-in XLSX parsing/column-filtering is skipped and
+   * this takes precedence over onImport.
+   */
+  onImportFile?: (file: File) => void | Promise<void>
   importResult?: ImportResult | null
   onImportResultClose?: () => void
   onDataChange?: (data: TData[]) => void
@@ -72,6 +80,12 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   predefinedFilters?: Record<string, unknown>
   getRowId?: (row: TData) => string
   initialRowSelection?: Record<string, boolean>
+  /**
+   * When set, the table view state (sorting, filters, column visibility/order/sizing, global
+   * filter and pagination) is persisted to localStorage under this key and restored on mount —
+   * e.g. so settings survive navigating to a detail page and back.
+   */
+  persistStateKey?: string
   locale?: string | TsLocale
 }
 
@@ -168,6 +182,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   onCreateClick,
   onAction,
   onImport,
+  onImportFile,
   importResult = null,
   onImportResultClose,
   onDataChange,
@@ -181,12 +196,17 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   predefinedFilters,
   getRowId,
   initialRowSelection,
+  persistStateKey,
   locale: localeProp,
 }: TsTableProps<TData>) {
   const locale = useTsLocale(localeProp)
   const t = locale.strings.table
   const [data, setData] = React.useState(initialData)
-  const [sorting, setSorting] = React.useState<SortingState>([])
+
+  // Restore any persisted view state once on mount.
+  const persisted = React.useMemo(() => loadPersistedTableState(persistStateKey), [persistStateKey])
+
+  const [sorting, setSorting] = React.useState<SortingState>(() => persisted?.sorting ?? [])
 
   const initialPredefinedFilters = React.useMemo(() => {
     if (!predefinedFilters) return {} as Record<string, string>
@@ -195,8 +215,9 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     )
   }, [predefinedFilters])
 
-  // Initialize filters with predefined filters if available
+  // Initialize filters from persisted state, falling back to predefined filters.
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
+    if (persisted?.columnFilters) return persisted.columnFilters
     return Object.entries(initialPredefinedFilters).map(([id, value]) => ({ id, value }))
   })
   const touchedPredefinedFilterKeysRef = React.useRef<Set<string>>(new Set())
@@ -206,14 +227,27 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     columnDefinitions.forEach((col) => {
       if (col.visible === false || col.unshowable) vis[col.key] = false
     })
+    if (persisted?.columnVisibility) Object.assign(vis, persisted.columnVisibility)
+    // Unshowable columns can never be made visible, even via persisted state.
+    columnDefinitions.forEach((col) => {
+      if (col.unshowable) vis[col.key] = false
+    })
     return vis
   })
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
     initialRowSelection || {}
   )
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([])
+  const [globalFilter, setGlobalFilter] = React.useState(() => persisted?.globalFilter ?? "")
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>(
+    () => persisted?.columnSizing ?? {}
+  )
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(
+    () => persisted?.columnOrder ?? []
+  )
+  const [pagination, setPagination] = React.useState<PaginationState>(() => ({
+    pageIndex: persisted?.pagination?.pageIndex ?? 0,
+    pageSize: persisted?.pagination?.pageSize ?? (enablePagination ? pageSize : 999999),
+  }))
   const [selectionViewMode, setSelectionViewMode] = React.useState<
     "all" | "selected" | "unselected"
   >("all")
@@ -321,6 +355,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       globalFilter,
       columnSizing,
       columnOrder,
+      pagination,
     },
     columnResizeMode: enableColumnResizing ? "onChange" : undefined,
     enableSorting,
@@ -332,17 +367,35 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     onGlobalFilterChange: setGlobalFilter,
     onColumnSizingChange: setColumnSizing,
     onColumnOrderChange: setColumnOrder,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getRowId,
-    initialState: {
-      pagination: {
-        pageSize: enablePagination ? pageSize : 999999,
-      },
-    },
   })
+
+  // Persist view state whenever it changes (no-op when persistStateKey is unset).
+  React.useEffect(() => {
+    savePersistedTableState(persistStateKey, {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      columnSizing,
+      columnOrder,
+      globalFilter,
+      pagination,
+    })
+  }, [
+    persistStateKey,
+    sorting,
+    columnFilters,
+    columnVisibility,
+    columnSizing,
+    columnOrder,
+    globalFilter,
+    pagination,
+  ])
 
   // Propagate selection changes back up
   React.useEffect(() => {
@@ -377,6 +430,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onUnselectAll={() => setRowSelection({})}
         onCreateClick={onCreateClick}
         onImportClick={onImport}
+        onImportFile={onImportFile}
         columnDefinitions={columnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
         predefinedFilterKeys={activePredefinedFilterKeys}

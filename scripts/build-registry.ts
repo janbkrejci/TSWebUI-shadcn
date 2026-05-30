@@ -87,6 +87,7 @@ const REGISTRY_COMPONENTS = [
       "ts-table/index.tsx",
       "ts-table/columns.tsx",
       "ts-table/filters.ts",
+      "ts-table/persistence.ts",
       "ts-table/ts-table-pagination.tsx",
       "ts-table/ts-table-toolbar.tsx",
       "ts-table/ts-table-view.tsx",

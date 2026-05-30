@@ -37,6 +37,13 @@ interface TsTableToolbarProps<TData> {
   onUnselectAll?: () => void
   onCreateClick?: () => void
   onImportClick?: (data: Record<string, unknown>[]) => void
+  /**
+   * When provided, the raw selected File is handed to this callback and the built-in XLSX
+   * parsing/column-filtering is skipped — the consumer is responsible for parsing it
+   * (e.g. read as UTF-8, keep cells as strings, keep all columns). Takes precedence over
+   * onImportClick.
+   */
+  onImportFile?: (file: File) => void | Promise<void>
   columnDefinitions?: TsTableColumnDef[]
   columnsRequiredForImport?: string[]
   predefinedFilterKeys?: string[]
@@ -59,6 +66,7 @@ export function TsTableToolbar<TData>({
   onUnselectAll: _onUnselectAll,
   onCreateClick,
   onImportClick,
+  onImportFile,
   columnDefinitions = [],
   columnsRequiredForImport,
   predefinedFilterKeys = [],
@@ -111,6 +119,13 @@ export function TsTableToolbar<TData>({
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Open pipeline: hand the raw file to the consumer and skip built-in parsing/filtering.
+    if (onImportFile) {
+      void onImportFile(file)
+      e.target.value = ""
+      return
+    }
 
     const reader = new FileReader()
     reader.onload = (event) => {
