@@ -36,6 +36,8 @@ interface TsTableToolbarProps<TData> {
   onBulkAction?: (action: string, rows: TData[]) => void
   onUnselectAll?: () => void
   onCreateClick?: () => void
+  onImportStart?: () => void
+  onImportEnd?: () => void
   onImportClick?: (data: Record<string, unknown>[]) => void
   /**
    * When provided, the raw selected File is handed to this callback and the built-in XLSX
@@ -65,6 +67,8 @@ export function TsTableToolbar<TData>({
   onBulkAction: _onBulkAction,
   onUnselectAll: _onUnselectAll,
   onCreateClick,
+  onImportStart,
+  onImportEnd,
   onImportClick,
   onImportFile,
   columnDefinitions = [],
@@ -134,6 +138,8 @@ export function TsTableToolbar<TData>({
     const file = e.target.files?.[0]
     if (!file) return
 
+    onImportStart?.()
+
     // Open pipeline: hand the raw file to the consumer and skip built-in parsing/filtering.
     if (onImportFile) {
       void onImportFile(file)
@@ -153,6 +159,7 @@ export function TsTableToolbar<TData>({
       // Empty file — nothing to import
       if (json.length === 0) {
         toast.info(t?.importNoData ?? "Import file contains no data rows")
+        onImportEnd?.()
         return
       }
 
@@ -174,6 +181,7 @@ export function TsTableToolbar<TData>({
         toast.error(t?.importFailedMissing?.(label) ?? `Import failed: ${label}`, {
           description: missingColumns.join(", "),
         })
+        onImportEnd?.()
         return
       }
 
@@ -188,7 +196,11 @@ export function TsTableToolbar<TData>({
       })
 
       // Call external handler — parent is responsible for processing and showing results
-      onImportClick?.(mapped)
+      if (onImportClick) {
+        onImportClick(mapped)
+      } else {
+        onImportEnd?.()
+      }
     }
     reader.readAsArrayBuffer(file)
 

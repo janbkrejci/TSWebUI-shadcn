@@ -72,6 +72,47 @@ describe("TsTable", () => {
     expect(onImport).not.toHaveBeenCalled()
   })
 
+  it("shows import progress until the user stops waiting", () => {
+    const onImportFile = vi.fn()
+    const { container } = render(
+      <TsTable data={data} columnDefinitions={columns} onImportFile={onImportFile} />
+    )
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(["ico\n01"], "clients.csv", { type: "text/csv" })
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    expect(screen.getByRole("status")).toHaveTextContent("Import is running...")
+    fireEvent.click(screen.getByRole("button", { name: /Stop waiting/i }))
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+  })
+
+  it("clears import progress when import results arrive", () => {
+    const onImportFile = vi.fn()
+    const { container, rerender } = render(
+      <TsTable data={data} columnDefinitions={columns} onImportFile={onImportFile} />
+    )
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(["ico\n01"], "clients.csv", { type: "text/csv" })
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    expect(screen.getByRole("status")).toHaveTextContent("Import is running...")
+
+    rerender(
+      <TsTable
+        data={data}
+        columnDefinitions={columns}
+        onImportFile={onImportFile}
+        importResult={{ added: 1, updated: 0, rejected: 0, skipped: 0 }}
+      />
+    )
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+    expect(screen.getByText("Import Results")).toBeInTheDocument()
+  })
+
   it("restores persisted view state for the same persistStateKey", () => {
     window.localStorage.clear()
     const view = render(

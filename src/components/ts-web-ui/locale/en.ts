@@ -41,6 +41,8 @@ export const en: TsLocale = {
       downloadErrorLog: "Download error log",
       close: "Close",
       importNoData: "Import file contains no data rows",
+      importWaiting: "Import is running...",
+      stopWaiting: "Stop waiting",
       importFailedMissing: (label) => `Import failed: ${label}`,
       missingRequiredColumns: "Missing required columns",
       missingColumns: "Missing columns",

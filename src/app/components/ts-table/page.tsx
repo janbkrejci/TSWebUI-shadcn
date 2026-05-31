@@ -675,6 +675,12 @@ export default function MyPage() {
                         "Column keys required in import file. Defaults to all column keys.",
                       ],
                       [
+                        "importResult",
+                        "ImportResult | null",
+                        "null",
+                        "Shows import results and clears the import progress overlay when set.",
+                      ],
+                      [
                         "initialRowSelection",
                         "Record<string, boolean>",
                         "—",

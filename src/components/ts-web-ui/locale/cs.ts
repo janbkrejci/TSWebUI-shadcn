@@ -41,6 +41,8 @@ export const cs: TsLocale = {
       downloadErrorLog: "Stáhnout chybový protokol",
       close: "Zavřít",
       importNoData: "Importovaný soubor neobsahuje žádné datové řádky",
+      importWaiting: "Import probíhá...",
+      stopWaiting: "Ukončit čekání",
       importFailedMissing: (label) => `Import selhal: ${label}`,
       missingRequiredColumns: "Chybějící povinné sloupce",
       missingColumns: "Chybějící sloupce",

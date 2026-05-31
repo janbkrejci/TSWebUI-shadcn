@@ -15,7 +15,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { Download, X } from "lucide-react"
+import { Download, Loader2, X } from "lucide-react"
 import * as React from "react"
 import * as XLSX from "xlsx"
 
@@ -285,6 +285,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   const [selectionViewMode, setSelectionViewMode] = React.useState<
     "all" | "selected" | "unselected"
   >("all")
+  const [isImportPending, setIsImportPending] = React.useState(false)
 
   // Update data if initialData changes
   React.useEffect(() => {
@@ -297,6 +298,12 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
       setRowSelection(initialRowSelection)
     }
   }, [initialRowSelection])
+
+  React.useEffect(() => {
+    if (importResult) {
+      setIsImportPending(false)
+    }
+  }, [importResult])
 
   const handleColumnFiltersChange = React.useCallback(
     (updater: Updater<ColumnFiltersState>) => {
@@ -447,7 +454,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   )
 
   return (
-    <div className="w-full space-y-4">
+    <div className="relative w-full space-y-4" aria-busy={isImportPending}>
       <TsTableToolbar
         table={table}
         title={title}
@@ -463,6 +470,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onBulkAction={onBulkAction}
         onUnselectAll={() => setRowSelection({})}
         onCreateClick={onCreateClick}
+        onImportStart={() => setIsImportPending(true)}
+        onImportEnd={() => setIsImportPending(false)}
         onImportClick={onImport}
         onImportFile={onImportFile}
         columnDefinitions={columnDefinitions}
@@ -470,6 +479,21 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         predefinedFilterKeys={activePredefinedFilterKeys}
         locale={locale}
       />
+      {isImportPending && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center rounded-md bg-background/80 backdrop-blur-[1px]">
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center gap-3 rounded-md border bg-background px-6 py-5 text-sm shadow-lg"
+          >
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="font-medium">{t.importWaiting}</div>
+            <Button variant="outline" size="sm" onClick={() => setIsImportPending(false)}>
+              {t.stopWaiting}
+            </Button>
+          </div>
+        </div>
+      )}
       <TsTableView
         table={table}
         enableFiltering={enableFiltering}
