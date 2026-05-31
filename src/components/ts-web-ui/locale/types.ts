@@ -38,6 +38,8 @@ export interface TsLocaleStrings {
     downloadErrorLog: string
     close: string
     importNoData: string
+    importWaiting: string
+    stopWaiting: string
     importFailedMissing: (label: string) => string
     missingRequiredColumns: string
     missingColumns: string

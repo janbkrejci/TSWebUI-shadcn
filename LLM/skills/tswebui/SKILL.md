@@ -1538,7 +1538,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `getRowId`                 | `(row: TData) => string`  | `undefined`            | Custom row ID function for stable selection                                                             |
 | `initialRowSelection`      | `Record<string, boolean>` | `undefined`            | Pre-selected row IDs (keyed by row ID)                                                                  |
 | `persistStateKey`          | `string`                  | `undefined`            | When set, the view state (sorting, column filters, column visibility/order/width, global filter, pagination) is persisted to `localStorage` under this key and restored on mount — e.g. so settings survive navigating to a detail page and back. Use a unique key per table. |
-| `importResult`             | `ImportResult \| null`    | `null`                 | Import results to display in a dialog (set by parent after processing import data)                      |
+| `importResult`             | `ImportResult \| null`    | `null`                 | Import results to display in a dialog (set by parent after processing import data). Setting this also clears the import progress overlay. |
 | `onImportResultClose`      | `() => void`              | `undefined`            | Called when user closes the import results dialog                                                       |
 | `locale`                   | `string \| TsLocale`      | `undefined`            | UI locale override — preset name (`"en"`, `"cs"`) or full `TsLocale` object. Falls back to context      |
 
@@ -1575,9 +1575,9 @@ interface ImportResult {
 The import follows a two-phase pattern matching the reference implementation:
 
 1. **Table handles file reading**: User selects a file → table reads it, validates column headers against `columnsRequiredForImport` (or all column definitions if not specified), and maps rows to known column keys only.
-2. **Parent handles processing**: `onImport(data)` is called with the mapped data. The parent processes it (e.g., API call) and then sets the `importResult` prop with the result.
-3. **Table shows results**: When `importResult` is set, a dialog shows counts (added, updated, rejected, skipped). If there are rejected rows with `rejectedRowsData`, the user can download them as XLSX; if `errorLog` is set, a "Download error log" button saves it as a `.txt` protocol (one rejection reason per line).
-4. **Cleanup**: When user closes the dialog, `onImportResultClose` is called. Parent should set `importResult` back to `null`.
+2. **Parent handles processing**: `onImport(data)` is called with the mapped data. While the parent processes the import, the table shows a blocking progress overlay with a spinner and a "Stop waiting" button.
+3. **Table shows results**: When `importResult` is set, the progress overlay closes and a dialog shows counts (added, updated, rejected, skipped). If there are rejected rows with `rejectedRowsData`, the user can download them as XLSX; if `errorLog` is set, a "Download error log" button saves it as a `.txt` protocol (one rejection reason per line).
+4. **Cleanup / fallback**: When user closes the dialog, `onImportResultClose` is called. Parent should set `importResult` back to `null`. If processing fails and no `importResult` arrives, the user can close the progress overlay with "Stop waiting".
 
 **Open pipeline (`onImportFile`)**: when the built-in parsing is unsuitable — e.g. it corrupts diacritics (CSV read with the wrong codepage), drops leading zeros of numeric-looking codes (IČO, ZIP), or discards columns not declared on the table — provide `onImportFile(file)` instead of `onImport`. The table then hands you the raw `File` and skips its own parsing/column-filtering entirely, so you can read it as UTF-8, keep every cell as a string and keep all columns. You still drive steps 2–4 yourself via `importResult` / `onImportResultClose`.
 
