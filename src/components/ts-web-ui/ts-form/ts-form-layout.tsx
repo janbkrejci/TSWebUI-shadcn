@@ -145,7 +145,9 @@ export function TsFormLayout({
             key={index}
             value={String(index)}
             forceMount
-            className="min-h-0 flex-1 overflow-y-auto space-y-1 pt-2 data-[state=inactive]:hidden"
+            // px-1 keeps the focus ring of edge inputs from being clipped: overflow-y-auto makes
+            // overflow-x compute to auto, which would otherwise cut the ring at the left/right edge.
+            className="min-h-0 flex-1 overflow-y-auto space-y-1 px-1 pt-2 data-[state=inactive]:hidden"
           >
             {renderRows(tab.rows, fields, externalErrors)}
           </TabsContent>
@@ -156,7 +158,9 @@ export function TsFormLayout({
 
   if (layout.rows) {
     return (
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      // px-1 keeps the focus ring of edge inputs from being clipped (overflow-y-auto makes
+      // overflow-x compute to auto, which would otherwise cut the ring at the left/right edge).
+      <div className="min-h-0 flex-1 overflow-y-auto px-1">
         <div className="space-y-1">{renderRows(layout.rows, fields, externalErrors)}</div>
       </div>
     )
