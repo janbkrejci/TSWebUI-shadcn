@@ -82,7 +82,9 @@ describe("TsTable", () => {
     const file = new File(["ico\n01"], "clients.csv", { type: "text/csv" })
     fireEvent.change(fileInput, { target: { files: [file] } })
 
-    expect(screen.getByRole("status")).toHaveTextContent("Import is running...")
+    const status = screen.getByRole("status")
+    expect(status).toHaveTextContent("Import is running...")
+    expect(status.parentElement).toHaveClass("fixed", "inset-0", "z-50", "bg-black/50")
     fireEvent.click(screen.getByRole("button", { name: /Stop waiting/i }))
 
     expect(screen.queryByRole("status")).not.toBeInTheDocument()
