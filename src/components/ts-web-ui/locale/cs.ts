@@ -38,6 +38,7 @@ export const cs: TsLocale = {
       rejected: "Zamítnuto",
       skipped: "Přeskočeno",
       saveRejectedRows: "Uložit zamítnuté řádky",
+      downloadErrorLog: "Stáhnout chybový protokol",
       close: "Zavřít",
       importNoData: "Importovaný soubor neobsahuje žádné datové řádky",
       importFailedMissing: (label) => `Import selhal: ${label}`,

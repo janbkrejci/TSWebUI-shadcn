@@ -137,4 +137,22 @@ describe("TsTable", () => {
 
     sheetSpy.mockRestore()
   })
+
+  it("shows a download-error-log button when importResult.errorLog is set", () => {
+    render(
+      <TsTable
+        data={data}
+        columnDefinitions={columns}
+        importResult={{
+          added: 1,
+          updated: 0,
+          rejected: 1,
+          skipped: 0,
+          errorLog: "Row 1: rejected (reason)",
+        }}
+      />
+    )
+
+    expect(screen.getByRole("button", { name: /Download error log/i })).toBeInTheDocument()
+  })
 })

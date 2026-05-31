@@ -1566,6 +1566,7 @@ interface ImportResult {
   rejected: number
   skipped: number
   rejectedRowsData?: Record<string, unknown>[]
+  errorLog?: string // plain-text protocol; enables a "Download error log" (.txt) button
 }
 ```
 
@@ -1575,7 +1576,7 @@ The import follows a two-phase pattern matching the reference implementation:
 
 1. **Table handles file reading**: User selects a file → table reads it, validates column headers against `columnsRequiredForImport` (or all column definitions if not specified), and maps rows to known column keys only.
 2. **Parent handles processing**: `onImport(data)` is called with the mapped data. The parent processes it (e.g., API call) and then sets the `importResult` prop with the result.
-3. **Table shows results**: When `importResult` is set, a dialog shows counts (added, updated, rejected, skipped). If there are rejected rows with `rejectedRowsData`, user can download them as XLSX.
+3. **Table shows results**: When `importResult` is set, a dialog shows counts (added, updated, rejected, skipped). If there are rejected rows with `rejectedRowsData`, the user can download them as XLSX; if `errorLog` is set, a "Download error log" button saves it as a `.txt` protocol (one rejection reason per line).
 4. **Cleanup**: When user closes the dialog, `onImportResultClose` is called. Parent should set `importResult` back to `null`.
 
 **Open pipeline (`onImportFile`)**: when the built-in parsing is unsuitable — e.g. it corrupts diacritics (CSV read with the wrong codepage), drops leading zeros of numeric-looking codes (IČO, ZIP), or discards columns not declared on the table — provide `onImportFile(file)` instead of `onImport`. The table then hands you the raw `File` and skips its own parsing/column-filtering entirely, so you can read it as UTF-8, keep every cell as a string and keep all columns. You still drive steps 2–4 yourself via `importResult` / `onImportResultClose`.
