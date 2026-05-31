@@ -480,11 +480,11 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         locale={locale}
       />
       {isImportPending && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center rounded-md bg-background/80 backdrop-blur-[1px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div
             role="status"
             aria-live="polite"
-            className="flex flex-col items-center gap-3 rounded-md border bg-background px-6 py-5 text-sm shadow-lg"
+            className="flex w-[400px] max-w-[90vw] flex-col items-center gap-3 rounded-lg border bg-background p-6 text-sm shadow-lg"
           >
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             <div className="font-medium">{t.importWaiting}</div>
