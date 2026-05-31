@@ -155,7 +155,7 @@ describe("TsForm", () => {
     })
   })
 
-  it("renders markdown widget", () => {
+  it("renders markdown widget", async () => {
     const mdFields: Record<string, TsFieldDef> = {
       content: {
         type: "markdown",
@@ -166,7 +166,8 @@ describe("TsForm", () => {
 
     render(<TsForm layout={mdLayout} fields={mdFields} buttons={[]} />)
 
-    expect(screen.getByText(/Hello/i)).toBeInTheDocument()
+    // The markdown renderer is lazy-loaded (code-split), so wait for the chunk to mount.
+    expect(await screen.findByText(/Hello/i, {}, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /Link/i })).toHaveAttribute("target", "_blank")
   })
 

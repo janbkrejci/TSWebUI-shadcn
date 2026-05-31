@@ -1,45 +1,17 @@
 "use client"
 
-import { Check, Copy } from "lucide-react"
 import * as React from "react"
-import Markdown from "react-markdown"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
-import remarkGfm from "remark-gfm"
-
-import { Button } from "@/components/ui/button"
 
 import { TsMarkdownField, TsWidgetProps } from "../types"
 
-// Proper types for Markdown components to satisfy AC 4 (Zero Any)
-interface TsMarkdownComponentProps {
-  children?: React.ReactNode
-  className?: string
-  href?: string
-}
+// The actual markdown rendering (react-markdown + remark-gfm + react-syntax-highlighter) lives in
+// ./markdown-render and is loaded lazily, so importing <TsForm> does not pull the ESM-only markdown
+// toolchain into the module graph. This keeps forms without markdown fields loadable/testable under
+// next/jest (which does not transform those packages) and code-splits the heavy deps out of the
+// main form bundle.
+const MarkdownRender = React.lazy(() => import("./markdown-render"))
 
 export type TsMarkdownWidgetProps = TsWidgetProps<TsMarkdownField>
-
-function MarkdownCopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = React.useState(false)
-
-  const copy = () => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="absolute right-2 top-2 size-6 opacity-0 transition-opacity group-hover:opacity-100"
-      onClick={copy}
-    >
-      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-    </Button>
-  )
-}
 
 export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetProps>(
   (
@@ -57,48 +29,16 @@ export const MarkdownWidget = React.forwardRef<HTMLDivElement, TsMarkdownWidgetP
     },
     ref
   ) => {
+    const content = (def.value as string) || def.content || ""
     return (
       <div
         className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2"
         {...props}
         ref={ref}
       >
-        <Markdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            a: ({ href, children, ...props }: TsMarkdownComponentProps) => (
-              <a href={href} {...props} target="_blank" rel="noopener noreferrer">
-                {children}
-              </a>
-            ),
-            code: ({ className, children, ...props }: TsMarkdownComponentProps) => {
-              const match = /language-(\w+)/.exec(className || "")
-              const isInline = !match
-              if (isInline) {
-                return (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                )
-              }
-              return (
-                <div className="relative group my-4">
-                  <MarkdownCopyButton text={String(children)} />
-                  <SyntaxHighlighter
-                    language={match[1]}
-                    style={oneDark}
-                    PreTag="div"
-                    className="rounded-md !m-0"
-                  >
-                    {String(children).replace(/\n$/, "")}
-                  </SyntaxHighlighter>
-                </div>
-              )
-            },
-          }}
-        >
-          {(def.value as string) || def.content || ""}
-        </Markdown>
+        <React.Suspense fallback={null}>
+          <MarkdownRender content={content} />
+        </React.Suspense>
       </div>
     )
   }
