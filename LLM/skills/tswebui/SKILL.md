@@ -1299,6 +1299,8 @@ Value: `Array<Record<string, unknown>>` — array of row objects.
 | `content` | `string` | Static markdown content                 |
 | `value`   | `string` | Dynamic markdown content from form data |
 
+> The markdown renderer (`react-markdown` + `remark-gfm` + `react-syntax-highlighter`) is **lazy-loaded** (code-split) and rendered inside a `React.Suspense` boundary. Importing `<TsForm>` therefore does **not** pull the ESM-only markdown toolchain into the module graph, so forms without markdown fields load and unit-test cleanly under `next/jest` (no `moduleNameMapper` stub required) and the heavy deps stay out of the main bundle. Tests that render a markdown field should await it (e.g. `await screen.findByText(...)`).
+
 ### Buttons Configuration
 
 ```ts
