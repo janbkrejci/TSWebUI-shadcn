@@ -1,5 +1,15 @@
 import { FilterFn } from "@tanstack/react-table"
 
+const EMPTY_FILTER_VALUE = "!*"
+
+function isEmptyFilterValue(filterValue: unknown): boolean {
+  return String(filterValue).trim() === EMPTY_FILTER_VALUE
+}
+
+function isEmptyCellValue(value: unknown): boolean {
+  return value == null || (typeof value === "string" && value.trim() === "")
+}
+
 /**
  * Match text with wildcard support: * (any chars), ? (single char).
  * Falls back to case-insensitive substring match if no wildcards present.
@@ -51,6 +61,7 @@ function parseNumberRange(filterValue: string): { min: number | null; max: numbe
 
 export const numberFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId) as number
+  if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (typeof cellValue !== "number") return false
 
   const range = parseNumberRange(String(filterValue))
@@ -138,6 +149,7 @@ function setEndOfPeriod(date: Date, input: string): Date {
 
 export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)
+  if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (!cellValue) return false
 
   const cellDate = new Date(cellValue as string)
@@ -179,6 +191,7 @@ export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
 
 export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)
+  if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   // Accept both boolean values (from predefinedFilters) and string values (from UI)
   if (filterValue === true || filterValue === "true") return cellValue === true
   if (filterValue === false || filterValue === "false") return cellValue === false
@@ -189,6 +202,7 @@ export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => 
 
 export const textFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)
+  if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (cellValue == null) return false
   return matchTextPattern(String(cellValue), String(filterValue))
 }

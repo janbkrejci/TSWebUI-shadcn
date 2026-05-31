@@ -26,6 +26,7 @@ export interface TsLocaleStrings {
     showSelectedOnly: string
     showUnselectedOnly: string
     all: string
+    empty: string
     yes: string
     no: string
     copyToClipboard: string

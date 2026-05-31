@@ -1609,7 +1609,9 @@ The import follows a two-phase pattern matching the reference implementation:
 | `"text"`    | Plain text                                        | Text input                   | Substring match; supports `*` (any chars) and `?` (single char) wildcards                         |
 | `"number"`  | Locale-formatted with configurable decimal places | Text input                   | `10..20` range, `10..` (≥10), `..20` (≤20), exact number matches via startsWith, fallback to text |
 | `"date"`    | Locale-formatted date                             | Text input                   | Supports `DD.MM.YYYY`, `DD.MM.YY`, `YYYY-MM-DD`, `YYYY`, `MM.YYYY`. Range with `..` separator     |
-| `"boolean"` | Read-only Switch component                        | Select dropdown (All/Yes/No) | Exact boolean match                                                                               |
+| `"boolean"` | Read-only Switch component                        | Select dropdown (All/Empty/Yes/No) | Exact boolean match                                                                          |
+
+All column filter types recognize `!*` as an empty-value filter. It matches `null`, `undefined`, empty strings, and whitespace-only strings, but not `0` or `false`.
 
 ### Sorting
 

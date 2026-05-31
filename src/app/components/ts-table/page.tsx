@@ -712,12 +712,17 @@ export default function MyPage() {
                   initial render. Users can still edit these filters, and after first change they
                   are treated the same as any other filter.
                 </p>
+                <p>
+                  Column filters for text, number, date, and boolean fields also accept{" "}
+                  <span className="font-mono">!*</span> to show rows where that column is empty. For
+                  boolean columns, choose Empty from the filter dropdown.
+                </p>
                 <CodeBlock
                   code={`<TsTable
   data={data}
   columnDefinitions={columns}
   predefinedFilters={{
-    approved: true,
+    email: "!*",
   }}
 />
 `}

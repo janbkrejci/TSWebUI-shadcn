@@ -29,6 +29,7 @@ export const cs: TsLocale = {
       showSelectedOnly: "Zobrazeny pouze vybrané",
       showUnselectedOnly: "Zobrazeny pouze nevybrané",
       all: "Vše",
+      empty: "Prázdné",
       yes: "Ano",
       no: "Ne",
       copyToClipboard: "Kopírovat do schránky",
