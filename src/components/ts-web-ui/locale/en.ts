@@ -38,6 +38,7 @@ export const en: TsLocale = {
       rejected: "Rejected",
       skipped: "Skipped",
       saveRejectedRows: "Save rejected rows",
+      downloadErrorLog: "Download error log",
       close: "Close",
       importNoData: "Import file contains no data rows",
       importFailedMissing: (label) => `Import failed: ${label}`,

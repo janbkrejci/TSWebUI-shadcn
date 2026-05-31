@@ -35,6 +35,7 @@ export interface TsLocaleStrings {
     rejected: string
     skipped: string
     saveRejectedRows: string
+    downloadErrorLog: string
     close: string
     importNoData: string
     importFailedMissing: (label: string) => string

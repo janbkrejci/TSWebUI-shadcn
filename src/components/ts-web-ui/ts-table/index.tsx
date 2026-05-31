@@ -36,6 +36,11 @@ export interface ImportResult {
   rejected: number
   skipped: number
   rejectedRowsData?: Record<string, unknown>[]
+  /**
+   * Optional plain-text error protocol (one reason per line). When set, the import results dialog
+   * shows a "Download error log" button that saves it as a `.txt` file.
+   */
+  errorLog?: string
 }
 
 export interface TsTableProps<TData extends Record<string, unknown> = Record<string, unknown>> {
@@ -122,6 +127,19 @@ function ImportResultDialog({
     )
   }
 
+  const saveErrorLog = () => {
+    if (!result.errorLog) return
+    const blob = new Blob([result.errorLog], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const d = new Date()
+    const pad = (n: number) => String(n).padStart(2, "0")
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} import-errors.txt`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-background border rounded-lg shadow-lg p-6 w-[400px] max-w-[90vw]">
@@ -150,6 +168,12 @@ function ImportResultDialog({
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
+          {result.errorLog && result.errorLog.trim().length > 0 && (
+            <Button variant="outline" size="sm" onClick={saveErrorLog}>
+              <Download className="h-4 w-4 mr-1.5" />
+              {t.downloadErrorLog}
+            </Button>
+          )}
           {result.rejected > 0 && result.rejectedRowsData && result.rejectedRowsData.length > 0 && (
             <Button variant="outline" size="sm" onClick={saveRejectedRows}>
               <Download className="h-4 w-4 mr-1.5" />

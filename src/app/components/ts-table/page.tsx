@@ -282,6 +282,14 @@ export default function TsTablePage() {
       rejected,
       skipped: 0,
       rejectedRowsData: data.slice(-rejected),
+      // Optional plain-text protocol → adds a "Download error log" button to the results dialog.
+      errorLog:
+        rejected > 0
+          ? data
+              .slice(-rejected)
+              .map((row, i) => `Row ${i + 1}: rejected (simulated reason)`)
+              .join("\n")
+          : undefined,
     })
   }, [])
 
