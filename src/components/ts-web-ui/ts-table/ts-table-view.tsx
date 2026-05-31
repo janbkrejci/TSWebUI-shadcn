@@ -476,6 +476,7 @@ export function TsTableView<TData>({
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="all">{t?.all ?? "All"}</SelectItem>
+                                    <SelectItem value="!*">{t?.empty ?? "Empty"}</SelectItem>
                                     <SelectItem value="true">{t?.yes ?? "Yes"}</SelectItem>
                                     <SelectItem value="false">{t?.no ?? "No"}</SelectItem>
                                   </SelectContent>

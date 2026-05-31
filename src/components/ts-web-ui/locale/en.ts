@@ -29,6 +29,7 @@ export const en: TsLocale = {
       showSelectedOnly: "Showing selected only",
       showUnselectedOnly: "Showing unselected only",
       all: "All",
+      empty: "Empty",
       yes: "Yes",
       no: "No",
       copyToClipboard: "Copy to clipboard",
