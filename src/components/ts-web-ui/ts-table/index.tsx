@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-table"
 import { Download, Loader2, X } from "lucide-react"
 import * as React from "react"
+import { createPortal } from "react-dom"
 import * as XLSX from "xlsx"
 
 import { TsLocale, useTsLocale } from "@/components/ts-web-ui/locale"
@@ -286,6 +287,10 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     "all" | "selected" | "unselected"
   >("all")
   const [isImportPending, setIsImportPending] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Update data if initialData changes
   React.useEffect(() => {
@@ -479,21 +484,24 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         predefinedFilterKeys={activePredefinedFilterKeys}
         locale={locale}
       />
-      {isImportPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div
-            role="status"
-            aria-live="polite"
-            className="flex w-[400px] max-w-[90vw] flex-col items-center gap-3 rounded-lg border bg-background p-6 text-sm shadow-lg"
-          >
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            <div className="font-medium">{t.importWaiting}</div>
-            <Button variant="outline" size="sm" onClick={() => setIsImportPending(false)}>
-              {t.stopWaiting}
-            </Button>
-          </div>
-        </div>
-      )}
+      {isImportPending &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex w-[400px] max-w-[90vw] flex-col items-center gap-3 rounded-lg border bg-background p-6 text-sm shadow-lg"
+            >
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div className="font-medium">{t.importWaiting}</div>
+              <Button variant="outline" size="sm" onClick={() => setIsImportPending(false)}>
+                {t.stopWaiting}
+              </Button>
+            </div>
+          </div>,
+          document.body
+        )}
       <TsTableView
         table={table}
         enableFiltering={enableFiltering}
@@ -509,15 +517,18 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         onUnselectAll={() => setRowSelection({})}
         locale={locale}
       />
-      {/* Import results dialog */}
-      {importResult && (
-        <ImportResultDialog
-          result={importResult}
-          columnDefinitions={columnDefinitions}
-          onClose={onImportResultClose ?? (() => {})}
-          t={t}
-        />
-      )}
+      {/* Import results dialog — rendered via portal so it covers the full viewport */}
+      {importResult &&
+        mounted &&
+        createPortal(
+          <ImportResultDialog
+            result={importResult}
+            columnDefinitions={columnDefinitions}
+            onClose={onImportResultClose ?? (() => {})}
+            t={t}
+          />,
+          document.body
+        )}
       {enablePagination && (
         <TsTablePagination table={table} pageSizeOptions={pageSizeOptions} locale={locale} />
       )}

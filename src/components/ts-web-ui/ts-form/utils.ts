@@ -544,7 +544,7 @@ export function formatNumericValue(
   roundTo?: number,
   locale?: string
 ): string {
-  if (val === undefined || val === null) return ""
+  if (val === undefined || val === null || val === ("" as unknown)) return ""
 
   const options: Intl.NumberFormatOptions = {
     minimumFractionDigits: roundTo !== undefined ? roundTo : 0,
