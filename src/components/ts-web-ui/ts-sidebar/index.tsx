@@ -585,6 +585,7 @@ export function SidebarInset({
       className={cn("flex flex-col transition-[margin-left] duration-300 ease-in-out", className)}
       style={{
         marginLeft,
+        paddingTop: topBarHeight,
         ...style,
       }}
       {...props}
