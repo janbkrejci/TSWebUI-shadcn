@@ -19,6 +19,28 @@ import { cn } from "@/lib/utils"
 
 import { booleanFilter, dateFilter, numberFilter, textFilter } from "./filters"
 
+function parseNumberCellValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  if (typeof value !== "string") return null
+
+  const normalized = value.trim().replace(/\s/g, "").replace(",", ".")
+  if (!normalized) return null
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function parseBooleanCellValue(value: unknown): boolean {
+  if (typeof value === "boolean") return value
+  if (typeof value === "number") return value !== 0
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+    if (["false", "0", "no", "n", "off", "ne", ""].includes(normalized)) return false
+    if (["true", "1", "yes", "y", "on", "ano"].includes(normalized)) return true
+  }
+  return !!value
+}
+
 function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string }) {
   const [copied, setCopied] = React.useState(false)
   const resetTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -217,11 +239,14 @@ export function generateColumns<TData>(
 
         let formattedValue: React.ReactNode = String(value ?? "")
 
-        if (def.type === "number" && typeof value === "number") {
-          formattedValue = value.toLocaleString(locale, {
-            minimumFractionDigits: decimalPlaces,
-            maximumFractionDigits: decimalPlaces,
-          })
+        if (def.type === "number") {
+          const numericValue = parseNumberCellValue(value)
+          if (numericValue !== null) {
+            formattedValue = numericValue.toLocaleString(locale, {
+              minimumFractionDigits: decimalPlaces,
+              maximumFractionDigits: decimalPlaces,
+            })
+          }
         } else if (def.type === "date" && value) {
           const d = new Date(value as string)
           if (!isNaN(d.getTime())) {
@@ -237,7 +262,7 @@ export function generateColumns<TData>(
               )}
             >
               <Switch
-                checked={!!value}
+                checked={parseBooleanCellValue(value)}
                 aria-readonly="true"
                 tabIndex={-1}
                 className="pointer-events-none"

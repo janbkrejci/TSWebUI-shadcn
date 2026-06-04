@@ -102,4 +102,39 @@ describe("Story 3.3: Tabulkový Dropdown v Relationship Pickeru", () => {
     const trigger = screen.getByRole("combobox")
     expect(trigger.getAttribute("aria-haspopup")).toBe("listbox")
   })
+
+  it("renders boolean and number columns from picker definitions with proper formatting", () => {
+    const layout: TsLayout = { rows: [[{ field: "rel" }]] }
+    const fields: Record<string, TsFieldDef> = {
+      rel: {
+        type: "relationship",
+        label: "Entity",
+        options: [{ id: "1", active: "false", amount: "1234.5" }],
+        columns: [
+          { key: "active", title: "Aktivní", type: "boolean", align: "center" },
+          {
+            key: "amount",
+            title: "Částka",
+            type: "number",
+            align: "right",
+            locale: "cs-CZ",
+            decimalPlaces: 2,
+          },
+        ],
+      },
+    }
+
+    render(
+      <TestWrapper>
+        <TsForm layout={layout} fields={fields} />
+      </TestWrapper>
+    )
+
+    fireEvent.click(screen.getByRole("combobox"))
+
+    expect(screen.getByRole("switch")).toHaveAttribute("data-state", "unchecked")
+    expect(
+      screen.getByText((content) => content.replace(/\s/g, "") === "1234,50")
+    ).toBeInTheDocument()
+  })
 })
