@@ -23,8 +23,30 @@ function parseNumberCellValue(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value
   if (typeof value !== "string") return null
 
-  const normalized = value.trim().replace(/\s/g, "").replace(",", ".")
-  if (!normalized) return null
+  const compact = value.trim().replace(/\s/g, "")
+  if (!compact) return null
+
+  const lastComma = compact.lastIndexOf(",")
+  const lastDot = compact.lastIndexOf(".")
+  let normalized = compact
+
+  // If both separators are present, treat the right-most one as decimal separator.
+  if (lastComma !== -1 && lastDot !== -1) {
+    normalized =
+      lastComma > lastDot ? compact.replace(/\./g, "").replace(",", ".") : compact.replace(/,/g, "")
+  } else if (lastComma !== -1) {
+    const parts = compact.split(",")
+    if (parts.length === 2 && parts[1].length <= 2) {
+      normalized = `${parts[0]}.${parts[1]}`
+    } else {
+      normalized = compact.replace(/,/g, "")
+    }
+  } else if (lastDot !== -1) {
+    const parts = compact.split(".")
+    if (!(parts.length === 2 && parts[1].length <= 2)) {
+      normalized = compact.replace(/\./g, "")
+    }
+  }
 
   const parsed = Number(normalized)
   return Number.isFinite(parsed) ? parsed : null
@@ -35,6 +57,7 @@ function parseBooleanCellValue(value: unknown): boolean {
   if (typeof value === "number") return value !== 0
   if (typeof value === "string") {
     const normalized = value.trim().toLowerCase()
+    // Includes common Czech localized values ("ano"/"ne") used by API payloads.
     if (["false", "0", "no", "n", "off", "ne", ""].includes(normalized)) return false
     if (["true", "1", "yes", "y", "on", "ano"].includes(normalized)) return true
   }
