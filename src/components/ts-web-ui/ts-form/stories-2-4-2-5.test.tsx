@@ -159,6 +159,27 @@ describe("Story 2-5: Implementace mřížkového zarovnání", () => {
     expect(checkboxWidget).toBeInTheDocument()
   })
 
+  it("reserves label and message slots for a button next to a text input", () => {
+    const buttonFields: Record<string, TsFieldDef> = {
+      email: { type: "text", label: "Email" },
+      lookup: { type: "button", label: "Lookup", action: "lookup" },
+    }
+    const buttonLayout: TsLayout = {
+      rows: [[{ field: "email" }, { field: "lookup" }]],
+    }
+
+    const { container } = render(<TsForm layout={buttonLayout} fields={buttonFields} />)
+
+    const emailField = container.querySelector('[data-field="email"]')
+    const buttonField = container.querySelector('[data-field="lookup"]')
+
+    expect(emailField?.children).toHaveLength(3)
+    expect(buttonField?.children).toHaveLength(3)
+    expect(buttonField?.firstElementChild).toHaveClass("min-h-8")
+    expect(buttonField?.lastElementChild).toHaveClass("min-h-4")
+    expect(buttonField).toContainElement(screen.getByRole("button", { name: "Lookup" }))
+  })
+
   it("keeps aligned row items pinned to the top instead of stretching vertically", () => {
     const alignedFields: Record<string, TsFieldDef> = {
       short: { type: "text", label: "Short" },
