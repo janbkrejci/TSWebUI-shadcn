@@ -585,11 +585,16 @@ export function SidebarInset({
       className={cn("flex flex-col transition-[margin-left] duration-300 ease-in-out", className)}
       style={{
         marginLeft,
-        paddingTop: topBarHeight,
         ...style,
       }}
       {...props}
     >
+      {/*
+       * No paddingTop here: the TopBar uses `sticky` positioning, so it already occupies its
+       * height in the normal document flow and the main content starts right below it. Adding a
+       * paddingTop of topBarHeight would both leave an empty gap below the bar and push total
+       * content to 100vh + topBarHeight, making the page overscroll (rubber-band) the sticky bar.
+       */}
       <div
         className="p-4 flex flex-col overflow-hidden"
         style={{ height: `calc(100vh - ${topBarHeight}px)` }}
