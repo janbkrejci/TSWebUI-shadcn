@@ -1611,7 +1611,7 @@ The import follows a two-phase pattern matching the reference implementation:
 | `"date"`    | Locale-formatted date                             | Text input                   | Supports `DD.MM.YYYY`, `DD.MM.YY`, `YYYY-MM-DD`, `YYYY`, `MM.YYYY`. Range with `..` separator     |
 | `"boolean"` | Read-only Switch component                        | Select dropdown (All/Empty/Yes/No) | Exact boolean match                                                                          |
 
-All column filter types recognize `!*` as an empty-value filter. It matches `null`, `undefined`, empty strings, and whitespace-only strings, but not `0` or `false`.
+All column filter types recognize `!*` as an empty-value filter and `*` as a not-empty filter. Empty means `null`, `undefined`, empty strings, or whitespace-only strings; values like `0` and `false` are treated as not empty.
 
 ### Sorting
 
