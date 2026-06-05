@@ -146,7 +146,7 @@ function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string })
 export interface TsTableColumnDef {
   key: string
   title: string
-  type?: "text" | "number" | "date" | "boolean"
+  type?: "text" | "number" | "date" | "datetime" | "boolean"
   sortable?: boolean
   filterable?: boolean
   visible?: boolean
@@ -245,7 +245,8 @@ export function generateColumns<TData>(
 
   // 3. Data columns
   columnDefinitions.forEach((def) => {
-    const locale = def.locale || "cs-CZ"
+    const locale = def.locale || tsLocale?.formatting.locale || "cs-CZ"
+    const timeZone = tsLocale?.formatting.timezone
     const decimalPlaces = def.decimalPlaces ?? 2
 
     cols.push({
@@ -307,7 +308,20 @@ export function generateColumns<TData>(
         } else if (def.type === "date" && value) {
           const d = new Date(value as string)
           if (!isNaN(d.getTime())) {
-            formattedValue = new Intl.DateTimeFormat(locale).format(d)
+            formattedValue = new Intl.DateTimeFormat(locale, { timeZone }).format(d)
+          }
+        } else if (def.type === "datetime" && value) {
+          const d = new Date(value as string)
+          if (!isNaN(d.getTime())) {
+            formattedValue = new Intl.DateTimeFormat(locale, {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              timeZone,
+            }).format(d)
           }
         } else if (def.type === "boolean") {
           formattedValue = (
