@@ -21,10 +21,28 @@ describe("TsTable column filters", () => {
     expect(filter(rowWith("   ") as never, "value", "!*", {} as never)).toBe(true)
   })
 
+  it.each([
+    ["text", textFilter, "hello"],
+    ["number", numberFilter, 0],
+    ["date", dateFilter, "2026-05-31"],
+    ["boolean", booleanFilter, false],
+  ])("treats * as a not-empty filter for %s columns", (_type, filter, nonEmptyValue) => {
+    expect(filter(rowWith(nonEmptyValue) as never, "value", "*", {} as never)).toBe(true)
+    expect(filter(rowWith(null) as never, "value", "*", {} as never)).toBe(false)
+    expect(filter(rowWith(undefined) as never, "value", "*", {} as never)).toBe(false)
+    expect(filter(rowWith("") as never, "value", "*", {} as never)).toBe(false)
+    expect(filter(rowWith("   ") as never, "value", "*", {} as never)).toBe(false)
+  })
+
   it("does not treat falsy non-empty values as empty", () => {
     expect(numberFilter(rowWith(0) as never, "value", "!*", {} as never)).toBe(false)
     expect(booleanFilter(rowWith(false) as never, "value", "!*", {} as never)).toBe(false)
     expect(textFilter(rowWith("0") as never, "value", "!*", {} as never)).toBe(false)
     expect(dateFilter(rowWith("2026-05-31") as never, "value", "!*", {} as never)).toBe(false)
+  })
+
+  it("keeps wildcard matching for text patterns beyond standalone *", () => {
+    expect(textFilter(rowWith("alice") as never, "value", "a*", {} as never)).toBe(true)
+    expect(textFilter(rowWith("alice") as never, "value", "b*", {} as never)).toBe(false)
   })
 })
