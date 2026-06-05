@@ -358,7 +358,7 @@ export function generateColumns<TData>(
             sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string) => {
               const a = String(rowA.getValue(columnId) ?? "")
               const b = String(rowB.getValue(columnId) ?? "")
-              return a.localeCompare(b, locale)
+              return a.localeCompare(b, locale, { sensitivity: "accent" })
             },
           }
         : {}),

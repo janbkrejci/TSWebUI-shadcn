@@ -181,6 +181,58 @@ describe("TsTable", () => {
     sheetSpy.mockRestore()
   })
 
+  it("sorts text columns case-insensitively", () => {
+    const mixedCaseData = [
+      { id: 1, name: "BOTA" },
+      { id: 2, name: "auto" },
+      { id: 3, name: "Čechy" },
+    ]
+    const sortColumns: TsTableColumnDef[] = [
+      { key: "id", title: "ID", type: "number" },
+      { key: "name", title: "Name", type: "text", sortable: true, locale: "cs-CZ" },
+    ]
+
+    render(
+      <TsTable
+        data={mixedCaseData}
+        columnDefinitions={sortColumns}
+        defaultSorting={[{ id: "name", desc: false }]}
+      />
+    )
+
+    // Ascending Czech locale sort: auto < BOTA < Čechy (case-insensitive: a < b < č)
+    const cells = screen.getAllByText(/auto|BOTA|Čechy/)
+    expect(cells[0]).toHaveTextContent("auto")
+    expect(cells[1]).toHaveTextContent("BOTA")
+    expect(cells[2]).toHaveTextContent("Čechy")
+  })
+
+  it("sorts uppercase and lowercase variants of the same letter as equal", () => {
+    const caseData = [
+      { id: 1, name: "B" },
+      { id: 2, name: "a" },
+      { id: 3, name: "A" },
+    ]
+    const sortColumns: TsTableColumnDef[] = [
+      { key: "id", title: "ID", type: "number" },
+      { key: "name", title: "Name", type: "text", sortable: true, locale: "cs-CZ" },
+    ]
+
+    render(
+      <TsTable
+        data={caseData}
+        columnDefinitions={sortColumns}
+        defaultSorting={[{ id: "name", desc: false }]}
+      />
+    )
+
+    // Both "a" and "A" sort before "B" — case has no effect on ordering
+    const cells = screen.getAllByText(/^[aAB]$/)
+    expect(cells[0]).toHaveTextContent(/^[aA]$/)
+    expect(cells[1]).toHaveTextContent(/^[aA]$/)
+    expect(cells[2]).toHaveTextContent("B")
+  })
+
   it("shows a download-error-log button when importResult.errorLog is set", () => {
     render(
       <TsTable
