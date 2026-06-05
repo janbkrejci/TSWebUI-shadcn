@@ -314,8 +314,12 @@ export function generateColumns<TData>(
           const d = new Date(value as string)
           if (!isNaN(d.getTime())) {
             formattedValue = new Intl.DateTimeFormat(locale, {
-              dateStyle: "short",
-              timeStyle: "medium",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
               timeZone,
             }).format(d)
           }
