@@ -116,7 +116,15 @@ export function TsTableToolbar<TData>({
             }
             return clone as TData
           })
-    const ws = XLSX.utils.json_to_sheet(exportRows)
+    // With no rows json_to_sheet produces a header-less sheet. Force the column headers from the
+    // definitions (minus excluded ones) so an empty export still carries the column titles.
+    const headerKeys = columnDefinitions
+      .map((definition) => definition.key)
+      .filter((key) => !excludedKeys.includes(key))
+    const ws =
+      exportRows.length === 0
+        ? XLSX.utils.json_to_sheet([], { header: headerKeys })
+        : XLSX.utils.json_to_sheet(exportRows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Data")
     XLSX.writeFile(wb, `export-${new Date().toISOString().split("T")[0]}.xlsx`)

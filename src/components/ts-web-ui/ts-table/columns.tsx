@@ -64,6 +64,40 @@ function parseBooleanCellValue(value: unknown): boolean {
   return !!value
 }
 
+// Copy text to the clipboard. The async Clipboard API is only available on secure origins
+// (HTTPS or localhost); on plain HTTP deployments it is undefined, so fall back to a hidden
+// textarea + execCommand("copy"). Returns whether the copy succeeded.
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      // Fall through to the legacy path below.
+    }
+  }
+
+  if (typeof document === "undefined") {
+    return false
+  }
+
+  try {
+    const textarea = document.createElement("textarea")
+    textarea.value = text
+    textarea.setAttribute("readonly", "")
+    textarea.style.position = "fixed"
+    textarea.style.top = "-9999px"
+    textarea.style.left = "-9999px"
+    document.body.appendChild(textarea)
+    textarea.select()
+    const succeeded = document.execCommand("copy")
+    document.body.removeChild(textarea)
+    return succeeded
+  } catch {
+    return false
+  }
+}
+
 function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string }) {
   const [copied, setCopied] = React.useState(false)
   const resetTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -81,8 +115,8 @@ function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string })
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
-    navigator.clipboard.writeText(value).then(() => {
-      if (!isMountedRef.current) return
+    void copyTextToClipboard(value).then((ok) => {
+      if (!ok || !isMountedRef.current) return
       setCopied(true)
       if (resetTimeoutRef.current) {
         clearTimeout(resetTimeoutRef.current)
