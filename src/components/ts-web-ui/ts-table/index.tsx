@@ -60,6 +60,12 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   enableRowMenu?: boolean
   enableClickableRows?: boolean
   enableClickableColumns?: boolean
+  /**
+   * Column keys that, when their clickable cell is clicked, set that column's filter to the
+   * clicked cell value (instead of invoking onRowClick navigation). Requires the column to be
+   * `isClickable` and `enableClickableColumns` to be set.
+   */
+  clickFilterColumns?: string[]
   enableColumnResizing?: boolean
   enableColumnReordering?: boolean
   unhideableColumns?: string[]
@@ -206,6 +212,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   enableRowMenu = true,
   enableClickableRows = true,
   enableClickableColumns = false,
+  clickFilterColumns,
   enableColumnResizing = true,
   enableColumnReordering = true,
   unhideableColumns = [],
@@ -361,7 +368,26 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   )
 
   // Determine click handlers based on enable flags
-  const effectiveRowClick = enableClickableRows || enableClickableColumns ? onRowClick : undefined
+  // Click on a `clickFilterColumns` cell sets that column's filter to the clicked value instead
+  // of navigating; any other clickable column falls through to onRowClick.
+  const handleClickableCellClick = React.useCallback(
+    (row: TData, columnKey?: string) => {
+      if (columnKey && clickFilterColumns?.includes(columnKey)) {
+        const rawValue = (row as Record<string, unknown>)[columnKey]
+        const filterValue = rawValue == null ? "" : String(rawValue)
+        handleColumnFiltersChange((prev) => {
+          const others = prev.filter((filter) => filter.id !== columnKey)
+          return filterValue === "" ? others : [...others, { id: columnKey, value: filterValue }]
+        })
+        return
+      }
+      onRowClick?.(row, columnKey)
+    },
+    [clickFilterColumns, handleColumnFiltersChange, onRowClick]
+  )
+
+  const effectiveRowClick =
+    enableClickableRows || enableClickableColumns ? handleClickableCellClick : undefined
 
   // Generate columns definition
   const columns = React.useMemo(
