@@ -1527,6 +1527,7 @@ React 19 compatibility note: debounced filter timeout refs should use `useRef<Re
 | `enableRowMenu`            | `boolean`                 | `true`                 | Show per-row action dropdown (requires `singleItemActions`)                                             |
 | `enableClickableRows`      | `boolean`                 | `true`                 | Make entire rows clickable (fires `onRowClick`)                                                         |
 | `enableClickableColumns`   | `boolean`                 | `false`                | Enable per-column clickable cells (columns with `isClickable: true` fire `onRowClick` with `columnKey`) |
+| `clickFilterColumns`       | `string[]`                | —                      | Column keys whose clickable cell, when clicked, sets that column's filter to the cell value instead of firing `onRowClick`. Requires the column to be `isClickable` and `enableClickableColumns` |
 | `enableColumnResizing`     | `boolean`                 | `true`                 | Allow drag-resizing columns. Resize handles appear as subtle vertical lines between headers             |
 | `enableColumnReordering`   | `boolean`                 | `true`                 | Show left/right arrows on hover to reorder data columns                                                 |
 | `unhideableColumns`        | `string[]`                | `[]`                   | Column keys that cannot be hidden via column selector (shown but with disabled toggle)                  |

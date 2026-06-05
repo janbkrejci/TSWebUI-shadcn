@@ -414,6 +414,7 @@ export default function TsTablePage() {
                 enableRowMenu={enableRowMenu}
                 enableClickableRows={enableClickableRows}
                 enableClickableColumns={enableClickableColumns}
+                clickFilterColumns={["company"]}
                 enableColumnResizing={enableColumnResizing}
                 enableColumnReordering={enableColumnReordering}
                 showCreateButton={showCreateButton}
@@ -486,6 +487,9 @@ export default function MyPage() {
       enableRowMenu={true}
       enableClickableRows={true}
       enableClickableColumns={false}  // default: false
+      // Clicking a listed column's cell sets that column's filter to the cell value
+      // (instead of firing onRowClick). Requires the column to be isClickable.
+      clickFilterColumns={["company"]}
       enableColumnResizing={true}
       enableColumnReordering={true}
       // Toolbar buttons
@@ -571,6 +575,12 @@ export default function MyPage() {
                         "boolean",
                         "false",
                         "Columns marked isClickable emit columnKey in onRowClick.",
+                      ],
+                      [
+                        "clickFilterColumns",
+                        "string[]",
+                        "—",
+                        "Column keys whose clickable cell, when clicked, sets that column's filter to the cell value instead of firing onRowClick.",
                       ],
                       [
                         "enableColumnResizing",
