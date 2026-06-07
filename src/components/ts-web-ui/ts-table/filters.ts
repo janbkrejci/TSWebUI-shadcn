@@ -59,7 +59,7 @@ export function matchTextPattern(text: string, pattern: string): boolean {
   try {
     return new RegExp(regexStr).test(lowText)
   } catch {
-    return lowText.includes(lowPattern)
+    return lowText.includes(anchorStrippedPattern)
   }
 }
 
@@ -228,10 +228,11 @@ export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => 
   const cellValue = row.getValue(columnId)
   if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (isNotEmptyFilterValue(filterValue)) return !isEmptyCellValue(cellValue)
+  if (filterValue === true) return cellValue === true
+  if (filterValue === false) return cellValue === false
   return withNegatedFilterValue(filterValue, (normalizedFilterValue) => {
-    // Accept both boolean values (from predefinedFilters) and string values (from UI)
-    if (filterValue === true || normalizedFilterValue === "true") return cellValue === true
-    if (filterValue === false || normalizedFilterValue === "false") return cellValue === false
+    if (normalizedFilterValue === "true") return cellValue === true
+    if (normalizedFilterValue === "false") return cellValue === false
     return true // 'all' or empty
   })
 }
