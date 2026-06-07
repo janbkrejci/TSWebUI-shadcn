@@ -42,6 +42,16 @@ describe("TsTable", () => {
     expect(screen.queryByText("Bob")).not.toBeInTheDocument()
   })
 
+  it("supports negation and text anchors in fulltext search", () => {
+    render(<TsTable data={data} columnDefinitions={columns} />)
+
+    const searchInput = screen.getByPlaceholderText(/Search.../i)
+    fireEvent.change(searchInput, { target: { value: "!^a" } })
+
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument()
+    expect(screen.getByText("Bob")).toBeInTheDocument()
+  })
+
   it("calls onRowClick when a row is clicked", () => {
     const onRowClick = vi.fn()
     render(<TsTable data={data} columnDefinitions={columns} onRowClick={onRowClick} />)

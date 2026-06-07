@@ -24,6 +24,7 @@ import { TsLocale, useTsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ui/button"
 
 import { generateColumns, TsTableColumnDef, TsTableRowAction } from "./columns"
+import { globalTextFilter } from "./filters"
 import { loadPersistedTableState, savePersistedTableState } from "./persistence"
 import { TsTablePagination } from "./ts-table-pagination"
 import { TsTableToolbar } from "./ts-table-toolbar"
@@ -442,6 +443,13 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const filterableValues = row
+        .getAllCells()
+        .filter((cell) => cell.column.getCanGlobalFilter())
+        .map((cell) => cell.getValue())
+      return globalTextFilter(filterableValues, filterValue)
+    },
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getRowId,

@@ -45,4 +45,27 @@ describe("TsTable column filters", () => {
     expect(textFilter(rowWith("alice") as never, "value", "a*", {} as never)).toBe(true)
     expect(textFilter(rowWith("alice") as never, "value", "b*", {} as never)).toBe(false)
   })
+
+  it("supports leading ! negation for text, number, date and boolean filters", () => {
+    expect(textFilter(rowWith("test value") as never, "value", "!test", {} as never)).toBe(false)
+    expect(textFilter(rowWith("hello") as never, "value", "!test", {} as never)).toBe(true)
+
+    expect(numberFilter(rowWith(75) as never, "value", "!50..", {} as never)).toBe(false)
+    expect(numberFilter(rowWith(49) as never, "value", "!50..", {} as never)).toBe(true)
+
+    expect(dateFilter(rowWith("2024-12-31") as never, "value", "!..2024", {} as never)).toBe(false)
+    expect(dateFilter(rowWith("2025-01-01") as never, "value", "!..2024", {} as never)).toBe(true)
+
+    expect(booleanFilter(rowWith(true) as never, "value", "!true", {} as never)).toBe(false)
+    expect(booleanFilter(rowWith(false) as never, "value", "!true", {} as never)).toBe(true)
+  })
+
+  it("supports ^ and $ anchors in text search, including negation", () => {
+    expect(textFilter(rowWith("alice") as never, "value", "^a", {} as never)).toBe(true)
+    expect(textFilter(rowWith("alice") as never, "value", "^b", {} as never)).toBe(false)
+    expect(textFilter(rowWith("oko") as never, "value", "ko$", {} as never)).toBe(true)
+    expect(textFilter(rowWith("kolo") as never, "value", "ko$", {} as never)).toBe(false)
+    expect(textFilter(rowWith("queen") as never, "value", "!^q", {} as never)).toBe(false)
+    expect(textFilter(rowWith("alice") as never, "value", "!^q", {} as never)).toBe(true)
+  })
 })

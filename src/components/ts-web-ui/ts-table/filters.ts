@@ -15,6 +15,17 @@ function isEmptyCellValue(value: unknown): boolean {
   return value == null || (typeof value === "string" && value.trim() === "")
 }
 
+function withNegatedFilterValue(
+  filterValue: unknown,
+  matcher: (normalizedValue: string) => boolean
+): boolean {
+  const normalizedFilterValue = String(filterValue).trim()
+  if (normalizedFilterValue.startsWith("!") && !isEmptyFilterValue(normalizedFilterValue)) {
+    return !matcher(normalizedFilterValue.slice(1).trim())
+  }
+  return matcher(normalizedFilterValue)
+}
+
 /**
  * Match text with wildcard support: * (any chars), ? (single char).
  * Falls back to case-insensitive substring match if no wildcards present.
@@ -22,19 +33,33 @@ function isEmptyCellValue(value: unknown): boolean {
 export function matchTextPattern(text: string, pattern: string): boolean {
   const lowText = text.toLowerCase()
   const lowPattern = pattern.toLowerCase()
+  const hasStartAnchor = lowPattern.startsWith("^")
+  const hasEndAnchor = lowPattern.endsWith("$")
+  const anchorStrippedPattern = lowPattern.slice(
+    hasStartAnchor ? 1 : 0,
+    hasEndAnchor ? -1 : undefined
+  )
+  const hasWildcards = anchorStrippedPattern.includes("*") || anchorStrippedPattern.includes("?")
 
   // If no wildcards, use simple substring match
-  if (!lowPattern.includes("*") && !lowPattern.includes("?")) {
-    return lowText.includes(lowPattern)
+  if (!hasWildcards) {
+    if (hasStartAnchor && hasEndAnchor) return lowText === anchorStrippedPattern
+    if (hasStartAnchor) return lowText.startsWith(anchorStrippedPattern)
+    if (hasEndAnchor) return lowText.endsWith(anchorStrippedPattern)
+    return lowText.includes(anchorStrippedPattern)
   }
 
   // Convert wildcard pattern to regex: * → .*, ? → .
-  const escaped = lowPattern.replace(/[.+^${}()|[\]\\]/g, "\\$&")
-  const regexStr = "^" + escaped.replace(/\*/g, ".*").replace(/\?/g, ".") + "$"
+  const escaped = anchorStrippedPattern.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+  const wildcardRegex = escaped.replace(/\*/g, ".*").replace(/\?/g, ".")
+  const regexStr =
+    hasStartAnchor || hasEndAnchor
+      ? `${hasStartAnchor ? "^" : ""}${wildcardRegex}${hasEndAnchor ? "$" : ""}`
+      : `^${wildcardRegex}$`
   try {
     return new RegExp(regexStr).test(lowText)
   } catch {
-    return lowText.includes(lowPattern)
+    return lowText.includes(anchorStrippedPattern)
   }
 }
 
@@ -68,22 +93,24 @@ export const numberFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId) as number
   if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (isNotEmptyFilterValue(filterValue)) return !isEmptyCellValue(cellValue)
-  if (typeof cellValue !== "number") return false
+  return withNegatedFilterValue(filterValue, (normalizedFilterValue) => {
+    if (typeof cellValue !== "number") return false
 
-  const range = parseNumberRange(String(filterValue))
-  if (!range) {
-    // Fallback to text matching
-    return matchTextPattern(String(cellValue), String(filterValue))
-  }
+    const range = parseNumberRange(normalizedFilterValue)
+    if (!range) {
+      // Fallback to text matching
+      return matchTextPattern(String(cellValue), normalizedFilterValue)
+    }
 
-  if (range.min !== null && range.max !== null && range.min === range.max) {
-    // Exact number — match if cell equals or cell string starts with filter
-    return cellValue === range.min || String(cellValue).startsWith(String(filterValue).trim())
-  }
+    if (range.min !== null && range.max !== null && range.min === range.max) {
+      // Exact number — match if cell equals or cell string starts with filter
+      return cellValue === range.min || String(cellValue).startsWith(normalizedFilterValue)
+    }
 
-  if (range.min !== null && cellValue < range.min) return false
-  if (range.max !== null && cellValue > range.max) return false
-  return true
+    if (range.min !== null && cellValue < range.min) return false
+    if (range.max !== null && cellValue > range.max) return false
+    return true
+  })
 }
 
 // ---- Date Filter (matches reference implementation: flexible date parsing) ----
@@ -167,31 +194,32 @@ export const dateFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
     cellDate.getDate()
   )
 
-  const val = String(filterValue).trim()
-  if (!val) return true
+  return withNegatedFilterValue(filterValue, (normalizedFilterValue) => {
+    if (!normalizedFilterValue) return true
 
-  // Range with ".."
-  if (val.includes("..")) {
-    const [startStr, endStr] = val.split("..")
-    const min = startStr?.trim() ? parseFlexibleDate(startStr.trim()) : null
-    const max = endStr?.trim() ? parseFlexibleDate(endStr.trim()) : null
-    const maxEnd = max && endStr?.trim() ? setEndOfPeriod(max, endStr.trim()) : null
+    // Range with ".."
+    if (normalizedFilterValue.includes("..")) {
+      const [startStr, endStr] = normalizedFilterValue.split("..")
+      const min = startStr?.trim() ? parseFlexibleDate(startStr.trim()) : null
+      const max = endStr?.trim() ? parseFlexibleDate(endStr.trim()) : null
+      const maxEnd = max && endStr?.trim() ? setEndOfPeriod(max, endStr.trim()) : null
 
-    if (min && normalizedCellDate < min) return false
-    if (maxEnd && normalizedCellDate > maxEnd) return false
-    return true
-  }
+      if (min && normalizedCellDate < min) return false
+      if (maxEnd && normalizedCellDate > maxEnd) return false
+      return true
+    }
 
-  // Single date/period
-  const parsed = parseFlexibleDate(val)
-  if (parsed) {
-    const end = setEndOfPeriod(new Date(parsed), val)
-    return normalizedCellDate >= parsed && normalizedCellDate <= end
-  }
+    // Single date/period
+    const parsed = parseFlexibleDate(normalizedFilterValue)
+    if (parsed) {
+      const end = setEndOfPeriod(new Date(parsed), normalizedFilterValue)
+      return normalizedCellDate >= parsed && normalizedCellDate <= end
+    }
 
-  // Fallback: text match on formatted date (cs-CZ)
-  const formatted = new Intl.DateTimeFormat("cs-CZ").format(normalizedCellDate)
-  return matchTextPattern(formatted, val)
+    // Fallback: text match on formatted date (cs-CZ)
+    const formatted = new Intl.DateTimeFormat("cs-CZ").format(normalizedCellDate)
+    return matchTextPattern(formatted, normalizedFilterValue)
+  })
 }
 
 // ---- Boolean Filter ----
@@ -200,10 +228,13 @@ export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => 
   const cellValue = row.getValue(columnId)
   if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (isNotEmptyFilterValue(filterValue)) return !isEmptyCellValue(cellValue)
-  // Accept both boolean values (from predefinedFilters) and string values (from UI)
-  if (filterValue === true || filterValue === "true") return cellValue === true
-  if (filterValue === false || filterValue === "false") return cellValue === false
-  return true // 'all' or empty
+  if (filterValue === true) return cellValue === true
+  if (filterValue === false) return cellValue === false
+  return withNegatedFilterValue(filterValue, (normalizedFilterValue) => {
+    if (normalizedFilterValue === "true") return cellValue === true
+    if (normalizedFilterValue === "false") return cellValue === false
+    return true // 'all' or empty
+  })
 }
 
 // ---- Text Filter ----
@@ -212,6 +243,21 @@ export const textFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   const cellValue = row.getValue(columnId)
   if (isEmptyFilterValue(filterValue)) return isEmptyCellValue(cellValue)
   if (isNotEmptyFilterValue(filterValue)) return !isEmptyCellValue(cellValue)
-  if (cellValue == null) return false
-  return matchTextPattern(String(cellValue), String(filterValue))
+  return withNegatedFilterValue(filterValue, (normalizedFilterValue) => {
+    if (cellValue == null) return false
+    return matchTextPattern(String(cellValue), normalizedFilterValue)
+  })
+}
+
+export function globalTextFilter(values: unknown[], filterValue: unknown): boolean {
+  if (isEmptyFilterValue(filterValue)) return values.some((value) => isEmptyCellValue(value))
+  if (isNotEmptyFilterValue(filterValue)) return values.some((value) => !isEmptyCellValue(value))
+
+  return withNegatedFilterValue(filterValue, (normalizedFilterValue) => {
+    if (!normalizedFilterValue) return true
+    return values.some((value) => {
+      if (value == null) return false
+      return matchTextPattern(String(value), normalizedFilterValue)
+    })
+  })
 }
