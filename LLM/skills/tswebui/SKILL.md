@@ -1602,6 +1602,7 @@ The import follows a two-phase pattern matching the reference implementation:
 | `isClickable`   | `boolean`                                   | `false`   | Make cell text clickable (styled as link, passes `columnKey` to `onRowClick`). Requires `enableClickableColumns` on the table |
 | `locale`        | `string`                                    | `"cs-CZ"` | Locale for number and date formatting                                                                                         |
 | `decimalPlaces` | `number`                                    | `2`       | Decimal places for number-type columns                                                                                        |
+| `filterWidget`  | `"combobox"`                                | —         | Override the filter UI for this column. `"combobox"` renders a Popover+Command combobox; options are auto-populated from unique values in the current data. Uses exact-match filtering. Ideal for low-cardinality categorical columns (status, type, city). |
 
 ### Column Type Rendering
 
@@ -1611,6 +1612,8 @@ The import follows a two-phase pattern matching the reference implementation:
 | `"number"`  | Locale-formatted with configurable decimal places | Text input                   | `10..20` range, `10..` (≥10), `..20` (≤20), exact number matches via startsWith, fallback to text |
 | `"date"`    | Locale-formatted date                             | Text input                   | Supports `DD.MM.YYYY`, `DD.MM.YY`, `YYYY-MM-DD`, `YYYY`, `MM.YYYY`. Range with `..` separator     |
 | `"boolean"` | Read-only Switch component                        | Select dropdown (All/Empty/Yes/No) | Exact boolean match                                                                          |
+
+`filterWidget: "combobox"` can be combined with any `type` (text, number, date). It overrides only the filter UI and filter function; cell rendering is unchanged.
 
 All column filter types recognize `!*` as an empty-value filter and `*` as a not-empty filter. Empty means `null`, `undefined`, empty strings, or whitespace-only strings; values like `0` and `false` are treated as not empty.
 

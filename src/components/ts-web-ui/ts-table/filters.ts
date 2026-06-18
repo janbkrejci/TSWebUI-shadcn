@@ -237,6 +237,14 @@ export const booleanFilter: FilterFn<unknown> = (row, columnId, filterValue) => 
   })
 }
 
+// ---- Combobox Filter (exact string match, sourced from column's unique values) ----
+
+export const comboboxFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
+  if (!filterValue || filterValue === "") return true
+  const cellValue = row.getValue(columnId)
+  return String(cellValue ?? "") === String(filterValue)
+}
+
 // ---- Text Filter ----
 
 export const textFilter: FilterFn<unknown> = (row, columnId, filterValue) => {

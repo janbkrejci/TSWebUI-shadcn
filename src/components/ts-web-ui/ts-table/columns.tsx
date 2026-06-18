@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch"
 
 import { cn } from "@/lib/utils"
 
-import { booleanFilter, dateFilter, numberFilter, textFilter } from "./filters"
+import { booleanFilter, comboboxFilter, dateFilter, numberFilter, textFilter } from "./filters"
 
 function parseNumberCellValue(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value
@@ -159,6 +159,12 @@ export interface TsTableColumnDef {
   isClickable?: boolean
   locale?: string
   decimalPlaces?: number
+  /**
+   * When set to `"combobox"`, the column filter renders as a combobox (Popover + Command) instead
+   * of a text input. Options are dynamically populated from the column's unique values in the
+   * current data — no static list needed. Uses exact-match filtering.
+   */
+  filterWidget?: "combobox"
 }
 
 export interface TsTableRowAction {
@@ -392,6 +398,8 @@ export function generateColumns<TData>(
       })(),
       filterFn: (row, id, value, addMeta) => {
         // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
+        if (def.filterWidget === "combobox") return comboboxFilter(row as any, id, value, addMeta)
+        // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
         if (def.type === "number") return numberFilter(row as any, id, value, addMeta)
         // biome-ignore lint/suspicious/noExplicitAny: TanStack Table filterFn requires row type cast
         if (def.type === "date") return dateFilter(row as any, id, value, addMeta)
@@ -404,6 +412,7 @@ export function generateColumns<TData>(
         title: def.title,
         type: def.type,
         align: def.align,
+        filterWidget: def.filterWidget,
       },
     })
   })
