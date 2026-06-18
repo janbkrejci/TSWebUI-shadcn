@@ -5,6 +5,7 @@ import {
   ColumnOrderState,
   ColumnSizingState,
   getCoreRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -443,6 +444,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const filterableValues = row
         .getAllCells()

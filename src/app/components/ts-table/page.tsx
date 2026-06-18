@@ -209,7 +209,7 @@ export default function TsTablePage() {
       excludeFromExport: true,
     },
     { key: "email", title: d.colEmail, type: "text", visible: true, canBeCopied: true },
-    { key: "city", title: d.colCity, type: "text", visible: true },
+    { key: "city", title: d.colCity, type: "text", visible: true, filterWidget: "combobox" },
     { key: "company", title: d.colCompany, type: "text", visible: true, isClickable: true },
     {
       key: "turnover",

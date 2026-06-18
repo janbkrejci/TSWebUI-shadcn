@@ -1,11 +1,27 @@
 "use client"
 
-import { flexRender, Table as TanStackTable } from "@tanstack/react-table"
-import { Check, ChevronLeft, ChevronRight, Filter, MoreVertical, X as XIcon } from "lucide-react"
+import { Column, flexRender, Table as TanStackTable } from "@tanstack/react-table"
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Filter,
+  MoreVertical,
+  X as XIcon,
+} from "lucide-react"
 
 import * as React from "react"
 import { TsLocale } from "@/components/ts-web-ui/locale"
 import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -80,6 +97,85 @@ function DebouncedFilterInput({
         }
       }}
     />
+  )
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: Column is generic; any is needed for reuse across TData
+function ComboboxColumnFilter({ column }: { column: Column<any, unknown> }) {
+  const [open, setOpen] = React.useState(false)
+  const filterValue = (column.getFilterValue() ?? "") as string
+  const facetedValues = column.getFacetedUniqueValues()
+  const options = Array.from(facetedValues.keys())
+    .filter((v) => v != null && String(v).trim() !== "")
+    .map((v) => String(v))
+    .sort()
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <div
+          role="combobox"
+          aria-expanded={open}
+          tabIndex={0}
+          className={cn(
+            "flex h-7 w-full items-center justify-between gap-1 rounded-md border border-input bg-background px-2 text-xs shadow-xs cursor-pointer",
+            "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+          )}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              setOpen(true)
+            }
+          }}
+        >
+          <span className={cn("flex-1 truncate", !filterValue && "text-muted-foreground")}>
+            {filterValue || "…"}
+          </span>
+          {filterValue ? (
+            <XIcon
+              className="h-3 w-3 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                column.setFilterValue("")
+              }}
+            />
+          ) : (
+            <ChevronsUpDown className="h-3 w-3 text-muted-foreground opacity-50 shrink-0" />
+          )}
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Hledat…" className="h-8" />
+          <CommandList>
+            <CommandEmpty className="py-2 text-xs text-center text-muted-foreground italic">
+              Žádné hodnoty.
+            </CommandEmpty>
+            <CommandGroup>
+              {options.map((opt) => (
+                <CommandItem
+                  key={opt}
+                  value={opt}
+                  className="text-xs"
+                  onSelect={(v) => {
+                    column.setFilterValue(v === filterValue ? "" : v)
+                    setOpen(false)
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-3 w-3",
+                      filterValue === opt ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {opt}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -411,8 +507,6 @@ export function TsTableView<TData>({
               {enableFiltering && (
                 <TableRow className="bg-muted/30">
                   {headerGroup.headers.map((header) => {
-                    const meta = header.column.columnDef.meta as { type?: string } | undefined
-
                     return (
                       <TableHead
                         key={`filter-${header.id}`}
@@ -463,7 +557,13 @@ export function TsTableView<TData>({
                           <div />
                         ) : header.column.getCanFilter() ? (
                           (() => {
-                            if (meta?.type === "boolean") {
+                            const colMeta = header.column.columnDef.meta as
+                              | { type?: string; filterWidget?: string }
+                              | undefined
+                            if (colMeta?.filterWidget === "combobox") {
+                              return <ComboboxColumnFilter column={header.column} />
+                            }
+                            if (colMeta?.type === "boolean") {
                               return (
                                 <Select
                                   value={(header.column.getFilterValue() ?? "all") as string}
