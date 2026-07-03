@@ -296,4 +296,42 @@ describe("TsTable", () => {
     fireEvent.click(screen.getByRole("button", { name: /Copy to clipboard/i }))
     expect(writeText).toHaveBeenCalledWith("s3cret!")
   })
+
+  it("uses renderCell to fully control a cell and passes it value/row/columnKey", () => {
+    const renderCell = vi.fn(({ value, row, columnKey }) => (
+      <button type="button">
+        go:{String(value)}:{String((row as { name: string }).name)}:{columnKey}
+      </button>
+    ))
+    const actionColumns: TsTableColumnDef[] = [
+      { key: "name", title: "Name", type: "text" },
+      { key: "action", title: "Action", type: "text", renderCell },
+    ]
+
+    render(<TsTable data={[{ name: "Alice", action: "run" }]} columnDefinitions={actionColumns} />)
+
+    // The custom node renders instead of the raw value, and receives the full context.
+    expect(screen.getByRole("button", { name: "go:run:Alice:action" })).toBeInTheDocument()
+    expect(renderCell).toHaveBeenCalledWith({
+      value: "run",
+      row: { name: "Alice", action: "run" },
+      columnKey: "action",
+    })
+  })
+
+  it("still exports the raw value of a renderCell column unless excluded", () => {
+    const sheetSpy = vi.spyOn(XLSX.utils, "json_to_sheet")
+    const actionColumns: TsTableColumnDef[] = [
+      { key: "name", title: "Name", type: "text" },
+      { key: "action", title: "Action", type: "text", renderCell: () => <span>btn</span> },
+    ]
+
+    render(<TsTable data={[{ name: "Alice", action: "run" }]} columnDefinitions={actionColumns} />)
+    fireEvent.click(screen.getByRole("button", { name: /Export/i }))
+
+    const exportedRows = sheetSpy.mock.calls[0][0] as Record<string, unknown>[]
+    // renderCell does not affect export — the raw field is still written.
+    expect(exportedRows[0]).toMatchObject({ name: "Alice", action: "run" })
+    sheetSpy.mockRestore()
+  })
 })

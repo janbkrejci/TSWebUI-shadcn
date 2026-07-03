@@ -1601,6 +1601,7 @@ The import follows a two-phase pattern matching the reference implementation:
 | `canBeCopied`   | `boolean`                                   | `false`   | Show copy-to-clipboard icon on row hover                                                                                      |
 | `copyOnly`      | `boolean`                                   | `false`   | Render ONLY a copy button — the value is never displayed. For secrets such as passwords/logins that must be copyable but not shown. The button stays visible (not hover-gated). Raw value is still used for sorting/filtering/export; pair with `excludeFromExport` to keep secrets out of the Excel export |
 | `isClickable`   | `boolean`                                   | `false`   | Make cell text clickable (styled as link, passes `columnKey` to `onRowClick`). Requires `enableClickableColumns` on the table |
+| `renderCell`    | `(ctx: { value, row, columnKey }) => ReactNode` | —     | Custom cell renderer that fully controls the cell's content (skips built-in value formatting, `copyOnly` and `canBeCopied`). `ctx.row` is the whole row object, so the renderer can read sibling fields and wire buttons/badges to the row's data. It owns its own click handling — call `stopPropagation()` inside interactive elements. Sorting/filtering/export still use the raw value, so pair with `sortable: false` / `filterable: false` / `excludeFromExport: true` for action columns |
 | `locale`        | `string`                                    | `"cs-CZ"` | Locale for number and date formatting                                                                                         |
 | `decimalPlaces` | `number`                                    | `2`       | Decimal places for number-type columns                                                                                        |
 | `filterWidget`  | `"combobox"`                                | —         | Override the filter UI for this column. `"combobox"` renders a Popover+Command combobox; options are auto-populated from unique values in the current data. Uses exact-match filtering. Ideal for low-cardinality categorical columns (status, type, city). |
@@ -1698,6 +1699,7 @@ When `enableColumnReordering` is enabled, left/right chevron arrows appear on he
 - **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json`. Table validates columns and maps data, then calls `onImport`. Parent processes import and shows results via `importResult` prop
 - **Predefined filters**: Lock specific column filters that users cannot modify
 - **Clickable columns**: Individual columns can be marked clickable (styled as links)
+- **Custom cell renderer**: A column's `renderCell(ctx)` fully controls its content — render buttons, badges, or any JSX wired to the row's data (`ctx.row`). Use for action columns (e.g. per-row launch buttons); pair with `sortable: false` / `filterable: false` / `excludeFromExport: true`
 - **Copy to clipboard**: Per-cell copy button on hover for `canBeCopied` columns; `copyOnly` columns show only the copy button and never render the value (for secrets like passwords/logins)
 - **Row count**: Footer shows "X of Y rows selected" and total row count
 
@@ -1737,6 +1739,26 @@ const columns: TsTableColumnDef[] = [
   },
   { key: "joinDate", title: "Joined", type: "date", align: "right" },
   { key: "active", title: "Active", type: "boolean", align: "center" },
+  {
+    key: "actions",
+    title: "Actions",
+    type: "text",
+    align: "center",
+    sortable: false,
+    filterable: false,
+    excludeFromExport: true,
+    renderCell: ({ row }) => (
+      <Button
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation()
+          console.log("open", row.id)
+        }}
+      >
+        Open
+      </Button>
+    ),
+  },
   { key: "internalId", title: "Internal", type: "text", unshowable: true },
 ]
 

@@ -155,6 +155,16 @@ function CopyButton({
   )
 }
 
+/** Context handed to a column's `renderCell` for one row. */
+export interface TsTableCellContext {
+  /** The raw cell value (`row[key]`) — the same value used for sorting, filtering and export. */
+  value: unknown
+  /** The full row object, so the renderer can read sibling fields. */
+  row: Record<string, unknown>
+  /** The column's `key`. */
+  columnKey: string
+}
+
 export interface TsTableColumnDef {
   key: string
   title: string
@@ -176,6 +186,15 @@ export interface TsTableColumnDef {
    */
   copyOnly?: boolean
   isClickable?: boolean
+  /**
+   * Custom cell renderer. When set, it fully controls the cell's content — the built-in value
+   * formatting, `copyOnly` and `canBeCopied` behaviours are skipped. Sorting, filtering and export
+   * still use the raw value, so pair this with `sortable: false` / `filterable: false` /
+   * `excludeFromExport: true` for columns that render actions rather than data. The renderer owns its
+   * own click handling (call `event.stopPropagation()` inside interactive elements to avoid the row
+   * click); the cell does not auto-wire `isClickable` when `renderCell` is set.
+   */
+  renderCell?: (context: TsTableCellContext) => React.ReactNode
   locale?: string
   decimalPlaces?: number
   /**
@@ -384,7 +403,13 @@ export function generateColumns<TData>(
               }
             }}
           >
-            {def.copyOnly ? (
+            {def.renderCell ? (
+              def.renderCell({
+                value,
+                row: row.original as Record<string, unknown>,
+                columnKey: def.key,
+              })
+            ) : def.copyOnly ? (
               value != null && String(value) !== "" ? (
                 <CopyButton value={String(value)} copyLabel={t?.copyToClipboard} alwaysVisible />
               ) : null

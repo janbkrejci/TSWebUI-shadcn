@@ -4,6 +4,7 @@ import * as React from "react"
 import { useTsLocale } from "@/components/ts-web-ui/locale"
 import { ImportResult, TsTable, TsTableColumnDef } from "@/components/ts-web-ui/ts-table"
 import { CodeBlock, InstallTab } from "@/components/ts-web-ui/widget-demo"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -233,6 +234,32 @@ export default function TsTablePage() {
       locale: "cs-CZ",
     },
     { key: "approved", title: d.colApproved, type: "boolean", visible: true, align: "center" },
+    // renderCell: a custom cell renderer takes full control of the cell's content — here an actions
+    // column with buttons wired to the row's data. It reads sibling fields via context.row and owns
+    // its own click handling (stopPropagation keeps the row click from firing). Such columns hold no
+    // data of their own, so mark them sortable/filterable false and excludeFromExport.
+    {
+      key: "actions",
+      title: "Action",
+      type: "text",
+      visible: true,
+      align: "center",
+      sortable: false,
+      filterable: false,
+      excludeFromExport: true,
+      renderCell: ({ row }) => (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation()
+            setLastAction(`renderCell button on row ID: ${row.id}`)
+          }}
+        >
+          Action
+        </Button>
+      ),
+    },
   ]
 
   const [lastAction, setLastAction] = React.useState<string | null>(null)
@@ -859,6 +886,18 @@ export default function MyPage() {
                         "boolean",
                         "false",
                         "Cell acts as a link (requires enableClickableColumns).",
+                      ],
+                      [
+                        "copyOnly",
+                        "boolean",
+                        "false",
+                        "Cell shows only a copy button; the value is never displayed (for secrets).",
+                      ],
+                      [
+                        "renderCell",
+                        "(ctx) => ReactNode",
+                        "—",
+                        "Custom cell renderer; fully controls cell content (ctx = { value, row, columnKey }). Owns its own click handling.",
                       ],
                       ["locale", "string", '"cs-CZ"', "Locale for number/date formatting (Intl)."],
                       [
