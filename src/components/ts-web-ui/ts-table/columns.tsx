@@ -98,7 +98,16 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
   }
 }
 
-function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string }) {
+function CopyButton({
+  value,
+  copyLabel,
+  alwaysVisible = false,
+}: {
+  value: string
+  copyLabel?: string
+  /** Keep the button visible at all times instead of only on row hover (used by `copyOnly` cells). */
+  alwaysVisible?: boolean
+}) {
   const [copied, setCopied] = React.useState(false)
   const resetTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMountedRef = React.useRef(false)
@@ -130,7 +139,10 @@ function CopyButton({ value, copyLabel }: { value: string; copyLabel?: string })
   return (
     <button
       type="button"
-      className="inline-flex items-center justify-center h-6 w-6 rounded-sm hover:bg-accent shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
+      className={cn(
+        "inline-flex items-center justify-center h-6 w-6 rounded-sm hover:bg-accent shrink-0 transition-opacity",
+        alwaysVisible ? "opacity-100" : "opacity-0 group-hover/row:opacity-100"
+      )}
       onClick={handleCopy}
       aria-label={copyLabel ?? "Copy to clipboard"}
     >
@@ -156,6 +168,13 @@ export interface TsTableColumnDef {
   width?: number | string
   align?: "left" | "center" | "right"
   canBeCopied?: boolean
+  /**
+   * When true, the cell renders ONLY a copy button — the value itself is never displayed. Use for
+   * secrets such as passwords or logins that should be copyable but not shown. The button stays
+   * visible (not hover-gated) since there is no value to hint at it. The raw value is still used for
+   * sorting/filtering/export as usual.
+   */
+  copyOnly?: boolean
   isClickable?: boolean
   locale?: string
   decimalPlaces?: number
@@ -365,9 +384,17 @@ export function generateColumns<TData>(
               }
             }}
           >
-            <span className="truncate">{formattedValue}</span>
-            {def.canBeCopied && value != null && (
-              <CopyButton value={String(value)} copyLabel={t?.copyToClipboard} />
+            {def.copyOnly ? (
+              value != null && String(value) !== "" ? (
+                <CopyButton value={String(value)} copyLabel={t?.copyToClipboard} alwaysVisible />
+              ) : null
+            ) : (
+              <>
+                <span className="truncate">{formattedValue}</span>
+                {def.canBeCopied && value != null && (
+                  <CopyButton value={String(value)} copyLabel={t?.copyToClipboard} />
+                )}
+              </>
             )}
           </div>
         )
