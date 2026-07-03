@@ -200,12 +200,14 @@ export default function TsTablePage() {
       align: "left",
       isClickable: true,
     },
-    // excludeFromExport: kept in the grid but stripped from the Excel export.
+    // copyOnly: the value is never shown, only a copy button is rendered (for secrets such as
+    // logins/passwords). excludeFromExport keeps the secret out of the Excel export as well.
     {
       key: "username",
       title: d.colUsername,
       type: "text",
-      visible: false,
+      visible: true,
+      copyOnly: true,
       excludeFromExport: true,
     },
     { key: "email", title: d.colEmail, type: "text", visible: true, canBeCopied: true },
@@ -466,6 +468,8 @@ const columns: TsTableColumnDef[] = [
   // Internal column kept in the grid but never written to the Excel export.
   { key: "internalRef", title: "Ref", type: "text", excludeFromExport: true },
   { key: "email", title: "E-mail", type: "text", canBeCopied: true },
+  // copyOnly: value hidden, only a copy button is shown (for secrets like passwords/logins).
+  { key: "password", title: "Password", type: "text", copyOnly: true, excludeFromExport: true },
   { key: "turnover", title: "Turnover", type: "number", align: "right",
     locale: "cs-CZ", decimalPlaces: 2 },
   { key: "contractDate", title: "Contract", type: "date", align: "right",

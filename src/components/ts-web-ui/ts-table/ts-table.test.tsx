@@ -260,4 +260,40 @@ describe("TsTable", () => {
 
     expect(screen.getByRole("button", { name: /Download error log/i })).toBeInTheDocument()
   })
+
+  it("renders only a copy button for copyOnly columns and never shows the value", () => {
+    const secretColumns: TsTableColumnDef[] = [
+      { key: "name", title: "Name", type: "text" },
+      { key: "password", title: "Password", type: "text", copyOnly: true },
+    ]
+    const secretData = [{ name: "Alice", password: "s3cret!" }]
+
+    render(<TsTable data={secretData} columnDefinitions={secretColumns} />)
+
+    // The header still shows, and the visible cell value (name) renders.
+    expect(screen.getByText("Password")).toBeInTheDocument()
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+    // The secret is never written to the DOM…
+    expect(screen.queryByText("s3cret!")).not.toBeInTheDocument()
+    // …but a copy button is available to copy it.
+    expect(screen.getByRole("button", { name: /Copy to clipboard/i })).toBeInTheDocument()
+  })
+
+  it("copies the raw value of a copyOnly cell to the clipboard", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+    // copyTextToClipboard only uses navigator.clipboard on a secure origin; jsdom defaults to false.
+    Object.defineProperty(window, "isSecureContext", { value: true, configurable: true })
+
+    const secretColumns: TsTableColumnDef[] = [
+      { key: "name", title: "Name", type: "text" },
+      { key: "password", title: "Password", type: "text", copyOnly: true },
+    ]
+    render(
+      <TsTable data={[{ name: "Alice", password: "s3cret!" }]} columnDefinitions={secretColumns} />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /Copy to clipboard/i }))
+    expect(writeText).toHaveBeenCalledWith("s3cret!")
+  })
 })

@@ -1599,6 +1599,7 @@ The import follows a two-phase pattern matching the reference implementation:
 | `width`         | `number \| string`                          | `200`     | Column width in pixels                                                                                                        |
 | `align`         | `"left" \| "center" \| "right"`             | `"left"`  | Content alignment (affects header label, sort icon position, and reorder arrows)                                              |
 | `canBeCopied`   | `boolean`                                   | `false`   | Show copy-to-clipboard icon on row hover                                                                                      |
+| `copyOnly`      | `boolean`                                   | `false`   | Render ONLY a copy button — the value is never displayed. For secrets such as passwords/logins that must be copyable but not shown. The button stays visible (not hover-gated). Raw value is still used for sorting/filtering/export; pair with `excludeFromExport` to keep secrets out of the Excel export |
 | `isClickable`   | `boolean`                                   | `false`   | Make cell text clickable (styled as link, passes `columnKey` to `onRowClick`). Requires `enableClickableColumns` on the table |
 | `locale`        | `string`                                    | `"cs-CZ"` | Locale for number and date formatting                                                                                         |
 | `decimalPlaces` | `number`                                    | `2`       | Decimal places for number-type columns                                                                                        |
@@ -1697,7 +1698,7 @@ When `enableColumnReordering` is enabled, left/right chevron arrows appear on he
 - **Excel/CSV import**: Upload `.xlsx`, `.xls`, `.csv`, or `.json`. Table validates columns and maps data, then calls `onImport`. Parent processes import and shows results via `importResult` prop
 - **Predefined filters**: Lock specific column filters that users cannot modify
 - **Clickable columns**: Individual columns can be marked clickable (styled as links)
-- **Copy to clipboard**: Per-cell copy button on hover for enabled columns
+- **Copy to clipboard**: Per-cell copy button on hover for `canBeCopied` columns; `copyOnly` columns show only the copy button and never render the value (for secrets like passwords/logins)
 - **Row count**: Footer shows "X of Y rows selected" and total row count
 
 ### Complete Usage Example
