@@ -479,11 +479,13 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     pagination,
   ])
 
-  // Propagate selection changes back up
+  // Propagate selection changes back up. `rowSelection` must be in the deps: the `table` instance is
+  // a stable reference across renders, so without it the effect fires only on mount and never
+  // reports later selection changes (e.g. multi-select pickers would never see checkbox toggles).
   React.useEffect(() => {
     if (!onSelectionChange) return
     onSelectionChange(table.getFilteredSelectedRowModel().rows.map((row) => row.original))
-  }, [onSelectionChange, table])
+  }, [onSelectionChange, table, rowSelection])
 
   // Get selected rows for toolbar
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
