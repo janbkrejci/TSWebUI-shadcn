@@ -334,4 +334,20 @@ describe("TsTable", () => {
     expect(exportedRows[0]).toMatchObject({ name: "Alice", action: "run" })
     sheetSpy.mockRestore()
   })
+
+  it("reports selection changes to onSelectionChange after mount, not only once", () => {
+    const onSelectionChange = vi.fn()
+    render(
+      <TsTable data={data} columnDefinitions={columns} onSelectionChange={onSelectionChange} />
+    )
+
+    // Fires once on mount with an empty selection; ignore that call.
+    onSelectionChange.mockClear()
+
+    // Toggle the first row's checkbox. Regression guard: the propagation effect must re-run on
+    // selection change (the `table` ref is stable, so `rowSelection` has to be in its deps).
+    fireEvent.click(screen.getAllByLabelText("Select row")[0])
+
+    expect(onSelectionChange).toHaveBeenCalledWith([data[0]])
+  })
 })
