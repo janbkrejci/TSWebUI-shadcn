@@ -482,6 +482,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   // Propagate selection changes back up. `rowSelection` must be in the deps: the `table` instance is
   // a stable reference across renders, so without it the effect fires only on mount and never
   // reports later selection changes (e.g. multi-select pickers would never see checkbox toggles).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: rowSelection is read via the stable `table` ref, so it must stay in the deps for this effect to re-run when the selection changes.
   React.useEffect(() => {
     if (!onSelectionChange) return
     onSelectionChange(table.getFilteredSelectedRowModel().rows.map((row) => row.original))
