@@ -18,6 +18,12 @@ export interface TsLayoutProps {
    * In normal full-page usage leave this false (default).
    */
   contained?: boolean
+  /**
+   * Render sidebar sections as an accordion: only one section open at a time,
+   * the others folded. Forwarded to Sidebar. Defaults to false (all sections
+   * always expanded, unchanged behavior).
+   */
+  collapsibleSections?: boolean
 }
 
 /**
@@ -36,6 +42,7 @@ export function TsLayout({
   topBarCenter,
   topBarRight,
   contained = false,
+  collapsibleSections = false,
 }: TsLayoutProps) {
   return (
     <SidebarProvider>
@@ -51,6 +58,7 @@ export function TsLayout({
       <Sidebar
         navigation={navigation}
         logo={logo}
+        collapsibleSections={collapsibleSections}
         className={contained ? "absolute!" : undefined}
       />
 
