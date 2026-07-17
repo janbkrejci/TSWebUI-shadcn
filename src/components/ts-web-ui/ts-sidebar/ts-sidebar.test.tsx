@@ -65,6 +65,13 @@ describe("TsSidebar", () => {
   })
 
   describe("collapsibleSections", () => {
+    // Folded content stays mounted (so the height can animate and nothing pops when the whole
+    // sidebar collapses); "folded" therefore means the items' panel is aria-hidden, not removed.
+    const panelFor = (name: RegExp) => {
+      const btn = screen.getByRole("button", { name })
+      return document.getElementById(btn.getAttribute("aria-controls") as string)
+    }
+
     it("renders section titles as accordion buttons and folds all sections by default", () => {
       renderSidebar({ collapsibleSections: true })
 
@@ -76,8 +83,8 @@ describe("TsSidebar", () => {
       expect(settingsBtn).toHaveAttribute("aria-expanded", "false")
 
       // No active route ("/") -> every section is folded, so no items are rendered
-      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument()
-      expect(screen.queryByText("Profile")).not.toBeInTheDocument()
+      expect(panelFor(/General/i)).toHaveAttribute("aria-hidden", "true")
+      expect(panelFor(/Settings/i)).toHaveAttribute("aria-hidden", "true")
     })
 
     it("reveals a section's items when its title is clicked and folds the others (single-open)", () => {
@@ -93,7 +100,7 @@ describe("TsSidebar", () => {
       expect(screen.getByText("Dashboard")).toBeInTheDocument()
       expect(screen.getByText("Reports")).toBeInTheDocument()
       // Settings remains folded
-      expect(screen.queryByText("Profile")).not.toBeInTheDocument()
+      expect(panelFor(/Settings/i)).toHaveAttribute("aria-hidden", "true")
 
       // Opening Settings must fold General (only one open at a time)
       fireEvent.click(screen.getByRole("button", { name: /Settings/i }))
@@ -107,7 +114,7 @@ describe("TsSidebar", () => {
         "false"
       )
       expect(screen.getByText("Profile")).toBeInTheDocument()
-      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument()
+      expect(panelFor(/General/i)).toHaveAttribute("aria-hidden", "true")
 
       // Clicking the open section folds it -> none open
       fireEvent.click(screen.getByRole("button", { name: /Settings/i }))
@@ -115,7 +122,7 @@ describe("TsSidebar", () => {
         "aria-expanded",
         "false"
       )
-      expect(screen.queryByText("Profile")).not.toBeInTheDocument()
+      expect(panelFor(/Settings/i)).toHaveAttribute("aria-hidden", "true")
     })
 
     it("links the header button to its items container via aria-controls", () => {
@@ -146,7 +153,7 @@ describe("TsSidebar", () => {
       // Active section's items are visible; the other section's are hidden
       expect(screen.getByText("Profile")).toBeInTheDocument()
       expect(screen.getByText("Billing")).toBeInTheDocument()
-      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument()
+      expect(panelFor(/General/i)).toHaveAttribute("aria-hidden", "true")
     })
   })
 

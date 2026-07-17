@@ -492,48 +492,54 @@ export function SidebarSection({
   // the sidebar is expanded (icon-only mode keeps the classic always-open layout).
   const isAccordion = Boolean(collapsible && title && !isCollapsed)
 
-  if (isAccordion) {
-    return (
-      <div className={cn("px-3 py-2", className)} {...props}>
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={expanded}
-          aria-controls={contentId}
-          className="w-full h-8 flex items-center justify-between gap-2 px-2 mb-2 rounded-md overflow-hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <h3 className="text-sm font-semibold tracking-tight truncate">{title}</h3>
-          {expanded ? (
-            <ChevronDown className="h-4 w-4 shrink-0" />
-          ) : (
-            <ChevronRight className="h-4 w-4 shrink-0" />
-          )}
-        </button>
-        <div
-          id={contentId}
-          className={cn(
-            "space-y-1 overflow-hidden motion-safe:transition-all motion-safe:duration-300",
-            expanded ? "opacity-100" : "max-h-0 opacity-0 pointer-events-none"
-          )}
-        >
-          {expanded && children}
-        </div>
-      </div>
-    )
-  }
+  // Content is visible unless we are in accordion mode and this section is folded. In icon-only
+  // mode (and during the collapse/expand transition) it stays visible so item icons never pop
+  // in or out — the sidebar-level collapse and the section accordion no longer fight each other.
+  const contentVisible = !isAccordion || expanded !== false
 
   return (
     <div className={cn("px-3 py-2", className)} {...props}>
-      {title && (
-        <div className="h-8 flex items-center px-2 mb-2 overflow-hidden">
-          {showTitle && (
-            <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate animate-in fade-in duration-300">
-              {title}
-            </h3>
-          )}
+      {title &&
+        (isAccordion ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            aria-controls={contentId}
+            className="w-full h-8 flex items-center justify-between gap-2 px-2 mb-2 rounded-md overflow-hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <h3 className="text-sm font-semibold tracking-tight truncate">{title}</h3>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 transition-transform duration-300",
+                expanded ? "rotate-0" : "-rotate-90"
+              )}
+            />
+          </button>
+        ) : (
+          <div className="h-8 flex items-center px-2 mb-2 overflow-hidden">
+            {showTitle && (
+              <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate animate-in fade-in duration-300">
+                {title}
+              </h3>
+            )}
+          </div>
+        ))}
+      {/* Single content region for both modes. grid-template-rows 0fr↔1fr animates the height
+          smoothly without a fixed pixel value, and the children stay mounted so toggling a section
+          or collapsing the whole sidebar never remounts (and never pops) the items. */}
+      <div
+        id={contentId}
+        aria-hidden={!contentVisible}
+        className={cn(
+          "grid motion-safe:transition-all motion-safe:duration-300",
+          contentVisible ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className={cn("space-y-1 overflow-hidden", !contentVisible && "pointer-events-none")}>
+          {children}
         </div>
-      )}
-      <div className="space-y-1">{children}</div>
+      </div>
     </div>
   )
 }
