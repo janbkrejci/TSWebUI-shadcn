@@ -3,7 +3,7 @@
 /**
  * TsSidebar - Animated sidebar with automatic hiding and data-driven navigation
  */
-import { ChevronLeft, ChevronRight, LucideIcon, Menu, X } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, LucideIcon, Menu, X } from "lucide-react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -210,11 +210,59 @@ export function SidebarProvider({
 interface SidebarProps extends React.ComponentProps<"aside"> {
   navigation?: NavSection[] | NavItem[]
   logo?: React.ReactNode
+  /**
+   * Opt-in accordion mode for the section list. When enabled and the sidebar is
+   * expanded, section titles become clickable headers and only one section can
+   * be open at a time. Defaults to `false`, which preserves the classic
+   * "all sections always visible" behavior.
+   */
+  collapsibleSections?: boolean
 }
 
-export function Sidebar({ className, children, navigation, logo, ...props }: SidebarProps) {
+/** Returns the title of the section that contains the currently-active route, or null. */
+function findActiveSectionTitle(
+  navigation: NavSection[] | NavItem[] | undefined,
+  pathname: string
+): string | null {
+  if (!navigation || navigation.length === 0 || !("items" in navigation[0])) return null
+  for (const section of navigation as NavSection[]) {
+    const isActive = section.items.some((item) =>
+      item.exact ? pathname === item.href : pathname.startsWith(item.href)
+    )
+    if (isActive) return section.title
+  }
+  return null
+}
+
+export function Sidebar({
+  className,
+  children,
+  navigation,
+  logo,
+  collapsibleSections = false,
+  ...props
+}: SidebarProps) {
   const { isOpen, close, isCollapsed, topBarHeight, isMobile, width, collapsedWidth } = useSidebar()
   const pathname = usePathname()
+
+  // Accordion state: which section title is currently expanded (max one).
+  // Initialized to the section containing the active route so it opens on mount.
+  const [openSection, setOpenSection] = React.useState<string | null>(() =>
+    collapsibleSections ? findActiveSectionTitle(navigation, pathname ?? "") : null
+  )
+
+  // Re-sync the auto-open section only when the route actually changes, so that
+  // a manual toggle on the current route is never immediately overridden.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed on pathname only
+  React.useEffect(() => {
+    if (!collapsibleSections) return
+    const active = findActiveSectionTitle(navigation, pathname ?? "")
+    if (active) setOpenSection(active)
+  }, [pathname])
+
+  const handleSectionToggle = React.useCallback((title: string) => {
+    setOpenSection((prev) => (prev === title ? null : title))
+  }, [])
 
   // When className includes "absolute" the sidebar is rendered inside a bounded
   // container (demo / widget), so we switch from viewport-based units to
@@ -235,7 +283,13 @@ export function Sidebar({ className, children, navigation, logo, ...props }: Sid
 
     if (isSections(navigation)) {
       return navigation.map((section) => (
-        <SidebarSection key={section.title} title={section.title}>
+        <SidebarSection
+          key={section.title}
+          title={section.title}
+          collapsible={collapsibleSections}
+          expanded={!collapsibleSections || openSection === section.title}
+          onToggle={() => handleSectionToggle(section.title)}
+        >
           {section.items.map((item) => (
             <SidebarItem
               key={item.name}
@@ -410,12 +464,63 @@ export function SidebarContent({
 
 interface SidebarSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string
+  /** When true (and expanded, with a title), render the title as an accordion toggle. */
+  collapsible?: boolean
+  /** Whether this section's items are currently visible. Only used when `collapsible`. */
+  expanded?: boolean
+  /** Toggle handler for the accordion header. Only used when `collapsible`. */
+  onToggle?: () => void
 }
 
-export function SidebarSection({ className, title, children, ...props }: SidebarSectionProps) {
+export function SidebarSection({
+  className,
+  title,
+  children,
+  collapsible,
+  expanded,
+  onToggle,
+  ...props
+}: SidebarSectionProps) {
   const { isCollapsed, isTransitioning } = useSidebar()
 
   const showTitle = !isCollapsed || isTransitioning
+
+  const reactId = React.useId()
+  const contentId = `sidebar-section-${reactId}`
+
+  // Accordion header only applies when opted in, when there is a title, and when
+  // the sidebar is expanded (icon-only mode keeps the classic always-open layout).
+  const isAccordion = Boolean(collapsible && title && !isCollapsed)
+
+  if (isAccordion) {
+    return (
+      <div className={cn("px-3 py-2", className)} {...props}>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          className="w-full h-8 flex items-center justify-between gap-2 px-2 mb-2 rounded-md overflow-hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <h3 className="text-sm font-semibold tracking-tight truncate">{title}</h3>
+          {expanded ? (
+            <ChevronDown className="h-4 w-4 shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          )}
+        </button>
+        <div
+          id={contentId}
+          className={cn(
+            "space-y-1 overflow-hidden motion-safe:transition-all motion-safe:duration-300",
+            expanded ? "opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+          )}
+        >
+          {expanded && children}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={cn("px-3 py-2", className)} {...props}>
