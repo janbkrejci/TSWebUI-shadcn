@@ -40,6 +40,9 @@ function renderSidebar(props: { collapsibleSections?: boolean } = {}) {
 describe("TsSidebar", () => {
   beforeEach(() => {
     mockPathname = "/"
+    // The sidebar persists its open/collapsed state to localStorage; clear it so one test's
+    // toggle can't leak into the next (a closed state hides the collapse control).
+    window.localStorage.clear()
   })
 
   it("toggles sidebar when trigger is clicked", () => {
@@ -154,6 +157,46 @@ describe("TsSidebar", () => {
       expect(screen.getByText("Profile")).toBeInTheDocument()
       expect(screen.getByText("Billing")).toBeInTheDocument()
       expect(panelFor(/General/i)).toHaveAttribute("aria-hidden", "true")
+    })
+
+    it("keeps the accordion when icon-collapsed — chevron toggles, only open section visible", () => {
+      // Desktop width so the sidebar is not in mobile mode (the collapse control only exists there).
+      window.innerWidth = 1024
+      mockPathname = "/settings/profile"
+      renderSidebar({ collapsibleSections: true })
+
+      // Collapse the whole sidebar to the icon-only rail.
+      fireEvent.click(screen.getByLabelText(/collapse menu|sbalit menu/i))
+
+      // Section toggles survive as chevron-only buttons, named (aria-label) after the section.
+      const generalToggle = screen.getByRole("button", { name: /General/i })
+      expect(generalToggle).toHaveAttribute("aria-expanded", "false")
+
+      // The open section (Settings = active route) keeps its item icons; the folded section
+      // (General) stays hidden — mirroring the wide sidebar rather than expanding everything.
+      expect(screen.getByText("Profile").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "false"
+      )
+      expect(screen.getByText("Dashboard").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "true"
+      )
+
+      // The chevron still toggles in icon mode: opening General folds Settings (single-open).
+      fireEvent.click(generalToggle)
+      expect(screen.getByRole("button", { name: /General/i })).toHaveAttribute(
+        "aria-expanded",
+        "true"
+      )
+      expect(screen.getByText("Dashboard").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "false"
+      )
+      expect(screen.getByText("Profile").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "true"
+      )
     })
   })
 
