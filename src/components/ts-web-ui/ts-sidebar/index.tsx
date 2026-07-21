@@ -530,11 +530,11 @@ export function SidebarSection({
               aria-label={title}
               aria-expanded={expanded}
               aria-controls={contentId}
-              className="w-full h-8 flex items-center justify-center mb-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full h-8 flex items-center justify-center mb-2 rounded-md text-muted-foreground/50 hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ChevronDown
                 className={cn(
-                  "h-4 w-4 shrink-0 transition-transform duration-300",
+                  "h-3.5 w-3.5 shrink-0 transition-transform duration-300",
                   expanded ? "rotate-0" : "-rotate-90"
                 )}
               />
