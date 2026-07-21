@@ -488,43 +488,46 @@ export function SidebarSection({
   const reactId = React.useId()
   const contentId = `sidebar-section-${reactId}`
 
-  // Accordion header only applies when opted in, when there is a title, and when
-  // the sidebar is expanded (icon-only mode keeps the classic always-open layout).
-  const isAccordion = Boolean(collapsible && title && !isCollapsed)
+  // A section participates in the accordion whenever it opts in and has a title — in BOTH the wide
+  // and the icon-collapsed sidebar, so the narrow rail mirrors the wide state (only the currently
+  // open section's items are visible). The clickable toggle header is shown only while wide.
+  const isAccordion = Boolean(collapsible && title)
+  const showAccordionHeader = isAccordion && !isCollapsed
 
-  // Content is visible unless we are in accordion mode and this section is folded. In icon-only
-  // mode (and during the collapse/expand transition) it stays visible so item icons never pop
-  // in or out — the sidebar-level collapse and the section accordion no longer fight each other.
+  // Content is visible unless this is an accordion section that is folded — in either mode. Children
+  // stay mounted (grid-rows animates height), so folding a section or collapsing the whole sidebar
+  // never remounts or pops the items; a folded section simply stays at height 0 in both modes.
   const contentVisible = !isAccordion || expanded !== false
 
   return (
     <div className={cn("px-3 py-2", className)} {...props}>
-      {title &&
-        (isAccordion ? (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={expanded}
-            aria-controls={contentId}
-            className="w-full h-8 flex items-center justify-between gap-2 px-2 mb-2 rounded-md overflow-hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <h3 className="text-sm font-semibold tracking-tight truncate">{title}</h3>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 shrink-0 transition-transform duration-300",
-                expanded ? "rotate-0" : "-rotate-90"
-              )}
-            />
-          </button>
-        ) : (
-          <div className="h-8 flex items-center px-2 mb-2 overflow-hidden">
-            {showTitle && (
-              <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate animate-in fade-in duration-300">
-                {title}
-              </h3>
+      {showAccordionHeader ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          className="w-full h-8 flex items-center justify-between gap-2 px-2 mb-2 rounded-md overflow-hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <h3 className="text-sm font-semibold tracking-tight truncate">{title}</h3>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 transition-transform duration-300",
+              expanded ? "rotate-0" : "-rotate-90"
             )}
-          </div>
-        ))}
+          />
+        </button>
+      ) : title && !isAccordion ? (
+        // Classic (non-accordion) section title — a plain label in the wide sidebar, an empty
+        // spacer once collapsed. Accordion sections render no header in icon mode (clean rail).
+        <div className="h-8 flex items-center px-2 mb-2 overflow-hidden">
+          {showTitle && (
+            <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate animate-in fade-in duration-300">
+              {title}
+            </h3>
+          )}
+        </div>
+      ) : null}
       {/* Single content region for both modes. grid-template-rows 0fr↔1fr animates the height
           smoothly without a fixed pixel value, and the children stay mounted so toggling a section
           or collapsing the whole sidebar never remounts (and never pops) the items. */}

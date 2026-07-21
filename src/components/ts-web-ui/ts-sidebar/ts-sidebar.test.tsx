@@ -40,6 +40,9 @@ function renderSidebar(props: { collapsibleSections?: boolean } = {}) {
 describe("TsSidebar", () => {
   beforeEach(() => {
     mockPathname = "/"
+    // The sidebar persists its open/collapsed state to localStorage; clear it so one test's
+    // toggle can't leak into the next (a closed state hides the collapse control).
+    window.localStorage.clear()
   })
 
   it("toggles sidebar when trigger is clicked", () => {
@@ -154,6 +157,31 @@ describe("TsSidebar", () => {
       expect(screen.getByText("Profile")).toBeInTheDocument()
       expect(screen.getByText("Billing")).toBeInTheDocument()
       expect(panelFor(/General/i)).toHaveAttribute("aria-hidden", "true")
+    })
+
+    it("keeps the accordion when icon-collapsed — only the open section's items stay visible", () => {
+      // Desktop width so the sidebar is not in mobile mode (the collapse control only exists there).
+      window.innerWidth = 1024
+      mockPathname = "/settings/profile"
+      renderSidebar({ collapsibleSections: true })
+
+      // Collapse the whole sidebar to the icon-only rail.
+      fireEvent.click(screen.getByLabelText(/collapse menu|sbalit menu/i))
+
+      // No accordion toggle headers survive in icon mode (no room for the labels).
+      expect(screen.queryByRole("button", { name: /General/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: /Settings/i })).not.toBeInTheDocument()
+
+      // The open section (Settings = active route) keeps its item icons; the folded section
+      // (General) stays hidden — mirroring the wide sidebar rather than expanding everything.
+      expect(screen.getByText("Profile").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "false"
+      )
+      expect(screen.getByText("Dashboard").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "true"
+      )
     })
   })
 
