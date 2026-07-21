@@ -159,7 +159,7 @@ describe("TsSidebar", () => {
       expect(panelFor(/General/i)).toHaveAttribute("aria-hidden", "true")
     })
 
-    it("keeps the accordion when icon-collapsed — only the open section's items stay visible", () => {
+    it("keeps the accordion when icon-collapsed — chevron toggles, only open section visible", () => {
       // Desktop width so the sidebar is not in mobile mode (the collapse control only exists there).
       window.innerWidth = 1024
       mockPathname = "/settings/profile"
@@ -168,9 +168,9 @@ describe("TsSidebar", () => {
       // Collapse the whole sidebar to the icon-only rail.
       fireEvent.click(screen.getByLabelText(/collapse menu|sbalit menu/i))
 
-      // No accordion toggle headers survive in icon mode (no room for the labels).
-      expect(screen.queryByRole("button", { name: /General/i })).not.toBeInTheDocument()
-      expect(screen.queryByRole("button", { name: /Settings/i })).not.toBeInTheDocument()
+      // Section toggles survive as chevron-only buttons, named (aria-label) after the section.
+      const generalToggle = screen.getByRole("button", { name: /General/i })
+      expect(generalToggle).toHaveAttribute("aria-expanded", "false")
 
       // The open section (Settings = active route) keeps its item icons; the folded section
       // (General) stays hidden — mirroring the wide sidebar rather than expanding everything.
@@ -179,6 +179,21 @@ describe("TsSidebar", () => {
         "false"
       )
       expect(screen.getByText("Dashboard").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "true"
+      )
+
+      // The chevron still toggles in icon mode: opening General folds Settings (single-open).
+      fireEvent.click(generalToggle)
+      expect(screen.getByRole("button", { name: /General/i })).toHaveAttribute(
+        "aria-expanded",
+        "true"
+      )
+      expect(screen.getByText("Dashboard").closest("[aria-hidden]")).toHaveAttribute(
+        "aria-hidden",
+        "false"
+      )
+      expect(screen.getByText("Profile").closest("[aria-hidden]")).toHaveAttribute(
         "aria-hidden",
         "true"
       )

@@ -490,7 +490,8 @@ export function SidebarSection({
 
   // A section participates in the accordion whenever it opts in and has a title — in BOTH the wide
   // and the icon-collapsed sidebar, so the narrow rail mirrors the wide state (only the currently
-  // open section's items are visible). The clickable toggle header is shown only while wide.
+  // open section's items are visible). While wide the toggle is a full title+chevron header; once
+  // collapsed it shrinks to a chevron-only button with the name in a tooltip (see below).
   const isAccordion = Boolean(collapsible && title)
   const showAccordionHeader = isAccordion && !isCollapsed
 
@@ -517,9 +518,33 @@ export function SidebarSection({
             )}
           />
         </button>
-      ) : title && !isAccordion ? (
+      ) : isAccordion ? (
+        // Icon-collapsed accordion: the header shrinks to a centered chevron that still toggles the
+        // section, with the section name in a tooltip. Keeps the rail navigable and preserves the
+        // header row so the items don't shift up.
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-label={title}
+              aria-expanded={expanded}
+              aria-controls={contentId}
+              className="w-full h-8 flex items-center justify-center mb-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-transform duration-300",
+                  expanded ? "rotate-0" : "-rotate-90"
+                )}
+              />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{title}</TooltipContent>
+        </Tooltip>
+      ) : title ? (
         // Classic (non-accordion) section title — a plain label in the wide sidebar, an empty
-        // spacer once collapsed. Accordion sections render no header in icon mode (clean rail).
+        // spacer once collapsed.
         <div className="h-8 flex items-center px-2 mb-2 overflow-hidden">
           {showTitle && (
             <h3 className="text-sm font-semibold text-muted-foreground tracking-tight truncate animate-in fade-in duration-300">
