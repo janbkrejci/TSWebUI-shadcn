@@ -70,6 +70,14 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   clickFilterColumns?: string[]
   enableColumnResizing?: boolean
   enableColumnReordering?: boolean
+  /**
+   * Keep the header (labels + filter row) visible while the body scrolls. Needs a height-bounded
+   * scroll container, so pair it with `maxHeight` — without one the table never scrolls vertically
+   * and there is nothing for the header to stick to.
+   */
+  stickyHeader?: boolean
+  /** Caps the scroll container's height, e.g. `"60vh"` or `480`. */
+  maxHeight?: number | string
   unhideableColumns?: string[]
   onRowClick?: (row: TData, columnKey?: string) => void
   onCreateClick?: () => void
@@ -217,6 +225,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   clickFilterColumns,
   enableColumnResizing = true,
   enableColumnReordering = true,
+  stickyHeader = false,
+  maxHeight,
   unhideableColumns = [],
   onRowClick,
   onCreateClick,
@@ -554,6 +564,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         selectedRowCount={selectedRows.length}
         onBulkAction={onBulkAction ? (action) => onBulkAction(action, selectedRows) : undefined}
         onUnselectAll={() => setRowSelection({})}
+        stickyHeader={stickyHeader}
+        maxHeight={maxHeight}
         locale={locale}
       />
       {/* Import results dialog — rendered via portal so it covers the full viewport */}

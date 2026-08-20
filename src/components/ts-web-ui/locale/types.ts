@@ -337,6 +337,8 @@ export interface TsLocaleStrings {
     featureClickableColumns: string
     featureColumnResizing: string
     featureColumnReordering: string
+    featurePinnedColumn: string
+    featureStickyHeader: string
     featureCreateButton: string
     featureImportButton: string
     featureExportButton: string

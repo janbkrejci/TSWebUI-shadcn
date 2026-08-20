@@ -194,6 +194,8 @@ interface TsTableViewProps<TData> {
   selectedRowCount?: number
   onBulkAction?: (action: string) => void
   onUnselectAll?: () => void
+  stickyHeader?: boolean
+  maxHeight?: number | string
   locale?: TsLocale
 }
 
@@ -210,9 +212,28 @@ export function TsTableView<TData>({
   selectedRowCount = 0,
   onBulkAction,
   onUnselectAll,
+  stickyHeader = false,
+  maxHeight,
   locale,
 }: TsTableViewProps<TData>) {
   const t = locale?.strings.table
+
+  // A column opts into freezing with `pinned: "left"` in its definition (carried through the
+  // column meta). The built-in select/actions columns always render leftmost, so they ride along
+  // with the frozen block — leaving them scrollable would slide them under it.
+  const isPinnedLeft = React.useCallback(
+    (columnId: string): boolean => {
+      if (columnId === "select" || columnId === "actions") {
+        return table
+          .getAllLeafColumns()
+          .some((col) => (col.columnDef.meta as { pinned?: string } | undefined)?.pinned === "left")
+      }
+      const meta = table.getColumn(columnId)?.columnDef.meta as { pinned?: string } | undefined
+      return meta?.pinned === "left"
+    },
+    [table]
+  )
+
   const cycleSelectionView = React.useCallback(() => {
     const modes: SelectionViewMode[] = ["all", "selected", "unselected"]
     const currentIdx = modes.indexOf(selectionViewMode)
@@ -227,9 +248,15 @@ export function TsTableView<TData>({
         currentOrder.length > 0 ? [...currentOrder] : table.getAllLeafColumns().map((c) => c.id)
 
       // Find movable range: skip "select" and "actions" at the beginning
-      const fixedPrefixCount = allColumnIds.filter(
-        (id) => id === "select" || id === "actions"
-      ).length
+      // Pinned columns are frozen to the left edge, so they must stay at the front of the order —
+      // they are non-movable in the same way the select/actions columns are.
+      let fixedPrefixCount = 0
+      while (
+        fixedPrefixCount < allColumnIds.length &&
+        isPinnedLeft(allColumnIds[fixedPrefixCount])
+      ) {
+        fixedPrefixCount += 1
+      }
       const movableIds = allColumnIds.slice(fixedPrefixCount)
 
       const idx = movableIds.indexOf(columnId)
@@ -246,16 +273,32 @@ export function TsTableView<TData>({
       const newOrder = [...allColumnIds.slice(0, fixedPrefixCount), ...movableIds]
       table.setColumnOrder(newOrder)
     },
-    [table]
+    [table, isPinnedLeft]
   )
 
-  // Get visible data columns for checking move boundaries (#5: react to column order)
+  // Get visible data columns for checking move boundaries (#5: react to column order). Frozen
+  // columns are excluded — they cannot move, so the first MOVABLE column is the one whose
+  // "move left" arrow has to be disabled.
   const visibleDataColumns = table
     .getVisibleLeafColumns()
-    .filter((c) => c.id !== "select" && c.id !== "actions")
+    .filter((c) => c.id !== "select" && c.id !== "actions" && !isPinnedLeft(c.id))
 
   // Measure container width so we can distribute extra space only to data columns
   const containerRef = React.useRef<HTMLDivElement>(null)
+
+  // With a sticky header the second (filter) row has to stop right below the first one, so its
+  // rendered height is measured rather than assumed — it changes with locale, font and zoom.
+  const labelRowRef = React.useRef<HTMLTableRowElement>(null)
+  const [labelRowHeight, setLabelRowHeight] = React.useState(0)
+  React.useLayoutEffect(() => {
+    const el = labelRowRef.current
+    if (!stickyHeader || !el) return
+    const update = () => setLabelRowHeight(el.getBoundingClientRect().height)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [stickyHeader])
 
   // Compute effective column widths: fixed always 40px, data columns use their natural size
   const FIXED_COL_PX = 40
@@ -277,8 +320,64 @@ export function TsTableView<TData>({
     return sum
   }, [columnWidthMap])
 
+  // Left offset of each frozen column, accumulated over the LEADING run of pinned columns. The
+  // offsets use the rendered widths (columnWidthMap) rather than TanStack's getStart(), because the
+  // select/actions columns render at a fixed 40px regardless of their nominal size. A pinned column
+  // that is not part of the leading run gets no offset and simply scrolls — the layout degrades
+  // instead of freezing a column at the wrong position.
+  const pinnedLeftOffsets = (() => {
+    const offsets = new Map<string, number>()
+    let offset = 0
+    for (const col of table.getVisibleLeafColumns()) {
+      if (!isPinnedLeft(col.id)) break
+      offsets.set(col.id, offset)
+      offset += columnWidthMap.get(col.id) ?? col.getSize()
+    }
+    return offsets
+  })()
+  const pinnedIds = [...pinnedLeftOffsets.keys()]
+  const lastPinnedId = pinnedIds[pinnedIds.length - 1]
+
+  /**
+   * Sticky positioning for one frozen cell. The cell needs an opaque background so the scrolled
+   * content cannot show through; the row/header tint is then painted back by an overlay behind the
+   * cell content (the cell's z-index makes it a stacking context, so a negative-z child lands
+   * between the cell background and its text). That keeps the tint identical to the scrolling
+   * cells' without assuming anything about the theme's colour tokens.
+   */
+  const pinnedCell = (columnId: string, zIndex: number) => {
+    const left = pinnedLeftOffsets.get(columnId)
+    if (left === undefined) return null
+    return {
+      className: cn("bg-card", columnId === lastPinnedId && "border-r"),
+      style: { position: "sticky", left, zIndex } as React.CSSProperties,
+    }
+  }
+
+  // `<Table>` wraps the table in its own scroll container, and THAT is the element that scrolls —
+  // so the height cap has to land on it, not on this wrapper. Capping the wrapper instead gives two
+  // nested scrollports: the wrapper scrolls vertically while `position: sticky` still resolves
+  // against the inner one, which never scrolls, and the header quietly fails to stick. The child
+  // selector targets the wrapper's only direct child, which keeps this working regardless of how
+  // the underlying shadcn Table primitive labels that element.
+  const capped = maxHeight !== undefined
   return (
-    <div ref={containerRef} className="rounded-md border bg-card overflow-x-auto">
+    <div
+      ref={containerRef}
+      className={cn(
+        "rounded-md border bg-card",
+        capped
+          ? "overflow-hidden [&>div]:overflow-auto [&>div]:[max-height:var(--ts-table-max-height)]"
+          : "overflow-x-auto"
+      )}
+      style={
+        capped
+          ? ({
+              "--ts-table-max-height": typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       <Table
         style={{
           width: effectiveTableWidth || table.getCenterTotalSize(),
@@ -295,7 +394,7 @@ export function TsTableView<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <React.Fragment key={headerGroup.id}>
               {/* Row 1: Header labels + reorder buttons + select-all */}
-              <TableRow>
+              <TableRow ref={labelRowRef}>
                 {headerGroup.headers.map((header) => {
                   const isDataColumn =
                     header.column.id !== "select" && header.column.id !== "actions"
@@ -308,20 +407,41 @@ export function TsTableView<TData>({
                     | undefined
                   const colAlign = (isDataColumn && meta?.align) || "left"
 
+                  const pinned = pinnedCell(header.column.id, stickyHeader ? 30 : 20)
+                  // A frozen column is held at the front of the order, so it never moves.
+                  const canReorder = enableColumnReordering && !pinned
+                  // A cell that outlives its own row's paint — because it is frozen sideways or the
+                  // header floats above the scrolling body — needs its own opaque background: the
+                  // row/thead background stays behind at the original position and the content
+                  // underneath would otherwise show straight through.
+                  const needsBacking = Boolean(pinned) || stickyHeader
+
                   return (
                     <TableHead
                       key={header.id}
                       className={cn(
                         "py-2 px-3 font-bold text-muted-foreground relative group/header",
-                        !isDataColumn && "w-[40px] min-w-[40px] max-w-[40px] p-0"
+                        !isDataColumn && "w-[40px] min-w-[40px] max-w-[40px] p-0",
+                        stickyHeader && "z-20",
+                        needsBacking && "bg-card",
+                        pinned?.className
                       )}
                       style={{
                         width: columnWidthMap.get(header.column.id) ?? header.getSize(),
                         ...(isDataColumn && enableColumnResizing
                           ? { minWidth: header.column.columnDef.minSize ?? 60 }
                           : {}),
+                        ...pinned?.style,
+                        ...(stickyHeader ? ({ position: "sticky", top: 0 } as const) : {}),
                       }}
                     >
+                      {/* Repaint the header tint that the opaque backing covered. */}
+                      {needsBacking ? (
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-0 -z-10 bg-muted/50"
+                        />
+                      ) : null}
                       {/* Select-all checkbox + selection filter in row 1 (#4) */}
                       {header.column.id === "select" ? (
                         <div className="h-8 flex items-center justify-center gap-1">
@@ -380,7 +500,7 @@ export function TsTableView<TData>({
                         /* Data columns: alignment-aware layout (#6) */
                         <div className="h-8 flex items-center gap-0.5">
                           {/* Arrows on left for right-aligned columns */}
-                          {enableColumnReordering && colAlign === "right" && (
+                          {canReorder && colAlign === "right" && (
                             <div className="flex items-center shrink-0">
                               <button
                                 type="button"
@@ -409,7 +529,7 @@ export function TsTableView<TData>({
                             </div>
                           )}
                           {/* Left arrow for center-aligned columns */}
-                          {enableColumnReordering && colAlign === "center" && (
+                          {canReorder && colAlign === "center" && (
                             <button
                               type="button"
                               className={cn(
@@ -438,7 +558,7 @@ export function TsTableView<TData>({
                           </div>
 
                           {/* Both arrows on right for left-aligned columns */}
-                          {enableColumnReordering && colAlign === "left" && (
+                          {canReorder && colAlign === "left" && (
                             <div className="flex items-center shrink-0">
                               <button
                                 type="button"
@@ -467,7 +587,7 @@ export function TsTableView<TData>({
                             </div>
                           )}
                           {/* Right arrow for center-aligned columns */}
-                          {enableColumnReordering && colAlign === "center" && (
+                          {canReorder && colAlign === "center" && (
                             <button
                               type="button"
                               className={cn(
@@ -507,18 +627,35 @@ export function TsTableView<TData>({
               {enableFiltering && (
                 <TableRow className="bg-muted/30">
                   {headerGroup.headers.map((header) => {
+                    const pinned = pinnedCell(header.column.id, stickyHeader ? 30 : 20)
+                    const needsBacking = Boolean(pinned) || stickyHeader
+
                     return (
                       <TableHead
                         key={`filter-${header.id}`}
                         className={cn(
-                          "py-1.5 px-3",
+                          "py-1.5 px-3 relative",
                           (header.column.id === "select" || header.column.id === "actions") &&
-                            "w-[40px] min-w-[40px] max-w-[40px] p-0"
+                            "w-[40px] min-w-[40px] max-w-[40px] p-0",
+                          stickyHeader && "z-20",
+                          needsBacking && "bg-card",
+                          pinned?.className
                         )}
                         style={{
                           width: columnWidthMap.get(header.column.id) ?? header.getSize(),
+                          ...pinned?.style,
+                          ...(stickyHeader
+                            ? ({ position: "sticky", top: labelRowHeight } as const)
+                            : {}),
                         }}
                       >
+                        {/* Repaint the filter-row tint that the opaque backing covered. */}
+                        {needsBacking ? (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 -z-10 bg-muted/30"
+                          />
+                        ) : null}
                         {header.column.id === "select" ? (
                           // Empty in filter row (checkbox moved to row 1)
                           <div className="flex justify-center">
@@ -626,17 +763,28 @@ export function TsTableView<TData>({
                 >
                   {row.getVisibleCells().map((cell) => {
                     const isFixed = cell.column.id === "select" || cell.column.id === "actions"
+                    const pinned = pinnedCell(cell.column.id, 10)
                     return (
                       <TableCell
                         key={cell.id}
                         className={cn(
                           "px-3 py-2",
-                          isFixed && "w-[40px] min-w-[40px] max-w-[40px] p-0"
+                          isFixed && "w-[40px] min-w-[40px] max-w-[40px] p-0",
+                          pinned && "relative",
+                          pinned?.className
                         )}
                         style={{
                           width: columnWidthMap.get(cell.column.id) ?? cell.column.getSize(),
+                          ...pinned?.style,
                         }}
                       >
+                        {/* Repaint the row hover tint that the opaque frozen background covered. */}
+                        {pinned ? (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 -z-10 transition-colors group-hover/row:bg-muted/50"
+                          />
+                        ) : null}
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     )

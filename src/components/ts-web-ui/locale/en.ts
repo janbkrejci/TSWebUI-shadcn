@@ -335,6 +335,8 @@ export const en: TsLocale = {
       featureClickableColumns: "Clickable Columns",
       featureColumnResizing: "Column Resizing",
       featureColumnReordering: "Column Reordering",
+      featurePinnedColumn: "Pin First Column",
+      featureStickyHeader: "Sticky Header",
       featureCreateButton: "Create Button",
       featureImportButton: "Import Button",
       featureExportButton: "Export Button",

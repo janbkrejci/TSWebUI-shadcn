@@ -187,6 +187,13 @@ export interface TsTableColumnDef {
   copyOnly?: boolean
   isClickable?: boolean
   /**
+   * Freeze the column to the left edge so it stays visible while the table scrolls horizontally.
+   * Pinned columns must be listed first in `columnDefinitions`; they are held at the front of the
+   * column order and cannot be reordered. Meant for wide tables (matrices, long metric rows) where
+   * the row's identity column has to stay on screen. Requires nothing else to be enabled.
+   */
+  pinned?: "left"
+  /**
    * Custom cell renderer. When set, it fully controls the cell's content — the built-in value
    * formatting, `copyOnly` and `canBeCopied` behaviours are skipped. Sorting, filtering and export
    * still use the raw value, so pair this with `sortable: false` / `filterable: false` /
@@ -465,6 +472,7 @@ export function generateColumns<TData>(
         type: def.type,
         align: def.align,
         filterWidget: def.filterWidget,
+        pinned: def.pinned,
       },
     })
   })
