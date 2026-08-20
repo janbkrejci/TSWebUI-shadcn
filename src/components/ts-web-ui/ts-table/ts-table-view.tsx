@@ -247,17 +247,12 @@ export function TsTableView<TData>({
       const allColumnIds =
         currentOrder.length > 0 ? [...currentOrder] : table.getAllLeafColumns().map((c) => c.id)
 
-      // Find movable range: skip "select" and "actions" at the beginning
-      // Pinned columns are frozen to the left edge, so they must stay at the front of the order —
-      // they are non-movable in the same way the select/actions columns are.
-      let fixedPrefixCount = 0
-      while (
-        fixedPrefixCount < allColumnIds.length &&
-        isPinnedLeft(allColumnIds[fixedPrefixCount])
-      ) {
-        fixedPrefixCount += 1
-      }
-      const movableIds = allColumnIds.slice(fixedPrefixCount)
+      // Split by membership, not by position. Pinned columns are frozen to the left edge, so they
+      // are non-movable in the same way select/actions are — but a hidden column declared ahead of
+      // a pinned one would end the "leading run" early, and everything after it (the pinned column
+      // included) would drift into the movable range and could be swapped out of the frozen block.
+      const immovableIds = allColumnIds.filter((id) => isPinnedLeft(id))
+      const movableIds = allColumnIds.filter((id) => !isPinnedLeft(id))
 
       const idx = movableIds.indexOf(columnId)
       if (idx < 0) return
@@ -270,8 +265,7 @@ export function TsTableView<TData>({
       movableIds[idx] = movableIds[swapIdx]
       movableIds[swapIdx] = temp
 
-      const newOrder = [...allColumnIds.slice(0, fixedPrefixCount), ...movableIds]
-      table.setColumnOrder(newOrder)
+      table.setColumnOrder([...immovableIds, ...movableIds])
     },
     [table, isPinnedLeft]
   )
@@ -328,6 +322,9 @@ export function TsTableView<TData>({
   const pinnedLeftOffsets = (() => {
     const offsets = new Map<string, number>()
     let offset = 0
+    // Walk the CURRENT visible order, so reordering can never leave a frozen column stranded behind
+    // a scrolling one. The order itself is normalised to keep pinned columns at the front, so this
+    // run covers every pinned column; the break is the backstop that keeps the offsets honest.
     for (const col of table.getVisibleLeafColumns()) {
       if (!isPinnedLeft(col.id)) break
       offsets.set(col.id, offset)
