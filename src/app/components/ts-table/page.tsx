@@ -204,9 +204,6 @@ export default function TsTablePage() {
       visible: true,
       align: "left",
       isClickable: true,
-      // Frozen to the left edge, so the row's identity stays on screen on a wide table. Pinned
-      // columns are held at the front of the order and cannot be reordered.
-      pinned: pinFirstColumn ? "left" : undefined,
     },
     // copyOnly: the value is never shown, only a copy button is rendered (for secrets such as
     // logins/passwords). excludeFromExport keeps the secret out of the Excel export as well.
@@ -246,7 +243,8 @@ export default function TsTablePage() {
     // its own click handling (stopPropagation keeps the row click from firing). Such columns hold no
     // data of their own, so mark them sortable/filterable false and excludeFromExport.
     {
-      key: "actions",
+      // NB: not "actions" — that id belongs to the built-in row-menu column.
+      key: "rowAction",
       title: "Action",
       type: "text",
       visible: true,
@@ -463,6 +461,7 @@ export default function TsTablePage() {
                 clickFilterColumns={["company"]}
                 enableColumnResizing={enableColumnResizing}
                 enableColumnReordering={enableColumnReordering}
+                pinnedColumnCount={pinFirstColumn ? 1 : 0}
                 stickyHeader={stickyHeader}
                 maxHeight={stickyHeader ? "24rem" : undefined}
                 showCreateButton={showCreateButton}
@@ -542,6 +541,8 @@ export default function MyPage() {
       clickFilterColumns={["company"]}
       enableColumnResizing={true}
       enableColumnReordering={true}
+      // Freeze the leading column(s) — whichever they currently are — to the left edge.
+      pinnedColumnCount={1}
       // Keep the header visible while the body scrolls. Needs a bounded height to scroll within.
       stickyHeader={true}
       maxHeight="24rem"
@@ -646,6 +647,12 @@ export default function MyPage() {
                         "boolean",
                         "true",
                         "Show ◂▸ reorder arrows on header hover.",
+                      ],
+                      [
+                        "pinnedColumnCount",
+                        "number",
+                        "0",
+                        "Freeze this many leading columns to the left edge. Positional: it follows the current order, so reordering or hiding a column moves the frozen block with it.",
                       ],
                       [
                         "stickyHeader",
@@ -920,12 +927,6 @@ export default function MyPage() {
                         "boolean",
                         "false",
                         "Cell acts as a link (requires enableClickableColumns).",
-                      ],
-                      [
-                        "pinned",
-                        '"left"',
-                        "—",
-                        "Freeze the column to the left edge while the table scrolls horizontally. Pinned columns must come first and cannot be reordered.",
                       ],
                       [
                         "copyOnly",

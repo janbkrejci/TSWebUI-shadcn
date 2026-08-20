@@ -352,10 +352,12 @@ describe("TsTable", () => {
   })
 
   describe("pinned columns", () => {
-    const pinnedColumns: TsTableColumnDef[] = [
-      { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
-      { key: "id", title: "ID", type: "number", width: 120 },
+    const threeColumns: TsTableColumnDef[] = [
+      { key: "name", title: "Name", type: "text", width: 200 },
+      { key: "city", title: "City", type: "text", width: 120 },
+      { key: "id", title: "ID", type: "number", width: 80 },
     ]
+    const rows = [{ id: 1, name: "Alice", city: "Prague" }]
 
     /** All cells (header + body) of one column, in DOM order. */
     const cellsOfColumn = (container: HTMLElement, columnIndex: number) =>
@@ -364,153 +366,135 @@ describe("TsTable", () => {
         return cell ? [cell] : []
       })
 
-    it("freezes a pinned column to the left edge in every row", () => {
-      const { container } = render(
-        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={false} />
+    const headerLabels = (container: HTMLElement) =>
+      Array.from(container.querySelectorAll("thead tr:first-child th")).map((th) =>
+        th.textContent?.trim()
       )
 
-      const nameCells = cellsOfColumn(container, 0)
-      expect(nameCells.length).toBeGreaterThan(1)
-      for (const cell of nameCells) {
+    it("freezes the leading column in every row", () => {
+      const { container } = render(
+        <TsTable
+          data={rows}
+          columnDefinitions={threeColumns}
+          enableSelection={false}
+          pinnedColumnCount={1}
+        />
+      )
+
+      const frozen = cellsOfColumn(container, 0)
+      expect(frozen.length).toBeGreaterThan(1)
+      for (const cell of frozen) {
         expect(cell.style.position).toBe("sticky")
         expect(cell.style.left).toBe("0px")
       }
-    })
-
-    it("leaves unpinned columns scrolling", () => {
-      const { container } = render(
-        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={false} />
-      )
-
       for (const cell of cellsOfColumn(container, 1)) {
         expect(cell.style.position).toBe("")
       }
     })
 
-    it("offsets a second pinned column by the first one's width", () => {
+    it("offsets the second frozen column by the first one's width", () => {
       const { container } = render(
         <TsTable
-          data={data}
+          data={rows}
+          columnDefinitions={threeColumns}
           enableSelection={false}
-          columnDefinitions={[
-            { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
-            { key: "id", title: "ID", type: "number", pinned: "left", width: 120 },
-          ]}
+          pinnedColumnCount={2}
         />
       )
 
-      const [firstHeader] = cellsOfColumn(container, 0)
-      const [secondHeader] = cellsOfColumn(container, 1)
-      expect(firstHeader.style.left).toBe("0px")
-      expect(secondHeader.style.left).toBe("200px")
+      expect(cellsOfColumn(container, 0)[0].style.left).toBe("0px")
+      expect(cellsOfColumn(container, 1)[0].style.left).toBe("200px")
+      expect(cellsOfColumn(container, 2)[0].style.position).toBe("")
     })
 
     it("carries the selection column along so it cannot slide under the frozen block", () => {
       const { container } = render(
-        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={true} />
-      )
-
-      // Column 0 is the 40px selection column; the pinned data column starts right after it.
-      const [selectHeader] = cellsOfColumn(container, 0)
-      const [nameHeader] = cellsOfColumn(container, 1)
-      expect(selectHeader.style.left).toBe("0px")
-      expect(nameHeader.style.left).toBe("40px")
-    })
-
-    it("keeps a pinned column out of the reorder range", () => {
-      const { container } = render(
-        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={false} />
-      )
-
-      // "ID" is the first movable column, so its "move left" button is disabled — moving it would
-      // push it in front of the frozen "Name" column.
-      const moveLeft = screen.getAllByLabelText("Move column left")
-      expect(moveLeft[moveLeft.length - 1]).toBeDisabled()
-      expect(cellsOfColumn(container, 0)[0]).toHaveTextContent("Name")
-    })
-
-    // Regression: a hidden column declared BEFORE the pinned one used to end the "leading run"
-    // early, so the pinned column drifted into the movable range. Revealing that hidden column (or
-    // reordering across it) then left only the select/actions columns frozen.
-    it("keeps the pinned column ahead of a column declared before it", () => {
-      const { container } = render(
         <TsTable
-          data={[{ id: 1, name: "Alice", city: "Prague" }]}
-          enableSelection={false}
-          columnDefinitions={[
-            { key: "id", title: "ID", type: "number", width: 80 },
-            { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
-            { key: "city", title: "City", type: "text", width: 120 },
-          ]}
-        />
-      )
-
-      const headers = Array.from(
-        container.querySelectorAll("thead tr:first-child th")
-      ) as HTMLElement[]
-      expect(headers[0]).toHaveTextContent("Name")
-      expect(headers[0].style.left).toBe("0px")
-      // The column declared first is not pinned, so it scrolls — behind the frozen one.
-      expect(headers[1]).toHaveTextContent("ID")
-      expect(headers[1].style.position).toBe("")
-    })
-
-    it("cannot be reordered out of the frozen block", () => {
-      const { container } = render(
-        <TsTable
-          data={[{ id: 1, name: "Alice", city: "Prague" }]}
-          enableSelection={false}
-          columnDefinitions={[
-            { key: "id", title: "ID", type: "number", width: 80 },
-            { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
-            { key: "city", title: "City", type: "text", width: 120 },
-          ]}
-        />
-      )
-
-      // Move the movable columns around as much as the arrows allow…
-      for (const button of screen.getAllByLabelText("Move column left")) {
-        if (!(button as HTMLButtonElement).disabled) fireEvent.click(button)
-      }
-      for (const button of screen.getAllByLabelText("Move column right")) {
-        if (!(button as HTMLButtonElement).disabled) fireEvent.click(button)
-      }
-
-      // …the frozen column still leads and still carries the zero offset.
-      const first = container.querySelector("thead tr:first-child th") as HTMLElement
-      expect(first).toHaveTextContent("Name")
-      expect(first.style.left).toBe("0px")
-    })
-
-    // Regression: hiding the pinned column used to leave the 40px select/actions columns frozen on
-    // their own, which reads as "freezing broke" rather than "there is nothing to freeze".
-    // Regression: hiding the pinned column used to leave the 40px select/actions columns frozen on
-    // their own, which reads as "freezing broke" rather than "there is nothing left to freeze".
-    // (The column selector is a Radix dropdown that does not open under jsdom, so the hidden state
-    // comes from the column definition — the same code path, since the check is on visibility.)
-    it("freezes nothing when the only pinned column is hidden", () => {
-      const { container } = render(
-        <TsTable
-          data={data}
+          data={rows}
+          columnDefinitions={threeColumns}
           enableSelection={true}
-          columnDefinitions={pinnedColumns.map((column) =>
+          pinnedColumnCount={1}
+        />
+      )
+
+      // Column 0 is the 40px selection column; the frozen data column starts right after it.
+      expect(cellsOfColumn(container, 0)[0].style.left).toBe("0px")
+      expect(cellsOfColumn(container, 1)[0].style.left).toBe("40px")
+      expect(cellsOfColumn(container, 2)[0].style.position).toBe("")
+    })
+
+    // The point of counting positions rather than tagging columns: whatever the user drags to the
+    // front is what freezes, with no ordering rules to obey and nothing to un-freeze by accident.
+    it("follows a reorder — the column moved to the front is the one that freezes", () => {
+      const { container } = render(
+        <TsTable
+          data={rows}
+          columnDefinitions={threeColumns}
+          enableSelection={false}
+          pinnedColumnCount={1}
+        />
+      )
+      expect(cellsOfColumn(container, 0)[0]).toHaveTextContent("Name")
+
+      // Move "City" left, past "Name".
+      const cityHeader = Array.from(container.querySelectorAll("thead tr:first-child th")).find(
+        (th) => th.textContent?.includes("City")
+      ) as HTMLElement
+      const moveLeft = Array.from(cityHeader.querySelectorAll("button")).find(
+        (button) => button.getAttribute("aria-label") === "Move column left"
+      ) as HTMLButtonElement
+      fireEvent.click(moveLeft)
+
+      expect(headerLabels(container)[0]).toContain("City")
+      expect(cellsOfColumn(container, 0)[0].style.left).toBe("0px")
+      expect(cellsOfColumn(container, 1)[0].style.position).toBe("")
+    })
+
+    it("hands the frozen slot to the next column when the leading one is hidden", () => {
+      const { container } = render(
+        <TsTable
+          data={rows}
+          enableSelection={false}
+          pinnedColumnCount={1}
+          columnDefinitions={threeColumns.map((column) =>
             column.key === "name" ? { ...column, visible: false } : column
           )}
         />
       )
 
-      for (const cell of Array.from(container.querySelectorAll("th, td")) as HTMLElement[]) {
-        expect(cell.style.position).toBe("")
+      expect(headerLabels(container)[0]).toContain("City")
+      expect(cellsOfColumn(container, 0)[0].style.position).toBe("sticky")
+    })
+
+    it("freezes nothing by default, and nothing at a count of zero", () => {
+      for (const props of [{}, { pinnedColumnCount: 0 }]) {
+        const { container, unmount } = render(
+          <TsTable
+            data={rows}
+            columnDefinitions={threeColumns}
+            enableSelection={false}
+            {...props}
+          />
+        )
+        for (const cell of Array.from(container.querySelectorAll("th, td")) as HTMLElement[]) {
+          expect(cell.style.position).toBe("")
+        }
+        unmount()
       }
     })
 
-    it("does not pin anything when no column asks for it", () => {
+    it("freezes what exists when asked for more columns than there are", () => {
       const { container } = render(
-        <TsTable data={data} columnDefinitions={columns} enableSelection={false} />
+        <TsTable
+          data={rows}
+          columnDefinitions={threeColumns}
+          enableSelection={false}
+          pinnedColumnCount={99}
+        />
       )
 
-      for (const cell of cellsOfColumn(container, 0)) {
-        expect(cell.style.position).toBe("")
+      for (let index = 0; index < 3; index += 1) {
+        expect(cellsOfColumn(container, index)[0].style.position).toBe("sticky")
       }
     })
   })
