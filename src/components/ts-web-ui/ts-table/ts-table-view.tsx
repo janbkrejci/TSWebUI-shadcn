@@ -224,8 +224,11 @@ export function TsTableView<TData>({
   const isPinnedLeft = React.useCallback(
     (columnId: string): boolean => {
       if (columnId === "select" || columnId === "actions") {
+        // Only ride along while a pinned column is actually on screen. Hiding the last pinned
+        // column would otherwise leave these two 40px utility columns frozen on their own, which
+        // is never useful and reads as if freezing broke.
         return table
-          .getAllLeafColumns()
+          .getVisibleLeafColumns()
           .some((col) => (col.columnDef.meta as { pinned?: string } | undefined)?.pinned === "left")
       }
       const meta = table.getColumn(columnId)?.columnDef.meta as { pinned?: string } | undefined

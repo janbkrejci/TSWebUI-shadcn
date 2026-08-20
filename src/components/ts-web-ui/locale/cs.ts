@@ -335,7 +335,7 @@ export const cs: TsLocale = {
       featureClickableColumns: "Klikatelné sloupce",
       featureColumnResizing: "Změna šířky sloupců",
       featureColumnReordering: "Přeuspořádání sloupců",
-      featurePinnedColumn: "Zmrazit první sloupec",
+      featurePinnedColumn: "Zmrazit sloupec Jméno",
       featureStickyHeader: "Lepivá hlavička",
       featureCreateButton: "Tlačítko Nový",
       featureImportButton: "Tlačítko Import",
