@@ -189,6 +189,10 @@ export default function TsTablePage() {
   const locale = useTsLocale()
   const d = locale.strings.demo
 
+  // Declared up here because the column definitions below read the pin toggle.
+  const [pinFirstColumn, setPinFirstColumn] = React.useState(false)
+  const [stickyHeader, setStickyHeader] = React.useState(false)
+
   const columnDefinitions: TsTableColumnDef[] = [
     { key: "id", title: d.colId, type: "number", visible: false, align: "right", unshowable: true },
     {
@@ -200,6 +204,9 @@ export default function TsTablePage() {
       visible: true,
       align: "left",
       isClickable: true,
+      // Frozen to the left edge, so the row's identity stays on screen on a wide table. Pinned
+      // columns are held at the front of the order and cannot be reordered.
+      pinned: pinFirstColumn ? "left" : undefined,
     },
     // copyOnly: the value is never shown, only a copy button is rendered (for secrets such as
     // logins/passwords). excludeFromExport keeps the secret out of the Excel export as well.
@@ -391,6 +398,16 @@ export default function TsTablePage() {
                   onCheckedChange={setEnableColumnReordering}
                 />
                 <ToggleControl
+                  label={d.featurePinnedColumn}
+                  checked={pinFirstColumn}
+                  onCheckedChange={setPinFirstColumn}
+                />
+                <ToggleControl
+                  label={d.featureStickyHeader}
+                  checked={stickyHeader}
+                  onCheckedChange={setStickyHeader}
+                />
+                <ToggleControl
                   label={d.featureCreateButton}
                   checked={showCreateButton}
                   onCheckedChange={setShowCreateButton}
@@ -446,6 +463,8 @@ export default function TsTablePage() {
                 clickFilterColumns={["company"]}
                 enableColumnResizing={enableColumnResizing}
                 enableColumnReordering={enableColumnReordering}
+                stickyHeader={stickyHeader}
+                maxHeight={stickyHeader ? "24rem" : undefined}
                 showCreateButton={showCreateButton}
                 showImportButton={showImportButton}
                 showExportButton={showExportButton}
@@ -523,6 +542,9 @@ export default function MyPage() {
       clickFilterColumns={["company"]}
       enableColumnResizing={true}
       enableColumnReordering={true}
+      // Keep the header visible while the body scrolls. Needs a bounded height to scroll within.
+      stickyHeader={true}
+      maxHeight="24rem"
       // Toolbar buttons
       showCreateButton={true}
       showImportButton={true}
@@ -624,6 +646,18 @@ export default function MyPage() {
                         "boolean",
                         "true",
                         "Show ◂▸ reorder arrows on header hover.",
+                      ],
+                      [
+                        "stickyHeader",
+                        "boolean",
+                        "false",
+                        "Keep the header rows visible while the body scrolls (pair with maxHeight).",
+                      ],
+                      [
+                        "maxHeight",
+                        "number | string",
+                        "—",
+                        'Caps the scroll container height, e.g. "60vh" or 480.',
                       ],
                       ["showCreateButton", "boolean", "true", "Show the + New button in toolbar."],
                       ["showImportButton", "boolean", "true", "Show the Import button (CSV/XLSX)."],
@@ -886,6 +920,12 @@ export default function MyPage() {
                         "boolean",
                         "false",
                         "Cell acts as a link (requires enableClickableColumns).",
+                      ],
+                      [
+                        "pinned",
+                        '"left"',
+                        "—",
+                        "Freeze the column to the left edge while the table scrolls horizontally. Pinned columns must come first and cannot be reordered.",
                       ],
                       [
                         "copyOnly",

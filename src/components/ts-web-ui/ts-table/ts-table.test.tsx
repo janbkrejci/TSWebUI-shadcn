@@ -350,4 +350,138 @@ describe("TsTable", () => {
 
     expect(onSelectionChange).toHaveBeenCalledWith([data[0]])
   })
+
+  describe("pinned columns", () => {
+    const pinnedColumns: TsTableColumnDef[] = [
+      { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
+      { key: "id", title: "ID", type: "number", width: 120 },
+    ]
+
+    /** All cells (header + body) of one column, in DOM order. */
+    const cellsOfColumn = (container: HTMLElement, columnIndex: number) =>
+      Array.from(container.querySelectorAll("tr")).flatMap((row) => {
+        const cell = row.children[columnIndex] as HTMLElement | undefined
+        return cell ? [cell] : []
+      })
+
+    it("freezes a pinned column to the left edge in every row", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={false} />
+      )
+
+      const nameCells = cellsOfColumn(container, 0)
+      expect(nameCells.length).toBeGreaterThan(1)
+      for (const cell of nameCells) {
+        expect(cell.style.position).toBe("sticky")
+        expect(cell.style.left).toBe("0px")
+      }
+    })
+
+    it("leaves unpinned columns scrolling", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={false} />
+      )
+
+      for (const cell of cellsOfColumn(container, 1)) {
+        expect(cell.style.position).toBe("")
+      }
+    })
+
+    it("offsets a second pinned column by the first one's width", () => {
+      const { container } = render(
+        <TsTable
+          data={data}
+          enableSelection={false}
+          columnDefinitions={[
+            { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
+            { key: "id", title: "ID", type: "number", pinned: "left", width: 120 },
+          ]}
+        />
+      )
+
+      const [firstHeader] = cellsOfColumn(container, 0)
+      const [secondHeader] = cellsOfColumn(container, 1)
+      expect(firstHeader.style.left).toBe("0px")
+      expect(secondHeader.style.left).toBe("200px")
+    })
+
+    it("carries the selection column along so it cannot slide under the frozen block", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={true} />
+      )
+
+      // Column 0 is the 40px selection column; the pinned data column starts right after it.
+      const [selectHeader] = cellsOfColumn(container, 0)
+      const [nameHeader] = cellsOfColumn(container, 1)
+      expect(selectHeader.style.left).toBe("0px")
+      expect(nameHeader.style.left).toBe("40px")
+    })
+
+    it("keeps a pinned column out of the reorder range", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={pinnedColumns} enableSelection={false} />
+      )
+
+      // "ID" is the first movable column, so its "move left" button is disabled — moving it would
+      // push it in front of the frozen "Name" column.
+      const moveLeft = screen.getAllByLabelText("Move column left")
+      expect(moveLeft[moveLeft.length - 1]).toBeDisabled()
+      expect(cellsOfColumn(container, 0)[0]).toHaveTextContent("Name")
+    })
+
+    it("does not pin anything when no column asks for it", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={columns} enableSelection={false} />
+      )
+
+      for (const cell of cellsOfColumn(container, 0)) {
+        expect(cell.style.position).toBe("")
+      }
+    })
+  })
+
+  describe("sticky header", () => {
+    /** The wrapper TsTableView renders around shadcn's <Table>. */
+    const wrapperOf = (container: HTMLElement) =>
+      (container.querySelector("table") as HTMLElement).parentElement?.parentElement as HTMLElement
+
+    it("sticks both header rows, the filter row below the labels", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={columns} stickyHeader maxHeight="60vh" />
+      )
+
+      const [labelRow, filterRow] = Array.from(container.querySelectorAll("thead tr"))
+      const labelCell = labelRow.querySelector("th") as HTMLElement
+      const filterCell = filterRow.querySelector("th") as HTMLElement
+
+      expect(labelCell.style.position).toBe("sticky")
+      expect(labelCell.style.top).toBe("0px")
+      expect(filterCell.style.position).toBe("sticky")
+      // jsdom reports every box as 0×0, so the measured label-row height is 0 here; the point of
+      // the assertion is that the filter row is offset by that measurement at all.
+      expect(filterCell.style.top).toBe("0px")
+    })
+
+    it("caps the element that actually scrolls, not the outer wrapper", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={columns} stickyHeader maxHeight={480} />
+      )
+
+      // shadcn's <Table> brings its own scroll container; capping the outer wrapper instead would
+      // leave `position: sticky` resolving against an inner scrollport that never scrolls.
+      const wrapper = wrapperOf(container)
+      expect(wrapper.style.getPropertyValue("--ts-table-max-height")).toBe("480px")
+      expect(wrapper.style.maxHeight).toBe("")
+      expect(wrapper.className).toContain("[&>div]:overflow-auto")
+    })
+
+    it("leaves the table uncapped and the header unstuck by default", () => {
+      const { container } = render(<TsTable data={data} columnDefinitions={columns} />)
+
+      const wrapper = wrapperOf(container)
+      expect(wrapper.className).toContain("overflow-x-auto")
+      expect(wrapper.style.getPropertyValue("--ts-table-max-height")).toBe("")
+      expect((container.querySelector("thead th") as HTMLElement).style.position).toBe("")
+    })
+  })
 })
