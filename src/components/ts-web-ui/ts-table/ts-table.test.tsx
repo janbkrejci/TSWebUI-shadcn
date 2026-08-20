@@ -429,6 +429,59 @@ describe("TsTable", () => {
       expect(cellsOfColumn(container, 0)[0]).toHaveTextContent("Name")
     })
 
+    // Regression: a hidden column declared BEFORE the pinned one used to end the "leading run"
+    // early, so the pinned column drifted into the movable range. Revealing that hidden column (or
+    // reordering across it) then left only the select/actions columns frozen.
+    it("keeps the pinned column ahead of a column declared before it", () => {
+      const { container } = render(
+        <TsTable
+          data={[{ id: 1, name: "Alice", city: "Prague" }]}
+          enableSelection={false}
+          columnDefinitions={[
+            { key: "id", title: "ID", type: "number", width: 80 },
+            { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
+            { key: "city", title: "City", type: "text", width: 120 },
+          ]}
+        />
+      )
+
+      const headers = Array.from(
+        container.querySelectorAll("thead tr:first-child th")
+      ) as HTMLElement[]
+      expect(headers[0]).toHaveTextContent("Name")
+      expect(headers[0].style.left).toBe("0px")
+      // The column declared first is not pinned, so it scrolls — behind the frozen one.
+      expect(headers[1]).toHaveTextContent("ID")
+      expect(headers[1].style.position).toBe("")
+    })
+
+    it("cannot be reordered out of the frozen block", () => {
+      const { container } = render(
+        <TsTable
+          data={[{ id: 1, name: "Alice", city: "Prague" }]}
+          enableSelection={false}
+          columnDefinitions={[
+            { key: "id", title: "ID", type: "number", width: 80 },
+            { key: "name", title: "Name", type: "text", pinned: "left", width: 200 },
+            { key: "city", title: "City", type: "text", width: 120 },
+          ]}
+        />
+      )
+
+      // Move the movable columns around as much as the arrows allow…
+      for (const button of screen.getAllByLabelText("Move column left")) {
+        if (!(button as HTMLButtonElement).disabled) fireEvent.click(button)
+      }
+      for (const button of screen.getAllByLabelText("Move column right")) {
+        if (!(button as HTMLButtonElement).disabled) fireEvent.click(button)
+      }
+
+      // …the frozen column still leads and still carries the zero offset.
+      const first = container.querySelector("thead tr:first-child th") as HTMLElement
+      expect(first).toHaveTextContent("Name")
+      expect(first.style.left).toBe("0px")
+    })
+
     it("does not pin anything when no column asks for it", () => {
       const { container } = render(
         <TsTable data={data} columnDefinitions={columns} enableSelection={false} />
