@@ -194,6 +194,7 @@ interface TsTableViewProps<TData> {
   selectedRowCount?: number
   onBulkAction?: (action: string) => void
   onUnselectAll?: () => void
+  pinnedColumnCount?: number
   stickyHeader?: boolean
   maxHeight?: number | string
   locale?: TsLocale
@@ -212,6 +213,7 @@ export function TsTableView<TData>({
   selectedRowCount = 0,
   onBulkAction,
   onUnselectAll,
+  pinnedColumnCount = 0,
   stickyHeader = false,
   maxHeight,
   locale,
@@ -221,22 +223,6 @@ export function TsTableView<TData>({
   // A column opts into freezing with `pinned: "left"` in its definition (carried through the
   // column meta). The built-in select/actions columns always render leftmost, so they ride along
   // with the frozen block — leaving them scrollable would slide them under it.
-  const isPinnedLeft = React.useCallback(
-    (columnId: string): boolean => {
-      if (columnId === "select" || columnId === "actions") {
-        // Only ride along while a pinned column is actually on screen. Hiding the last pinned
-        // column would otherwise leave these two 40px utility columns frozen on their own, which
-        // is never useful and reads as if freezing broke.
-        return table
-          .getVisibleLeafColumns()
-          .some((col) => (col.columnDef.meta as { pinned?: string } | undefined)?.pinned === "left")
-      }
-      const meta = table.getColumn(columnId)?.columnDef.meta as { pinned?: string } | undefined
-      return meta?.pinned === "left"
-    },
-    [table]
-  )
-
   const cycleSelectionView = React.useCallback(() => {
     const modes: SelectionViewMode[] = ["all", "selected", "unselected"]
     const currentIdx = modes.indexOf(selectionViewMode)
@@ -250,12 +236,18 @@ export function TsTableView<TData>({
       const allColumnIds =
         currentOrder.length > 0 ? [...currentOrder] : table.getAllLeafColumns().map((c) => c.id)
 
-      // Split by membership, not by position. Pinned columns are frozen to the left edge, so they
-      // are non-movable in the same way select/actions are — but a hidden column declared ahead of
-      // a pinned one would end the "leading run" early, and everything after it (the pinned column
-      // included) would drift into the movable range and could be swapped out of the frozen block.
-      const immovableIds = allColumnIds.filter((id) => isPinnedLeft(id))
-      const movableIds = allColumnIds.filter((id) => !isPinnedLeft(id))
+      // Find movable range: skip the LEADING "select"/"actions" columns. Matching by position
+      // rather than by id matters — a caller's own data column may legitimately be keyed
+      // "actions", and hoisting that to the front would scramble the order.
+      let fixedPrefixCount = 0
+      while (
+        fixedPrefixCount < allColumnIds.length &&
+        (allColumnIds[fixedPrefixCount] === "select" ||
+          allColumnIds[fixedPrefixCount] === "actions")
+      ) {
+        fixedPrefixCount += 1
+      }
+      const movableIds = allColumnIds.slice(fixedPrefixCount)
 
       const idx = movableIds.indexOf(columnId)
       if (idx < 0) return
@@ -268,17 +260,15 @@ export function TsTableView<TData>({
       movableIds[idx] = movableIds[swapIdx]
       movableIds[swapIdx] = temp
 
-      table.setColumnOrder([...immovableIds, ...movableIds])
+      table.setColumnOrder([...allColumnIds.slice(0, fixedPrefixCount), ...movableIds])
     },
-    [table, isPinnedLeft]
+    [table]
   )
 
-  // Get visible data columns for checking move boundaries (#5: react to column order). Frozen
-  // columns are excluded — they cannot move, so the first MOVABLE column is the one whose
-  // "move left" arrow has to be disabled.
+  // Get visible data columns for checking move boundaries (#5: react to column order)
   const visibleDataColumns = table
     .getVisibleLeafColumns()
-    .filter((c) => c.id !== "select" && c.id !== "actions" && !isPinnedLeft(c.id))
+    .filter((c) => c.id !== "select" && c.id !== "actions")
 
   // Measure container width so we can distribute extra space only to data columns
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -317,26 +307,38 @@ export function TsTableView<TData>({
     return sum
   }, [columnWidthMap])
 
-  // Left offset of each frozen column, accumulated over the LEADING run of pinned columns. The
-  // offsets use the rendered widths (columnWidthMap) rather than TanStack's getStart(), because the
-  // select/actions columns render at a fixed 40px regardless of their nominal size. A pinned column
-  // that is not part of the leading run gets no offset and simply scrolls — the layout degrades
-  // instead of freezing a column at the wrong position.
+  // Left offset of each frozen column. Freezing is POSITIONAL: the first `pinnedColumnCount` data
+  // columns of the current visible order are frozen, whatever they happen to be — reorder or hide
+  // something and the frozen block follows, which is the only rule that stays true while the user
+  // rearranges the table. The select/actions columns ride along, since they always render leftmost
+  // and leaving them scrollable would slide them under the block.
+  // Offsets accumulate the RENDERED widths (columnWidthMap) rather than TanStack's getStart(),
+  // because those two utility columns render at a fixed 40px regardless of their nominal size.
+  // Indexed by POSITION in the visible order, never by column id: a caller's own column may be
+  // keyed "actions" (or anything else that collides with a built-in), and an id-keyed map would
+  // then freeze that unrelated column too, at the wrong offset.
   const pinnedLeftOffsets = (() => {
-    const offsets = new Map<string, number>()
+    const offsets: number[] = []
+    if (pinnedColumnCount <= 0) return offsets
     let offset = 0
-    // Walk the CURRENT visible order, so reordering can never leave a frozen column stranded behind
-    // a scrolling one. The order itself is normalised to keep pinned columns at the front, so this
-    // run covers every pinned column; the break is the backstop that keeps the offsets honest.
-    for (const col of table.getVisibleLeafColumns()) {
-      if (!isPinnedLeft(col.id)) break
-      offsets.set(col.id, offset)
+    let dataColumnsPinned = 0
+    let inFixedPrefix = true
+    const visible = table.getVisibleLeafColumns()
+    for (let index = 0; index < visible.length; index += 1) {
+      const col = visible[index]
+      // The LEADING select/actions columns ride along for free; from the first real column on,
+      // every frozen column spends one of the requested slots.
+      inFixedPrefix = inFixedPrefix && (col.id === "select" || col.id === "actions")
+      if (!inFixedPrefix) {
+        if (dataColumnsPinned >= pinnedColumnCount) break
+        dataColumnsPinned += 1
+      }
+      offsets[index] = offset
       offset += columnWidthMap.get(col.id) ?? col.getSize()
     }
     return offsets
   })()
-  const pinnedIds = [...pinnedLeftOffsets.keys()]
-  const lastPinnedId = pinnedIds[pinnedIds.length - 1]
+  const lastPinnedIndex = pinnedLeftOffsets.length - 1
 
   /**
    * Sticky positioning for one frozen cell. The cell needs an opaque background so the scrolled
@@ -345,11 +347,11 @@ export function TsTableView<TData>({
    * between the cell background and its text). That keeps the tint identical to the scrolling
    * cells' without assuming anything about the theme's colour tokens.
    */
-  const pinnedCell = (columnId: string, zIndex: number) => {
-    const left = pinnedLeftOffsets.get(columnId)
+  const pinnedCell = (columnIndex: number, zIndex: number) => {
+    const left = pinnedLeftOffsets[columnIndex]
     if (left === undefined) return null
     return {
-      className: cn("bg-card", columnId === lastPinnedId && "border-r"),
+      className: cn("bg-card", columnIndex === lastPinnedIndex && "border-r"),
       style: { position: "sticky", left, zIndex } as React.CSSProperties,
     }
   }
@@ -395,7 +397,7 @@ export function TsTableView<TData>({
             <React.Fragment key={headerGroup.id}>
               {/* Row 1: Header labels + reorder buttons + select-all */}
               <TableRow ref={labelRowRef}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, headerIndex) => {
                   const isDataColumn =
                     header.column.id !== "select" && header.column.id !== "actions"
                   const isFirstData = isDataColumn && visibleDataColumns[0]?.id === header.column.id
@@ -407,9 +409,8 @@ export function TsTableView<TData>({
                     | undefined
                   const colAlign = (isDataColumn && meta?.align) || "left"
 
-                  const pinned = pinnedCell(header.column.id, stickyHeader ? 30 : 20)
-                  // A frozen column is held at the front of the order, so it never moves.
-                  const canReorder = enableColumnReordering && !pinned
+                  const pinned = pinnedCell(headerIndex, stickyHeader ? 30 : 20)
+                  const canReorder = enableColumnReordering
                   // A cell that outlives its own row's paint — because it is frozen sideways or the
                   // header floats above the scrolling body — needs its own opaque background: the
                   // row/thead background stays behind at the original position and the content
@@ -626,8 +627,8 @@ export function TsTableView<TData>({
               {/* Row 2: Filter inputs + bulk actions menu */}
               {enableFiltering && (
                 <TableRow className="bg-muted/30">
-                  {headerGroup.headers.map((header) => {
-                    const pinned = pinnedCell(header.column.id, stickyHeader ? 30 : 20)
+                  {headerGroup.headers.map((header, headerIndex) => {
+                    const pinned = pinnedCell(headerIndex, stickyHeader ? 30 : 20)
                     const needsBacking = Boolean(pinned) || stickyHeader
 
                     return (
@@ -761,9 +762,9 @@ export function TsTableView<TData>({
                   )}
                   onClick={() => onRowClick?.(row.original)}
                 >
-                  {row.getVisibleCells().map((cell) => {
+                  {row.getVisibleCells().map((cell, cellIndex) => {
                     const isFixed = cell.column.id === "select" || cell.column.id === "actions"
-                    const pinned = pinnedCell(cell.column.id, 10)
+                    const pinned = pinnedCell(cellIndex, 10)
                     return (
                       <TableCell
                         key={cell.id}

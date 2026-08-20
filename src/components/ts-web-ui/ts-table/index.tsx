@@ -71,6 +71,14 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   enableColumnResizing?: boolean
   enableColumnReordering?: boolean
   /**
+   * Freeze this many leading columns to the left edge so they stay visible while the table scrolls
+   * horizontally. Positional, not per-column: it is whichever columns lead the CURRENT visible
+   * order, so reordering or hiding a column moves the frozen block with it. The selection and
+   * row-menu columns are frozen along with them, since they always render leftmost. Meant for wide
+   * tables (matrices, long metric rows) where the row's identity has to stay on screen.
+   */
+  pinnedColumnCount?: number
+  /**
    * Keep the header (labels + filter row) visible while the body scrolls. Needs a height-bounded
    * scroll container, so pair it with `maxHeight` — without one the table never scrolls vertically
    * and there is nothing for the header to stick to.
@@ -225,6 +233,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   clickFilterColumns,
   enableColumnResizing = true,
   enableColumnReordering = true,
+  pinnedColumnCount = 0,
   stickyHeader = false,
   maxHeight,
   unhideableColumns = [],
@@ -295,36 +304,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>(
     () => persisted?.columnSizing ?? {}
   )
-  // A frozen column only makes sense at the front of the order — a scrolling column to its left
-  // would leave a gap the frozen block cannot cover. So every order this table accepts is
-  // normalised: the fixed select/actions columns first, then the pinned ones in their declared
-  // order, then everything else as-is. This covers the user's own reordering as well as an order
-  // persisted by an older session (or by a build where the column was not pinned yet).
-  const pinnedColumnKeys = React.useMemo(
-    () => columnDefinitions.filter((def) => def.pinned === "left").map((def) => def.key),
-    [columnDefinitions]
-  )
-  const normalizeColumnOrder = React.useCallback(
-    (order: ColumnOrderState): ColumnOrderState => {
-      if (pinnedColumnKeys.length === 0) return order
-      // Unknown ids are ignored by TanStack and unlisted columns keep their natural order at the
-      // end, so this also works as a seed for the "no explicit order yet" case: listing just the
-      // fixed and pinned ids is enough to hoist them without spelling out the whole table.
-      const hoisted = new Set(["select", "actions", ...pinnedColumnKeys])
-      return ["select", "actions", ...pinnedColumnKeys, ...order.filter((id) => !hoisted.has(id))]
-    },
-    [pinnedColumnKeys]
-  )
-  const [columnOrder, setColumnOrderState] = React.useState<ColumnOrderState>(() =>
-    normalizeColumnOrder(persisted?.columnOrder ?? [])
-  )
-  const setColumnOrder = React.useCallback(
-    (updater: Updater<ColumnOrderState>) => {
-      setColumnOrderState((current) =>
-        normalizeColumnOrder(typeof updater === "function" ? updater(current) : updater)
-      )
-    },
-    [normalizeColumnOrder]
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(
+    () => persisted?.columnOrder ?? []
   )
   const [pagination, setPagination] = React.useState<PaginationState>(() => ({
     pageIndex: persisted?.pagination?.pageIndex ?? 0,
@@ -592,6 +573,7 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         selectedRowCount={selectedRows.length}
         onBulkAction={onBulkAction ? (action) => onBulkAction(action, selectedRows) : undefined}
         onUnselectAll={() => setRowSelection({})}
+        pinnedColumnCount={pinnedColumnCount}
         stickyHeader={stickyHeader}
         maxHeight={maxHeight}
         locale={locale}
