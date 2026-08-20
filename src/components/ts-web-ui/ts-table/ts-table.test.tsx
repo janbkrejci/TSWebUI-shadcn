@@ -482,6 +482,28 @@ describe("TsTable", () => {
       expect(first.style.left).toBe("0px")
     })
 
+    // Regression: hiding the pinned column used to leave the 40px select/actions columns frozen on
+    // their own, which reads as "freezing broke" rather than "there is nothing to freeze".
+    // Regression: hiding the pinned column used to leave the 40px select/actions columns frozen on
+    // their own, which reads as "freezing broke" rather than "there is nothing left to freeze".
+    // (The column selector is a Radix dropdown that does not open under jsdom, so the hidden state
+    // comes from the column definition — the same code path, since the check is on visibility.)
+    it("freezes nothing when the only pinned column is hidden", () => {
+      const { container } = render(
+        <TsTable
+          data={data}
+          enableSelection={true}
+          columnDefinitions={pinnedColumns.map((column) =>
+            column.key === "name" ? { ...column, visible: false } : column
+          )}
+        />
+      )
+
+      for (const cell of Array.from(container.querySelectorAll("th, td")) as HTMLElement[]) {
+        expect(cell.style.position).toBe("")
+      }
+    })
+
     it("does not pin anything when no column asks for it", () => {
       const { container } = render(
         <TsTable data={data} columnDefinitions={columns} enableSelection={false} />
