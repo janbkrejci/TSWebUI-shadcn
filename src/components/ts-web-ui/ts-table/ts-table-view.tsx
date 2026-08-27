@@ -380,7 +380,21 @@ export function TsTableView<TData>({
           : undefined
       }
     >
+      {/*
+       * Separated borders, not the collapsed default. With `border-collapse: collapse` Blink leaves
+       * the band around the boundary between the two sticky header rows unpainted, and the body
+       * rows passing underneath show through it: half a row of smeared text sits between the column
+       * labels and the filter inputs while the table scrolls. In the separated model the sticky
+       * cells paint their whole box and the seam is gone. Row separators then have to move off
+       * `<tr>` — a row's own borders are never painted once borders are separated — onto the cells,
+       * with the last body row dropping its own the way the shadcn table does.
+       */}
       <Table
+        className={cn(
+          "border-separate border-spacing-0",
+          "[&_tr]:border-b-0 [&_th]:border-b [&_td]:border-b",
+          "[&_tbody_tr:last-child>td]:border-b-0"
+        )}
         style={{
           width: effectiveTableWidth || table.getCenterTotalSize(),
           tableLayout: "fixed",
