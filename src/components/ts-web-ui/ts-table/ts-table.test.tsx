@@ -521,6 +521,21 @@ describe("TsTable", () => {
       expect(filterCell.style.top).toBe("0px")
     })
 
+    it("keeps the table's borders separated so the sticky rows paint their whole box", () => {
+      const { container } = render(
+        <TsTable data={data} columnDefinitions={columns} stickyHeader maxHeight="60vh" />
+      )
+
+      // Collapsed borders leave the seam between the two sticky header rows unpainted in Blink, so
+      // the scrolling body shows through it. The separators live on the cells for the same reason:
+      // a row's own border is never painted in the separated model.
+      const table = container.querySelector("table") as HTMLElement
+      expect(table.className).toContain("border-separate")
+      expect(table.className).toContain("border-spacing-0")
+      expect(table.className).toContain("[&_tr]:border-b-0")
+      expect(table.className).toContain("[&_td]:border-b")
+    })
+
     it("caps the element that actually scrolls, not the outer wrapper", () => {
       const { container } = render(
         <TsTable data={data} columnDefinitions={columns} stickyHeader maxHeight={480} />
