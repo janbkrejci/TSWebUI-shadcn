@@ -8,9 +8,21 @@ import type {
 } from "@tanstack/react-table"
 
 /**
+ * Marker stamped into every snapshot this version writes.
+ *
+ * It exists to tell "the user cleared the sort" apart from "this snapshot predates the table
+ * honouring an empty sort". Both look like `sorting: []`, but only the first may override
+ * `defaultSorting` — see the seeding in `TsTable`. Bump it only when an older snapshot must be
+ * re-interpreted again, never for adding a field.
+ */
+export const PERSISTED_TABLE_STATE_VERSION = 1
+
+/**
  * Snapshot of the user-controllable TsTable view state that can be persisted across navigation.
  */
 export interface PersistedTableState {
+  /** Version of the writer, absent in snapshots written before {@link PERSISTED_TABLE_STATE_VERSION}. */
+  version?: number
   sorting?: SortingState
   columnFilters?: ColumnFiltersState
   columnVisibility?: VisibilityState
@@ -59,7 +71,10 @@ export function savePersistedTableState(key: string | undefined, state: Persiste
   const storage = getStorage()
   if (!storage) return
   try {
-    storage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(state))
+    storage.setItem(
+      `${STORAGE_PREFIX}${key}`,
+      JSON.stringify({ ...state, version: PERSISTED_TABLE_STATE_VERSION })
+    )
   } catch {
     // Quota / serialization errors are non-fatal for a view-state cache.
   }

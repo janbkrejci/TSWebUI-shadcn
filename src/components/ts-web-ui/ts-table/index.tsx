@@ -26,7 +26,11 @@ import { Button } from "@/components/ui/button"
 
 import { generateColumns, TsTableColumnDef, TsTableRowAction } from "./columns"
 import { globalTextFilter } from "./filters"
-import { loadPersistedTableState, savePersistedTableState } from "./persistence"
+import {
+  loadPersistedTableState,
+  PERSISTED_TABLE_STATE_VERSION,
+  savePersistedTableState,
+} from "./persistence"
 import { TsTablePagination } from "./ts-table-pagination"
 import { TsTableToolbar } from "./ts-table-toolbar"
 import { TsTableView } from "./ts-table-view"
@@ -119,7 +123,7 @@ export interface TsTableProps<TData extends Record<string, unknown> = Record<str
   /**
    * Initial sort applied on mount. The user can freely re-sort afterwards; this only seeds the
    * starting sort state (e.g. newest records first). Persisted sorting (when persistStateKey is
-   * set) takes precedence.
+   * set) takes precedence — including a sort the user deliberately cleared, which stays cleared.
    */
   defaultSorting?: SortingState
   locale?: string | TsLocale
@@ -266,10 +270,17 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
   // Restore any persisted view state once on mount.
   const persisted = React.useMemo(() => loadPersistedTableState(persistStateKey), [persistStateKey])
 
-  // Persisted sorting wins; otherwise seed from defaultSorting (if provided).
-  const [sorting, setSorting] = React.useState<SortingState>(
-    () => persisted?.sorting ?? defaultSorting ?? []
-  )
+  // Persisted sorting wins; otherwise seed from defaultSorting (if provided). An EMPTY persisted
+  // sort counts as a choice ("I cleared it") only when the snapshot was written by a version that
+  // knew about defaultSorting: older snapshots stored `sorting: []` for every table that had never
+  // been sorted, so honouring those would make a newly added defaultSorting unreachable for anyone
+  // who had already opened the table once.
+  const [sorting, setSorting] = React.useState<SortingState>(() => {
+    const persistedSorting = persisted?.sorting
+    if (persistedSorting && persistedSorting.length > 0) return persistedSorting
+    if (persistedSorting && persisted?.version === PERSISTED_TABLE_STATE_VERSION) return []
+    return defaultSorting ?? []
+  })
 
   const initialPredefinedFilters = React.useMemo(() => {
     if (!predefinedFilters) return {} as Record<string, string>
