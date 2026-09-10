@@ -4,6 +4,7 @@ import * as XLSX from "xlsx"
 
 import { TsTableColumnDef } from "./columns"
 import { TsTable } from "./index"
+import { PERSISTED_TABLE_STATE_VERSION } from "./persistence"
 
 // writeFile would hit the filesystem during the export test — stub it, keep the rest of xlsx real
 // so json_to_sheet still produces a worksheet we can inspect.
@@ -168,6 +169,68 @@ describe("TsTable", () => {
     const cells = screen.getAllByText(/Alice|Bob/)
     expect(cells[0]).toHaveTextContent("Bob")
     expect(cells[1]).toHaveTextContent("Alice")
+  })
+
+  it("seeds defaultSorting over a legacy snapshot that stored an empty sort", () => {
+    window.localStorage.clear()
+    // A snapshot written before this version: every unsorted table stored `sorting: []`, and no
+    // version marker says whether that empty array was ever a choice.
+    window.localStorage.setItem(
+      "tswebui:ts-table:legacy-table",
+      JSON.stringify({ sorting: [], globalFilter: "" })
+    )
+
+    render(
+      <TsTable
+        data={data}
+        columnDefinitions={columns}
+        persistStateKey="legacy-table"
+        defaultSorting={[{ id: "name", desc: true }]}
+      />
+    )
+
+    const cells = screen.getAllByText(/Alice|Bob/)
+    expect(cells[0]).toHaveTextContent("Bob")
+    expect(cells[1]).toHaveTextContent("Alice")
+    window.localStorage.clear()
+  })
+
+  it("keeps a sort the user cleared cleared, even with defaultSorting set", () => {
+    window.localStorage.clear()
+    // Written by this version, so the empty sort is the user's own decision and survives a remount.
+    window.localStorage.setItem(
+      "tswebui:ts-table:cleared-table",
+      JSON.stringify({ version: PERSISTED_TABLE_STATE_VERSION, sorting: [] })
+    )
+
+    render(
+      <TsTable
+        data={data}
+        columnDefinitions={columns}
+        persistStateKey="cleared-table"
+        defaultSorting={[{ id: "name", desc: true }]}
+      />
+    )
+
+    // Untouched data order: Alice was first in the fixture.
+    const cells = screen.getAllByText(/Alice|Bob/)
+    expect(cells[0]).toHaveTextContent("Alice")
+    expect(cells[1]).toHaveTextContent("Bob")
+    window.localStorage.clear()
+  })
+
+  it("stamps the version marker into every snapshot it writes", () => {
+    window.localStorage.clear()
+    const view = render(
+      <TsTable data={data} columnDefinitions={columns} persistStateKey="stamped-table" />
+    )
+
+    fireEvent.change(view.getByPlaceholderText(/Search.../i), { target: { value: "Alice" } })
+
+    const raw = window.localStorage.getItem("tswebui:ts-table:stamped-table")
+    expect(raw).not.toBeNull()
+    expect(JSON.parse(raw as string).version).toBe(PERSISTED_TABLE_STATE_VERSION)
+    window.localStorage.clear()
   })
 
   it("omits excludeFromExport columns from the exported rows", () => {
