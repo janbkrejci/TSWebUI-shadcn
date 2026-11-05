@@ -375,6 +375,13 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
     (key) => !touchedPredefinedFilterKeysRef.current.has(key)
   )
 
+  // Clearing filters returns the column filters to the predefined state, including predefined
+  // filters the user changed or removed.
+  const resetColumnFilters = React.useCallback(() => {
+    touchedPredefinedFilterKeysRef.current.clear()
+    setColumnFilters(Object.entries(initialPredefinedFilters).map(([id, value]) => ({ id, value })))
+  }, [initialPredefinedFilters])
+
   // Parse row actions
   const rowActions = React.useMemo<TsTableRowAction[]>(() => {
     if (!singleItemActions) return []
@@ -551,6 +558,8 @@ export function TsTable<TData extends Record<string, unknown> = Record<string, u
         columnDefinitions={columnDefinitions}
         columnsRequiredForImport={columnsRequiredForImport}
         predefinedFilterKeys={activePredefinedFilterKeys}
+        predefinedFilterValues={initialPredefinedFilters}
+        onResetColumnFilters={resetColumnFilters}
         locale={locale}
       />
       {isImportPending &&

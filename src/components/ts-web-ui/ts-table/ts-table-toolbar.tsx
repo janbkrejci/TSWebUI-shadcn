@@ -49,6 +49,10 @@ interface TsTableToolbarProps<TData> {
   columnDefinitions?: TsTableColumnDef[]
   columnsRequiredForImport?: string[]
   predefinedFilterKeys?: string[]
+  /** Predefined filter values. When set, filters count as active only if they differ from these. */
+  predefinedFilterValues?: Record<string, string>
+  /** Restores the predefined filters. When set, clearing filters calls it instead of dropping user filters. */
+  onResetColumnFilters?: () => void
   title?: string
   locale?: TsLocale
 }
@@ -74,6 +78,8 @@ export function TsTableToolbar<TData>({
   columnDefinitions = [],
   columnsRequiredForImport,
   predefinedFilterKeys = [],
+  predefinedFilterValues,
+  onResetColumnFilters,
   title,
   locale,
 }: TsTableToolbarProps<TData>) {
@@ -243,21 +249,31 @@ export function TsTableToolbar<TData>({
     )
   }, [columnFiltersState])
   const hasActiveUserFilters = React.useMemo(() => {
-    return columnFiltersState.some(
-      (f) => f.value !== "" && f.value != null && !predefinedFilterKeys.includes(f.id)
-    )
-  }, [columnFiltersState, predefinedFilterKeys])
+    const active = columnFiltersState.filter((f) => f.value !== "" && f.value != null)
+    if (predefinedFilterValues) {
+      const predefinedIds = Object.keys(predefinedFilterValues)
+      return (
+        active.length !== predefinedIds.length ||
+        active.some((f) => predefinedFilterValues[f.id] !== String(f.value))
+      )
+    }
+    return active.some((f) => !predefinedFilterKeys.includes(f.id))
+  }, [columnFiltersState, predefinedFilterKeys, predefinedFilterValues])
 
   const globalFilterState = table.getState().globalFilter as string | undefined
   const hasAnyActiveFilter =
     columnFiltersState.some((f) => f.value !== "" && f.value != null) || !!globalFilterState
 
   const handleClearAllFilters = React.useCallback(() => {
+    if (onResetColumnFilters) {
+      onResetColumnFilters()
+      return
+    }
     const predefinedOnly = table
       .getState()
       .columnFilters.filter((f) => predefinedFilterKeys.includes(f.id))
     table.setColumnFilters(predefinedOnly)
-  }, [table, predefinedFilterKeys])
+  }, [table, predefinedFilterKeys, onResetColumnFilters])
 
   // Clears the fulltext and every user column filter, including filters on hidden columns.
   const hasClearableFilters = hasActiveUserFilters || !!globalFilterState

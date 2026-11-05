@@ -94,8 +94,46 @@ describe("TsTable", () => {
     expect(screen.getByPlaceholderText(/Search.../i)).toHaveValue("")
     expect(screen.getByText("Alice")).toBeInTheDocument()
     expect(screen.getByText("Bob")).toBeInTheDocument()
-    // The predefined "active" filter survives, as with "Clear all filters".
+    // The predefined "active" filter survives.
     expect(screen.queryByText("Carol")).not.toBeInTheDocument()
+    expect(clearButton).toBeDisabled()
+    window.localStorage.clear()
+  })
+
+  it("restores a predefined filter the user changed when clearing filters", () => {
+    const filterColumns: TsTableColumnDef[] = [
+      ...columns,
+      { key: "active", title: "Active", type: "text", filterable: true, visible: false },
+    ]
+    const filterData = [
+      { id: 1, name: "Alice", active: "yes" },
+      { id: 2, name: "Bob", active: "no" },
+    ]
+    // The user changed the predefined "active" filter to "no" earlier; persisted, not touched here.
+    window.localStorage.clear()
+    window.localStorage.setItem(
+      "tswebui:ts-table:restore-predefined",
+      JSON.stringify({
+        version: PERSISTED_TABLE_STATE_VERSION,
+        columnFilters: [{ id: "active", value: "no" }],
+      })
+    )
+    render(
+      <TsTable
+        data={filterData}
+        columnDefinitions={filterColumns}
+        persistStateKey="restore-predefined"
+        predefinedFilters={{ active: "yes" }}
+      />
+    )
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument()
+
+    const clearButton = screen.getByRole("button", { name: "Clear filters" })
+    expect(clearButton).toBeEnabled()
+    fireEvent.click(clearButton)
+
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+    expect(screen.queryByText("Bob")).not.toBeInTheDocument()
     expect(clearButton).toBeDisabled()
     window.localStorage.clear()
   })
