@@ -8,6 +8,7 @@ export const en: TsLocale = {
       viewColumns: "View columns",
       searchColumns: "Search columns...",
       clearAllFilters: "Clear all filters",
+      clearFilters: "Clear filters",
       export: "Export",
       import: "Import",
       newRecord: "New record",

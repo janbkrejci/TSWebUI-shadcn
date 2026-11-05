@@ -5,6 +5,7 @@ export interface TsLocaleStrings {
     viewColumns: string
     searchColumns: string
     clearAllFilters: string
+    clearFilters: string
     export: string
     import: string
     newRecord: string

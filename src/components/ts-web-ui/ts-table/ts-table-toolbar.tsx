@@ -49,6 +49,10 @@ interface TsTableToolbarProps<TData> {
   columnDefinitions?: TsTableColumnDef[]
   columnsRequiredForImport?: string[]
   predefinedFilterKeys?: string[]
+  /** Predefined filter values. When set, filters count as active only if they differ from these. */
+  predefinedFilterValues?: Record<string, string>
+  /** Restores the predefined filters. When set, clearing filters calls it instead of dropping user filters. */
+  onResetColumnFilters?: () => void
   title?: string
   locale?: TsLocale
 }
@@ -74,6 +78,8 @@ export function TsTableToolbar<TData>({
   columnDefinitions = [],
   columnsRequiredForImport,
   predefinedFilterKeys = [],
+  predefinedFilterValues,
+  onResetColumnFilters,
   title,
   locale,
 }: TsTableToolbarProps<TData>) {
@@ -243,21 +249,38 @@ export function TsTableToolbar<TData>({
     )
   }, [columnFiltersState])
   const hasActiveUserFilters = React.useMemo(() => {
-    return columnFiltersState.some(
-      (f) => f.value !== "" && f.value != null && !predefinedFilterKeys.includes(f.id)
-    )
-  }, [columnFiltersState, predefinedFilterKeys])
+    const active = columnFiltersState.filter((f) => f.value !== "" && f.value != null)
+    if (predefinedFilterValues) {
+      const predefinedIds = Object.keys(predefinedFilterValues)
+      return (
+        active.length !== predefinedIds.length ||
+        active.some((f) => predefinedFilterValues[f.id] !== String(f.value))
+      )
+    }
+    return active.some((f) => !predefinedFilterKeys.includes(f.id))
+  }, [columnFiltersState, predefinedFilterKeys, predefinedFilterValues])
 
   const globalFilterState = table.getState().globalFilter as string | undefined
   const hasAnyActiveFilter =
     columnFiltersState.some((f) => f.value !== "" && f.value != null) || !!globalFilterState
 
   const handleClearAllFilters = React.useCallback(() => {
+    if (onResetColumnFilters) {
+      onResetColumnFilters()
+      return
+    }
     const predefinedOnly = table
       .getState()
       .columnFilters.filter((f) => predefinedFilterKeys.includes(f.id))
     table.setColumnFilters(predefinedOnly)
-  }, [table, predefinedFilterKeys])
+  }, [table, predefinedFilterKeys, onResetColumnFilters])
+
+  // Clears the fulltext and every user column filter, including filters on hidden columns.
+  const hasClearableFilters = hasActiveUserFilters || !!globalFilterState
+  const handleClearFulltextAndFilters = React.useCallback(() => {
+    table.setGlobalFilter("")
+    handleClearAllFilters()
+  }, [table, handleClearAllFilters])
 
   return (
     <div className="space-y-4 pt-4 pb-0">
@@ -445,20 +468,32 @@ export function TsTableToolbar<TData>({
       </div>
 
       {showFulltext && (
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t?.search ?? "Search..."}
-            value={(table.getState().globalFilter as string) ?? ""}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                e.preventDefault()
-                table.setGlobalFilter("")
-              }
-            }}
-            className="pl-8 h-9"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t?.search ?? "Search..."}
+              value={(table.getState().globalFilter as string) ?? ""}
+              onChange={(event) => table.setGlobalFilter(event.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault()
+                  table.setGlobalFilter("")
+                }
+              }}
+              className="pl-8 h-9"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2 shrink-0"
+            onClick={handleClearFulltextAndFilters}
+            disabled={!hasClearableFilters}
+          >
+            <XCircle className="h-4 w-4" />
+            {t?.clearFilters ?? "Clear filters"}
+          </Button>
         </div>
       )}
     </div>
