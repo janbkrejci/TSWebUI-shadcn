@@ -8,6 +8,7 @@ export const cs: TsLocale = {
       viewColumns: "Zobrazení sloupců",
       searchColumns: "Hledat sloupce...",
       clearAllFilters: "Vymazat všechny filtry",
+      clearFilters: "Vymazat filtry",
       export: "Export",
       import: "Import",
       newRecord: "Nový záznam",

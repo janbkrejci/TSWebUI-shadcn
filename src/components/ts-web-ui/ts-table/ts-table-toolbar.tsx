@@ -259,6 +259,13 @@ export function TsTableToolbar<TData>({
     table.setColumnFilters(predefinedOnly)
   }, [table, predefinedFilterKeys])
 
+  // Clears the fulltext and every user column filter, including filters on hidden columns.
+  const hasClearableFilters = hasActiveUserFilters || !!globalFilterState
+  const handleClearFulltextAndFilters = React.useCallback(() => {
+    table.setGlobalFilter("")
+    handleClearAllFilters()
+  }, [table, handleClearAllFilters])
+
   return (
     <div className="space-y-4 pt-4 pb-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -445,20 +452,32 @@ export function TsTableToolbar<TData>({
       </div>
 
       {showFulltext && (
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t?.search ?? "Search..."}
-            value={(table.getState().globalFilter as string) ?? ""}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                e.preventDefault()
-                table.setGlobalFilter("")
-              }
-            }}
-            className="pl-8 h-9"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t?.search ?? "Search..."}
+              value={(table.getState().globalFilter as string) ?? ""}
+              onChange={(event) => table.setGlobalFilter(event.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault()
+                  table.setGlobalFilter("")
+                }
+              }}
+              className="pl-8 h-9"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2 shrink-0"
+            onClick={handleClearFulltextAndFilters}
+            disabled={!hasClearableFilters}
+          >
+            <XCircle className="h-4 w-4" />
+            {t?.clearFilters ?? "Clear filters"}
+          </Button>
         </div>
       )}
     </div>

@@ -53,6 +53,58 @@ describe("TsTable", () => {
     expect(screen.getByText("Bob")).toBeInTheDocument()
   })
 
+  it("clears fulltext and column filters, including hidden ones, but keeps predefined", () => {
+    window.localStorage.clear()
+    const filterColumns: TsTableColumnDef[] = [
+      ...columns,
+      { key: "city", title: "City", type: "text", filterable: true, visible: false },
+      { key: "active", title: "Active", type: "text", filterable: true },
+    ]
+    const filterData = [
+      { id: 1, name: "Alice", city: "Brno", active: "yes" },
+      { id: 2, name: "Bob", city: "Praha", active: "yes" },
+      { id: 3, name: "Carol", city: "Brno", active: "no" },
+    ]
+    // A filter on the hidden "city" column is invisible in the header but still narrows the rows.
+    window.localStorage.setItem(
+      "tswebui:ts-table:clear-filters",
+      JSON.stringify({
+        version: PERSISTED_TABLE_STATE_VERSION,
+        columnFilters: [
+          { id: "city", value: "Praha" },
+          { id: "active", value: "yes" },
+        ],
+      })
+    )
+    render(
+      <TsTable
+        data={filterData}
+        columnDefinitions={filterColumns}
+        persistStateKey="clear-filters"
+        predefinedFilters={{ active: "yes" }}
+      />
+    )
+
+    const clearButton = screen.getByRole("button", { name: "Clear filters" })
+    fireEvent.change(screen.getByPlaceholderText(/Search.../i), { target: { value: "Bob" } })
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument()
+
+    fireEvent.click(clearButton)
+
+    expect(screen.getByPlaceholderText(/Search.../i)).toHaveValue("")
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+    expect(screen.getByText("Bob")).toBeInTheDocument()
+    // The predefined "active" filter survives, as with "Clear all filters".
+    expect(screen.queryByText("Carol")).not.toBeInTheDocument()
+    expect(clearButton).toBeDisabled()
+    window.localStorage.clear()
+  })
+
+  it("hides the clear filters button when fulltext is off", () => {
+    render(<TsTable data={data} columnDefinitions={columns} showFulltext={false} />)
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument()
+  })
+
   it("calls onRowClick when a row is clicked", () => {
     const onRowClick = vi.fn()
     render(<TsTable data={data} columnDefinitions={columns} onRowClick={onRowClick} />)
